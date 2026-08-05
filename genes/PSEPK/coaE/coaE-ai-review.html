@@ -1,0 +1,2365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>coaE - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>coaE</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88Q65" target="_blank" class="term-link">
+                        Q88Q65
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "coaE";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88Q65" data-a="DESCRIPTION: coaE (PP_0631) encodes a soluble dephospho-CoA kin..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>coaE (PP_0631) encodes a soluble dephospho-CoA kinase that uses ATP to phosphorylate the 3&#39;-hydroxyl of dephospho-CoA, producing coenzyme A and ADP. This is the fifth and final reaction in the conserved conversion of pantothenate to coenzyme A. Q88Q65 belongs to the bacterial CoaE family and contains the diagnostic P-loop NTPase and dephospho-CoA kinase domains; direct biochemical characterization of the KT2440 protein has not been reported.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004140" target="_blank" class="term-link">
+                                    GO:0004140
+                                </a>
+                            </span>
+                            <span class="term-label">dephospho-CoA kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88Q65" data-a="GO:0004140" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Dephospho-CoA kinase is the core predicted molecular function of CoaE.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HAMAP, InterPro, Pfam, NCBIfam, and the conserved P-loop architecture all support the specific CoaE-family reaction recorded by Rhea.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/coaE/coaE-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0004140	dephospho-CoA kinase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/coaE/coaE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=Dephospho-CoA kinase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/coaE/coaE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   Pfam; PF01121; CoaE; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/coaE/coaE-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">is dephospho-CoA kinase (EC 2.7.1.24)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88Q65" data-a="GO:0005524" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ATP binding is required for phosphotransfer but is not the core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ATP is the phosphate donor in the CoaE reaction, and Q88Q65 contains the conserved P-loop NTPase nucleotide-binding architecture.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/coaE/coaE-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0005524	ATP binding</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/coaE/coaE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR027417; P-loop_NTPase.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88Q65" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization is consistent with this soluble CoA-biosynthetic kinase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt explicitly assigns Q88Q65 to the cytoplasm and no secretion or membrane feature is present.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/coaE/coaE-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0005737	cytoplasm</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/coaE/coaE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                    GO:0015937
+                                </a>
+                            </span>
+                            <span class="term-label">coenzyme A biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88Q65" data-a="GO:0015937" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CoaE catalyzes the terminal reaction of coenzyme A biosynthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Dephospho-CoA phosphorylation produces mature CoA, and UniProt explicitly places Q88Q65 at step 5 of 5 in the pantothenate-to-CoA pathway.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/coaE/coaE-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0015937	coenzyme A biosynthetic process</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/coaE/coaE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CoA from (R)-pantothenate: step 5/5.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">| 5. DPCK | 2.7.1.24 | **coaE** | PP_0631 / Q88Q65</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Dephospho-CoA kinase that transfers phosphate from ATP to 3&#39;-dephospho-CoA, completing coenzyme A biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88Q65" data-a="FUNCTION: Dephospho-CoA kinase that transfers phosphate from..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004140" target="_blank" class="term-link">
+                            dephospho-CoA kinase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                coenzyme A biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/coaE/coaE-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">RecName: Full=Dephospho-CoA kinase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/coaE/coaE-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">GO:0004140	dephospho-CoA kinase activity</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/coaE/coaE-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">the fifth and final step of the universal coenzyme A (CoA) biosynthetic pathway</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11292795" target="_blank" class="term-link">
+                            PMID:11292795
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification of yacE (coaE) as the structural gene for dephosphocoenzyme A kinase in Escherichia coli K-12.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Recombinant bacterial CoaE catalyzes dephospho-CoA phosphorylation and strongly prefers dephospho-CoA over related adenosine compounds.</div>
+
+                        <div class="finding-text">"Enzyme assay and nuclear magnetic resonance analyses of the product demonstrated that the recombinant enzyme is indeed dephospho-CoA kinase."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/coaE/coaE-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for coaE</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt records the exact terminal kinase reaction, CoA-pathway position, CoaE-family membership, and cytoplasmic localization of Q88Q65.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/coaE/coaE-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for coaE</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the four annotations reviewed for coaE.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/coaE/coaE-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for coaE</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report supports the CoaE assignment through ortholog biochemistry, target-sequence features, and pathway context while noting the lack of a direct KT2440 assay.</div>
+
+                        <div class="finding-text">"No direct experimental study of the *P. putida* KT2440 protein."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist pathway research for PSEPK pantothenate and CoA biosynthesis</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The pathway report identifies coaE as the standalone enzyme satisfying the terminal CoA-pathway step.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the native kinetic constants, substrate selectivity, and oligomeric state of KT2440 CoaE?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88Q65" data-a="Q: What are the native kinetic constants, substrate s..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify Q88Q65 and measure ATP-dependent dephospho-CoA phosphorylation, substrate selectivity, and oligomeric state.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: biochemical enzyme assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88Q65" data-a="EXPERIMENT: Purify Q88Q65 and measure ATP-dependent dephospho-..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(coaE-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88Q65" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *coaE* (Dephospho-CoA Kinase, PP_0631, UniProt Q88Q65) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">11 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-18T13:35:31.222792</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="coaE-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="coaE-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-coae-dephospho-coa-kinase-pp_0631-uniprot-q88q65-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>coaE</em> (Dephospho-CoA Kinase, PP_0631, UniProt Q88Q65) in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Gene:</strong> <em>coaE</em> (OrderedLocusName <strong>PP_0631</strong>) · <strong>Protein:</strong> Dephospho-CoA kinase (DPCK/DCK), EC 2.7.1.24 · <strong>UniProt:</strong> Q88Q65 (COAE_PSEPK) · <strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / KT2440) · <strong>Family/domains:</strong> CoaE family; P-loop NTPase (IPR027417); Dephospho-CoA kinase (IPR001977); Pfam PF01121; HAMAP-Rule MF_00376</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p><strong>CoaE (PP_0631; UniProt Q88Q65) of <em>Pseudomonas putida</em> KT2440 is dephospho-CoA kinase (EC 2.7.1.24), the enzyme that catalyzes the fifth and final step of the universal coenzyme A (CoA) biosynthetic pathway.</strong> It uses ATP to phosphorylate the 3′-hydroxyl group of the ribose moiety of 3′-dephospho-CoA, producing CoA and ADP. The reaction completes the conversion of the vitamin precursor pantothenate (vitamin B5) into the mature, universally essential acyl-carrier cofactor CoA. No direct experimental study of the <em>P. putida</em> protein exists; the assignment is a <strong>high-confidence functional transfer</strong> built from a convergent body of evidence — curated protein-family annotation (CoaE family, HAMAP-Rule MF_00376), the diagnostic Walker-A/P-loop motif present in the target's own sequence, 46.7% amino-acid identity to the biochemically proven <em>E. coli</em> enzyme, residue-level conservation of experimentally validated catalytic residues, and consistent KEGG pathway and genomic-context placement.</p>
+<p>Mechanistically, CoaE is a small (~22 kDa, 207-residue) soluble, monomeric member of the <strong>P-loop NTPase (nucleotide-kinase) superfamily</strong>. Crystal structures of bacterial orthologs reveal a conserved three-domain architecture — a canonical nucleotide (ATP)-binding core with a five-stranded parallel β-sheet and Walker-A/P-loop motif, a substrate (CoA)-binding α-helical domain, and a lid domain — and show that ATP binding drives large domain motions that close the active site over the dephospho-CoA substrate during phosphoryl transfer. The enzyme is highly specific for dephospho-CoA over related adenosine-containing molecules, functions in the cytoplasm, and is essential in every bacterium in which it has been tested, consistent with the strict indispensability of CoA supply for central metabolism.</p>
+<p>Biologically, CoaE operates in the cytosol as the terminal enzyme of the pantothenate-to-CoA pathway (KEGG module M00120), feeding the essential cofactor CoA into fatty-acid and phospholipid metabolism, central carbon metabolism (via acetyl-CoA and other acyl-CoAs), and phosphopantetheine transfer to acyl/peptidyl carrier proteins. In <em>P. putida</em> KT2440 the gene is monocistronic and sits next to a conserved <em>yacG</em> neighbor (PP_0630), mirroring the <em>E. coli</em> gene neighborhood, but is not co-transcribed with the other, dispersed CoA-pathway genes. This report synthesizes seven confirmed findings and 17 reviewed papers into a complete functional narrative. <strong>No ambiguity was found in the gene identity: the <em>coaE</em> / dephospho-CoA kinase literature applies directly to this protein by orthology.</strong></p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="coae-catalyzes-the-final-step-of-coa-biosynthesis-f001">CoaE catalyzes the final step of CoA biosynthesis (F001)</h3>
+<p>The primary function of PP_0631/<em>coaE</em> is that of <strong>dephospho-CoA kinase (EC 2.7.1.24)</strong>. UniProt entry Q88Q65 annotates the protein as Dephospho-CoA kinase and assigns it to the CoaE family under HAMAP-Rule MF_00376. The enzyme catalyzes the ATP-dependent phosphorylation of the 3′-hydroxyl of the ribose in 3′-dephospho-CoA, yielding CoA + ADP — the <strong>fifth and final step</strong> of the conserved five-enzyme CoA biosynthetic pathway that begins with the phosphorylation of pantothenate.</p>
+<p>The reaction chemistry has been directly established for orthologs. In <em>E. coli</em>, the <em>yacE/coaE</em> gene product was identified as dephospho-CoA kinase by NMR analysis of the reaction product (<a href="https://pubmed.ncbi.nlm.nih.gov/11292795/">PMID: 11292795</a>): <em>"Dephosphocoenzyme A (dephospho-CoA) kinase catalyzes the final step in coenzyme A biosynthesis, the phosphorylation of the 3'-hydroxy group of the ribose sugar moiety."</em> The placement of dephospho-CoA kinase as the terminal enzyme of a universal five-step pathway is confirmed in the authoritative review by Leonardi &amp; Jackowski (<a href="https://pubmed.ncbi.nlm.nih.gov/26443589/">PMID: 26443589</a>): <em>"CoA is assembled in five enzymatic steps, starting from the phosphorylation of pantothenate to phosphopantothenate."</em></p>
+<p>The five steps of the pathway are:</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Enzyme</th>
+<th>Gene</th>
+<th>EC</th>
+<th>Reaction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Pantothenate kinase</td>
+<td><em>coaA</em>/PanK</td>
+<td>2.7.1.33</td>
+<td>Pantothenate → 4′-phosphopantothenate</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Phosphopantothenoylcysteine synthetase</td>
+<td><em>coaB</em></td>
+<td>6.3.2.5</td>
+<td>+ L-Cys → 4′-phosphopantothenoylcysteine</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Phosphopantothenoylcysteine decarboxylase</td>
+<td><em>coaC</em></td>
+<td>4.1.1.36</td>
+<td>→ 4′-phosphopantetheine</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Phosphopantetheine adenylyltransferase</td>
+<td><em>coaD</em></td>
+<td>2.7.7.3</td>
+<td>+ ATP → 3′-dephospho-CoA</td>
+</tr>
+<tr>
+<td><strong>5</strong></td>
+<td><strong>Dephospho-CoA kinase</strong></td>
+<td><strong><em>coaE</em> (PP_0631)</strong></td>
+<td><strong>2.7.1.24</strong></td>
+<td><strong>Dephospho-CoA + ATP → CoA + ADP</strong></td>
+</tr>
+</tbody>
+</table>
+<p>CoaE thus performs the committed final maturation of the cofactor, installing the 3′-phosphate that distinguishes mature CoA from its dephospho precursor.</p>
+<h3 id="coae-is-a-p-loop-ntpase-with-a-three-domain-fold-and-large-catalytic-domain-motions-f002">CoaE is a P-loop NTPase with a three-domain fold and large catalytic domain motions (F002)</h3>
+<p>Crystal structures of bacterial CoaE orthologs establish the fold and mechanism that Q88Q65 inherits by homology. The <em>Haemophilus influenzae</em> structure (<a href="https://pubmed.ncbi.nlm.nih.gov/11886213/">PMID: 11886213</a>) describes the three-domain organization: <em>"The protein molecule consists of three domains: the canonical nucleotide-binding domain with a five-stranded parallel beta-sheet, the substrate-binding alpha-helical domain, and the lid domain formed by a pair of alpha-helices. The overall topology of the protein resembles the structures of nucleotide kinases."</em> The <em>E. coli</em> structure (<a href="https://pubmed.ncbi.nlm.nih.gov/12538896/">PMID: 12538896</a>) confirms superfamily membership: <em>"Dephospho-CoA kinase is structurally similar to many nucleoside kinases and other P-loop-containing nucleotide triphosphate hydrolases, despite having negligible sequence similarity to these enzymes."</em></p>
+<p>The CoA-binding site sits at the interface of all three domains, and catalysis requires substantial conformational change. The <em>Thermus thermophilus</em> structure (<a href="https://pubmed.ncbi.nlm.nih.gov/15526298/">PMID: 15526298</a>), solved in both liganded and unliganded states, revealed that ATP binding induces large domain movements, with proline residues (notably Pro91) conferring flexibility at the domain linkages so the CoA-binding domain can close over the substrate.</p>
+<p>Functional residues have been pinpointed by site-directed mutagenesis in the <em>M. tuberculosis</em> enzyme (<a href="https://pubmed.ncbi.nlm.nih.gov/21264299/">PMID: 21264299</a>), which <em>"identified Lys14 and Arg140 in ATP binding and the stabilization of the phosphoryl intermediate during the phosphotransfer reaction. Mutagenesis of Asp32 and Arg140 showed catalytic efficiencies less than 5-10% of the wild type."</em> These structural and mutational data map directly onto the InterPro/Pfam domains assigned to Q88Q65: IPR027417 (P-loop_NTPase), IPR001977 (Depp_CoAkinase), and PF01121 (CoaE).</p>
+<h3 id="the-targets-own-sequence-carries-the-coae-family-walker-ap-loop-motif-f004">The target's own sequence carries the CoaE-family Walker-A/P-loop motif (F004)</h3>
+<p>Direct inspection of the 207-residue Q88Q65 sequence (entry name COAE_PSEPK) confirms the family assignment at the sequence level. The protein contains a canonical <strong>Walker-A/P-loop motif, GGIGSGKS, at residues 15–22</strong>, matching the consensus [AG]xxxxGK[S/T]. This motif is the ATP-binding signature of the P-loop NTPase superfamily and the diagnostic fingerprint of the dephospho-CoA kinase (CoaE) family. The predicted size of ~22 kDa matches biochemically characterized monomeric orthologs (the <em>E. coli</em> enzyme is 22.6 kDa). This grounds the annotation in the actual amino-acid sequence of the target rather than in database inheritance alone.</p>
+<h3 id="467-identity-to-the-biochemically-confirmed-e-coli-coae-f005">46.7% identity to the biochemically confirmed <em>E. coli</em> CoaE (F005)</h3>
+<p>A Needleman–Wunsch global alignment of <em>P. putida</em> Q88Q65 (207 aa) against <em>E. coli</em> CoaE/YacE (UniProt P0A6I9, 206 aa) yields <strong>99/212 = 46.7% identity over the full length</strong>. The <em>E. coli</em> protein is the reference case in which dephospho-CoA kinase activity was experimentally proven by product NMR (<a href="https://pubmed.ncbi.nlm.nih.gov/11292795/">PMID: 11292795</a>): <em>"Amplification of the gene and overexpression yielded recombinant dephospho-CoA kinase as a 22.6-kDa monomer. Enzyme assay and nuclear magnetic resonance analyses of the product demonstrated that the recombinant enzyme is indeed dephospho-CoA kinase."</em></p>
+<p>The Walker-A/P-loop regions are essentially identical between the two proteins (<em>P. putida</em> <code>TGGIGSGKS</code> vs <em>E. coli</em> <code>TGGIGSGKS</code>). Identity of 46.7% over the entire protein is well above the ~25–30% "twilight-zone" threshold below which fold and function become uncertain; at this level across the full length, conservation of both three-dimensional fold and enzymatic function is highly reliable. This is the single strongest quantitative pillar supporting the functional transfer to the <em>P. putida</em> protein.</p>
+<h3 id="validated-catalytic-residues-are-conserved-in-the-target-f006">Validated catalytic residues are conserved in the target (F006)</h3>
+<p>Beyond global identity, the residues known to be functionally critical are conserved. The alignment to <em>E. coli</em> CoaE maps the invariant Walker-A/P-loop lysine (<em>E. coli</em> Lys15, within GKST) onto <strong><em>P. putida</em> Lys21</strong> (within the GGIGSGKS motif at residues 15–22). This lysine is equivalent to <em>M. tuberculosis</em> CoaE Lys14, shown by mutagenesis to be essential for ATP binding and stabilization of the phosphoryl-transfer intermediate (<a href="https://pubmed.ncbi.nlm.nih.gov/21264299/">PMID: 21264299</a>). Conserved acidic residues immediately C-terminal to the P-loop (<em>P. putida</em> Asp37 and Asp39) are strong candidates for the Mg²⁺-coordinating/catalytic aspartate role, occupying the equivalent context to <em>M. tuberculosis</em> Asp32. Numerous additional charged residues are shared (e.g., Lys21, Asp37/39, Arg43, Glu101, Asp177), consistent with a fully conserved ATP- and dephospho-CoA-binding active site. This upgrades the confidence from "same family" to "same active-site machinery."</p>
+<h3 id="high-substrate-specificity-cytoplasmic-localization-and-essentiality-f003">High substrate specificity, cytoplasmic localization, and essentiality (F003)</h3>
+<p><strong>Substrate specificity.</strong> Recombinant <em>E. coli</em> dephospho-CoA kinase displayed a strong preference for dephospho-CoA: activity with adenosine, AMP, and adenosine phosphosulfate was only 4–8% of the activity with dephospho-CoA (<a href="https://pubmed.ncbi.nlm.nih.gov/11292795/">PMID: 11292795</a>): <em>"The activities with adenosine, AMP, and adenosine phosphosulfate were 4 to 8% of the activity with dephospho-CoA."</em> The enzyme selectively recognizes the full dephospho-CoA acceptor rather than merely its adenosine/adenine-phosphate portion.</p>
+<p><strong>Essentiality.</strong> CoA biosynthesis is essential across bacteria, and <em>coaE</em> specifically is indispensable. It was identified as a novel essential gene in <em>Streptococcus mutans</em> by antisense knockdown (<a href="https://pubmed.ncbi.nlm.nih.gov/15908386/">PMID: 15908386</a>): <em>"a novel essential gene, the coaE gene, encoding dephospho-coenzyme A kinase, which is involved in the final step of coenzyme A."</em> It is likewise essential for the survival of <em>M. tuberculosis</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/22954585/">PMID: 22954585</a>): <em>"we found that CoaE was also essential for the survival of M. tuberculosis."</em></p>
+<p><strong>Localization.</strong> The enzyme is a soluble cytoplasmic protein — no signal peptide, no transmembrane domain, and the UniProt subcellular location is cytoplasm. Its substrate (dephospho-CoA) and product (CoA) are cytosolic metabolites, placing its function firmly in the bacterial cytoplasm.</p>
+<h3 id="kegg-pathway-placement-and-conserved-genomic-context-f007">KEGG pathway placement and conserved genomic context (F007)</h3>
+<p>KEGG assigns PP_0631/<em>coaE</em> to orthology <strong>K00859</strong> (dephospho-CoA kinase, EC 2.7.1.24), pathways ppu00770 (Pantothenate and CoA biosynthesis) and ppu01240 (Biosynthesis of cofactors), and module <strong>ppu_M00120</strong> (Coenzyme A biosynthesis, pantothenate ⇒ CoA). The gene lies at <code>complement(737926..738549)</code>. Its immediate neighbors are functionally unrelated to CoA metabolism: PP_0630 = <strong>YacG</strong> (a DNA gyrase inhibitor), PP_0632 = a prepilin leader peptidase/N-methyltransferase, and PP_0633 = PilC. The gene is effectively <strong>monocistronic</strong> and not co-transcribed with the other CoA-pathway genes, which are dispersed across the genome (typical for bacterial CoA biosynthesis). Notably, the <em>coaE</em>(<em>yacE</em>)-adjacent-to-<em>yacG</em> arrangement mirrors the conserved <em>E. coli</em> gene neighborhood, indicating evolutionarily preserved local synteny. In the genome-wide mini-Tn5 conditional-essentiality screen of KT2440 (<a href="https://pubmed.ncbi.nlm.nih.gov/20158506/">PMID: 20158506</a>) — <em>"a genome-wide collection of single-gene P. putida KT2440 knockouts was generated by mini-Tn5 transposon mutagenesis and used to identify genes essential for growth in minimal medium"</em> — no viable <em>coaE</em> disruption was recovered, consistent with <em>coaE</em> being strictly (not merely conditionally) essential.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>The findings converge on a single coherent model of CoaE function.</p>
+<h3 id="the-reaction-and-its-place-in-metabolism">The reaction and its place in metabolism</h3>
+<div class="codehilite"><pre><span></span><code>Pantothenate (vitamin B5)
+      │  CoaA / PanK  (2.7.1.33)
+      ▼
+4&#39;-Phosphopantothenate
+      │  CoaB  (6.3.2.5)  + L-Cys
+      ▼
+4&#39;-Phosphopantothenoyl-cysteine
+      │  CoaC  (4.1.1.36)  - CO2
+      ▼
+4&#39;-Phosphopantetheine
+      │  CoaD  (2.7.7.3)  + ATP
+      ▼
+3&#39;-Dephospho-CoA
+      │  ►►► CoaE / PP_0631  (2.7.1.24)   + ATP → + ADP   ◄◄◄  FINAL STEP
+      ▼
+Coenzyme A (CoA)
+      │
+      ├──► Acetyl-CoA / acyl-CoAs → central carbon metabolism (TCA, β-oxidation)
+      ├──► Malonyl-CoA → fatty-acid &amp; phospholipid biosynthesis
+      └──► 4&#39;-Phosphopantetheine transfer → acyl/peptidyl carrier proteins (ACP, PCP)
+</code></pre></div>
+
+<p>CoaE catalyzes the terminal, committed maturation step: it transfers the γ-phosphate of ATP onto the 3′-hydroxyl of the ribose of dephospho-CoA. The product, CoA, is the universal thioester-forming acyl carrier at the heart of bacterial metabolism. Because every downstream acyl-CoA and every phosphopantetheinylated carrier protein depends on this final phosphorylation, loss of CoaE activity collapses CoA supply — explaining the observed essentiality across taxa.</p>
+<h3 id="the-catalytic-machine">The catalytic machine</h3>
+<div class="codehilite"><pre><span></span><code>┌───────────────────────────────────────────────┐
+│<span class="w">              </span><span class="nv">Dephospho</span><span class="o">-</span><span class="nv">CoA</span><span class="w"> </span><span class="nv">kinase</span><span class="w">              </span>│
+│<span class="w">    </span><span class="ss">(</span><span class="nv">P</span><span class="o">-</span><span class="k">loop</span><span class="w"> </span><span class="nv">NTPase</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nv">nucleotide</span><span class="o">-</span><span class="nv">kinase</span><span class="w"> </span><span class="nv">fold</span><span class="ss">)</span><span class="w">    </span>│
+│<span class="w">                                                </span>│
+│<span class="w">  </span>[<span class="mi">1</span>]<span class="w"> </span><span class="nv">Nucleotide</span><span class="o">-</span><span class="nv">binding</span><span class="w"> </span><span class="nv">core</span><span class="w">                   </span>│
+│<span class="w">      </span><span class="mi">5</span><span class="o">-</span><span class="nv">stranded</span><span class="w"> </span><span class="nv">parallel</span><span class="w"> </span>β<span class="o">-</span><span class="nv">sheet</span><span class="w">               </span>│
+│<span class="w">      </span><span class="nv">Walker</span><span class="o">-</span><span class="nv">A</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nv">P</span><span class="o">-</span><span class="k">loop</span>:<span class="w"> </span><span class="nv">GGIGSGKS</span><span class="w">  </span><span class="ss">(</span><span class="nv">res</span><span class="w"> </span><span class="mi">15</span>–<span class="mi">22</span><span class="ss">)</span><span class="w">  </span>│
+│<span class="w">      </span><span class="nv">catalytic</span><span class="w"> </span><span class="nv">Lys21</span><span class="w"> </span>──<span class="w"> </span><span class="nv">binds</span><span class="w"> </span><span class="nv">ATP</span><span class="w"> </span>β<span class="o">/</span>γ<span class="o">-</span><span class="nv">PO4</span><span class="w">      </span>│
+│<span class="w">                                                </span>│
+│<span class="w">  </span>[<span class="mi">2</span>]<span class="w"> </span><span class="nv">CoA</span><span class="o">-</span><span class="nv">binding</span><span class="w"> </span>α<span class="o">-</span><span class="nv">helical</span><span class="w"> </span><span class="nv">domain</span><span class="w"> </span>─┐<span class="w">            </span>│
+│<span class="w">      </span><span class="ss">(</span><span class="nv">moves</span><span class="w"> </span><span class="nv">on</span><span class="w"> </span><span class="nv">ATP</span><span class="w"> </span><span class="nv">binding</span><span class="ss">)</span><span class="w">        </span>├─<span class="w"> </span><span class="nv">active</span><span class="w">    </span>│
+│<span class="w">  </span>[<span class="mi">3</span>]<span class="w"> </span><span class="nv">Lid</span><span class="w"> </span><span class="nv">domain</span><span class="w"> </span><span class="ss">(</span>α<span class="o">-</span><span class="nv">helix</span><span class="w"> </span><span class="nv">pair</span><span class="ss">)</span><span class="w"> </span>────┘<span class="w">   </span><span class="nv">site</span><span class="w">     </span>│
+│<span class="w">                                                </span>│
+│<span class="w">  </span><span class="nv">ATP</span><span class="w"> </span><span class="nv">binding</span><span class="w"> </span>→<span class="w"> </span><span class="nv">large</span><span class="w"> </span><span class="nv">domain</span><span class="w"> </span><span class="nv">closure</span><span class="w">            </span>│
+│<span class="w">  </span><span class="ss">(</span><span class="nv">proline</span><span class="w"> </span><span class="nv">hinges</span><span class="ss">)</span><span class="w"> </span>→<span class="w"> </span><span class="nv">in</span><span class="o">-</span><span class="nv">line</span><span class="w"> </span><span class="nv">phosphoryl</span><span class="w"> </span><span class="nv">transfer</span>│
+└───────────────────────────────────────────────┘
+</code></pre></div>
+
+<p>The enzyme is a small monomer with classic nucleotide-kinase topology. The Walker-A/P-loop motif — present verbatim in the Q88Q65 sequence at residues 15–22 (GGIGSGKS) — cradles the ATP phosphates, with the invariant lysine (Lys21 in <em>P. putida</em>, equivalent to the mutationally validated Lys14 of <em>M. tuberculosis</em>) stabilizing the transition state. ATP binding triggers proline-hinged domain closure that brings the CoA-binding domain and lid over the dephospho-CoA acceptor, aligning the 3′-OH for in-line phosphoryl transfer. High acceptor specificity (dephospho-CoA ≫ adenosine/AMP/APS) reflects extensive recognition of the pantetheine and pyrophosphate portions of the substrate at the multi-domain interface. Kinetic studies of the mycobacterial ortholog indicate an <strong>ordered mechanism</strong> with dephospho-CoA as the leading substrate and ATP binding second (<a href="https://pubmed.ncbi.nlm.nih.gov/19876400/">PMID: 19876400</a>).</p>
+<h3 id="regulatory-note-from-orthologs-not-confirmed-in-p-putida">Regulatory note (from orthologs, not confirmed in <em>P. putida</em>)</h3>
+<p>Studies of the mycobacterial enzyme reveal a regulatory layer in which CTP acts as an intrinsic inhibitor binding at a site overlapping the dephospho-CoA site, and in which a monomer/trimer equilibrium modulates active-enzyme concentration (<a href="https://pubmed.ncbi.nlm.nih.gov/21731728/">PMID: 21731728</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/19876400/">PMID: 19876400</a>). Whether <em>P. putida</em> CoaE shares these features is unknown; these are ortholog-derived hypotheses, not established properties of Q88Q65.</p>
+<h3 id="confidence-assessment">Confidence assessment</h3>
+<table>
+<thead>
+<tr>
+<th>Evidence pillar</th>
+<th>Finding</th>
+<th>Strength</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Curated family annotation (HAMAP MF_00376, CoaE family, EC 2.7.1.24)</td>
+<td>F001</td>
+<td>High</td>
+</tr>
+<tr>
+<td>Diagnostic Walker-A/P-loop motif present in target sequence</td>
+<td>F004</td>
+<td>High</td>
+</tr>
+<tr>
+<td>46.7% identity to biochemically proven <em>E. coli</em> CoaE</td>
+<td>F005</td>
+<td>Very high</td>
+</tr>
+<tr>
+<td>Residue-level conservation of validated catalytic Lys/Asp</td>
+<td>F006</td>
+<td>High</td>
+</tr>
+<tr>
+<td>KEGG pathway + module M00120 + conserved <em>yacG</em> synteny</td>
+<td>F007</td>
+<td>High</td>
+</tr>
+<tr>
+<td>Structural/mechanistic homology to solved ortholog structures</td>
+<td>F002</td>
+<td>High</td>
+</tr>
+<tr>
+<td>Substrate specificity, essentiality, cytoplasmic localization (orthologs)</td>
+<td>F003</td>
+<td>Moderate–High (transferred)</td>
+</tr>
+</tbody>
+</table>
+<p>No single line of evidence comes from a direct experimental study of the <em>P. putida</em> KT2440 protein, but the <strong>convergence of six independent evidence types</strong> — sequence, structure, family, catalytic residues, pathway/context, and orthologous biochemistry — makes the annotation of Q88Q65 as dephospho-CoA kinase a high-confidence conclusion.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbreviated)</th>
+<th>Contribution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11292795/">11292795</a></td>
+<td><em>Identification of yacE (coaE) as the structural gene for dephospho-CoA kinase in E. coli K-12</em></td>
+<td><strong>Foundational.</strong> Proves (product NMR) CoaE is dephospho-CoA kinase; establishes reaction, 22.6-kDa monomer, and high substrate specificity. The 46.7%-identity reference ortholog. Supports F001, F003, F005.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26443589/">26443589</a></td>
+<td><em>Biosynthesis of Pantothenic Acid and Coenzyme A</em> (Leonardi &amp; Jackowski review)</td>
+<td>Authoritative review placing dephospho-CoA kinase as the terminal enzyme of the five-step pathway. Supports F001.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11886213/">11886213</a></td>
+<td><em>Crystal structure of dephospho-CoA kinase from H. influenzae</em></td>
+<td>Defines the conserved three-domain P-loop kinase architecture. Supports F002.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12538896/">12538896</a></td>
+<td><em>Crystal structure of a trimeric form of dephospho-CoA kinase from E. coli</em></td>
+<td>Confirms P-loop NTPase / nucleoside-kinase superfamily membership matching InterPro/Pfam of Q88Q65. Supports F002.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15526298/">15526298</a></td>
+<td><em>ATP-induced structural change of dephospho-CoA kinase from T. thermophilus</em></td>
+<td>Shows ATP-driven domain movements (Pro91 hinge) essential for catalysis. Supports F002.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21264299/">21264299</a></td>
+<td><em>Identification of critical residues of the mycobacterial dephospho-CoA kinase by mutagenesis</em></td>
+<td>Identifies Lys14, Arg140, Asp32 as catalytic/ATP-binding; maps to conserved <em>P. putida</em> residues. Supports F002, F006.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15908386/">15908386</a></td>
+<td><em>Inducible antisense RNA expression in S. mutans</em></td>
+<td>Establishes <em>coaE</em> as a novel essential gene. Supports F003.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22954585/">22954585</a></td>
+<td><em>Evaluation of CoA biosynthesis proteins of M. tuberculosis as drug targets</em></td>
+<td>Confirms CoaE essentiality for survival. Supports F003.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20158506/">20158506</a></td>
+<td><em>Conditionally essential genes for growth of P. putida KT2440</em></td>
+<td>KT2440 mini-Tn5 library; <em>coaE</em> not recovered as a viable knockout, consistent with strict essentiality. Supports F007.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21731728/">21731728</a></td>
+<td><em>Regulatory characteristics of mycobacterial dephospho-CoA kinase</em></td>
+<td>Ortholog CTP inhibition and monomer/trimer regulation (context; not confirmed in <em>P. putida</em>).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19876400/">19876400</a></td>
+<td><em>Role of UPF0157 in folding of M. tuberculosis CoaE and CTP regulation</em></td>
+<td>Ordered substrate addition (DCoA then ATP); CTP inhibition (context).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25022520/">25022520</a></td>
+<td><em>Characterization of dephospho-CoA kinase from Streptomyces peucetius</em></td>
+<td>Additional biochemical confirmation of CoaE phosphorylating activity; CoaE overexpression boosts CoA-dependent product (doxorubicin).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>How the evidence coheres:</strong> The <em>E. coli</em> study (PMID 11292795) anchors the reaction chemistry and specificity; the crystallographic studies (PMIDs 11886213, 12538896, 15526298) define the fold and dynamics; the mutagenesis study (PMID 21264299) pins down catalytic residues; and sequence analysis of Q88Q65 itself (F004–F006) demonstrates that these features are conserved in the <em>P. putida</em> protein at 46.7% identity, with an intact P-loop and catalytic lysine. Essentiality data (PMIDs 15908386, 22954585, 20158506) and KEGG/context data (F007) situate the enzyme's biological importance and cellular pathway.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li><strong>No direct experimental study of the <em>P. putida</em> KT2440 protein.</strong> The entire annotation rests on homology-based transfer. Although 46.7% identity to a proven enzyme, conserved catalytic residues, and consistent pathway context make this robust, the Q88Q65 protein has not itself been purified, assayed kinetically, or crystallized.</li>
+<li><strong>Kinetic parameters unknown for <em>P. putida</em> CoaE.</strong> Km and kcat for dephospho-CoA and ATP are not measured for this ortholog. Orthologous values vary (e.g., mycobacterial CoaE is reported ~21× more catalytically proficient than some prokaryotic counterparts), so quantitative behavior cannot be assumed.</li>
+<li><strong>Regulation is inferred only from distant orthologs.</strong> CTP inhibition and monomer/trimer oligomeric regulation are documented for <em>M. tuberculosis</em> CoaE (PMIDs 21731728, 19876400) but have not been tested for the <em>P. putida</em> enzyme.</li>
+<li><strong>Localization is predicted, not demonstrated.</strong> Cytoplasmic localization is inferred from the absence of signal/transmembrane sequences and from general knowledge of CoA biosynthesis; no experimental fractionation or imaging exists for PP_0631.</li>
+<li><strong>Essentiality in <em>P. putida</em> is inferred, not directly proven.</strong> The absence of a recoverable <em>coaE</em> knockout in the KT2440 transposon library (PMID 20158506) is consistent with strict essentiality but is indirect; a targeted conditional-knockout study would be definitive.</li>
+<li><strong>Oligomeric state in solution is unconfirmed for the target.</strong> Orthologs range from monomer (<em>E. coli</em>, <em>H. influenzae</em>) to trimer (crystallographic and mycobacterial regulatory forms); the physiologically relevant state for <em>P. putida</em> CoaE is not established.</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li><strong>Recombinant expression and enzyme assay.</strong> Clone PP_0631, express the His-tagged protein, and confirm dephospho-CoA kinase activity via a coupled spectrophotometric assay (ADP production coupled to pyruvate kinase/lactate dehydrogenase, monitoring NADH oxidation) — the strategy used for the <em>Streptomyces</em> ortholog (PMID 25022520). Report Km/kcat for dephospho-CoA and ATP.</li>
+<li><strong>Substrate-specificity panel.</strong> Test activity against adenosine, AMP, and adenosine phosphosulfate versus dephospho-CoA to verify the strong acceptor preference seen in <em>E. coli</em> (PMID 11292795).</li>
+<li><strong>Active-site mutagenesis.</strong> Generate K21A (P-loop lysine) and D37A/D39A variants and measure loss of catalytic efficiency, testing the residue-level predictions from F006 and the mycobacterial mutagenesis study (PMID 21264299).</li>
+<li><strong>Structural determination.</strong> Solve the crystal or cryo-EM structure of <em>P. putida</em> CoaE, ideally with ATP/ADP and dephospho-CoA/CoA bound, to confirm the three-domain fold and closed catalytic conformation predicted from orthologs (PMIDs 11886213, 15526298). An AlphaFold model plus experimental validation is a fast first step.</li>
+<li><strong>Conditional essentiality test.</strong> Construct an inducible/depletion strain (e.g., CRISPRi or a regulated promoter) to directly demonstrate that <em>coaE</em> is essential in <em>P. putida</em> KT2440, complementing the indirect transposon-library inference (PMID 20158506).</li>
+<li><strong>Regulatory probing.</strong> Test whether CTP inhibits <em>P. putida</em> CoaE and whether the enzyme exhibits oligomer-dependent activity, to determine if the mycobacterial regulatory logic (PMIDs 21731728, 19876400) generalizes to <em>Pseudomonas</em>.</li>
+<li><strong>Localization confirmation.</strong> Use subcellular fractionation or a fluorescent fusion to confirm cytoplasmic localization.</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>CoaE (PP_0631, UniProt Q88Q65) of <em>Pseudomonas putida</em> KT2440 is dephospho-CoA kinase (EC 2.7.1.24), the cytoplasmic, ATP-dependent enzyme that catalyzes the fifth and final step of coenzyme A biosynthesis — phosphorylating the 3′-hydroxyl of the ribose of dephospho-CoA to yield CoA + ADP — with high specificity for dephospho-CoA. It is a small (~22 kDa) monomeric member of the P-loop NTPase / nucleotide-kinase superfamily with a three-domain fold and a Walker-A/P-loop ATP-binding motif (GGIGSGKS, catalytic Lys21). This high-confidence functional assignment, absent a direct <em>P. putida</em> experimental study, is supported by curated family annotation, the diagnostic sequence motif in the target itself, 46.7% identity to the biochemically confirmed <em>E. coli</em> enzyme, residue-level conservation of validated catalytic residues, structural homology to solved ortholog structures, and consistent KEGG pathway and genomic-context placement (module M00120). The enzyme acts in the cytosol to supply the essential universal cofactor CoA to central carbon, fatty-acid/phospholipid, and phosphopantetheine-transfer metabolism.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="coaE-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="coaE-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:11292795</li>
+<li>PMID:26443589</li>
+<li>PMID:11886213</li>
+<li>PMID:12538896</li>
+<li>PMID:15526298</li>
+<li>PMID:21264299</li>
+<li>PMID:15908386</li>
+<li>PMID:22954585</li>
+<li>PMID:20158506</li>
+<li>PMID:19876400</li>
+<li>PMID:21731728</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88Q65
+gene_symbol: coaE
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  coaE (PP_0631) encodes a soluble dephospho-CoA kinase that uses ATP to
+  phosphorylate the 3&#39;-hydroxyl of dephospho-CoA, producing coenzyme A and ADP.
+  This is the fifth and final reaction in the conserved conversion of
+  pantothenate to coenzyme A. Q88Q65 belongs to the bacterial CoaE family and
+  contains the diagnostic P-loop NTPase and dephospho-CoA kinase domains;
+  direct biochemical characterization of the KT2440 protein has not been
+  reported.
+existing_annotations:
+- term:
+    id: GO:0004140
+    label: dephospho-CoA kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Dephospho-CoA kinase is the core predicted molecular function of CoaE.
+    action: ACCEPT
+    reason: &gt;-
+      HAMAP, InterPro, Pfam, NCBIfam, and the conserved P-loop architecture all
+      support the specific CoaE-family reaction recorded by Rhea.
+    supported_by:
+    - reference_id: file:PSEPK/coaE/coaE-goa.tsv
+      supporting_text: &#34;GO:0004140\tdephospho-CoA kinase activity&#34;
+    - reference_id: file:PSEPK/coaE/coaE-uniprot.txt
+      supporting_text: &#34;RecName: Full=Dephospho-CoA kinase&#34;
+    - reference_id: file:PSEPK/coaE/coaE-uniprot.txt
+      supporting_text: &#34;DR   Pfam; PF01121; CoaE; 1.&#34;
+    - reference_id: file:PSEPK/coaE/coaE-deep-research-openscientist.md
+      supporting_text: &#34;is dephospho-CoA kinase (EC 2.7.1.24)&#34;
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: ATP binding is required for phosphotransfer but is not the core function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      ATP is the phosphate donor in the CoaE reaction, and Q88Q65 contains the
+      conserved P-loop NTPase nucleotide-binding architecture.
+    supported_by:
+    - reference_id: file:PSEPK/coaE/coaE-goa.tsv
+      supporting_text: &#34;GO:0005524\tATP binding&#34;
+    - reference_id: file:PSEPK/coaE/coaE-uniprot.txt
+      supporting_text: &#34;DR   InterPro; IPR027417; P-loop_NTPase.&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Cytoplasmic localization is consistent with this soluble CoA-biosynthetic kinase.
+    action: ACCEPT
+    reason: UniProt explicitly assigns Q88Q65 to the cytoplasm and no secretion or membrane feature is present.
+    supported_by:
+    - reference_id: file:PSEPK/coaE/coaE-goa.tsv
+      supporting_text: &#34;GO:0005737\tcytoplasm&#34;
+    - reference_id: file:PSEPK/coaE/coaE-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+- term:
+    id: GO:0015937
+    label: coenzyme A biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: CoaE catalyzes the terminal reaction of coenzyme A biosynthesis.
+    action: ACCEPT
+    reason: &gt;-
+      Dephospho-CoA phosphorylation produces mature CoA, and UniProt explicitly
+      places Q88Q65 at step 5 of 5 in the pantothenate-to-CoA pathway.
+    supported_by:
+    - reference_id: file:PSEPK/coaE/coaE-goa.tsv
+      supporting_text: &#34;GO:0015937\tcoenzyme A biosynthetic process&#34;
+    - reference_id: file:PSEPK/coaE/coaE-uniprot.txt
+      supporting_text: &#34;CoA from (R)-pantothenate: step 5/5.&#34;
+    - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md
+      supporting_text: &#34;| 5. DPCK | 2.7.1.24 | **coaE** | PP_0631 / Q88Q65&#34;
+references:
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:11292795
+  title: Identification of yacE (coaE) as the structural gene for dephosphocoenzyme
+    A kinase in Escherichia coli K-12.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified direct biochemical evidence for the bacterial CoaE
+      reaction and substrate preference; the assayed enzyme is from E. coli.
+  findings:
+  - statement: &gt;-
+      Recombinant bacterial CoaE catalyzes dephospho-CoA phosphorylation and
+      strongly prefers dephospho-CoA over related adenosine compounds.
+    supporting_text: &#34;Enzyme assay and nuclear magnetic resonance analyses of the product demonstrated that the recombinant enzyme is indeed dephospho-CoA kinase.&#34;
+- id: file:PSEPK/coaE/coaE-uniprot.txt
+  title: UniProtKB entry for coaE
+  findings:
+  - statement: &gt;-
+      UniProt records the exact terminal kinase reaction, CoA-pathway position,
+      CoaE-family membership, and cytoplasmic localization of Q88Q65.
+- id: file:PSEPK/coaE/coaE-goa.tsv
+  title: QuickGO GOA annotations for coaE
+  findings:
+  - statement: The fetched GOA table contains the four annotations reviewed for coaE.
+- id: file:PSEPK/coaE/coaE-deep-research-openscientist.md
+  title: OpenScientist gene research for coaE
+  findings:
+  - statement: &gt;-
+      The report supports the CoaE assignment through ortholog biochemistry,
+      target-sequence features, and pathway context while noting the lack of a
+      direct KT2440 assay.
+    supporting_text: &#34;No direct experimental study of the *P. putida* KT2440 protein.&#34;
+- id: file:projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md
+  title: OpenScientist pathway research for PSEPK pantothenate and CoA biosynthesis
+  findings:
+  - statement: The pathway report identifies coaE as the standalone enzyme satisfying the terminal CoA-pathway step.
+core_functions:
+- description: &gt;-
+    Dephospho-CoA kinase that transfers phosphate from ATP to
+    3&#39;-dephospho-CoA, completing coenzyme A biosynthesis.
+  molecular_function:
+    id: GO:0004140
+    label: dephospho-CoA kinase activity
+  directly_involved_in:
+  - id: GO:0015937
+    label: coenzyme A biosynthetic process
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: file:PSEPK/coaE/coaE-uniprot.txt
+    supporting_text: &#34;RecName: Full=Dephospho-CoA kinase&#34;
+  - reference_id: file:PSEPK/coaE/coaE-goa.tsv
+    supporting_text: &#34;GO:0004140\tdephospho-CoA kinase activity&#34;
+  - reference_id: file:PSEPK/coaE/coaE-deep-research-openscientist.md
+    supporting_text: &#34;the fifth and final step of the universal coenzyme A (CoA) biosynthetic pathway&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    What are the native kinetic constants, substrate selectivity, and oligomeric
+    state of KT2440 CoaE?
+suggested_experiments:
+- description: &gt;-
+    Purify Q88Q65 and measure ATP-dependent dephospho-CoA phosphorylation,
+    substrate selectivity, and oligomeric state.
+  experiment_type: biochemical enzyme assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

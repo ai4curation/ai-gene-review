@@ -1,0 +1,2246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hemL - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>hemL</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88DP0" target="_blank" class="term-link">
+                        Q88DP0
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+
+                    <span class="badge">PP_4784</span>
+
+                </div>
+            </div>
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "hemL";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88DP0" data-a="DESCRIPTION: HemL is a cytoplasmic, pyridoxal-5&#39;-phosphate-depe..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>HemL is a cytoplasmic, pyridoxal-5&#39;-phosphate-dependent glutamate-1-semialdehyde 2,1-aminomutase. It catalyzes the second reaction of the C5 glutamyl-tRNA route, rearranging the HemA product glutamate 1-semialdehyde to 5-aminolevulinate, the common precursor for the subsequent porphyrin pathway.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DP0" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The soluble HemL enzyme is predicted to function in the bacterial cytoplasm.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt explicitly assigns cytoplasmic localization and no targeting or membrane feature.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemL/hemL-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                                    GO:0030170
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxal phosphate binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DP0" data-a="GO:0030170" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PLP is the established cofactor for HemL-family aminomutases.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PLP binding is valid cofactor information, but the substrate-specific aminomutase activity is the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemL/hemL-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=pyridoxal 5&#39;-phosphate; Xref=ChEBI:CHEBI:597326;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033014" target="_blank" class="term-link">
+                                    GO:0033014
+                                </a>
+                            </span>
+                            <span class="term-label">tetrapyrrole biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DP0" data-a="GO:0033014" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HemL directly supplies 5-aminolevulinate for tetrapyrrole synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HemL completes 5-aminolevulinate formation in the C5 route, which occurs in bacteria, archaea, and plastid-bearing eukaryotes and can feed multiple tetrapyrrole products. GO:0033014 accurately captures that direct role without relying on an obsolete route-specific term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemL/hemL-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">biosynthesis; 5-aminolevulinate from L-glutamyl-tRNA(Glu): step 2/2.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7883699" target="_blank" class="term-link">
+                                        PMID:7883699
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">be used by Pseudomonas aeruginosa, Pseudomonas putida, Pseudomonas stutzeri,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042286" target="_blank" class="term-link">
+                                    GO:0042286
+                                </a>
+                            </span>
+                            <span class="term-label">glutamate-1-semialdehyde 2,1-aminomutase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DP0" data-a="GO:0042286" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This term precisely identifies the HemL reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns EC 5.4.3.8 and the HemL family, supporting reversible rearrangement of glutamate 1-semialdehyde and ALA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemL/hemL-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=Glutamate-1-semialdehyde 2,1-aminomutase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Rearranges glutamate 1-semialdehyde to 5-aminolevulinate in the second reaction of the C5 glutamyl-tRNA heme-precursor route.</h3>
+                <span class="vote-buttons" data-g="Q88DP0" data-a="FUNCTION: Rearranges glutamate 1-semialdehyde to 5-aminolevu..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042286" target="_blank" class="term-link">
+                            glutamate-1-semialdehyde 2,1-aminomutase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033014" target="_blank" class="term-link">
+                                tetrapyrrole biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/hemL/hemL-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">RecName: Full=Glutamate-1-semialdehyde 2,1-aminomutase</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/hemL/hemL-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PSEPK hemL</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HemL is a PLP-dependent aminomutase in C5-route ALA synthesis.</div>
+
+                        <div class="finding-text">"biosynthesis; 5-aminolevulinate from L-glutamyl-tRNA(Glu): step 2/2."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HemL is cytoplasmic.</div>
+
+                        <div class="finding-text">"SUBCELLULAR LOCATION: Cytoplasm"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7883699" target="_blank" class="term-link">
+                            PMID:7883699
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Regulation of the hemA gene during 5-aminolevulinic acid formation in Pseudomonas aeruginosa.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The abstract directly lists Pseudomonas putida among organisms shown to use the tRNA-dependent HemA/HemL route to ALA.</div>
+
+                        <div class="finding-text">"be used by Pseudomonas aeruginosa, Pseudomonas putida, Pseudomonas stutzeri,"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/hemL/hemL-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist research report for PSEPK hemL</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report recovers the HemL reaction and explicitly acknowledges that the target protein lacks direct P. putida enzymology.</div>
+
+                        <div class="finding-text">"No *P. putida*-specific enzymology."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does HemL abundance or PLP occupancy limit C5-route flux in KT2440?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88DP0" data-a="Q: Does HemL abundance or PLP occupancy limit C5-rout..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare growth and porphyrin intermediates after hemL depletion with and without exogenous ALA rescue.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: HemL supplies essentially all endogenous ALA in KT2440.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88DP0" data-a="EXPERIMENT: Compare growth and porphyrin intermediates after h..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hemL-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88DP0" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *hemL* (Q88DP0) — Glutamate-1-Semialdehyde 2,1-Aminomutase in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">12 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-20T17:12:11.684512</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="hemL-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="hemL-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-heml-q88dp0-glutamate-1-semialdehyde-21-aminomutase-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>hemL</em> (Q88DP0) — Glutamate-1-Semialdehyde 2,1-Aminomutase in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Gene:</strong> hemL (OrderedLocusName PP_4784) · <strong>UniProt:</strong> Q88DP0 · <strong>Organism:</strong> <em>Pseudomonas putida</em> KT2440 (PSEPK)<br />
+<strong>Enzyme:</strong> Glutamate-1-semialdehyde 2,1-aminomutase (GSA-AM; also GSA aminotransferase, GSA-AT, GSAM) · <strong>EC 5.4.3.8</strong><br />
+<strong>Family:</strong> Class-III pyridoxal-5′-phosphate (PLP)-dependent aminotransferase (Aminotrans_3; aspartate-aminotransferase superfamily)</p>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>hemL</strong> (UniProt <strong>Q88DP0</strong>; ordered locus <strong>PP_4784</strong>) of <em>Pseudomonas putida</em> strain KT2440 encodes <strong>glutamate-1-semialdehyde 2,1-aminomutase</strong> (GSA-AM, also called glutamate-1-semialdehyde aminotransferase, GSA-AT; <strong>EC 5.4.3.8</strong>). This is a <strong>pyridoxal-5′-phosphate (PLP)-dependent, class-III aminotransferase</strong> that catalyzes the <strong>second and terminal step of the C5 (glutamate/tRNA-dependent) pathway</strong> for the biosynthesis of <strong>5-aminolevulinic acid (ALA)</strong>, the universal precursor of all tetrapyrroles. The enzyme performs an unusual <strong>intramolecular transamination</strong>: it converts <strong>(S)-glutamate-1-semialdehyde (GSA)</strong> into <strong>ALA</strong> by exchanging an amino group and an oxo group within a single molecule, proceeding through a free <strong>4,5-diaminovalerate (DAVA)</strong> intermediate and — uniquely among transaminations — requiring <strong>no external nitrogen donor or acceptor</strong>.</p>
+<p>Because ALA is the committed, flux-defining precursor of heme, siroheme, and cobalamin (and, in phototrophs, chlorophyll), HemL sits at the <strong>gateway to the entire tetrapyrrole biosynthetic branch</strong>. The physiological importance is direct and non-redundant in most organisms: the two-enzyme C5 route (glutamyl-tRNA reductase = <strong>hemA</strong>, then GSA-AM = <strong>hemL</strong>) is the only means by which <em>P. putida</em> and other γ/β-proteobacteria make ALA, in contrast to the ALA-synthase (Shemin/C4) route that is restricted to α-proteobacteria and animals. An experimental survey of proteobacteria explicitly demonstrated that <em>Pseudomonas putida</em> uses the hemA/hemL C5 pathway, which independently corroborates the annotation of Q88DP0.</p>
+<p>At the molecular level, GSA-AM is a <strong>soluble, cytoplasmic α₂ homodimer</strong> adopting the <strong>aspartate-aminotransferase (class-III B6) fold</strong>. The <em>P. putida</em> protein itself carries the full catalytic apparatus expected of a functional GSA-AM: a <strong>PLP Schiff-base catalytic lysine (Lys265)</strong> embedded in the strictly conserved class-III aminotransferase motif, a bound PLP cofactor, homodimeric quaternary structure, and cytoplasmic localization. Sequence alignment shows the <em>P. putida</em> enzyme is <strong>63.4% identical</strong> to the experimentally characterized <em>Escherichia coli</em> GSA-AM, and specificity-determining residues (Arg32 orienting the substrate; Glu406 excluding α-carboxylates) are conserved. Taken together, the identity of Q88DP0 as <em>hemL</em>/GSA-AM is confidently established both by direct pathway experiments in <em>P. putida</em> and by conservation of the catalytic machinery. <strong>This gene symbol is unambiguous for this organism</strong> — the domain architecture, family membership, and organism-specific pathway data all align.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-hemlq88dp0-is-glutamate-1-semialdehyde-21-aminomutase-the-terminal-ala-producing-enzyme-of-the-c5-pathway-ec-5438">Finding 1 — HemL/Q88DP0 is glutamate-1-semialdehyde 2,1-aminomutase, the terminal ALA-producing enzyme of the C5 pathway (EC 5.4.3.8)</h3>
+<p>The primary function of the gene product is unambiguous at the biochemical level: it catalyzes the <strong>intramolecular transamination of (S)-glutamate-1-semialdehyde (GSA) to 5-aminolevulinic acid (ALA)</strong>. This is the second, terminal step of a two-enzyme route in which glutamyl-tRNA is first reduced by glutamyl-tRNA reductase (<strong>hemA</strong>) to glutamate-1-semialdehyde, which is then converted by HemL to ALA:</p>
+<div class="codehilite"><pre><span></span><code>L-glutamyl-tRNA(Glu)
+│  glutamyl-tRNA reductase (hemA)   [step 1/2]
+▼
+(S)-glutamate-1-semialdehyde (GSA)
+│  GSA-2,1-aminomutase / HemL (EC 5.4.3.8)   [step 2/2]
+▼
+5-aminolevulinic acid (ALA)  ──►  universal tetrapyrrole precursor
+                   (heme, siroheme, cobalamin, chlorophyll)
+</code></pre></div>
+
+<p>The reaction is described directly in the literature on glutamyl-tRNA reductase and ALA formation: <em>"The aldehyde is subsequently transaminated by glutamate-1-semialdehyde 2,1-aminomutase to yield 5-aminolaevulinic acid"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/12196141/">PMID: 12196141</a>). Detailed enzymic and mechanistic studies further pin down the <strong>substrate stereospecificity, product, intermediate, and kinetic mechanism</strong>: <em>"The pyridoxamine 5′-phosphate form of the enzyme converts (S)-glutamate 1-semialdehyde to 5-aminolaevulinate via 4,5-diaminovalerate through a bi-bi ping-pong mechanism"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/7842860/">PMID: 7842860</a>). ALA is the committed precursor of the whole tetrapyrrole family, so this single enzymatic step defines HemL's biological role as the <strong>gateway to tetrapyrrole biosynthesis</strong>.</p>
+<p>The classification as an <strong>aminomutase / isomerase (EC 5.4.3.8)</strong> rather than a conventional aminotransferase (EC 2.6.1.x) reflects the fact that the amino group is transferred <em>within</em> one molecule: GSA (C5) and ALA (C5N) share the same carbon skeleton, and only the positions of the amino and oxo groups on adjacent carbons are interchanged.</p>
+<h3 id="finding-2-pseudomonas-putida-experimentally-uses-the-trna-dependent-c5-hemaheml-route-directly-confirming-the-annotation">Finding 2 — <em>Pseudomonas putida</em> experimentally uses the tRNA-dependent (C5) hemA/hemL route, directly confirming the annotation</h3>
+<p>Bacteria make ALA by one of two mutually exclusive routes: the <strong>C4 (Shemin) pathway</strong>, in which ALA synthase condenses glycine and succinyl-CoA (found in α-proteobacteria and animals), or the <strong>C5 (tRNA-dependent) pathway</strong>, using hemA and hemL. A comparative experimental survey of proteobacteria established which organisms use which route, and it names <em>P. putida</em> explicitly: <em>"The tRNA-dependent pathway, involving the enzymes glutamyl-tRNA reductase (encoded by hemA) and glutamate-1-semialdehyde-2,1-aminomutase (encoded by hemL), was demonstrated to be used by Pseudomonas aeruginosa, Pseudomonas putida, Pseudomonas stutzeri, Comamonas testosteroni, Azotobacter vinelandii, and Acinetobacter calcoaceticus"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/7883699/">PMID: 7883699</a>).</p>
+<p>This is the strongest, organism-specific line of evidence in the annotation: it is not merely inference from sequence, but a demonstration that <em>P. putida</em> biochemically synthesizes ALA through hemA/hemL. It removes any ambiguity that a Pseudomonad hemL might be vestigial or that ALA might be produced by an alternative route. The metabolic-engineering literature reinforces the functional partnership of the two enzymes: in engineered <em>Corynebacterium glutamicum</em>, co-expressing HemL with HemA raised ALA titers roughly 2-fold over HemA alone (204 → 457 mg/L), confirming that HemL activity is the productive, flux-carrying step converting GSA to ALA (<a href="https://pubmed.ncbi.nlm.nih.gov/26453466/">PMID: 26453466</a>).</p>
+<h3 id="finding-3-the-catalytic-strategy-is-a-unique-intramolecular-transamination-via-a-free-dava-intermediate-needing-no-external-nitrogen-partner">Finding 3 — The catalytic strategy is a unique intramolecular transamination via a free DAVA intermediate, needing no external nitrogen partner</h3>
+<p>GSA-AM belongs to the <strong>class-III (vitamin B6/PLP) aminotransferases</strong>, but its chemistry is mechanistically distinctive. Whereas canonical transaminases shuttle an amino group between two different molecules (using a keto-acid such as 2-oxoglutarate as the nitrogen acceptor), GSA-AM performs the amino/oxo swap <strong>within a single substrate molecule</strong>. The reaction proceeds through the catalytic intermediate <strong>4,5-diaminovalerate (DAVA)</strong>: <em>"a pyridoxamine-5′-phosphate (PMP)/pyridoxal-5′-phosphate (PLP) dependent enzyme, catalyses the transamination of the substrate glutamate-1-semialdehyde (GSA) to the product 5-Aminolevulinic acid (ALA) by an unusual intramolecular exchange of amino and oxo groups within the catalytic intermediate 4,5-diaminovalerate (DAVA)"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/20946885/">PMID: 20946885</a>).</p>
+<p>The defining, unusual mechanistic feature is that <strong>no external cofactor acts as the nitrogen donor or acceptor</strong>: <em>"This transamination reaction is unique in the fact that is does not require an external cofactor to act as a nitrogen donor or acceptor in this transamination reaction"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/21930115/">PMID: 21930115</a>). The PMP form of the enzyme initiates catalysis; the diamine intermediate DAVA is retained in the active site (a mobile gating loop prevents its escape), whereupon the second half-reaction transfers the amino group to the opposite carbon, generating ALA. Transient-state kinetic analysis of the <em>Synechococcus</em> enzyme resolved chromophoric intermediates consistent with <strong>Schiff-base formation and ketimine/aldimine tautomerization</strong>, and supported a <strong>ping-pong bi-bi</strong> mechanism with rapid equilibration of isomeric aldimines and geminal diamines (<a href="https://pubmed.ncbi.nlm.nih.gov/9425053/">PMID: 9425053</a>). The mechanistic picture is therefore internally consistent across biochemical, kinetic, and structural studies.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">PMP</span><span class="o">-</span><span class="n">enzyme</span>
+<span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="o">+</span><span class="w"> </span><span class="n">GSA</span><span class="w"> </span><span class="p">(</span><span class="n">aldehyde</span><span class="w"> </span><span class="k">end</span><span class="p">)</span>
+<span class="w">    </span><span class="err">▼</span>
+<span class="w">   </span><span class="err">┌───────────────────────┐</span>
+<span class="w">   </span><span class="err">│</span><span class="w">  </span><span class="mh">4</span><span class="p">,</span><span class="mh">5</span><span class="o">-</span><span class="n">diaminovalerate</span><span class="w">  </span><span class="err">│</span><span class="w">  </span><span class="err">←</span><span class="w"> </span><span class="n">free</span><span class="w"> </span><span class="n">diamine</span><span class="w"> </span><span class="n">intermediate</span><span class="p">,</span><span class="w"> </span><span class="n">retained</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">gating</span><span class="w"> </span><span class="n">loop</span>
+<span class="w">   </span><span class="err">│</span><span class="w">        </span><span class="p">(</span><span class="n">DAVA</span><span class="p">)</span><span class="w">          </span><span class="err">│</span><span class="w">     </span><span class="n">amino</span><span class="w"> </span><span class="n">group</span><span class="w"> </span><span class="n">transferred</span><span class="w"> </span><span class="n">intramolecularly</span>
+<span class="w">   </span><span class="err">└───────────────────────┘</span>
+<span class="w">    </span><span class="err">│</span>
+<span class="w">    </span><span class="err">▼</span>
+<span class="n">ALA</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">PMP</span><span class="o">-</span><span class="n">enzyme</span><span class="w"> </span><span class="p">(</span><span class="n">regenerated</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="n">no</span><span class="w"> </span><span class="n">external</span><span class="w"> </span><span class="n">keto</span><span class="o">-</span><span class="n">acid</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">amino</span><span class="o">-</span><span class="n">acid</span><span class="w"> </span><span class="n">partner</span><span class="w"> </span><span class="n">consumed</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="finding-4-heml-is-a-soluble-cytoplasmic-2-homodimer-with-an-aspartate-aminotransferase-fold-specificity-for-gsa-is-enforced-by-active-site-residues">Finding 4 — HemL is a soluble cytoplasmic α₂ homodimer with an aspartate-aminotransferase fold; specificity for GSA is enforced by active-site residues</h3>
+<p>Crystal structures of GSA-AM from <em>Synechococcus</em> (2.4 Å) and <em>Bacillus subtilis</em> (PMP-bound, 2.3 Å) reveal an <strong>α₂-dimeric vitamin B6-dependent enzyme</strong> with the <strong>aspartate-aminotransferase fold</strong> characteristic of class-III B6 enzymes: <em>"The overall fold is that of aspartate aminotransferase and related B6 enzymes"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/9144156/">PMID: 9144156</a>). The structures display notable <strong>subunit asymmetry</strong> — one subunit carries PLP as an internal aldimine to the catalytic lysine while the partner subunit is cofactor-free — and a <strong>mobile gating loop</strong> (~residues 153–181) that closes over the active site to retain the DAVA intermediate.</p>
+<p>The structural basis of <strong>substrate specificity</strong> was defined from these structures. The enzyme must accept GSA (a semialdehyde) while excluding the closely related α-amino/α-carboxylate glutamate. A key active-site glutamate accomplishes this by electrostatic repulsion: <em>"Glu-406 is suitably positioned to repel alpha-carboxylic acids, thereby suggesting a basis for the enzyme's reaction specificity"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/9144156/">PMID: 9144156</a>). N-terminal-domain residues, notably <strong>Arg-32</strong>, orient and bind the substrate carboxylate. The importance of the active-site architecture is underscored by mutational data: a single <strong>S162T</strong> substitution in the <em>Synechococcus</em> hemL gene alters inhibitor sensitivity to the mechanism-based inactivator 4-amino-5-fluoropentanoic acid (<a href="https://pubmed.ncbi.nlm.nih.gov/10350057/">PMID: 10350057</a>), and a Lys272→Ile mutation at the catalytic lysine perturbs the aldimine chemistry (<a href="https://pubmed.ncbi.nlm.nih.gov/9425053/">PMID: 9425053</a>).</p>
+<p>Localization is <strong>soluble/cytoplasmic</strong>. The C5-pathway enzymes are soluble proteins; in plants and algae they reside in the chloroplast stroma, and in bacteria they operate in the cytoplasm: <em>"These components are soluble and in plants and algae are located in the chloroplast stroma"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/7842860/">PMID: 7842860</a>). For <em>P. putida</em>, this maps to a <strong>cytoplasmic</strong> site of action, consistent with the UniProt subcellular-location annotation of Q88DP0.</p>
+<h3 id="finding-5-sequence-level-confirmation-for-the-exact-p-putida-protein-q88dp0">Finding 5 — Sequence-level confirmation for the exact <em>P. putida</em> protein Q88DP0</h3>
+<p>The specific <em>P. putida</em> KT2440 protein carries every hallmark of a functional GSA-AM. UniProt <strong>Q88DP0</strong> (427 aa) is annotated with:</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value for Q88DP0</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Catalytic activity</td>
+<td>(S)-4-amino-5-oxopentanoate (= GSA) ⇌ 5-aminolevulinate (<strong>EC 5.4.3.8</strong>)</td>
+</tr>
+<tr>
+<td>Cofactor</td>
+<td>Pyridoxal 5′-phosphate (PLP)</td>
+</tr>
+<tr>
+<td>Pathway</td>
+<td>Protoporphyrin-IX biosynthesis; 5-aminolevulinate from L-glutamyl-tRNA(Glu), <strong>step 2/2</strong></td>
+</tr>
+<tr>
+<td>Subunit</td>
+<td>Homodimer</td>
+</tr>
+<tr>
+<td>Subcellular location</td>
+<td>Cytoplasm</td>
+</tr>
+<tr>
+<td>Catalytic residue</td>
+<td>Lys265 — N6-(pyridoxal phosphate)lysine (PLP Schiff-base attachment)</td>
+</tr>
+<tr>
+<td>Length</td>
+<td>427 aa</td>
+</tr>
+</tbody>
+</table>
+<p>A Needleman–Wunsch global alignment against the experimentally characterized <em>E. coli</em> GSA-AM (UniProt <strong>P23893</strong>) yields <strong>270/426 = 63.4% identity</strong>, and the catalytic lysine is strictly conserved within the class-III aminotransferase PLP motif. In <em>P. putida</em>, the local sequence around the catalytic residue is <code>258-PDLSTFGKIVGGGMP-272</code>, in which <strong>K265</strong> aligns to the <em>E. coli</em> catalytic lysine in the homologous <code>...LGKIIGGGMPV...</code> motif. The presence of the intact PLP-binding lysine, the conserved specificity residues, homodimeric assembly, and cytoplasmic localization together demonstrate that Q88DP0 is not a divergent pseudo-gene or a mis-annotation but a <em>bona fide</em>, catalytically competent GSA-AM. The InterPro domain signatures listed in the annotation — 4pyrrol_synth_GluAld_NH2Trfase (IPR004639), Aminotrans_3 (IPR005814), Aminotrans_3_PPA_site (IPR049704), and the PyrdxlP-dep transferase folds (IPR015424/IPR015421) — are precisely those diagnostic of GSA-AM and independently corroborate the assignment.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>The findings converge on a single, well-supported model of HemL's role in <em>P. putida</em>:</p>
+<p><strong>Pathway context.</strong> HemL is the second of two enzymes that convert the "activated glutamate" carried on tRNA^Glu into ALA. This C5 route is universal to plants, archaea, and most bacteria, and it is the pathway experimentally documented in <em>P. putida</em>. The tRNA-charged glutamate is reduced by HemA (glutamyl-tRNA reductase) to the reactive aldehyde GSA, which HemL then isomerizes to ALA.</p>
+<div class="codehilite"><pre><span></span><code><span class="w">     </span><span class="n">C5</span><span class="w"> </span><span class="p">(</span><span class="n">tRNA</span><span class="o">-</span><span class="n">dependent</span><span class="p">)</span><span class="w"> </span><span class="n">pathway</span><span class="w"> </span><span class="err">—</span><span class="w"> </span><span class="n">cytoplasm</span><span class="w"> </span><span class="kr">of</span><span class="w"> </span><span class="n">P</span><span class="p">.</span><span class="w"> </span><span class="n">putida</span>
+<span class="w">  </span><span class="err">┌───────────────────────────────────────────────────────────────────────────┐</span>
+<span class="w">  </span><span class="err">│</span><span class="w">  </span><span class="n">Glu</span><span class="w">  </span><span class="o">--</span><span class="p">(</span><span class="n">GluRS</span><span class="p">)</span><span class="o">--&gt;</span><span class="w">  </span><span class="n">Glu</span><span class="o">-</span><span class="n">tRNA</span><span class="p">(</span><span class="n">Glu</span><span class="p">)</span><span class="w">  </span><span class="o">--</span><span class="n">HemA</span><span class="o">--&gt;</span><span class="w">  </span><span class="n">GSA</span><span class="w">  </span><span class="o">--</span><span class="n">HemL</span><span class="w"> </span><span class="p">(</span><span class="n">Q88DP0</span><span class="p">)</span><span class="o">--&gt;</span><span class="w">  </span><span class="n">ALA</span><span class="w">  </span><span class="err">│</span>
+<span class="w">  </span><span class="err">└───────────────────────────────────────────────────────────────────────────┘</span>
+<span class="w">                                                     </span><span class="err">│</span>
+<span class="w">                        </span><span class="mi">2</span><span class="w"> </span><span class="n">ALA</span><span class="w"> </span><span class="o">--</span><span class="n">HemB</span><span class="o">--&gt;</span><span class="w"> </span><span class="n">porphobilinogen</span>
+<span class="w">                                                     </span><span class="err">│</span>
+<span class="w">                                                     </span><span class="err">▼</span>
+<span class="w">              </span><span class="n">uroporphyrinogen</span><span class="w"> </span><span class="n">III</span><span class="w"> </span><span class="err">──►</span><span class="w"> </span><span class="n">heme</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">siroheme</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">cobalamin</span>
+</code></pre></div>
+
+<p><strong>Catalytic logic.</strong> ALA is C5N — five carbons and one nitrogen — and is produced from GSA (also C5) with no change in carbon skeleton: only the positions of the amino and oxo groups on C1 and C2 are swapped. This is why the enzyme is classified as an <strong>aminomutase / intramolecular transaminase (isomerase, EC 5.4.3.8)</strong> rather than a conventional inter-molecular aminotransferase (EC 2.6.1.x). The elegance of the mechanism is that the PLP/PMP cofactor shuttles the amino group between the two carbons of a single retained intermediate (DAVA), which is why no external amino donor/acceptor is consumed. The gating loop and the α₂-dimer's active-site asymmetry are structural adaptations that keep the diamine intermediate captive so that transamination completes on the same molecule.</p>
+<p><strong>Specificity and localization.</strong> The enzyme's active site is tuned to bind the semialdehyde/diamine substrate while rejecting glutamate itself — Glu406 repels α-carboxylates and Arg32 orients the substrate. All of this occurs in the soluble cytoplasm, where GSA is generated by HemA and where downstream ALA is consumed by HemB (porphobilinogen synthase) and the rest of the tetrapyrrole machinery.</p>
+<p><strong>Biological significance for <em>P. putida</em>.</strong> As the committed gateway to tetrapyrroles, HemL supplies the precursor for heme-dependent respiration (cytochromes), catalase/peroxidase defense against oxidative stress, and siroheme-dependent sulfite/nitrite reduction — all central to the aerobic, metabolically versatile lifestyle of <em>P. putida</em>. Because the C5 route is the organism's sole ALA source, HemL is expected to be essential or near-essential unless ALA is supplied exogenously.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12196141/">12196141</a></td>
+<td><em>Structure and function of glutamyl-tRNA reductase in ALA formation</em></td>
+<td>States the reaction: GSA is transaminated by GSA-2,1-aminomutase to yield ALA (defines HemL's step).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/7842860/">7842860</a></td>
+<td><em>Enzymic and mechanistic studies on glutamate → 5-aminolaevulinate</em></td>
+<td>Defines (S)-GSA substrate stereospecificity, ALA product, DAVA intermediate, ping-pong bi-bi mechanism, and soluble/stromal localization.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/7883699/">7883699</a></td>
+<td><em>Regulation of hemA in P. aeruginosa</em></td>
+<td>Experimentally names <em>P. putida</em> as using the hemA/hemL C5 pathway — organism-specific confirmation.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21930115/">21930115</a></td>
+<td><em>Proposed reaction mechanism of GSA aminomutase at atomic level</em></td>
+<td>Establishes the unique feature: no external nitrogen donor/acceptor.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20946885/">20946885</a></td>
+<td><em>Crystal structure of B. subtilis GSA-AT with PMP</em></td>
+<td>Confirms PLP/PMP dependence and intramolecular amino/oxo exchange via DAVA.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9144156/">9144156</a></td>
+<td><em>Crystal structure of GSA aminomutase (α₂-dimer)</em></td>
+<td>Aspartate-aminotransferase fold, α₂-dimer, active-site asymmetry, Glu-406 specificity basis.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9425053/">9425053</a></td>
+<td><em>Transient-state kinetics of Synechococcus GSAT</em></td>
+<td>Resolves Schiff-base/ketimine intermediates; Lys272 catalytic role; ping-pong mechanism.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10350057/">10350057</a></td>
+<td><em>Synechococcus mutants resistant to enamine inhibitor</em></td>
+<td>S162T mutation in hemL alters inhibitor sensitivity — active-site importance and gene identity.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26453466/">26453466</a></td>
+<td><em>ALA production in engineered C. glutamicum via C5 pathway</em></td>
+<td>Co-expression of HemL with HemA doubles ALA titer — HemL is the productive GSA→ALA step.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/1672867/">1672867</a></td>
+<td><em>B. subtilis hemAXCDBL cluster</em></td>
+<td>Places hemL in the glutamate→uroporphyrinogen III pathway; notes GSA→ALA can occur slowly non-enzymatically.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19473249/">19473249</a></td>
+<td><em>Porphyrin intermediates from soil metagenomic genes in E. coli</em></td>
+<td>Reinforces hemL's position among the C5/porphyrin-pathway genes required for tetrapyrrole synthesis.</td>
+</tr>
+</tbody>
+</table>
+<p>Two additional plant-focused papers (<a href="https://pubmed.ncbi.nlm.nih.gov/25840087/">PMID: 25840087</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/32092859/">PMID: 32092859</a>) document GSA-AM (GSA2/HEMA/GSA1) in Arabidopsis and rice chlorophyll biosynthesis; while not from <em>P. putida</em>, they confirm the enzyme's conserved role as an ALA-producing gateway across kingdoms.</p>
+<p><strong>Note on a caveat from the literature:</strong> The <em>B. subtilis</em> study observed that deleting an internal fragment of hemL did <em>not</em> create an absolute ALA/heme growth requirement, suggesting GSA→ALA can occur slowly spontaneously or via another activity in that organism (<a href="https://pubmed.ncbi.nlm.nih.gov/1672867/">PMID: 1672867</a>). This is a possible challenge to strict essentiality, but the non-enzymatic rate is far too low to support normal growth, and in most bacteria (and demonstrably in <em>P. putida</em>'s functional pathway) HemL is the physiologically relevant catalyst.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No <em>P. putida</em>-specific enzymology.</strong> The catalytic, kinetic, and structural details (DAVA intermediate, ping-pong mechanism, α₂-dimer, Glu406/Arg32 specificity, Lys265 Schiff base) are established from orthologs (<em>Synechococcus</em>, <em>B. subtilis</em>, <em>E. coli</em>, plants) and transferred to Q88DP0 by strong sequence homology (63% identity to <em>E. coli</em>) and conserved motifs. No purified-enzyme kinetic constants (kcat, KM) have been measured for the <em>P. putida</em> protein itself.</p>
+</li>
+<li>
+<p><strong>No experimental structure of Q88DP0.</strong> All structural claims rest on homology to solved GSA-AM structures; an experimental or high-confidence predicted structure of the <em>P. putida</em> enzyme has not been analyzed here.</p>
+</li>
+<li>
+<p><strong>Essentiality not directly tested in <em>P. putida</em>.</strong> Essentiality is inferred from the C5 pathway being the organism's sole ALA route. A targeted knockout/ALA-auxotrophy experiment in KT2440 has not been reviewed, and the <em>B. subtilis</em> observation (<a href="https://pubmed.ncbi.nlm.nih.gov/1672867/">PMID: 1672867</a>) leaves a small caveat about spontaneous ALA formation.</p>
+</li>
+<li>
+<p><strong>Regulation and expression in <em>P. putida</em> not characterized here.</strong> How <em>hemL</em>/PP_4784 is transcriptionally regulated, whether it is co-transcribed with other hem genes, and how flux through ALA is controlled in <em>P. putida</em> were not investigated.</p>
+</li>
+<li>
+<p><strong>Cofactor/metal partners and channeling.</strong> While PLP dependence is certain, any accessory factors, in-vivo cofactor loading, or protein–protein interactions with HemA (potential metabolic channeling of the labile GSA intermediate) remain unexplored for this organism.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant enzymology of Q88DP0.</strong> Clone PP_4784, purify the His-tagged protein, and measure steady-state kinetics (kcat, KM for GSA) and PLP/PMP content spectroscopically. Confirm product ALA by LC-MS and detect the DAVA intermediate. This would convert homology-based inference into direct evidence for the <em>P. putida</em> enzyme.</p>
+</li>
+<li>
+<p><strong>Genetic essentiality test.</strong> Attempt a clean ΔhemL (PP_4784) deletion in KT2440; test for ALA auxotrophy (rescue by exogenous ALA). This directly establishes physiological essentiality and the strict dependence on the C5 route.</p>
+</li>
+<li>
+<p><strong>Structure determination / prediction.</strong> Solve a crystal structure (or generate and analyze a high-confidence AlphaFold model) of Q88DP0, ideally with bound PLP/PMP, to verify the α₂-dimer, catalytic Lys265 aldimine, the gating loop, and the Glu406/Arg32 specificity pocket.</p>
+</li>
+<li>
+<p><strong>Active-site mutagenesis.</strong> Test predicted specificity/catalytic residues (K265A, R32A, E406Q) for loss of activity and altered substrate discrimination, mirroring the ortholog studies (Lys272, Glu406, S162T).</p>
+</li>
+<li>
+<p><strong>HemA–HemL interaction / channeling.</strong> Probe for a physical or functional complex between HemA and HemL that could channel the chemically labile GSA intermediate, using pull-downs or coupled-assay kinetics.</p>
+</li>
+<li>
+<p><strong>Regulation.</strong> Map the <em>hemL</em> transcript (operon structure), and test expression under heme-demanding conditions (aerobic growth, oxidative stress, iron limitation) to understand how tetrapyrrole precursor supply is controlled in <em>P. putida</em>.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><em>hemL</em> (Q88DP0 / PP_4784) in <em>Pseudomonas putida</em> KT2440 encodes <strong>glutamate-1-semialdehyde 2,1-aminomutase (GSA-AM; EC 5.4.3.8)</strong>, a soluble cytoplasmic, PLP-dependent class-III aminotransferase that carries out the <strong>terminal (step 2/2) reaction of the C5 tetrapyrrole pathway</strong>: the unique intramolecular transamination of (S)-glutamate-1-semialdehyde to 5-aminolevulinic acid via a free 4,5-diaminovalerate intermediate, without any external nitrogen partner. As ALA is the universal precursor of heme, siroheme, and cobalamin, HemL is the <strong>committed gateway to tetrapyrrole biosynthesis</strong> in <em>P. putida</em>, an organism experimentally shown to depend on the hemA/hemL route. The protein functions as an <strong>α₂ homodimer</strong> with an aspartate-aminotransferase fold, and the <em>P. putida</em> sequence itself retains the catalytic PLP-lysine (Lys265) and specificity residues, making the functional annotation robust and well supported.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="hemL-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="hemL-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:12196141</li>
+<li>PMID:7842860</li>
+<li>PMID:7883699</li>
+<li>PMID:26453466</li>
+<li>PMID:20946885</li>
+<li>PMID:21930115</li>
+<li>PMID:9425053</li>
+<li>PMID:9144156</li>
+<li>PMID:10350057</li>
+<li>PMID:25840087</li>
+<li>PMID:32092859</li>
+<li>PMID:1672867</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hemL-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88DP0" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="heml-assessment-notes">hemL assessment notes</h1>
+<h2 id="identity-and-core-reaction">Identity and core reaction</h2>
+<p>Q88DP0 (PP_4784) is a HemL-family glutamate-1-semialdehyde 2,1-aminomutase<br />
+assigned EC 5.4.3.8. UniProt supports the PLP-dependent conversion of<br />
+glutamate-1-semialdehyde to 5-aminolevulinate and a cytoplasmic homodimer<br />
+[file:PSEPK/hemL/hemL-uniprot.txt "RecName: Full=Glutamate-1-semialdehyde 2,1-aminomutase"]<br />
+[file:PSEPK/hemL/hemL-uniprot.txt "SUBCELLULAR LOCATION: Cytoplasm"].</p>
+<p>The abstract of PMID:7883699 directly lists <em>Pseudomonas putida</em> among species<br />
+shown to use the tRNA-dependent HemA/HemL route to ALA<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/7883699" title="be used by Pseudomonas aeruginosa, Pseudomonas putida, Pseudomonas stutzeri,">PMID:7883699</a>.<br />
+This is species-level pathway evidence, not purified KT2440 Q88DP0 enzymology.</p>
+<h2 id="openscientist-assessment">OpenScientist assessment</h2>
+<p>The OpenScientist report correctly identifies Q88DP0/PP_4784, the HemL reaction,<br />
+and the P. putida C5 route. It explicitly notes that target-specific enzymology,<br />
+structure, essentiality, regulation, and channeling evidence were not found.<br />
+Nevertheless, it presents an unsaved 63.4% alignment, exact target-residue<br />
+mapping, and ortholog-derived structure and essentiality conclusions as if they<br />
+were established for KT2440. Those details are not reproducible from the report<br />
+artifacts and were not used as target evidence.</p>
+<h2 id="curation-decisions">Curation decisions</h2>
+<p>GO:0042286 captures the core reaction and GO:0033014 captures direct<br />
+tetrapyrrole precursor synthesis. PLP binding remains valid non-core cofactor<br />
+information, and cytoplasm is retained from the UniProt assignment. No<br />
+target-specific essentiality, HemA-HemL complex, or active-site-residue claim<br />
+was added.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88DP0
+gene_symbol: hemL
+product_type: PROTEIN
+aliases:
+  - PP_4784
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  HemL is a cytoplasmic, pyridoxal-5&#39;-phosphate-dependent glutamate-1-semialdehyde
+  2,1-aminomutase. It catalyzes the second reaction of the C5 glutamyl-tRNA
+  route, rearranging the HemA product glutamate 1-semialdehyde to
+  5-aminolevulinate, the common precursor for the subsequent porphyrin pathway.
+existing_annotations:
+  - term:
+      id: GO:0005737
+      label: cytoplasm
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: located_in
+    review:
+      summary: The soluble HemL enzyme is predicted to function in the bacterial cytoplasm.
+      action: ACCEPT
+      reason: UniProt explicitly assigns cytoplasmic localization and no targeting or membrane feature.
+      supported_by:
+        - reference_id: file:PSEPK/hemL/hemL-uniprot.txt
+          supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+  - term:
+      id: GO:0030170
+      label: pyridoxal phosphate binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: PLP is the established cofactor for HemL-family aminomutases.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        PLP binding is valid cofactor information, but the substrate-specific
+        aminomutase activity is the core molecular function.
+      supported_by:
+        - reference_id: file:PSEPK/hemL/hemL-uniprot.txt
+          supporting_text: &#34;Name=pyridoxal 5&#39;-phosphate; Xref=ChEBI:CHEBI:597326;&#34;
+  - term:
+      id: GO:0033014
+      label: tetrapyrrole biosynthetic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: HemL directly supplies 5-aminolevulinate for tetrapyrrole synthesis.
+      action: ACCEPT
+      reason: &gt;-
+        HemL completes 5-aminolevulinate formation in the C5 route, which occurs
+        in bacteria, archaea, and plastid-bearing eukaryotes and can feed
+        multiple tetrapyrrole products. GO:0033014 accurately captures that
+        direct role without relying on an obsolete route-specific term.
+      supported_by:
+        - reference_id: file:PSEPK/hemL/hemL-uniprot.txt
+          supporting_text: &#34;biosynthesis; 5-aminolevulinate from L-glutamyl-tRNA(Glu): step 2/2.&#34;
+        - reference_id: PMID:7883699
+          supporting_text: be used by Pseudomonas aeruginosa, Pseudomonas putida, Pseudomonas stutzeri,
+  - term:
+      id: GO:0042286
+      label: glutamate-1-semialdehyde 2,1-aminomutase activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: enables
+    review:
+      summary: This term precisely identifies the HemL reaction.
+      action: ACCEPT
+      reason: &gt;-
+        UniProt assigns EC 5.4.3.8 and the HemL family, supporting reversible
+        rearrangement of glutamate 1-semialdehyde and ALA.
+      supported_by:
+        - reference_id: file:PSEPK/hemL/hemL-uniprot.txt
+          supporting_text: &#34;RecName: Full=Glutamate-1-semialdehyde 2,1-aminomutase&#34;
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings: []
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings: []
+  - id: file:PSEPK/hemL/hemL-uniprot.txt
+    title: UniProtKB entry for PSEPK hemL
+    findings:
+      - statement: HemL is a PLP-dependent aminomutase in C5-route ALA synthesis.
+        supporting_text: &#34;biosynthesis; 5-aminolevulinate from L-glutamyl-tRNA(Glu): step 2/2.&#34;
+      - statement: HemL is cytoplasmic.
+        supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+  - id: PMID:7883699
+    title: Regulation of the hemA gene during 5-aminolevulinic acid formation in Pseudomonas aeruginosa.
+    full_text_unavailable: true
+    findings:
+      - statement: &gt;-
+          The abstract directly lists Pseudomonas putida among organisms shown
+          to use the tRNA-dependent HemA/HemL route to ALA.
+        supporting_text: be used by Pseudomonas aeruginosa, Pseudomonas putida, Pseudomonas stutzeri,
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PubMed-cached abstract-only primary research supports the route at the
+        P. putida species level, not direct biochemistry of KT2440 Q88DP0.
+  - id: file:PSEPK/hemL/hemL-deep-research-openscientist.md
+    title: OpenScientist research report for PSEPK hemL
+    findings:
+      - statement: &gt;-
+          The report recovers the HemL reaction and explicitly acknowledges that
+          the target protein lacks direct P. putida enzymology.
+        supporting_text: &#34;No *P. putida*-specific enzymology.&#34;
+    reference_review:
+      relevance: HIGH
+      correctness: MISCITED
+      review_notes: &gt;-
+        The report correctly identifies Q88DP0 and the organism-level C5 route.
+        It also supplies an unsaved 63.4% pairwise alignment and exact target
+        residue mapping, transfers oligomeric and structural details from other
+        HemL proteins, and infers KT2440 essentiality without a target-organism
+        experiment. Those claims were not promoted; the curated review relies on
+        UniProt for the reaction, PLP, homodimer, and cytoplasm assignments and on
+        PMID:7883699 only for species-level route use.
+core_functions:
+  - description: &gt;-
+      Rearranges glutamate 1-semialdehyde to 5-aminolevulinate in the second
+      reaction of the C5 glutamyl-tRNA heme-precursor route.
+    molecular_function:
+      id: GO:0042286
+      label: glutamate-1-semialdehyde 2,1-aminomutase activity
+    directly_involved_in:
+      - id: GO:0033014
+        label: tetrapyrrole biosynthetic process
+    locations:
+      - id: GO:0005737
+        label: cytoplasm
+    supported_by:
+      - reference_id: file:PSEPK/hemL/hemL-uniprot.txt
+        supporting_text: &#34;RecName: Full=Glutamate-1-semialdehyde 2,1-aminomutase&#34;
+suggested_questions:
+  - question: Does HemL abundance or PLP occupancy limit C5-route flux in KT2440?
+suggested_experiments:
+  - hypothesis: HemL supplies essentially all endogenous ALA in KT2440.
+    description: &gt;-
+      Compare growth and porphyrin intermediates after hemL depletion with and
+      without exogenous ALA rescue.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

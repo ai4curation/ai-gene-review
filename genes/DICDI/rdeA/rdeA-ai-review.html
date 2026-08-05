@@ -1,0 +1,3334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rdeA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>rdeA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q54RR8" target="_blank" class="term-link">
+                        Q54RR8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Dictyostelium discoideum</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "rdeA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q54RR8" data-a="DESCRIPTION: RdeA is the histidine-phosphotransfer (HPt / H2-mo..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>RdeA is the histidine-phosphotransfer (HPt / H2-module) intermediate of the two-component phosphorelay that controls the rate of Dictyostelium discoideum development. It is a small (~28 kDa), highly charged, hydrophilic, non-compartmentalised cytosolic protein that carries a conserved phosphoaccepting histidine at position 65. In the relay, sensor histidine kinases (such as DhkA, the SDF-2 receptor, and DhkC) transfer a phosphoryl group to His-65 of RdeA, which in turn exchanges phosphate with the response-regulator receiver aspartate (Asp-212) of the cAMP phosphodiesterase RegA; the transfer is bidirectional. Phospho-RegA is the active phosphodiesterase, so RdeA-mediated phosphotransfer tunes RegA activity, intracellular cAMP levels and hence PKA activity. Loss of RdeA (or replacement of His-65) lowers RegA activity and causes precocious, rapid development (aggregation and terminal spore/stalk differentiation within ~14 h instead of the normal ~24 h). RdeA is functionally interchangeable with the H2-module protein Ypd1 of budding yeast.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000160" target="_blank" class="term-link">
+                                    GO:0000160
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorelay signal transduction system</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54RR8" data-a="GO:0000160" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RdeA is a core component of a multistep His-Asp phosphorelay; the phylogenetic inference is strongly corroborated by direct biochemical and genetic evidence in Dictyostelium.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> RdeA is the HPt intermediate of the DhkA/DhkC -&gt; RdeA -&gt; RegA phosphorelay; this is its defining process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9582274" target="_blank" class="term-link">
+                                        PMID:9582274
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">part of a multistep phosphorelay system that modulates the rate of development</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q54RR8" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nuclear localization is a phylogenetic over-propagation from HPt family members in other lineages. Direct evidence shows Dictyostelium RdeA is not compartmentalised (cytosolic), with no support for a nuclear pool.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> RdeA is directly reported as not compartmentalised and cytosolic; the nuclear IBA is a compartment over-propagation from HPt orthologs.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">COMPARTMENT OR COMPLEX MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN002000688</span>
+
+                                    &middot; PANTHER HPt / H2-module phosphotransfer protein node
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">The node&#39;s plant/fungal HPt members (Arabidopsis AHP, yeast Ypd1) can be nuclear, but Dictyostelium RdeA is directly shown to be non-compartmentalised, so the nuclear localization does not transfer.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9582274" target="_blank" class="term-link">
+                                        PMID:9582274
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">RdeA is not compartmentalized</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54RR8" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization is consistent with direct evidence that RdeA is a soluble, non-compartmentalised protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Matches the direct cytosol localization; RdeA acts as a soluble phosphotransfer intermediate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9582274" target="_blank" class="term-link">
+                                        PMID:9582274
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">RdeA is not compartmentalized</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009927" target="_blank" class="term-link">
+                                    GO:0009927
+                                </a>
+                            </span>
+                            <span class="term-label">histidine phosphotransfer kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54RR8" data-a="GO:0009927" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Histidine phosphotransfer activity is the core molecular function of RdeA, strongly corroborated by direct biochemistry.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> RdeA transfers phosphate via His-65 between sensor kinases and RegA, the defining HPt-protein activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10488068" target="_blank" class="term-link">
+                                        PMID:10488068
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">phospho-transfer between the two proteins in vitro</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043424" target="_blank" class="term-link">
+                                    GO:0043424
+                                </a>
+                            </span>
+                            <span class="term-label">protein histidine kinase binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54RR8" data-a="GO:0043424" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> As the HPt intermediate, RdeA physically communicates with the histidine-kinase/phosphodiesterase partners of the relay to shuttle phosphate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Binding to its two-component partners is intrinsic to the phosphotransfer mechanism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10488068" target="_blank" class="term-link">
+                                        PMID:10488068
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">phospho-transfer between the two proteins in vitro</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000160" target="_blank" class="term-link">
+                                    GO:0000160
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorelay signal transduction system</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54RR8" data-a="GO:0000160" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO annotation from the HPt domain, redundant with the experimentally supported phosphorelay annotations. Correct and core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Domain-based inference agrees with the direct evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10488068" target="_blank" class="term-link">
+                                        PMID:10488068
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a phospho-transfer protein that supplies phosphates to RegA</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54RR8" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt subcellular-location mapping to cytoplasm, consistent with the direct cytosol evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct localization for this soluble phosphotransfer protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9582274" target="_blank" class="term-link">
+                                        PMID:9582274
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">RdeA is not compartmentalized</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009927" target="_blank" class="term-link">
+                                    GO:0009927
+                                </a>
+                            </span>
+                            <span class="term-label">histidine phosphotransfer kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54RR8" data-a="GO:0009927" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO annotation from the HPt/H2 module signature, redundant with the IDA evidence. Core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Domain-based inference agrees with the direct biochemical evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9582274" target="_blank" class="term-link">
+                                        PMID:9582274
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">members of the H2 module family of phosphotransferases that participate in multistep phosphoryl relays</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043424" target="_blank" class="term-link">
+                                    GO:0043424
+                                </a>
+                            </span>
+                            <span class="term-label">protein histidine kinase binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54RR8" data-a="GO:0043424" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Domain-based inference of histidine-kinase binding, consistent with RdeA&#39;s role as the relay intermediate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Intrinsic to the phosphotransfer mechanism with its two-component partners.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10488068" target="_blank" class="term-link">
+                                        PMID:10488068
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">phospho-transfer between the two proteins in vitro</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9582274" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9582274
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Evidence that the RdeA protein is a component of a multistep...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54RR8" data-a="GO:0005829" data-r="PMID:9582274" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence (c-Myc/GFP tagging) shows RdeA is not compartmentalised, i.e. a soluble cytosolic protein. This is the core location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly demonstrated cytosolic distribution, where the soluble phosphorelay operates.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9582274" target="_blank" class="term-link">
+                                        PMID:9582274
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">RdeA is not compartmentalized</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009927" target="_blank" class="term-link">
+                                    GO:0009927
+                                </a>
+                            </span>
+                            <span class="term-label">histidine phosphotransfer kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10488068" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10488068
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The RdeA-RegA system, a eukaryotic phospho-relay controlling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54RR8" data-a="GO:0009927" data-r="PMID:10488068" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct biochemical demonstration of bidirectional phosphotransfer between RdeA (His-65) and RegA (Asp-212). Core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> In-vitro phosphotransfer dependent on His-65 establishes the HPt activity directly.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10488068" target="_blank" class="term-link">
+                                        PMID:10488068
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">and aspartate 212 of RegA, and occurs in both directions</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030435" target="_blank" class="term-link">
+                                    GO:0030435
+                                </a>
+                            </span>
+                            <span class="term-label">sporulation resulting in formation of a cellular spore</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9582274" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9582274
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Evidence that the RdeA protein is a component of a multistep...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q54RR8" data-a="GO:0030435" data-r="PMID:9582274" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RdeA influences the timing of terminal spore differentiation via the RegA/PKA relay; a developmental output downstream of the core phosphotransfer function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Genuine but downstream developmental role, secondary to the molecular phosphotransfer activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9582274" target="_blank" class="term-link">
+                                        PMID:9582274
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">aggregated rapidly and formed spores and stalk cells within 14 h of development instead of the normal 24 h</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030587" target="_blank" class="term-link">
+                                    GO:0030587
+                                </a>
+                            </span>
+                            <span class="term-label">sorocarp development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9582274" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9582274
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Evidence that the RdeA protein is a component of a multistep...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q54RR8" data-a="GO:0030587" data-r="PMID:9582274" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> rdeA loss accelerates the whole developmental program (rapid development). A pleiotropic developmental role downstream of the relay.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Broad developmental-timing phenotype, secondary to the core phosphotransfer function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9582274" target="_blank" class="term-link">
+                                        PMID:9582274
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">aggregated rapidly and formed spores and stalk cells within 14 h of development instead of the normal 24 h</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031288" target="_blank" class="term-link">
+                                    GO:0031288
+                                </a>
+                            </span>
+                            <span class="term-label">sorocarp morphogenesis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/6298035" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:6298035
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A new class of rapidly developing mutants in Dictyostelium d...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q54RR8" data-a="GO:0031288" data-r="PMID:6298035" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The classic rapid-developing (rde) mutants alter fruiting-body morphogenesis timing; a developmental output of the RdeA/RegA relay.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Developmental morphogenesis phenotype, downstream of the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/6298035" target="_blank" class="term-link">
+                                        PMID:6298035
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">rapidly developing mutants</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061128" target="_blank" class="term-link">
+                                    GO:0061128
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of chemotaxis to cAMP by DIF-2</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26919666" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26919666
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Differentiation-inducing factor 2 modulates chemotaxis via t...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q54RR8" data-a="GO:0061128" data-r="PMID:26919666" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RdeA participates in a DIF-2/DhkC-dependent modulation of cAMP chemotaxis, a specific downstream signaling role of the phosphorelay.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A specific, context-dependent downstream role via the DhkC branch of the relay; not the core phosphotransfer function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26919666" target="_blank" class="term-link">
+                                        PMID:26919666
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">histidine kinase DhkC</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000160" target="_blank" class="term-link">
+                                    GO:0000160
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorelay signal transduction system</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9582274" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9582274
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Evidence that the RdeA protein is a component of a multistep...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54RR8" data-a="GO:0000160" data-r="PMID:9582274" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Genetic evidence that RdeA acts in a multistep phosphorelay controlling developmental rate. Core process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The rdeA mutant phenotype and His-65 requirement place RdeA in the phosphorelay.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9582274" target="_blank" class="term-link">
+                                        PMID:9582274
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">part of a multistep phosphorelay system that modulates the rate of development</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000160" target="_blank" class="term-link">
+                                    GO:0000160
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorelay signal transduction system</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10488068" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10488068
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The RdeA-RegA system, a eukaryotic phospho-relay controlling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54RR8" data-a="GO:0000160" data-r="PMID:10488068" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct biochemical evidence of the RdeA-RegA phosphorelay. Core process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> In-vitro reconstitution of RdeA-RegA phosphotransfer establishes the relay directly.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10488068" target="_blank" class="term-link">
+                                        PMID:10488068
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">phospho-transfer between the two proteins in vitro</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030587" target="_blank" class="term-link">
+                                    GO:0030587
+                                </a>
+                            </span>
+                            <span class="term-label">sorocarp development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17659086" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17659086
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    High-throughput analysis of spatio-temporal dynamics in Dict...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q54RR8" data-a="GO:0030587" data-r="PMID:17659086" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput phenotyping places rdeA among genes affecting developmental progression; consistent with its rapid-development phenotype.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Broad developmental-timing association, downstream of the core phosphotransfer function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9582274" target="_blank" class="term-link">
+                                        PMID:9582274
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">part of a multistep phosphorelay system that modulates the rate of development</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>RdeA is the histidine-phosphotransfer (HPt / H2-module) intermediate of the Dictyostelium two-component phosphorelay, using its His-65 to shuttle phosphate bidirectionally between sensor histidine kinases (DhkA, DhkC) and the response-regulator cAMP phosphodiesterase RegA (Asp-212), thereby setting RegA activity, intracellular cAMP and the rate of development.</h3>
+                <span class="vote-buttons" data-g="Q54RR8" data-a="FUNCTION: RdeA is the histidine-phosphotransfer (HPt / H2-mo..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009927" target="_blank" class="term-link">
+                            histidine phosphotransfer kinase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000160" target="_blank" class="term-link">
+                                phosphorelay signal transduction system
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10488068" target="_blank" class="term-link">
+                                PMID:10488068
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">and aspartate 212 of RegA, and occurs in both directions</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9582274" target="_blank" class="term-link">
+                                PMID:9582274
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">RdeA displays homology around a histidine residue at amino acid 65 with members of the H2 module family of phosphotransferases that participate in multistep phosphoryl relays</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10488068" target="_blank" class="term-link">
+                            PMID:10488068
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The RdeA-RegA system, a eukaryotic phospho-relay controlling cAMP breakdown.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">RdeA is a phosphotransfer protein that supplies phosphate to RegA, the response-regulator cAMP phosphodiesterase.</div>
+
+                        <div class="finding-text">"a phospho-transfer protein that supplies phosphates to RegA"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Phosphotransfer is bidirectional and depends on His-65 of RdeA and Asp-212 of RegA.</div>
+
+                        <div class="finding-text">"and aspartate 212 of RegA, and occurs in both directions"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17659086" target="_blank" class="term-link">
+                            PMID:17659086
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">High-throughput analysis of spatio-temporal dynamics in Dictyostelium.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26919666" target="_blank" class="term-link">
+                            PMID:26919666
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Differentiation-inducing factor 2 modulates chemotaxis via the histidine kinase DhkC-dependent pathway in Dictyostelium discoideum.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">RdeA acts in a DIF-2/DhkC-dependent pathway modulating cAMP chemotaxis.</div>
+
+                        <div class="finding-text">"histidine kinase DhkC"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/6298035" target="_blank" class="term-link">
+                            PMID:6298035
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A new class of rapidly developing mutants in Dictyostelium discoideum: implications for cyclic AMP metabolism and cell differentiation.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The rapidly-developing (rde) mutant class alters cAMP metabolism and the timing of differentiation.</div>
+
+                        <div class="finding-text">"rapidly developing mutants"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9582274" target="_blank" class="term-link">
+                            PMID:9582274
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Evidence that the RdeA protein is a component of a multistep phosphorelay modulating rate of development in Dictyostelium.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">rdeA-null cells develop precociously, forming spores and stalk cells in ~14 h instead of ~24 h.</div>
+
+                        <div class="finding-text">"aggregated rapidly and formed spores and stalk cells within 14 h of development instead of the normal 24 h"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">RdeA is a non-compartmentalised (cytosolic) ~28 kDa protein with a phosphoaccepting histidine at position 65, homologous to H2-module phosphotransferases.</div>
+
+                        <div class="finding-text">"RdeA displays homology around a histidine residue at amino acid 65 with members of the H2 module family of phosphotransferases that participate in multistep phosphoryl relays"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">RdeA is functionally interchangeable with the yeast H2-module protein Ypd1.</div>
+
+                        <div class="finding-text">"complemented by transformation with the Ypd1 gene of Saccharomyces cerevisiae, itself an H2 module protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q54RR8
+gene_symbol: rdeA
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:44689
+  label: Dictyostelium discoideum
+description: RdeA is the histidine-phosphotransfer (HPt / H2-module) intermediate
+  of the two-component phosphorelay that controls the rate of Dictyostelium
+  discoideum development. It is a small (~28 kDa), highly charged, hydrophilic,
+  non-compartmentalised cytosolic protein that carries a conserved
+  phosphoaccepting histidine at position 65. In the relay, sensor histidine
+  kinases (such as DhkA, the SDF-2 receptor, and DhkC) transfer a phosphoryl group
+  to His-65 of RdeA, which in turn exchanges phosphate with the response-regulator
+  receiver aspartate (Asp-212) of the cAMP phosphodiesterase RegA; the transfer is
+  bidirectional. Phospho-RegA is the active phosphodiesterase, so RdeA-mediated
+  phosphotransfer tunes RegA activity, intracellular cAMP levels and hence PKA
+  activity. Loss of RdeA (or replacement of His-65) lowers RegA activity and
+  causes precocious, rapid development (aggregation and terminal spore/stalk
+  differentiation within ~14 h instead of the normal ~24 h). RdeA is functionally
+  interchangeable with the H2-module protein Ypd1 of budding yeast.
+existing_annotations:
+- term:
+    id: GO:0000160
+    label: phosphorelay signal transduction system
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: RdeA is a core component of a multistep His-Asp phosphorelay; the
+      phylogenetic inference is strongly corroborated by direct biochemical and
+      genetic evidence in Dictyostelium.
+    action: ACCEPT
+    reason: RdeA is the HPt intermediate of the DhkA/DhkC -&gt; RdeA -&gt; RegA
+      phosphorelay; this is its defining process.
+    supported_by:
+    - reference_id: PMID:9582274
+      supporting_text: part of a multistep phosphorelay system that modulates the
+        rate of development
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Nuclear localization is a phylogenetic over-propagation from HPt
+      family members in other lineages. Direct evidence shows Dictyostelium RdeA
+      is not compartmentalised (cytosolic), with no support for a nuclear pool.
+    action: REMOVE
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - COMPARTMENT_OR_COMPLEX_MISMATCH
+      source_entities:
+      - source_id: PANTHER:PTN002000688
+        source_label: PANTHER HPt / H2-module phosphotransfer protein node
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: The node&#39;s plant/fungal HPt members (Arabidopsis AHP, yeast Ypd1)
+          can be nuclear, but Dictyostelium RdeA is directly shown to be
+          non-compartmentalised, so the nuclear localization does not transfer.
+    reason: RdeA is directly reported as not compartmentalised and cytosolic; the
+      nuclear IBA is a compartment over-propagation from HPt orthologs.
+    supported_by:
+    - reference_id: PMID:9582274
+      supporting_text: RdeA is not compartmentalized
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Cytoplasmic localization is consistent with direct evidence that
+      RdeA is a soluble, non-compartmentalised protein.
+    action: ACCEPT
+    reason: Matches the direct cytosol localization; RdeA acts as a soluble
+      phosphotransfer intermediate.
+    supported_by:
+    - reference_id: PMID:9582274
+      supporting_text: RdeA is not compartmentalized
+- term:
+    id: GO:0009927
+    label: histidine phosphotransfer kinase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: Histidine phosphotransfer activity is the core molecular function of
+      RdeA, strongly corroborated by direct biochemistry.
+    action: ACCEPT
+    reason: RdeA transfers phosphate via His-65 between sensor kinases and RegA,
+      the defining HPt-protein activity.
+    supported_by:
+    - reference_id: PMID:10488068
+      supporting_text: phospho-transfer between the two proteins in vitro
+- term:
+    id: GO:0043424
+    label: protein histidine kinase binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: As the HPt intermediate, RdeA physically communicates with the
+      histidine-kinase/phosphodiesterase partners of the relay to shuttle
+      phosphate.
+    action: ACCEPT
+    reason: Binding to its two-component partners is intrinsic to the
+      phosphotransfer mechanism.
+    supported_by:
+    - reference_id: PMID:10488068
+      supporting_text: phospho-transfer between the two proteins in vitro
+- term:
+    id: GO:0000160
+    label: phosphorelay signal transduction system
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: InterPro2GO annotation from the HPt domain, redundant with the
+      experimentally supported phosphorelay annotations. Correct and core.
+    action: ACCEPT
+    reason: Domain-based inference agrees with the direct evidence.
+    supported_by:
+    - reference_id: PMID:10488068
+      supporting_text: a phospho-transfer protein that supplies phosphates to RegA
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: UniProt subcellular-location mapping to cytoplasm, consistent with
+      the direct cytosol evidence.
+    action: ACCEPT
+    reason: Correct localization for this soluble phosphotransfer protein.
+    supported_by:
+    - reference_id: PMID:9582274
+      supporting_text: RdeA is not compartmentalized
+- term:
+    id: GO:0009927
+    label: histidine phosphotransfer kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: InterPro2GO annotation from the HPt/H2 module signature, redundant
+      with the IDA evidence. Core molecular function.
+    action: ACCEPT
+    reason: Domain-based inference agrees with the direct biochemical evidence.
+    supported_by:
+    - reference_id: PMID:9582274
+      supporting_text: members of the H2 module family of phosphotransferases that
+        participate in multistep phosphoryl relays
+- term:
+    id: GO:0043424
+    label: protein histidine kinase binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Domain-based inference of histidine-kinase binding, consistent with
+      RdeA&#39;s role as the relay intermediate.
+    action: ACCEPT
+    reason: Intrinsic to the phosphotransfer mechanism with its two-component
+      partners.
+    supported_by:
+    - reference_id: PMID:10488068
+      supporting_text: phospho-transfer between the two proteins in vitro
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: PMID:9582274
+  qualifier: is_active_in
+  review:
+    summary: Direct evidence (c-Myc/GFP tagging) shows RdeA is not
+      compartmentalised, i.e. a soluble cytosolic protein. This is the core
+      location.
+    action: ACCEPT
+    reason: Directly demonstrated cytosolic distribution, where the soluble
+      phosphorelay operates.
+    supported_by:
+    - reference_id: PMID:9582274
+      supporting_text: RdeA is not compartmentalized
+- term:
+    id: GO:0009927
+    label: histidine phosphotransfer kinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:10488068
+  qualifier: enables
+  review:
+    summary: Direct biochemical demonstration of bidirectional phosphotransfer
+      between RdeA (His-65) and RegA (Asp-212). Core molecular function.
+    action: ACCEPT
+    reason: In-vitro phosphotransfer dependent on His-65 establishes the HPt
+      activity directly.
+    supported_by:
+    - reference_id: PMID:10488068
+      supporting_text: and aspartate 212 of RegA, and occurs in both directions
+- term:
+    id: GO:0030435
+    label: sporulation resulting in formation of a cellular spore
+  evidence_type: IGI
+  original_reference_id: PMID:9582274
+  qualifier: involved_in
+  review:
+    summary: RdeA influences the timing of terminal spore differentiation via the
+      RegA/PKA relay; a developmental output downstream of the core phosphotransfer
+      function.
+    action: KEEP_AS_NON_CORE
+    reason: Genuine but downstream developmental role, secondary to the molecular
+      phosphotransfer activity.
+    supported_by:
+    - reference_id: PMID:9582274
+      supporting_text: aggregated rapidly and formed spores and stalk cells within
+        14 h of development instead of the normal 24 h
+- term:
+    id: GO:0030587
+    label: sorocarp development
+  evidence_type: IMP
+  original_reference_id: PMID:9582274
+  qualifier: involved_in
+  review:
+    summary: rdeA loss accelerates the whole developmental program (rapid
+      development). A pleiotropic developmental role downstream of the relay.
+    action: KEEP_AS_NON_CORE
+    reason: Broad developmental-timing phenotype, secondary to the core
+      phosphotransfer function.
+    supported_by:
+    - reference_id: PMID:9582274
+      supporting_text: aggregated rapidly and formed spores and stalk cells within
+        14 h of development instead of the normal 24 h
+- term:
+    id: GO:0031288
+    label: sorocarp morphogenesis
+  evidence_type: IMP
+  original_reference_id: PMID:6298035
+  qualifier: involved_in
+  review:
+    summary: The classic rapid-developing (rde) mutants alter fruiting-body
+      morphogenesis timing; a developmental output of the RdeA/RegA relay.
+    action: KEEP_AS_NON_CORE
+    reason: Developmental morphogenesis phenotype, downstream of the core
+      molecular function.
+    supported_by:
+    - reference_id: PMID:6298035
+      supporting_text: rapidly developing mutants
+- term:
+    id: GO:0061128
+    label: positive regulation of chemotaxis to cAMP by DIF-2
+  evidence_type: IMP
+  original_reference_id: PMID:26919666
+  qualifier: involved_in
+  review:
+    summary: RdeA participates in a DIF-2/DhkC-dependent modulation of cAMP
+      chemotaxis, a specific downstream signaling role of the phosphorelay.
+    action: KEEP_AS_NON_CORE
+    reason: A specific, context-dependent downstream role via the DhkC branch of
+      the relay; not the core phosphotransfer function.
+    supported_by:
+    - reference_id: PMID:26919666
+      supporting_text: histidine kinase DhkC
+- term:
+    id: GO:0000160
+    label: phosphorelay signal transduction system
+  evidence_type: IMP
+  original_reference_id: PMID:9582274
+  qualifier: involved_in
+  review:
+    summary: Genetic evidence that RdeA acts in a multistep phosphorelay
+      controlling developmental rate. Core process.
+    action: ACCEPT
+    reason: The rdeA mutant phenotype and His-65 requirement place RdeA in the
+      phosphorelay.
+    supported_by:
+    - reference_id: PMID:9582274
+      supporting_text: part of a multistep phosphorelay system that modulates the
+        rate of development
+- term:
+    id: GO:0000160
+    label: phosphorelay signal transduction system
+  evidence_type: IDA
+  original_reference_id: PMID:10488068
+  qualifier: involved_in
+  review:
+    summary: Direct biochemical evidence of the RdeA-RegA phosphorelay. Core
+      process.
+    action: ACCEPT
+    reason: In-vitro reconstitution of RdeA-RegA phosphotransfer establishes the
+      relay directly.
+    supported_by:
+    - reference_id: PMID:10488068
+      supporting_text: phospho-transfer between the two proteins in vitro
+- term:
+    id: GO:0030587
+    label: sorocarp development
+  evidence_type: HMP
+  original_reference_id: PMID:17659086
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: High-throughput phenotyping places rdeA among genes affecting
+      developmental progression; consistent with its rapid-development phenotype.
+    action: KEEP_AS_NON_CORE
+    reason: Broad developmental-timing association, downstream of the core
+      phosphotransfer function.
+    supported_by:
+    - reference_id: PMID:9582274
+      supporting_text: part of a multistep phosphorelay system that modulates the
+        rate of development
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: PMID:10488068
+  title: The RdeA-RegA system, a eukaryotic phospho-relay controlling cAMP breakdown.
+  findings:
+  - statement: RdeA is a phosphotransfer protein that supplies phosphate to RegA,
+      the response-regulator cAMP phosphodiesterase.
+    supporting_text: a phospho-transfer protein that supplies phosphates to RegA
+  - statement: Phosphotransfer is bidirectional and depends on His-65 of RdeA and
+      Asp-212 of RegA.
+    supporting_text: and aspartate 212 of RegA, and occurs in both directions
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Abstract-only in cache; the abstract directly establishes the
+      RdeA-RegA phosphotransfer, its His-65/Asp-212 chemistry and bidirectionality,
+      and the control of cAMP breakdown. Anchors the core HPt molecular function.
+- id: PMID:17659086
+  title: High-throughput analysis of spatio-temporal dynamics in Dictyostelium.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: High-throughput developmental phenotyping; supports a
+      developmental-timing association only (HMP), not the molecular function.
+- id: PMID:26919666
+  title: Differentiation-inducing factor 2 modulates chemotaxis via the histidine
+    kinase DhkC-dependent pathway in Dictyostelium discoideum.
+  findings:
+  - statement: RdeA acts in a DIF-2/DhkC-dependent pathway modulating cAMP
+      chemotaxis.
+    supporting_text: histidine kinase DhkC
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Places RdeA downstream of the DhkC histidine kinase in a
+      DIF-2-modulated chemotaxis context; a specific non-core role.
+- id: PMID:6298035
+  title: &#39;A new class of rapidly developing mutants in Dictyostelium discoideum: implications
+    for cyclic AMP metabolism and cell differentiation.&#39;
+  findings:
+  - statement: The rapidly-developing (rde) mutant class alters cAMP metabolism
+      and the timing of differentiation.
+    supporting_text: rapidly developing mutants
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Classic characterization of the rapid-development mutant class
+      to which rdeA belongs; supports the developmental-timing phenotype.
+- id: PMID:9582274
+  title: Evidence that the RdeA protein is a component of a multistep phosphorelay
+    modulating rate of development in Dictyostelium.
+  findings:
+  - statement: rdeA-null cells develop precociously, forming spores and stalk cells
+      in ~14 h instead of ~24 h.
+    supporting_text: aggregated rapidly and formed spores and stalk cells within 14
+      h of development instead of the normal 24 h
+  - statement: RdeA is a non-compartmentalised (cytosolic) ~28 kDa protein with a
+      phosphoaccepting histidine at position 65, homologous to H2-module
+      phosphotransferases.
+    supporting_text: RdeA displays homology around a histidine residue at amino acid
+      65 with members of the H2 module family of phosphotransferases that participate
+      in multistep phosphoryl relays
+  - statement: RdeA is functionally interchangeable with the yeast H2-module protein
+      Ypd1.
+    supporting_text: complemented by transformation with the Ypd1 gene of Saccharomyces
+      cerevisiae, itself an H2 module protein
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Primary genetic characterization of rdeA; establishes the
+      rapid-development phenotype, cytosolic non-compartmentalisation, the His-65
+      phosphoacceptor, and Ypd1 complementation. All quotes verbatim from the
+      cached abstract.
+core_functions:
+- description: RdeA is the histidine-phosphotransfer (HPt / H2-module) intermediate
+    of the Dictyostelium two-component phosphorelay, using its His-65 to shuttle
+    phosphate bidirectionally between sensor histidine kinases (DhkA, DhkC) and the
+    response-regulator cAMP phosphodiesterase RegA (Asp-212), thereby setting RegA
+    activity, intracellular cAMP and the rate of development.
+  molecular_function:
+    id: GO:0009927
+    label: histidine phosphotransfer kinase activity
+  directly_involved_in:
+  - id: GO:0000160
+    label: phosphorelay signal transduction system
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:10488068
+    supporting_text: and aspartate 212 of RegA, and occurs in both directions
+  - reference_id: PMID:9582274
+    supporting_text: RdeA displays homology around a histidine residue at amino acid
+      65 with members of the H2 module family of phosphotransferases that participate
+      in multistep phosphoryl relays
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

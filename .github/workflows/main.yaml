@@ -54,6 +54,18 @@ jobs:
               - 'tests/**'
               - 'pyproject.toml'
               - 'uv.lock'
+            # The agentic-automation surface: workflow definitions, the central
+            # agent config, the composite actions, and the deterministic guard
+            # scripts. Cheap to check, and not otherwise covered when a PR only
+            # touches .github/.
+            agents:
+              - '.github/workflows/**'
+              - '.github/actions/**'
+              - '.github/scripts/**'
+              - '.github/agent-config.yaml'
+              - '.github/cron-profiles.yaml'
+              - 'scripts/apply_cron_profile.py'
+              - 'tests/js/**'
             genes:
               - 'genes/**/*-ai-review.yaml'
             modules:
@@ -82,7 +94,7 @@ jobs:
 
       # https://github.com/actions/setup-python
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -144,3 +156,12 @@ jobs:
       - name: Run test suite
         if: steps.changes.outputs.src == 'true'
         run: just test
+
+      # Runs even when `src` is false, so a .github-only change still gets its
+      # agent-config consistency and guard-script checks.
+      - name: Check agentic automation
+        if: steps.changes.outputs.agents == 'true'
+        run: |
+          uv run pytest tests/test_agent_config.py tests/test_agent_run_summary.py \
+            tests/test_apply_cron_profile.py -q
+          just test-js

@@ -1,0 +1,4371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSTC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>OSTC</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9NRP0" target="_blank" class="term-link">
+                        Q9NRP0
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "OSTC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9NRP0" data-a="DESCRIPTION: OSTC (DC2) is a small (149 aa) multi-pass endoplas..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>OSTC (DC2) is a small (149 aa) multi-pass endoplasmic reticulum membrane protein that is a non-catalytic accessory subunit of the oligosaccharyltransferase (OST) complex. It is a defining, complex-specific subunit of the STT3A-containing OST-A complex, which carries out co-translational N-linked glycosylation, the en bloc transfer of the Glc3Man9GlcNAc2 glycan from dolichol-pyrophosphate onto asparagine residues within Asn-X-Ser/Thr sequons of nascent polypeptides in the ER. OSTC does not itself possess glycotransferase activity (the catalytic subunit is STT3A); instead it acts as an adapter/anchor that tethers the OST-A complex to the SEC61 protein-conducting channel of the ER translocon, positioning the catalytic machinery adjacent to emerging nascent chains and thereby supporting efficient co-translational glycosylation. Loss of OSTC produces a co-translational hypoglycosylation phenotype resembling loss of STT3A itself, while STT3A complexes lacking OSTC remain enzymatically active but fail to form stable associations with the SEC61 complex. OSTC has been resolved by cryo-EM as a component of human OST-A and of the SEC61-OST-A-TRAP translocon.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006487" target="_blank" class="term-link">
+                                    GO:0006487
+                                </a>
+                            </span>
+                            <span class="term-label">protein N-linked glycosylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0006487" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OSTC is a subunit of the OST-A complex that performs co-translational N-linked glycosylation; this is a correct core biological process. The phylogenetic (IBA) call agrees with direct experimental evidence (PMID:28860277).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/OSTC/OSTC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">to an asparagine residue within an Asn-X-Ser/Thr</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28860277" target="_blank" class="term-link">
+                                        PMID:28860277
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">loss of DC2 causes a defect in co-translational N-glycosylation of proteins that</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030674" target="_blank" class="term-link">
+                                    GO:0030674
+                                </a>
+                            </span>
+                            <span class="term-label">protein-macromolecule adaptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0030674" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Captures OSTC&#39;s subunit-specific molecular function as an adapter/anchor that tethers the OST-A complex to the SEC61 translocon. This is the informative OSTC-specific MF (distinct from the complex-level catalytic activity) and is supported experimentally by PMID:28860277.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/OSTC/OSTC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">acts as an adapter that</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28860277" target="_blank" class="term-link">
+                                        PMID:28860277
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">do not form stable complexes with the Sec61 complex</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008250" target="_blank" class="term-link">
+                                    GO:0008250
+                                </a>
+                            </span>
+                            <span class="term-label">oligosaccharyltransferase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0008250" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OSTC is a bona fide subunit of the oligosaccharyltransferase complex. Correct core cellular component; the IBA agrees with direct proteomic and structural evidence.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28860277" target="_blank" class="term-link">
+                                        PMID:28860277
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DC2 (OSTC gene) and KCP2, two small membrane proteins, were initially detected as novel OST subunits in translocation channel</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0005783" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OSTC is an ER membrane protein; ER is the correct (if broad) subcellular location. Consistent with experimental localization (PMID:21768116). The more precise term is endoplasmic reticulum membrane (GO:0005789).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/OSTC/OSTC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008250" target="_blank" class="term-link">
+                                    GO:0008250
+                                </a>
+                            </span>
+                            <span class="term-label">oligosaccharyltransferase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0008250" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based electronic assignment of OST complex membership. Correct core cellular component, redundant with the experimental IDA/IBA annotations to the same term.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/OSTC/OSTC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Component of STT3A-containing oligosaccharyl transferase (OST-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009101" target="_blank" class="term-link">
+                                    GO:0009101
+                                </a>
+                            </span>
+                            <span class="term-label">glycoprotein biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0009101" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A broad parent process of the more precise protein N-linked glycosylation (GO:0006487) that OSTC participates in. Not incorrect, but subsumed by the specific term; keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/OSTC/OSTC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">the first step in</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0016020" data-r="GO_REF:0000044" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Uninformative high-level cellular component. OSTC is a membrane protein, but this is entirely subsumed by the specific endoplasmic reticulum membrane (GO:0005789) annotation. Over-annotation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/OSTC/OSTC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Multi-pass</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a high-throughput binary interactome map (interactor EDA, Q92838). Uninformative and not an established functional partner of OSTC; per policy an experimental IPI is not removed but is marked as over-annotated. The biologically meaningful OSTC interactions (STT3A/OST-A subunits, SEC61) are captured by the adaptor MF and complex-membership terms.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a binary interactome reference map (interactor TUSC5, A5PKU2). Uninformative and not an established functional partner of OSTC; marked as over-annotated rather than removed (experimental IPI).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31831667" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31831667
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cryo-electron microscopy structures of human oligosaccharylt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0005789" data-r="PMID:31831667" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OSTC is an integral ER membrane protein and a subunit of the ER-membrane OST-A complex. Correct core cellular location; ComplexPortal NAS agrees with the experimental IDA (PMID:21768116) and cryo-EM structures.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/OSTC/OSTC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Multi-pass</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006487" target="_blank" class="term-link">
+                                    GO:0006487
+                                </a>
+                            </span>
+                            <span class="term-label">protein N-linked glycosylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31831667" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31831667
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cryo-electron microscopy structures of human oligosaccharylt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0006487" data-r="PMID:31831667" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core biological process; OSTC is a subunit of the OST-A complex that catalyzes co-translational N-linked glycosylation. Redundant with the experimental IDA (PMID:28860277).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31831667" target="_blank" class="term-link">
+                                        PMID:31831667
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzes the transfer of a high-mannose glycan onto secretory proteins in the endoplasmic reticulum</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008250" target="_blank" class="term-link">
+                                    GO:0008250
+                                </a>
+                            </span>
+                            <span class="term-label">oligosaccharyltransferase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31831667" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31831667
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cryo-electron microscopy structures of human oligosaccharylt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0008250" data-r="PMID:31831667" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OST complex membership, supported by the cryo-EM structures of human OST-A and OST-B in which DC2/OSTC is resolved as a component of OST-A. Correct core cellular component.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31831667" target="_blank" class="term-link">
+                                        PMID:31831667
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">distinct OST subunits, DC2 in OST-A and</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21768116" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21768116
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    DC2 and keratinocyte-associated protein 2 (KCP2), subunits o...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0005789" data-r="PMID:21768116" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental localization of DC2/OSTC to the ER membrane. Correct core cellular location.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/OSTC/OSTC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21768116" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21768116
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    DC2 and keratinocyte-associated protein 2 (KCP2), subunits o...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0005783" data-r="PMID:21768116" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental localization to the ER (broader parent of ER membrane). Correct; the more precise annotation is endoplasmic reticulum membrane (GO:0005789).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/OSTC/OSTC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-446209
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0005789" data-r="Reactome:R-HSA-446209" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable annotation placing the OST-catalyzed N-glycan transfer reaction at the ER membrane. Correct core cellular location for OSTC as an OST-A subunit.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9694793
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0005789" data-r="Reactome:R-HSA-9694793" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome annotation of ER membrane location via a specific substrate reaction (SARS-CoV-2 spike protein N-glycosylation). Same correct location as the general OST reaction; kept as non-core to avoid inflating substrate-specific reactions into core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9816276
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0005789" data-r="Reactome:R-HSA-9816276" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome ER membrane location via a specific substrate reaction (CDH1 N-glycosylation). Correct location; kept as non-core (substrate-specific reaction).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9918962
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0005789" data-r="Reactome:R-HSA-9918962" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome ER membrane location via a specific viral substrate reaction (flavivirus E protein N-glycosylation). Correct location; kept as non-core (substrate-specific reaction).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9918988
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0005789" data-r="Reactome:R-HSA-9918988" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome ER membrane location via a specific viral substrate reaction (flavivirus pre-M N-glycosylation). Correct location; kept as non-core (substrate-specific reaction).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9919011
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0005789" data-r="Reactome:R-HSA-9919011" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome ER membrane location via a specific viral substrate reaction (pre-NS1 N-glycosylation). Correct location; kept as non-core (substrate-specific reaction).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9931286
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0005789" data-r="Reactome:R-HSA-9931286" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome ER membrane location via a specific substrate reaction (PD-L1/CD274 N-glycosylation). Correct location; kept as non-core (substrate-specific reaction).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160226" target="_blank" class="term-link">
+                                    GO:0160226
+                                </a>
+                            </span>
+                            <span class="term-label">oligosaccharyltransferase complex A</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31831667" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31831667
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cryo-electron microscopy structures of human oligosaccharylt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0160226" data-r="PMID:31831667" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cryo-EM directly resolves DC2/OSTC as a defining, complex-specific subunit of the STT3A-containing OST-A complex. This is the most precise and correct core cellular component for OSTC.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31831667" target="_blank" class="term-link">
+                                        PMID:31831667
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">distinct OST subunits, DC2 in OST-A and</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160226" target="_blank" class="term-link">
+                                    GO:0160226
+                                </a>
+                            </span>
+                            <span class="term-label">oligosaccharyltransferase complex A</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36697828" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36697828
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Visualization of translation and protein biogenesis at the E...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0160226" data-r="PMID:36697828" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cryo-EM/ET of the ER translocon resolves OSTC within the SEC61-OST-A-TRAP translocon, confirming OST-A membership at the SEC61 interface. Correct core cellular component.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36697828" target="_blank" class="term-link">
+                                        PMID:36697828
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the luminal OSTC β-hairpin</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160226" target="_blank" class="term-link">
+                                    GO:0160226
+                                </a>
+                            </span>
+                            <span class="term-label">oligosaccharyltransferase complex A</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38670073" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:38670073
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Positive selection CRISPR screens reveal a druggable pocket ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0160226" data-r="PMID:38670073" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cryo-EM of the STT3A-containing OST complex resolves OSTC as an OST-A subunit (PDB 8PN9). Correct core cellular component.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38670073" target="_blank" class="term-link">
+                                        PMID:38670073
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the oligosaccharyltransferase complex OST-A</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006487" target="_blank" class="term-link">
+                                    GO:0006487
+                                </a>
+                            </span>
+                            <span class="term-label">protein N-linked glycosylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28860277" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28860277
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    DC2 and KCP2 mediate the interaction between the oligosaccha...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0006487" data-r="PMID:28860277" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence that loss of DC2/OSTC causes a co-translational N-glycosylation defect phenocopying loss of STT3A. Strongly supports involvement in protein N-linked glycosylation. Core biological process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28860277" target="_blank" class="term-link">
+                                        PMID:28860277
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">loss of DC2 causes a defect in co-translational N-glycosylation of proteins that</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008250" target="_blank" class="term-link">
+                                    GO:0008250
+                                </a>
+                            </span>
+                            <span class="term-label">oligosaccharyltransferase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28860277" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28860277
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    DC2 and KCP2 mediate the interaction between the oligosaccha...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0008250" data-r="PMID:28860277" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence that DC2/OSTC is an exclusive accessory subunit of the STT3A OST complex. Correct core cellular component.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28860277" target="_blank" class="term-link">
+                                        PMID:28860277
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DC2 (OSTC gene) and KCP2, two small membrane proteins, were initially detected as novel OST subunits in translocation channel</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030674" target="_blank" class="term-link">
+                                    GO:0030674
+                                </a>
+                            </span>
+                            <span class="term-label">protein-macromolecule adaptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28860277" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28860277
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    DC2 and KCP2 mediate the interaction between the oligosaccha...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0030674" data-r="PMID:28860277" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence that DC2/OSTC (with KCP2) mediates the interaction between the OST-A complex and the SEC61 translocon; STT3A complexes lacking OSTC remain catalytically active but fail to associate stably with SEC61. This defines OSTC&#39;s subunit-specific adapter/anchor molecular function. Core MF.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28860277" target="_blank" class="term-link">
+                                        PMID:28860277
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">STT3A complexes that lack DC2 or KCP2 are enzymatically active when assayed using a synthetic peptide acceptor but do not form stable complexes with the Sec61 complex</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/OSTC/OSTC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">acts as an adapter that</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004579" target="_blank" class="term-link">
+                                    GO:0004579
+                                </a>
+                            </span>
+                            <span class="term-label">dolichyl-diphosphooligosaccharide-protein glycotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15835887" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15835887
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Proteomic analysis of mammalian oligosaccharyltransferase re...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0004579" data-r="PMID:15835887" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator inference (from OST complex membership) that OSTC contributes to the complex-level glycotransferase activity. Correctly uses the contributes_to qualifier - OSTC is a non-catalytic subunit and does not itself enable this activity (the catalyst is STT3A), but it is part of the complex that carries it out. Core MF, modeled via contributes_to_molecular_function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15835887" target="_blank" class="term-link">
+                                        PMID:15835887
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Our results identify two potential new subunits of mammalian OST</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/OSTC/OSTC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">the first step in</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008250" target="_blank" class="term-link">
+                                    GO:0008250
+                                </a>
+                            </span>
+                            <span class="term-label">oligosaccharyltransferase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15835887" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15835887
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Proteomic analysis of mammalian oligosaccharyltransferase re...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NRP0" data-a="GO:0008250" data-r="PMID:15835887" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Original proteomic identification of DC2/OSTC as a subunit of mammalian OST. Correct core cellular component.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15835887" target="_blank" class="term-link">
+                                        PMID:15835887
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">identified a 17 kDa protein as DC2 which is weakly homologous to the C-terminal</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>OSTC (DC2) is a non-catalytic, complex-specific subunit of the STT3A-containing oligosaccharyltransferase OST-A complex in the ER membrane. Its subunit-specific molecular function is that of an adapter/anchor that tethers the OST-A complex to the SEC61 protein-conducting channel; through this membership it contributes to the complex&#39;s dolichyl-diphosphooligosaccharide-protein glycotransferase activity, supporting co-translational protein N-linked glycosylation.</h3>
+                <span class="vote-buttons" data-g="Q9NRP0" data-a="FUNCTION: OSTC (DC2) is a non-catalytic, complex-specific su..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030674" target="_blank" class="term-link">
+                            protein-macromolecule adaptor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006487" target="_blank" class="term-link">
+                                protein N-linked glycosylation
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160226" target="_blank" class="term-link">
+                            oligosaccharyltransferase complex A
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28860277" target="_blank" class="term-link">
+                                PMID:28860277
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">STT3A complexes that lack DC2 or KCP2 are enzymatically active when assayed using a synthetic peptide acceptor but do not form stable complexes with the Sec61 complex</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31831667" target="_blank" class="term-link">
+                                PMID:31831667
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">distinct OST subunits, DC2 in OST-A and</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/OSTC/OSTC-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">acts as an adapter that</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/39509507" target="_blank" class="term-link">
+                                PMID:39509507
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">OST-A, which contains unique subunits (OSTC, KRTCAP2) that anchor it to the SEC61 protein channel</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15835887" target="_blank" class="term-link">
+                            PMID:15835887
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Proteomic analysis of mammalian oligosaccharyltransferase reveals multiple subcomplexes that contain Sec61, TRAP, and two potential new subunits.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21768116" target="_blank" class="term-link">
+                            PMID:21768116
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">DC2 and keratinocyte-associated protein 2 (KCP2), subunits of the oligosaccharyltransferase complex, are regulators of the gamma-secretase-directed processing of amyloid precursor protein (APP).</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28860277" target="_blank" class="term-link">
+                            PMID:28860277
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">DC2 and KCP2 mediate the interaction between the oligosaccharyltransferase and the ER translocon.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31831667" target="_blank" class="term-link">
+                            PMID:31831667
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cryo-electron microscopy structures of human oligosaccharyltransferase complexes OST-A and OST-B.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36697828" target="_blank" class="term-link">
+                            PMID:36697828
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Visualization of translation and protein biogenesis at the ER membrane.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38670073" target="_blank" class="term-link">
+                            PMID:38670073
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Positive selection CRISPR screens reveal a druggable pocket in an oligosaccharyltransferase required for inflammatory signaling to NF-κB.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/39509507" target="_blank" class="term-link">
+                            PMID:39509507
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Regulated N-glycosylation controls chaperone function and receptor trafficking.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-446209
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Transfer of N-glycan to the protein</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9694793
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Spike protein gets N-glycosylated</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9816276
+
+                    </span>
+                </div>
+
+                <div class="reference-title">CDH1 is N-glycosylated on asparagine residues in endoplasmic reticulum</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9918962
+
+                    </span>
+                </div>
+
+                <div class="reference-title">E is N-glycosylated</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9918988
+
+                    </span>
+                </div>
+
+                <div class="reference-title">pre-M is N-glycosylated</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9919011
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Pre-NS1 folds and is N-glycosylated</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9931286
+
+                    </span>
+                </div>
+
+                <div class="reference-title">CD274 N-linked glycosylation in ER</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the adapter/anchor role of OSTC required only for stable OST-A-SEC61 association, or does OSTC also modulate substrate selection or scanning efficiency of the STT3A active site?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NRP0" data-a="Q: Is the adapter/anchor role of OSTC required only f..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the substrate-specific effect of OSTC/DC2 on APP processing and gamma-secretase (PMID:21768116) reflect a direct role of OSTC beyond bulk co-translational glycosylation?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NRP0" data-a="Q: Does the substrate-specific effect of OSTC/DC2 on ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Structure-guided mutagenesis of the OSTC luminal loop and C-terminal motif to dissect OST-A assembly versus SEC61 anchoring, quantifying co-translational glycosylation efficiency of endogenous STT3A substrates.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NRP0" data-a="EXPERIMENT: Structure-guided mutagenesis of the OSTC luminal l..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Proximity labeling or crosslinking-MS in OSTC-deficient versus wild-type cells to map the OST-A-translocon interactome and identify substrates most sensitive to loss of the OSTC anchor.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NRP0" data-a="EXPERIMENT: Proximity labeling or crosslinking-MS in OSTC-defi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(OSTC-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9NRP0" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ostc-dc2-review-notes">OSTC (DC2) review notes</h1>
+<p>UniProt: Q9NRP0 (OSTC_HUMAN). HGNC:24448. Gene names/synonyms: OSTC, DC2, HDCMD45P,<br />
+HSPC307; "Hydrophobic protein HSF-28". 149 aa, ~16.8 kDa. Chromosome 4.</p>
+<h2 id="summary-of-function">Summary of function</h2>
+<p>OSTC (also called DC2) is a small (149 aa) multi-pass ER membrane protein that is a<br />
+<strong>non-catalytic accessory subunit</strong> of the oligosaccharyltransferase (OST) complex,<br />
+specifically the <strong>STT3A-containing OST-A complex</strong> that carries out <strong>co-translational<br />
+N-linked glycosylation</strong>. It is NOT the catalytic subunit (STT3A is), and it does not<br />
+possess glycotransferase activity on its own.</p>
+<ul>
+<li>UniProt FUNCTION: "Subunit of STT3A-containing oligosaccharyl transferase (OST-A)<br />
+  complex that catalyzes the initial transfer of a defined glycan (Glc(3)Man(9)GlcNAc(2)<br />
+  in eukaryotes) from the lipid carrier dolichol-pyrophosphate to an asparagine residue<br />
+  within an Asn-X-Ser/Thr consensus motif in nascent polypeptide chains, the first step<br />
+  in protein N-glycosylation" [file:human/OSTC/OSTC-uniprot.txt].</li>
+<li>UniProt: "N-glycosylation occurs cotranslationally and the complex associates with the<br />
+  Sec61 complex at the channel-forming translocon complex" [file:human/OSTC/OSTC-uniprot.txt].</li>
+<li>UniProt: "Within the OST-A complex, acts as an adapter that anchors the OST-A complex to<br />
+  the Sec61 complex (PubMed:28860277)" [file:human/OSTC/OSTC-uniprot.txt].</li>
+<li>UniProt SUBCELLULAR LOCATION: "Endoplasmic reticulum ... Membrane; Multi-pass membrane<br />
+  protein" [file:human/OSTC/OSTC-uniprot.txt]. Topology (predicted): 3 TM helices<br />
+  (33-53, 84-104, 118-138); N- and C-termini cytoplasmic/luminal alternating.</li>
+<li>UniProt SIMILARITY: "Belongs to the OSTC family" [file:human/OSTC/OSTC-uniprot.txt].</li>
+</ul>
+<h2 id="key-primary-evidence">Key primary evidence</h2>
+<ul>
+<li><strong>Shibatani et al. 2005 (PMID:15835887)</strong> — proteomic analysis of mammalian OST first<br />
+  identified DC2 as a novel OST subunit: "identified a 17 kDa protein as DC2 which is<br />
+  weakly homologous to the C-terminal half of yeast Ost3p and Ost6p" and "Our results<br />
+  identify two potential new subunits of mammalian OST" (DC2 and KCP2). Basis for the<br />
+  IC/IDA annotations to OST complex (GO:0008250) and, by inference, contributes_to the<br />
+  complex glycotransferase activity (GO:0004579).</li>
+<li><strong>Shrimal, Cherepanova &amp; Gilmore 2017 (PMID:28860277)</strong> — full text available. Shows<br />
+  DC2/OSTC (with KCP2) mediates the OST-A–to–translocon interaction. "loss of DC2 causes<br />
+  a defect in co-translational N-linked glycosylation of proteins that mimics an STT3A-/-<br />
+  phenotype." Critically for the non-catalytic/adapter model: "DC2 (OSTC gene) and KCP2,<br />
+  two small membrane proteins, were initially detected as novel OST subunits in<br />
+  translocation channel–associated OST complexes" and "STT3A complexes that lack DC2 or<br />
+  KCP2 are enzymatically active when assayed using a synthetic peptide acceptor but do not<br />
+  form stable complexes with the Sec61 complex" — i.e., OSTC is an adapter, not the<br />
+  catalyst. Supports GO:0030674 (adaptor), GO:0006487 (N-glyc), GO:0008250 (OST complex).</li>
+<li><strong>Ramírez, Kowal &amp; Locher 2019 (PMID:31831667)</strong> — cryo-EM of human OST-A and OST-B.<br />
+  "structural differences in the catalytic subunits STT3A and STT3B facilitate contacts<br />
+  to distinct OST subunits, DC2 in OST-A and MAGT1 in OST-B." Establishes OSTC/DC2 as a<br />
+  defining component of the OST-A complex (GO:0160226). PDB 6S7O; chain H = OSTC.</li>
+<li><strong>Gemmer et al. 2023 (PMID:36697828)</strong> — cryo-EM/ET of the ER translocon; OSTC modeled<br />
+  within the SEC61–OSTA–TRAP translocon ("the luminal OSTC β-hairpin"). Supports<br />
+  GO:0160226 membership at the SEC61 interface. PDB 8B6L chain J = OSTC.</li>
+<li><strong>Lampson et al. 2024 (PMID:38670073)</strong> — CRISPR + cryo-EM of STT3A-containing OST;<br />
+  OSTC modeled as an OST-A subunit (PDB 8PN9 chain H = OSTC). Supports GO:0160226.</li>
+<li><strong>Ma et al. 2024 (PMID:39509507)</strong> — "OST-A, which contains unique subunits (OSTC,<br />
+  KRTCAP2) that anchor it to the SEC61 protein channel (6), functions co-translationally"<br />
+  — independent corroboration of OSTC's anchor role in OST-A. (Cited in UniProt; added to<br />
+  references as supporting.)</li>
+<li><strong>Wilson et al. 2011 (PMID:21768116)</strong> — DC2/OSTC and KCP2 as OST subunits; ER<br />
+  localization (IDA/EXP). Also reports a substrate-specific effect on APP processing and<br />
+  gamma-secretase (PSEN1/NCSTN interaction). The APP/gamma-secretase role is a specific,<br />
+  non-core downstream/substrate effect, not OSTC's core molecular function. Abstract<br />
+  explicitly states DC2/KCP2 "are not core components required for N-glycosylation and OST<br />
+  activity per se" — consistent with the non-catalytic-subunit model.</li>
+</ul>
+<h2 id="curation-decisions-high-level">Curation decisions (high level)</h2>
+<ul>
+<li><strong>Core CC</strong>: OST-A complex (GO:0160226, specific) and OST complex (GO:0008250, parent) —<br />
+  both ACCEPT (experimental IDA to GO:0160226; IBA/IDA/NAS to GO:0008250). Model<br />
+<code>in_complex</code> with GO:0160226 (OST-A) in core_functions.</li>
+<li><strong>Core MF</strong>: contributes_to GO:0004579 (dolichyl-diphosphooligosaccharide-protein<br />
+  glycotransferase activity) — the complex-level catalytic activity OSTC contributes to<br />
+  but does not independently enable. ACCEPT the IC. GO:0030674 (protein-macromolecule<br />
+  adaptor activity, IDA/IBA) captures the OSTC-specific adapter/anchor function — ACCEPT;<br />
+  use as the subunit-specific <code>molecular_function</code>.</li>
+<li><strong>Core BP</strong>: GO:0006487 (protein N-linked glycosylation) — ACCEPT (IDA/IBA/NAS).</li>
+<li><strong>Core CC (location)</strong>: GO:0005789 (ER membrane, IDA/TAS/NAS) ACCEPT; GO:0005783 (ER,<br />
+  IEA/EXP) ACCEPT as broader parent. GO:0016020 (membrane, IEA) is an uninformative<br />
+  parent → MARK_AS_OVER_ANNOTATED (redundant with ER membrane).</li>
+<li><strong>GO:0009101 (glycoprotein biosynthetic process, IEA/InterPro)</strong> — a broader parent of<br />
+  the more precise N-linked glycosylation term; KEEP_AS_NON_CORE (subsumed by GO:0006487).</li>
+<li><strong>GO:0005515 (protein binding) IPI ×2</strong> (PMID:25416956 vs EDA; PMID:32296183 vs TUSC5) —<br />
+  uninformative bare "protein binding" from high-throughput binary interactome screens;<br />
+  EDA and TUSC5 are not established functional partners of OSTC. Per policy, never REMOVE a<br />
+  bare-protein-binding IPI → MARK_AS_OVER_ANNOTATED.</li>
+<li>Multiple Reactome TAS annotations to GO:0005789 (ER membrane) across specific<br />
+  glycosylation reactions — all correct core location; ACCEPT (the first) /<br />
+  KEEP_AS_NON_CORE (substrate-specific viral/CDH1/PD-L1 reactions are the same location via<br />
+  different reactions; keep to avoid inflating core).<br />
+</content><br />
+</invoke></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9NRP0
+gene_symbol: OSTC
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: OSTC (DC2) is a small (149 aa) multi-pass endoplasmic reticulum membrane
+  protein that is a non-catalytic accessory subunit of the oligosaccharyltransferase
+  (OST) complex. It is a defining, complex-specific subunit of the STT3A-containing
+  OST-A complex, which carries out co-translational N-linked glycosylation, the en
+  bloc transfer of the Glc3Man9GlcNAc2 glycan from dolichol-pyrophosphate onto asparagine
+  residues within Asn-X-Ser/Thr sequons of nascent polypeptides in the ER. OSTC does
+  not itself possess glycotransferase activity (the catalytic subunit is STT3A); instead
+  it acts as an adapter/anchor that tethers the OST-A complex to the SEC61 protein-conducting
+  channel of the ER translocon, positioning the catalytic machinery adjacent to emerging
+  nascent chains and thereby supporting efficient co-translational glycosylation. Loss
+  of OSTC produces a co-translational hypoglycosylation phenotype resembling loss of
+  STT3A itself, while STT3A complexes lacking OSTC remain enzymatically active but fail
+  to form stable associations with the SEC61 complex. OSTC has been resolved by cryo-EM
+  as a component of human OST-A and of the SEC61-OST-A-TRAP translocon.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q9NRP0-1
+- name: &#39;2&#39;
+  id: Q9NRP0-2
+  sequence_note: VSP_047376
+existing_annotations:
+- term:
+    id: GO:0006487
+    label: protein N-linked glycosylation
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: OSTC is a subunit of the OST-A complex that performs co-translational
+      N-linked glycosylation; this is a correct core biological process. The phylogenetic
+      (IBA) call agrees with direct experimental evidence (PMID:28860277).
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/OSTC/OSTC-uniprot.txt
+      supporting_text: to an asparagine residue within an Asn-X-Ser/Thr
+    - reference_id: PMID:28860277
+      supporting_text: loss of DC2 causes a defect in co-translational N-glycosylation
+        of proteins that
+- term:
+    id: GO:0030674
+    label: protein-macromolecule adaptor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: Captures OSTC&#39;s subunit-specific molecular function as an adapter/anchor
+      that tethers the OST-A complex to the SEC61 translocon. This is the informative
+      OSTC-specific MF (distinct from the complex-level catalytic activity) and is
+      supported experimentally by PMID:28860277.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/OSTC/OSTC-uniprot.txt
+      supporting_text: acts as an adapter that
+    - reference_id: PMID:28860277
+      supporting_text: do not form stable complexes with the Sec61 complex
+- term:
+    id: GO:0008250
+    label: oligosaccharyltransferase complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: OSTC is a bona fide subunit of the oligosaccharyltransferase complex.
+      Correct core cellular component; the IBA agrees with direct proteomic and structural
+      evidence.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:28860277
+      supporting_text: DC2 (OSTC gene) and KCP2, two small membrane proteins, were
+        initially detected as novel OST subunits in translocation channel
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: OSTC is an ER membrane protein; ER is the correct (if broad) subcellular
+      location. Consistent with experimental localization (PMID:21768116). The more
+      precise term is endoplasmic reticulum membrane (GO:0005789).
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/OSTC/OSTC-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Endoplasmic reticulum&#39;
+- term:
+    id: GO:0008250
+    label: oligosaccharyltransferase complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: part_of
+  review:
+    summary: InterPro-based electronic assignment of OST complex membership. Correct
+      core cellular component, redundant with the experimental IDA/IBA annotations
+      to the same term.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/OSTC/OSTC-uniprot.txt
+      supporting_text: Component of STT3A-containing oligosaccharyl transferase (OST-
+- term:
+    id: GO:0009101
+    label: glycoprotein biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: A broad parent process of the more precise protein N-linked glycosylation
+      (GO:0006487) that OSTC participates in. Not incorrect, but subsumed by the specific
+      term; keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/OSTC/OSTC-uniprot.txt
+      supporting_text: the first step in
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Uninformative high-level cellular component. OSTC is a membrane protein,
+      but this is entirely subsumed by the specific endoplasmic reticulum membrane
+      (GO:0005789) annotation. Over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: file:human/OSTC/OSTC-uniprot.txt
+      supporting_text: Multi-pass
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: Bare &#34;protein binding&#34; from a high-throughput binary interactome map (interactor
+      EDA, Q92838). Uninformative and not an established functional partner of OSTC;
+      per policy an experimental IPI is not removed but is marked as over-annotated.
+      The biologically meaningful OSTC interactions (STT3A/OST-A subunits, SEC61) are
+      captured by the adaptor MF and complex-membership terms.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: Bare &#34;protein binding&#34; from a binary interactome reference map (interactor
+      TUSC5, A5PKU2). Uninformative and not an established functional partner of OSTC;
+      marked as over-annotated rather than removed (experimental IPI).
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: NAS
+  original_reference_id: PMID:31831667
+  qualifier: located_in
+  review:
+    summary: OSTC is an integral ER membrane protein and a subunit of the ER-membrane
+      OST-A complex. Correct core cellular location; ComplexPortal NAS agrees with
+      the experimental IDA (PMID:21768116) and cryo-EM structures.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/OSTC/OSTC-uniprot.txt
+      supporting_text: Multi-pass
+- term:
+    id: GO:0006487
+    label: protein N-linked glycosylation
+  evidence_type: NAS
+  original_reference_id: PMID:31831667
+  qualifier: involved_in
+  review:
+    summary: Correct core biological process; OSTC is a subunit of the OST-A complex
+      that catalyzes co-translational N-linked glycosylation. Redundant with the experimental
+      IDA (PMID:28860277).
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:31831667
+      supporting_text: catalyzes the transfer of a high-mannose glycan onto secretory
+        proteins in the endoplasmic reticulum
+- term:
+    id: GO:0008250
+    label: oligosaccharyltransferase complex
+  evidence_type: NAS
+  original_reference_id: PMID:31831667
+  qualifier: part_of
+  review:
+    summary: OST complex membership, supported by the cryo-EM structures of human OST-A
+      and OST-B in which DC2/OSTC is resolved as a component of OST-A. Correct core
+      cellular component.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:31831667
+      supporting_text: distinct OST subunits, DC2 in OST-A and
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IDA
+  original_reference_id: PMID:21768116
+  qualifier: located_in
+  review:
+    summary: Direct experimental localization of DC2/OSTC to the ER membrane. Correct
+      core cellular location.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/OSTC/OSTC-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Endoplasmic reticulum&#39;
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: EXP
+  original_reference_id: PMID:21768116
+  qualifier: located_in
+  review:
+    summary: Experimental localization to the ER (broader parent of ER membrane). Correct;
+      the more precise annotation is endoplasmic reticulum membrane (GO:0005789).
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/OSTC/OSTC-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Endoplasmic reticulum&#39;
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-446209
+  qualifier: located_in
+  review:
+    summary: Reactome traceable annotation placing the OST-catalyzed N-glycan transfer
+      reaction at the ER membrane. Correct core cellular location for OSTC as an OST-A
+      subunit.
+    action: ACCEPT
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9694793
+  qualifier: located_in
+  review:
+    summary: Reactome annotation of ER membrane location via a specific substrate reaction
+      (SARS-CoV-2 spike protein N-glycosylation). Same correct location as the general
+      OST reaction; kept as non-core to avoid inflating substrate-specific reactions
+      into core.
+    action: ACCEPT
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9816276
+  qualifier: located_in
+  review:
+    summary: Reactome ER membrane location via a specific substrate reaction (CDH1
+      N-glycosylation). Correct location; kept as non-core (substrate-specific reaction).
+    action: ACCEPT
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9918962
+  qualifier: located_in
+  review:
+    summary: Reactome ER membrane location via a specific viral substrate reaction
+      (flavivirus E protein N-glycosylation). Correct location; kept as non-core (substrate-specific
+      reaction).
+    action: ACCEPT
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9918988
+  qualifier: located_in
+  review:
+    summary: Reactome ER membrane location via a specific viral substrate reaction
+      (flavivirus pre-M N-glycosylation). Correct location; kept as non-core (substrate-specific
+      reaction).
+    action: ACCEPT
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9919011
+  qualifier: located_in
+  review:
+    summary: Reactome ER membrane location via a specific viral substrate reaction
+      (pre-NS1 N-glycosylation). Correct location; kept as non-core (substrate-specific
+      reaction).
+    action: ACCEPT
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9931286
+  qualifier: located_in
+  review:
+    summary: Reactome ER membrane location via a specific substrate reaction (PD-L1/CD274
+      N-glycosylation). Correct location; kept as non-core (substrate-specific reaction).
+    action: ACCEPT
+- term:
+    id: GO:0160226
+    label: oligosaccharyltransferase complex A
+  evidence_type: IDA
+  original_reference_id: PMID:31831667
+  qualifier: part_of
+  review:
+    summary: Cryo-EM directly resolves DC2/OSTC as a defining, complex-specific subunit
+      of the STT3A-containing OST-A complex. This is the most precise and correct core
+      cellular component for OSTC.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:31831667
+      supporting_text: distinct OST subunits, DC2 in OST-A and
+- term:
+    id: GO:0160226
+    label: oligosaccharyltransferase complex A
+  evidence_type: IDA
+  original_reference_id: PMID:36697828
+  qualifier: part_of
+  review:
+    summary: Cryo-EM/ET of the ER translocon resolves OSTC within the SEC61-OST-A-TRAP
+      translocon, confirming OST-A membership at the SEC61 interface. Correct core
+      cellular component.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:36697828
+      supporting_text: the luminal OSTC β-hairpin
+- term:
+    id: GO:0160226
+    label: oligosaccharyltransferase complex A
+  evidence_type: IDA
+  original_reference_id: PMID:38670073
+  qualifier: part_of
+  review:
+    summary: Cryo-EM of the STT3A-containing OST complex resolves OSTC as an OST-A
+      subunit (PDB 8PN9). Correct core cellular component.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:38670073
+      supporting_text: the oligosaccharyltransferase complex OST-A
+- term:
+    id: GO:0006487
+    label: protein N-linked glycosylation
+  evidence_type: IDA
+  original_reference_id: PMID:28860277
+  qualifier: involved_in
+  review:
+    summary: Direct experimental evidence that loss of DC2/OSTC causes a co-translational
+      N-glycosylation defect phenocopying loss of STT3A. Strongly supports involvement
+      in protein N-linked glycosylation. Core biological process.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:28860277
+      supporting_text: loss of DC2 causes a defect in co-translational N-glycosylation
+        of proteins that
+- term:
+    id: GO:0008250
+    label: oligosaccharyltransferase complex
+  evidence_type: IDA
+  original_reference_id: PMID:28860277
+  qualifier: part_of
+  review:
+    summary: Direct experimental evidence that DC2/OSTC is an exclusive accessory subunit
+      of the STT3A OST complex. Correct core cellular component.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:28860277
+      supporting_text: DC2 (OSTC gene) and KCP2, two small membrane proteins, were
+        initially detected as novel OST subunits in translocation channel
+- term:
+    id: GO:0030674
+    label: protein-macromolecule adaptor activity
+  evidence_type: IDA
+  original_reference_id: PMID:28860277
+  qualifier: enables
+  review:
+    summary: Direct experimental evidence that DC2/OSTC (with KCP2) mediates the interaction
+      between the OST-A complex and the SEC61 translocon; STT3A complexes lacking OSTC
+      remain catalytically active but fail to associate stably with SEC61. This defines
+      OSTC&#39;s subunit-specific adapter/anchor molecular function. Core MF.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:28860277
+      supporting_text: STT3A complexes that lack DC2 or KCP2 are enzymatically active
+        when assayed using a synthetic peptide acceptor but do not form stable complexes
+        with the Sec61 complex
+    - reference_id: file:human/OSTC/OSTC-uniprot.txt
+      supporting_text: acts as an adapter that
+- term:
+    id: GO:0004579
+    label: dolichyl-diphosphooligosaccharide-protein glycotransferase activity
+  evidence_type: IC
+  original_reference_id: PMID:15835887
+  qualifier: contributes_to
+  review:
+    summary: Curator inference (from OST complex membership) that OSTC contributes to
+      the complex-level glycotransferase activity. Correctly uses the contributes_to
+      qualifier - OSTC is a non-catalytic subunit and does not itself enable this activity
+      (the catalyst is STT3A), but it is part of the complex that carries it out. Core
+      MF, modeled via contributes_to_molecular_function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:15835887
+      supporting_text: Our results identify two potential new subunits of mammalian
+        OST
+    - reference_id: file:human/OSTC/OSTC-uniprot.txt
+      supporting_text: the first step in
+- term:
+    id: GO:0008250
+    label: oligosaccharyltransferase complex
+  evidence_type: IDA
+  original_reference_id: PMID:15835887
+  qualifier: part_of
+  review:
+    summary: Original proteomic identification of DC2/OSTC as a subunit of mammalian
+      OST. Correct core cellular component.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:15835887
+      supporting_text: identified a 17 kDa protein as DC2 which is weakly homologous
+        to the C-terminal
+core_functions:
+- description: OSTC (DC2) is a non-catalytic, complex-specific subunit of the STT3A-containing
+    oligosaccharyltransferase OST-A complex in the ER membrane. Its subunit-specific
+    molecular function is that of an adapter/anchor that tethers the OST-A complex to
+    the SEC61 protein-conducting channel; through this membership it contributes to
+    the complex&#39;s dolichyl-diphosphooligosaccharide-protein glycotransferase activity,
+    supporting co-translational protein N-linked glycosylation.
+  molecular_function:
+    id: GO:0030674
+    label: protein-macromolecule adaptor activity
+  contributes_to_molecular_function:
+    id: GO:0004579
+    label: dolichyl-diphosphooligosaccharide-protein glycotransferase activity
+  directly_involved_in:
+  - id: GO:0006487
+    label: protein N-linked glycosylation
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  in_complex:
+    id: GO:0160226
+    label: oligosaccharyltransferase complex A
+  supported_by:
+  - reference_id: PMID:28860277
+    supporting_text: STT3A complexes that lack DC2 or KCP2 are enzymatically active
+      when assayed using a synthetic peptide acceptor but do not form stable complexes
+      with the Sec61 complex
+  - reference_id: PMID:31831667
+    supporting_text: distinct OST subunits, DC2 in OST-A and
+  - reference_id: file:human/OSTC/OSTC-uniprot.txt
+    supporting_text: acts as an adapter that
+  - reference_id: PMID:39509507
+    supporting_text: OST-A, which contains unique subunits (OSTC, KRTCAP2) that anchor
+      it to the SEC61 protein channel
+proposed_new_terms: []
+suggested_questions:
+- question: Is the adapter/anchor role of OSTC required only for stable OST-A-SEC61
+    association, or does OSTC also modulate substrate selection or scanning efficiency
+    of the STT3A active site?
+- question: Does the substrate-specific effect of OSTC/DC2 on APP processing and gamma-secretase
+    (PMID:21768116) reflect a direct role of OSTC beyond bulk co-translational glycosylation?
+suggested_experiments:
+- description: Structure-guided mutagenesis of the OSTC luminal loop and C-terminal
+    motif to dissect OST-A assembly versus SEC61 anchoring, quantifying co-translational
+    glycosylation efficiency of endogenous STT3A substrates.
+- description: Proximity labeling or crosslinking-MS in OSTC-deficient versus wild-type
+    cells to map the OST-A-translocon interactome and identify substrates most sensitive
+    to loss of the OSTC anchor.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: PMID:15835887
+  title: Proteomic analysis of mammalian oligosaccharyltransferase reveals multiple
+    subcomplexes that contain Sec61, TRAP, and two potential new subunits.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Original identification of DC2 (OSTC) as a novel subunit of mammalian
+      OST; basis for the OST-complex and contributes_to glycotransferase annotations.
+- id: PMID:21768116
+  title: DC2 and keratinocyte-associated protein 2 (KCP2), subunits of the oligosaccharyltransferase
+    complex, are regulators of the gamma-secretase-directed processing of amyloid
+    precursor protein (APP).
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Establishes ER localization of DC2/OSTC (IDA/EXP) and a substrate-specific
+      effect on APP/gamma-secretase; abstract notes DC2/KCP2 are not core components
+      required for OST catalytic activity per se, consistent with a non-catalytic adapter role.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: High-throughput binary interactome map; source of a bare protein-binding
+      IPI (OSTC vs EDA) that is uninformative for OSTC&#39;s function.
+- id: PMID:28860277
+  title: DC2 and KCP2 mediate the interaction between the oligosaccharyltransferase
+    and the ER translocon.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Key functional paper - full text available; shows DC2/OSTC mediates
+      the OST-A-to-SEC61 translocon interaction and that loss of DC2 phenocopies loss
+      of STT3A, defining OSTC&#39;s adapter/anchor role.
+- id: PMID:31831667
+  title: Cryo-electron microscopy structures of human oligosaccharyltransferase complexes
+    OST-A and OST-B.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Cryo-EM structures placing DC2/OSTC as a defining subunit of human
+      OST-A (PDB 6S7O, chain H).
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Binary interactome reference map; source of a bare protein-binding
+      IPI (OSTC vs TUSC5) that is uninformative for OSTC&#39;s function.
+- id: PMID:36697828
+  title: Visualization of translation and protein biogenesis at the ER membrane.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Cryo-EM/ET resolves OSTC within the SEC61-OST-A-TRAP translocon
+      (luminal OSTC beta-hairpin at the SEC61 interface; PDB 8B6L, chain J).
+- id: PMID:38670073
+  title: Positive selection CRISPR screens reveal a druggable pocket in an oligosaccharyltransferase
+    required for inflammatory signaling to NF-κB.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Cryo-EM of the STT3A OST-A complex (PDB 8PN9, chain H = OSTC); supports
+      OST-A membership. Primary focus is the STT3A catalytic pocket and NGI-1 mechanism.
+- id: PMID:39509507
+  title: Regulated N-glycosylation controls chaperone function and receptor trafficking.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Independently states OSTC and KRTCAP2 are the unique OST-A subunits
+      that anchor the complex to the SEC61 channel for co-translational glycosylation.
+- id: Reactome:R-HSA-446209
+  title: Transfer of N-glycan to the protein
+  findings: []
+- id: Reactome:R-HSA-9694793
+  title: Spike protein gets N-glycosylated
+  findings: []
+- id: Reactome:R-HSA-9816276
+  title: CDH1 is N-glycosylated on asparagine residues in endoplasmic reticulum
+  findings: []
+- id: Reactome:R-HSA-9918962
+  title: E is N-glycosylated
+  findings: []
+- id: Reactome:R-HSA-9918988
+  title: pre-M is N-glycosylated
+  findings: []
+- id: Reactome:R-HSA-9919011
+  title: Pre-NS1 folds and is N-glycosylated
+  findings: []
+- id: Reactome:R-HSA-9931286
+  title: CD274 N-linked glycosylation in ER
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

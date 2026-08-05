@@ -1,0 +1,4857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GLS - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>GLS</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O94925" target="_blank" class="term-link">
+                        O94925
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "GLS";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O94925" data-a="DESCRIPTION: GLS (kidney-type glutaminase, also known as GLS1) ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>GLS (kidney-type glutaminase, also known as GLS1) is a mitochondrial, phosphate-activated glutaminase (EC 3.5.1.2) that catalyzes the hydrolytic deamidation of L-glutamine to L-glutamate plus ammonia, the first and committed step of glutaminolysis. The gene produces two catalytically active splice isoforms, KGA (isoform 1) and the shorter GAC/glutaminase C (isoform 3), and a catalytically inactive muscle isoform GAM (isoform 2). The enzyme is synthesized as a ~74-kDa cytosolic precursor that is imported into mitochondria and processed by the mitochondrial-processing peptidase into mature 68- and 65-kDa chains that reside in the mitochondrial matrix. It assembles into homotetramers (dimers of dimers), and phosphate-driven tetramerization is coupled to catalytic activation; C-terminal ankyrin repeats modulate higher-order assembly. The glutamate produced feeds the TCA cycle (via glutamate dehydrogenase and transaminases to alpha-ketoglutarate) for energy and anaplerosis. GLS is central to renal ammoniagenesis and acid-base homeostasis, to the brain glutamate/glutamine cycle that supplies neurotransmitter glutamate, and to the elevated glutamine metabolism of many proliferating cancers, where it is an actively pursued drug target (allosteric inhibitors such as BPTES and CB-839/telaglenastat). Loss-of-function GLS variants cause severe neonatal developmental and epileptic encephalopathy and a global developmental delay/ataxia syndrome, whereas a gain-of-function variant causes cataract with glutamate excess and profound developmental delay.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004359" target="_blank" class="term-link">
+                                    GO:0004359
+                                </a>
+                            </span>
+                            <span class="term-label">glutaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0004359" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically-inferred glutaminase activity. This is the well-established core molecular function of GLS, confirmed directly by multiple experimental structural-enzymology studies and by the UniProt catalytic-activity annotation (EC 3.5.1.2, L-glutamine + H2O = L-glutamate + NH4+).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GLS/GLS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=L-glutamine + H2O = L-glutamate + NH4(+);</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference that GLS is active in the mitochondrion. Correct: the mature enzyme is a mitochondrial (matrix) protein. Accepted as a core location.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22228304" target="_blank" class="term-link">
+                                        PMID:22228304
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GAC is distinctly mitochondrial</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006543" target="_blank" class="term-link">
+                                    GO:0006543
+                                </a>
+                            </span>
+                            <span class="term-label">L-glutamine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0006543" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically-inferred involvement in glutamine catabolism. This is the core biological process for GLS (glutaminolysis begins with glutamine hydrolysis). Accepted; also supported directly by IDA (PMID:22049910).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004359" target="_blank" class="term-link">
+                                    GO:0004359
+                                </a>
+                            </span>
+                            <span class="term-label">glutaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0004359" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assertion of glutaminase activity (multiple IEA methods, incl. RHEA/EC/InterPro). Correct and redundant with the experimental annotations of the same term. Accepted as core MF.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0005739" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt SubCell mapping to mitochondrion. Correct core location; redundant with experimental mitochondrial annotations.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0005759" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assertion of mitochondrial matrix localization. Consistent with the mature 68-/65-kDa chains being matrix proteins per UniProt. This is the specific compartment within the mitochondrion; accepted.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GLS/GLS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion matrix {ECO:0000250|UniProtKB:P13264}.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0005829" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt SubCell mapping to cytosol. This reflects the ~74-kDa cytosolic precursor of isoform 1 before mitochondrial import, not a steady-state site of catalysis. Real but transient/non-core; keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GLS/GLS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Cytoplasm, cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006520" target="_blank" class="term-link">
+                                    GO:0006520
+                                </a>
+                            </span>
+                            <span class="term-label">amino acid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0006520" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA electronic annotation to the very general parent &#39;amino acid metabolic process&#39;. Not wrong, but far less informative than the specific L-glutamine catabolic / L-glutamate biosynthetic terms that are directly supported. Keep as a non-core general grouping term.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006541" target="_blank" class="term-link">
+                                    GO:0006541
+                                </a>
+                            </span>
+                            <span class="term-label">L-glutamine metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0006541" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic annotation to &#39;L-glutamine metabolic process&#39;, the parent of the specific catabolic term. Correct but general; the specific child GO:0006543 (L-glutamine catabolic process) is the appropriate core term and is already annotated. Generalize/keep as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006543" target="_blank" class="term-link">
+                                    GO:0006543
+                                </a>
+                            </span>
+                            <span class="term-label">L-glutamine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0006543" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl-Compara electronic transfer of glutamine catabolic process. Correct core BP; redundant with IBA and IDA annotations of the same term.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051289" target="_blank" class="term-link">
+                                    GO:0051289
+                                </a>
+                            </span>
+                            <span class="term-label">protein homotetramerization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0051289" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic transfer of protein homotetramerization. GLS does form homotetramers (dimers of dimers), so this captures a real quaternary-structure property rather than the enzyme&#39;s pathway function. Keep as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097054" target="_blank" class="term-link">
+                                    GO:0097054
+                                </a>
+                            </span>
+                            <span class="term-label">L-glutamate biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0097054" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic transfer of L-glutamate biosynthetic process. This is the product side of the glutaminase reaction and is a legitimate core BP; redundant with the IDA (PMID:22049910) and TAS (PMID:21757002) annotations of the same term.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0062133" target="_blank" class="term-link">
+                                    GO:0062133
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of L-glutamine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16899818" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16899818
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Brain-specific BNIP-2-homology protein Caytaxin relocalises ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0062133" data-r="PMID:16899818" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Derived from the ATCAY/Caytaxin study (PMID:16899818). That paper shows that Caytaxin (ATCAY) binds and inhibits KGA and thereby lowers glutamate; it does not show that GLS itself negatively regulates glutamine biosynthesis. GLS degrades glutamine (catabolism) rather than regulating its synthesis, so this process term is a poor fit for GLS&#39;s own function. As an experimental IDA it is retained but flagged as an over-annotation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16899818" target="_blank" class="term-link">
+                                        PMID:16899818
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">It also reduced the steady-state
+levels of glutamate by inhibiting KGA enzyme activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0005739" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HPA immunofluorescence localization to mitochondrion. Consistent with all other evidence; accepted as core location.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004359" target="_blank" class="term-link">
+                                    GO:0004359
+                                </a>
+                            </span>
+                            <span class="term-label">glutaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22538822" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22538822
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural basis for the allosteric inhibitory mechanism of ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0004359" data-r="PMID:22538822" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental glutaminase activity from the KGA structure/enzymology study (crystal structures with glutamate/glutamine substrate, catalytic-activity assays, active-site mutagenesis). Directly establishes the core molecular function. Accepted.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22538822" target="_blank" class="term-link">
+                                        PMID:22538822
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">human kidney-type glutaminase isoform (KGA) is becoming an
+attractive target</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004359" target="_blank" class="term-link">
+                                    GO:0004359
+                                </a>
+                            </span>
+                            <span class="term-label">glutaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24451979" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24451979
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural basis for the active site inhibition mechanism of...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0004359" data-r="PMID:24451979" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental glutaminase activity confirmed by the cKGA active-site inhibition study: glutaminase assays plus active-site mutagenesis (Ser286, Lys289, Tyr249, Tyr466) that reduce activity. Directly supports the core MF. Accepted.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24451979" target="_blank" class="term-link">
+                                        PMID:24451979
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Glutaminase controls the first step in the glutaminolysis pathway by converting glutamine (Gln) to glutamate (Glu)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004359" target="_blank" class="term-link">
+                                    GO:0004359
+                                </a>
+                            </span>
+                            <span class="term-label">glutaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26988803" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26988803
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Design and evaluation of novel glutaminase inhibitors.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0004359" data-r="PMID:26988803" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental glutaminase activity from the glutaminase-inhibitor design study, which assayed catalytic activity and solved KGA/GAC structures. Supports the core MF. Accepted.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004359" target="_blank" class="term-link">
+                                    GO:0004359
+                                </a>
+                            </span>
+                            <span class="term-label">glutaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28526749" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28526749
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The origin and evolution of human glutaminases and their aty...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0004359" data-r="PMID:28526749" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental glutaminase activity from the glutaminase evolution/structure study (full-length KGA crystal structure with catalytic-activity determination). Supports the core MF. Accepted.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004359" target="_blank" class="term-link">
+                                    GO:0004359
+                                </a>
+                            </span>
+                            <span class="term-label">glutaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29317493" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29317493
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of the interactions of potent allosteric in...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0004359" data-r="PMID:29317493" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental glutaminase activity from the GAC allosteric-inhibitor study, which measured enzymatic activity of recombinant GAC. Supports the core MF. Accepted.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29317493" target="_blank" class="term-link">
+                                        PMID:29317493
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">glutaminase C
+(GAC), which catalyzes the first step in glutamine metabolism</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0005739" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity transfer of mitochondrial localization from the rat ortholog (P13264). Correct core location; redundant with experimental evidence.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22228304" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22228304
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial localization and structure-based phosphate act...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0005739" data-r="PMID:22228304" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental demonstration that GAC is mitochondrial (subcellular-localization analysis). Directly supports the core mitochondrial localization. Accepted.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22228304" target="_blank" class="term-link">
+                                        PMID:22228304
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GAC is distinctly mitochondrial</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0005759" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity transfer of mitochondrial matrix localization from the rat ortholog. Consistent with the mature matrix-resident chains; accepted as the specific compartment.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GLS/GLS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion matrix {ECO:0000250|UniProtKB:P13264}.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-70609
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0005759" data-r="Reactome:R-HSA-70609" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable assertion placing the glutaminase reaction in the mitochondrial matrix. Consistent with UniProt; accepted as the specific compartment of catalysis.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0005739" data-r="PMID:34800366" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mitochondrial proteomics detection of GLS. Consistent with the established mitochondrial localization; accepted (corroborating, non-core relative to the direct localization studies).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0090461" target="_blank" class="term-link">
+                                    GO:0090461
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular glutamate homeostasis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30239721" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30239721
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    GLS hyperactivity causes glutamate excess, infantile catarac...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0090461" data-r="PMID:30239721" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Supported by the gain-of-function Ser482Cys study: hyperactive GLS raises glutamate and lowers glutamine in patient cells, and inhibiting GLS reverses the phenotype, directly implicating GLS in setting intracellular glutamate levels. Accepted as a physiological process downstream of the core catalytic function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30239721" target="_blank" class="term-link">
+                                        PMID:30239721
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">increased glutamate and decreased glutamine
+concentrations were measured in urine and fibroblasts</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16899818" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16899818
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Brain-specific BNIP-2-homology protein Caytaxin relocalises ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0005515" data-r="PMID:16899818" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI capturing the direct interaction with ATCAY/Caytaxin (Q86WG3), a brain-specific regulator that relocalizes GLS and inhibits its activity. The interaction is real and biologically meaningful, but bare &#39;protein binding&#39; is uninformative as a molecular function. Retained as evidence of the ATCAY interaction but flagged as over-annotation; the regulatory biology is captured in the notes.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16899818" target="_blank" class="term-link">
+                                        PMID:16899818
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">binding studies showed that they interact with each other
+directly</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16899818" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16899818
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Brain-specific BNIP-2-homology protein Caytaxin relocalises ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0005739" data-r="PMID:16899818" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct localization of KGA to mitochondria (baseline, before ATCAY-induced relocalization to neurite terminals). Supports the core mitochondrial location. Accepted.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16899818" target="_blank" class="term-link">
+                                        PMID:16899818
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">relocalised
+KGA from the mitochondria to neurite terminals</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004359" target="_blank" class="term-link">
+                                    GO:0004359
+                                </a>
+                            </span>
+                            <span class="term-label">glutaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22049910" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22049910
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Full-length human glutaminase in complex with an allosteric ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0004359" data-r="PMID:22049910" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay of glutaminase activity on full-length human GLS/GAC (kinetics; KM for glutamine reported in UniProt). Definitive support for the core molecular function. Accepted.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22049910" target="_blank" class="term-link">
+                                        PMID:22049910
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Glutaminase (GLS1/2) catalyzes the conversion of L-glutamine to L-glutamate and
+ammonia.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006543" target="_blank" class="term-link">
+                                    GO:0006543
+                                </a>
+                            </span>
+                            <span class="term-label">L-glutamine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22049910" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22049910
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Full-length human glutaminase in complex with an allosteric ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0006543" data-r="PMID:22049910" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence that GLS catalyzes the committed catabolic step for glutamine (glutamine -&gt; glutamate + ammonia). Core biological process. Accepted.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22049910" target="_blank" class="term-link">
+                                        PMID:22049910
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Glutaminase (GLS1/2) catalyzes the conversion of L-glutamine to L-glutamate and
+ammonia.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051289" target="_blank" class="term-link">
+                                    GO:0051289
+                                </a>
+                            </span>
+                            <span class="term-label">protein homotetramerization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22049910" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22049910
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Full-length human glutaminase in complex with an allosteric ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0051289" data-r="PMID:22049910" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct structural evidence for the GAC homotetramer (full-length crystal structure; BPTES binds at the tetramer interface). This is a genuine quaternary-structure property that underlies phosphate activation, but it is not the enzyme&#39;s core pathway function. Keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22049910" target="_blank" class="term-link">
+                                        PMID:22049910
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Two BPTES molecules bind at an interface region of the GAC
+tetramer</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097054" target="_blank" class="term-link">
+                                    GO:0097054
+                                </a>
+                            </span>
+                            <span class="term-label">L-glutamate biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22049910" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22049910
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Full-length human glutaminase in complex with an allosteric ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0097054" data-r="PMID:22049910" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence that GLS produces L-glutamate from glutamine. This is the product side of the glutaminase reaction and is a legitimate core BP (glutamate biosynthesis via glutamine hydrolysis). Accepted.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22049910" target="_blank" class="term-link">
+                                        PMID:22049910
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Glutaminase (GLS1/2) catalyzes the conversion of L-glutamine to L-glutamate and
+ammonia.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097054" target="_blank" class="term-link">
+                                    GO:0097054
+                                </a>
+                            </span>
+                            <span class="term-label">L-glutamate biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21757002" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21757002
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The nuclear receptor FXR regulates hepatic transport and met...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0097054" data-r="PMID:21757002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable assertion (FXR/hepatic glutamine-glutamate metabolism review context) that glutaminase generates glutamate. Consistent with the core function; the cited paper is about FXR regulation of hepatic glutamine/glutamate metabolism and only contextually establishes GLS&#39;s role. Accepted as corroborating (non-core relative to the direct enzymology).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004359" target="_blank" class="term-link">
+                                    GO:0004359
+                                </a>
+                            </span>
+                            <span class="term-label">glutaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10719215" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10719215
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation, characterization and expression of a human brain ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0004359" data-r="PMID:10719215" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Non-traceable/author-stated glutaminase activity from the human brain glutaminase cDNA cloning paper (recombinant enzyme was active). Correct core MF; redundant with the experimental annotations.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10719215" target="_blank" class="term-link">
+                                        PMID:10719215
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">express high levels of properly processed
+and active glutaminase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10719215" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10719215
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation, characterization and expression of a human brain ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0005739" data-r="PMID:10719215" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-stated mitochondrial localization inferred from the N-terminal mitochondrial targeting signal in the human brain glutaminase cDNA. Correct core location; redundant with direct evidence.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10719215" target="_blank" class="term-link">
+                                        PMID:10719215
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">N-terminal mitochondrial targeting signal</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006543" target="_blank" class="term-link">
+                                    GO:0006543
+                                </a>
+                            </span>
+                            <span class="term-label">L-glutamine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10719215" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10719215
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation, characterization and expression of a human brain ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0006543" data-r="PMID:10719215" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-stated involvement in glutamine metabolism (the cloned enzyme catalyzes a key reaction in glutamine metabolism and neurotransmitter synthesis). Core BP; redundant with the IBA/IDA annotations.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10719215" target="_blank" class="term-link">
+                                        PMID:10719215
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a key reaction in the metabolism of glutamine and the synthesis of
+important excitatory and inhibitory neurotransmitters</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004359" target="_blank" class="term-link">
+                                    GO:0004359
+                                </a>
+                            </span>
+                            <span class="term-label">glutaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11015561" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11015561
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and analysis of unique human glutaminase isoforms ge...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94925" data-a="GO:0004359" data-r="PMID:11015561" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-stated glutaminase activity from the isoform-cloning paper (hKGA/hGAC are active kidney-type glutaminases; hGAC has high glutaminase activity in breast cancer cells). Correct core MF; redundant with experimental annotations.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11015561" target="_blank" class="term-link">
+                                        PMID:11015561
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a high rate
+of glutamine utilization and glutaminase activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Hydrolyzes L-glutamine to L-glutamate and ammonia in the mitochondrial matrix (glutaminase activity, EC 3.5.1.2), the first, committed step of glutaminolysis that supplies glutamate for TCA-cycle anaplerosis, renal ammoniagenesis, and the neuronal glutamate/glutamine cycle.</h3>
+                <span class="vote-buttons" data-g="O94925" data-a="FUNCTION: Hydrolyzes L-glutamine to L-glutamate and ammonia ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004359" target="_blank" class="term-link">
+                            glutaminase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006543" target="_blank" class="term-link">
+                                L-glutamine catabolic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097054" target="_blank" class="term-link">
+                                L-glutamate biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/GLS/GLS-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=L-glutamine + H2O = L-glutamate + NH4(+);</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22049910" target="_blank" class="term-link">
+                                PMID:22049910
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Glutaminase (GLS1/2) catalyzes the conversion of L-glutamine to L-glutamate and
+ammonia.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24451979" target="_blank" class="term-link">
+                                PMID:24451979
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Glutaminase controls the first step in the glutaminolysis pathway by converting glutamine (Gln) to glutamate (Glu)</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10719215" target="_blank" class="term-link">
+                            PMID:10719215
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Isolation, characterization and expression of a human brain mitochondrial glutaminase cDNA.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11015561" target="_blank" class="term-link">
+                            PMID:11015561
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cloning and analysis of unique human glutaminase isoforms generated by tissue-specific alternative splicing.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16899818" target="_blank" class="term-link">
+                            PMID:16899818
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Brain-specific BNIP-2-homology protein Caytaxin relocalises glutaminase to neurite terminals and reduces glutamate levels.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21757002" target="_blank" class="term-link">
+                            PMID:21757002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The nuclear receptor FXR regulates hepatic transport and metabolism of glutamine and glutamate.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22049910" target="_blank" class="term-link">
+                            PMID:22049910
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Full-length human glutaminase in complex with an allosteric inhibitor.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22228304" target="_blank" class="term-link">
+                            PMID:22228304
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mitochondrial localization and structure-based phosphate activation mechanism of Glutaminase C with implications for cancer metabolism.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22538822" target="_blank" class="term-link">
+                            PMID:22538822
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural basis for the allosteric inhibitory mechanism of human kidney-type glutaminase (KGA) and its regulation by Raf-Mek-Erk signaling in cancer cell metabolism.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24451979" target="_blank" class="term-link">
+                            PMID:24451979
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural basis for the active site inhibition mechanism of human kidney-type glutaminase (KGA).</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26988803" target="_blank" class="term-link">
+                            PMID:26988803
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Design and evaluation of novel glutaminase inhibitors.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28526749" target="_blank" class="term-link">
+                            PMID:28526749
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The origin and evolution of human glutaminases and their atypical C-terminal ankyrin repeats.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29317493" target="_blank" class="term-link">
+                            PMID:29317493
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Characterization of the interactions of potent allosteric inhibitors with glutaminase C, a key enzyme in cancer cell glutamine metabolism.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30239721" target="_blank" class="term-link">
+                            PMID:30239721
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GLS hyperactivity causes glutamate excess, infantile cataract and profound developmental delay.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-70609
+
+                    </span>
+                </div>
+
+                <div class="reference-title">glutamine + H2O =&gt; glutamate + NH4+ (GLS)</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(GLS-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O94925" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="gls-human-review-notes">GLS (human) — review notes</h1>
+<p>UniProt: O94925 (GLSK_HUMAN), "Glutaminase kidney isoform, mitochondrial"; gene GLS (syn. GLS1, KIAA0838); 669 aa precursor. HGNC:4331. EC 3.5.1.2.</p>
+<h2 id="identity-and-core-biochemistry">Identity and core biochemistry</h2>
+<p>GLS is the kidney-type / phosphate-activated glutaminase. Two catalytically active isoforms exist by alternative splicing: <strong>KGA</strong> (isoform 1, O94925-1) and <strong>GAC / Glutaminase C</strong> (isoform 3, O94925-3); a third splice product <strong>GAM</strong> (isoform 2, O94925-2) lacks catalytic activity.<br />
+- Catalytic reaction (UniProt CATALYTIC ACTIVITY): [file:human/GLS/GLS-uniprot.txt "Reaction=L-glutamine + H2O = L-glutamate + NH4(+)"]; EC=3.5.1.2; Rhea:RHEA:15889.<br />
+- FUNCTION (UniProt): [file:human/GLS/GLS-uniprot.txt "Catalyzes the first reaction in the primary pathway for the"] renal catabolism of glutamine; plays a role in maintaining acid-base homeostasis; regulates the levels of the neurotransmitter glutamate.<br />
+- Isoform 2 (GAM): [file:human/GLS/GLS-uniprot.txt "Lacks catalytic activity."]<br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/22049910" title="Glutaminase (GLS1/2) catalyzes the conversion of L-glutamine to L-glutamate and ammonia.">PMID:22049910</a><br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/24451979" title="Glutaminase controls the first step in the glutaminolysis pathway by converting glutamine (Gln) to glutamate (Glu), with subsequent enzymatic reactions generating aspartate, malate, pyruvate, citrate, alanine, and lactate">PMID:24451979</a> — feeds glutamate into the TCA cycle (glutaminolysis/anaplerosis).<br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/11015561" title="One isoform contains an open reading frame with high homology with the rat kidney-type glutaminase, suggesting that this isoform represents the human kidney-type glutaminase, hKGA.">PMID:11015561</a> and the catalytically inactive hGAM is muscle-specific.</p>
+<h2 id="subcellular-location">Subcellular location</h2>
+<p>Mitochondrion; the mature enzyme is generated from a ~74-kDa cytosolic precursor imported and processed by the mitochondrial-processing peptidase (MPP) to 68-/65-kDa matrix chains.<br />
+- [file:human/GLS/GLS-uniprot.txt "The 74-kDa cytosolic precursor is"] translocated into the mitochondria and processed... to yield the mature 68- and 65-kDa subunits.<br />
+- Matrix chains: [file:human/GLS/GLS-uniprot.txt "Mitochondrion matrix {ECO:0000250|UniProtKB:P13264}."]<br />
+- GAC is distinctly mitochondrial: <a href="https://pubmed.ncbi.nlm.nih.gov/22228304" title="GAC is distinctly mitochondrial">PMID:22228304</a>.<br />
+- Brain GA cDNA encodes a protein with an N-terminal mitochondrial targeting signal: <a href="https://pubmed.ncbi.nlm.nih.gov/10719215" title="N-terminal mitochondrial targeting signal">PMID:10719215</a>.<br />
+- KGA can be relocalised from mitochondria to neurite terminals by ATCAY/Caytaxin: <a href="https://pubmed.ncbi.nlm.nih.gov/16899818" title="relocalised \nKGA from the mitochondria to neurite terminals">PMID:16899818</a>.<br />
+- The cytosol annotation (GO:0005829, IEA UniProtKB-SubCell) reflects the cytosolic precursor stage of isoform 1 before mitochondrial import ([file:human/GLS/GLS-uniprot.txt "Cytoplasm, cytosol"]); it is a real but non-core, transient localization.</p>
+<h2 id="quaternary-structure-regulation">Quaternary structure / regulation</h2>
+<ul>
+<li>Homotetramer, dimer of dimers (UniProt SUBUNIT, citing PubMed:22538822, 26988803, 28526749, 29317493). Tetramerization is coupled to activation.</li>
+<li>Phosphate-activated; BPTES/CB-839-class allosteric inhibitors bind at the dimer interface and lock a nonproductive tetramer.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/22049910" title="Two BPTES molecules bind at an interface region of the GAC \ntetramer in a manner that appears to lock the GAC tetramer into a nonproductive \nconformation.">PMID:22049910</a></li>
+<li>Phosphate activation / tetramerization: [PMID:22228304 "the \ntetramerization-induced lifting of a \"gating loop\" as essential for the \nphosphate-dependent activation process"].</li>
+<li>Active-site catalytic residues (KGA numbering): catalytic nucleophile Ser286, Lys289 general base, Tyr466; substrate/active-site residues Tyr249, Asn335, Glu381, Asn388, Tyr414, Val484 (<a href="https://pubmed.ncbi.nlm.nih.gov/24451979">PMID:24451979</a>). DON covalently modifies Ser286.</li>
+<li>KGA activity is stimulated by EGF/Raf-Mek-Erk phosphorylation and the enzyme associates with RAF1/MAP2K2 (<a href="https://pubmed.ncbi.nlm.nih.gov/22538822">PMID:22538822</a>); interacts with ATCAY (Caytaxin), which relocalises it and reduces its activity (<a href="https://pubmed.ncbi.nlm.nih.gov/16899818">PMID:16899818</a>).</li>
+<li>C-terminal ANK repeats: <a href="https://pubmed.ncbi.nlm.nih.gov/28526749">PMID:28526749</a> — glutaminase ANK repeats fold via intramolecular contacts that occlude the usual ANK protein-protein-interaction surface and limit assembly into supra-tetrameric filaments.</li>
+</ul>
+<h2 id="biological-roles">Biological roles</h2>
+<ul>
+<li>Glutaminolysis / anaplerosis: first, committed step feeding glutamate to TCA (via GLUD1/transaminases -&gt; alpha-ketoglutarate). Central to cancer "glutamine addiction"; drug target (CB-839/telaglenastat, BPTES).</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/29317493" title="This requirement is met by the overexpression of glutaminase C \n(GAC), which catalyzes the first step in glutamine metabolism and therefore \nrepresents a potential therapeutic target.">PMID:29317493</a></li>
+<li>Renal ammoniagenesis / acid-base homeostasis (UniProt FUNCTION).</li>
+<li>Brain glutamate-glutamine cycle: supplies neurotransmitter glutamate.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/16899818" title="KGA converts glutamine to glutamate, which could serve as an important \nsource of neurotransmitter.">PMID:16899818</a></li>
+<li>Intracellular glutamate homeostasis: gain-of-function Ser482Cys causes hyperactivity, increased glutamate/decreased glutamine.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/30239721" title="increased glutamate and decreased glutamine \nconcentrations were measured in urine and fibroblasts">PMID:30239721</a>; "we describe an inborn error of glutamate metabolism caused by a GLS hyperactivity variant".</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li><strong>DEE71</strong> (developmental &amp; epileptic encephalopathy 71; MIM 618328): autosomal recessive, loss-of-function (UniProt DISEASE; PubMed:30575854).</li>
+<li><strong>CASGID</strong> (cataract, subcutaneous nodules, glutamate excess, developmental delay; MIM 618339): autosomal dominant, gain-of-function Ser482Cys (<a href="https://pubmed.ncbi.nlm.nih.gov/30239721">PMID:30239721</a>).</li>
+<li><strong>GDPAG</strong> (global developmental delay, progressive ataxia, elevated glutamine; MIM 618412): autosomal recessive, GAG/short-tandem-repeat expansion loss-of-function (UniProt DISEASE; PubMed:30970188).</li>
+</ul>
+<h2 id="annotation-review-judgments-summary">Annotation review judgments (summary)</h2>
+<ul>
+<li>Core MF: <strong>glutaminase activity (GO:0004359)</strong> — strongly supported by multiple EXP/IDA structural-enzymology papers and UniProt catalytic activity. ACCEPT.</li>
+<li>Core BP: <strong>L-glutamine catabolic process (GO:0006543)</strong> and <strong>L-glutamate biosynthetic process (GO:0097054)</strong> — the two faces of the same reaction; both directly supported (IDA PMID:22049910). ACCEPT.</li>
+<li>Location: <strong>mitochondrion (GO:0005739)</strong> core; <strong>mitochondrial matrix (GO:0005759)</strong> the specific matrix location of the mature chains. ACCEPT.</li>
+<li><strong>protein homotetramerization (GO:0051289)</strong> — real quaternary-structure property (dimer of dimers); KEEP_AS_NON_CORE (structural, not the pathway function).</li>
+<li><strong>intracellular glutamate homeostasis (GO:0090461)</strong> IMP PMID:30239721 — supported by the gain-of-function disease study; ACCEPT (organism-level consequence of the MF).</li>
+<li><strong>negative regulation of L-glutamine biosynthetic process (GO:0062133)</strong> IDA PMID:16899818 — the paper shows ATCAY/Caytaxin <em>inhibits</em> KGA and reduces glutamate; it is not evidence that GLS negatively regulates glutamine <em>biosynthesis</em>. This BP term is a poor fit for GLS's own activity (glutamine catabolism, not regulation of glutamine synthesis). MARK_AS_OVER_ANNOTATED (experimental IDA — do not REMOVE).</li>
+<li><strong>protein binding (GO:0005515)</strong> IPI PMID:16899818 with ATCAY (Q86WG3) — bare protein binding; keep as evidence of the direct ATCAY interaction but MARK_AS_OVER_ANNOTATED (uninformative MF); the biology is captured in notes/core.</li>
+<li>IEA/IBA/ISS/NAS/TAS/HTP duplicates of the above accepted terms: ACCEPT or KEEP_AS_NON_CORE per redundancy.</li>
+<li><strong>amino acid metabolic process (GO:0006520)</strong> IEA (ARBA) and <strong>L-glutamine metabolic process (GO:0006541)</strong> IEA (InterPro) — correct but general parents of the specific catabolic term; KEEP_AS_NON_CORE / MODIFY toward the specific GO:0006543.<br />
+</content><br />
+</invoke></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O94925
+gene_symbol: GLS
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  GLS (kidney-type glutaminase, also known as GLS1) is a mitochondrial,
+  phosphate-activated glutaminase (EC 3.5.1.2) that catalyzes the hydrolytic
+  deamidation of L-glutamine to L-glutamate plus ammonia, the first and
+  committed step of glutaminolysis. The gene produces two catalytically active
+  splice isoforms, KGA (isoform 1) and the shorter GAC/glutaminase C (isoform 3),
+  and a catalytically inactive muscle isoform GAM (isoform 2). The enzyme is
+  synthesized as a ~74-kDa cytosolic precursor that is imported into mitochondria
+  and processed by the mitochondrial-processing peptidase into mature 68- and
+  65-kDa chains that reside in the mitochondrial matrix. It assembles into
+  homotetramers (dimers of dimers), and phosphate-driven tetramerization is
+  coupled to catalytic activation; C-terminal ankyrin repeats modulate higher-order
+  assembly. The glutamate produced feeds the TCA cycle (via glutamate
+  dehydrogenase and transaminases to alpha-ketoglutarate) for energy and
+  anaplerosis. GLS is central to renal ammoniagenesis and acid-base homeostasis,
+  to the brain glutamate/glutamine cycle that supplies neurotransmitter glutamate,
+  and to the elevated glutamine metabolism of many proliferating cancers, where it
+  is an actively pursued drug target (allosteric inhibitors such as BPTES and
+  CB-839/telaglenastat). Loss-of-function GLS variants cause severe neonatal
+  developmental and epileptic encephalopathy and a global developmental
+  delay/ataxia syndrome, whereas a gain-of-function variant causes cataract with
+  glutamate excess and profound developmental delay.
+alternative_products:
+- name: 1 (KGA {ECO:0000303|PubMed:22228304,)
+  id: O94925-1
+- name: 2 (GAM)
+  id: O94925-2
+  sequence_note: VSP_001765, VSP_001766
+- name: 3 (Glutaminase C {ECO:0000303|PubMed:22228304}, GAC)
+  id: O94925-3
+  sequence_note: VSP_001767
+existing_annotations:
+- term:
+    id: GO:0004359
+    label: glutaminase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetically-inferred glutaminase activity. This is the well-established
+      core molecular function of GLS, confirmed directly by multiple experimental
+      structural-enzymology studies and by the UniProt catalytic-activity annotation
+      (EC 3.5.1.2, L-glutamine + H2O = L-glutamate + NH4+).
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/GLS/GLS-uniprot.txt
+      supporting_text: &#34;Reaction=L-glutamine + H2O = L-glutamate + NH4(+);&#34;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic inference that GLS is active in the mitochondrion. Correct: the
+      mature enzyme is a mitochondrial (matrix) protein. Accepted as a core location.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:22228304
+      supporting_text: &#34;GAC is distinctly mitochondrial&#34;
+- term:
+    id: GO:0006543
+    label: L-glutamine catabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetically-inferred involvement in glutamine catabolism. This is the
+      core biological process for GLS (glutaminolysis begins with glutamine
+      hydrolysis). Accepted; also supported directly by IDA (PMID:22049910).
+    action: ACCEPT
+- term:
+    id: GO:0004359
+    label: glutaminase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic assertion of glutaminase activity (multiple IEA methods, incl.
+      RHEA/EC/InterPro). Correct and redundant with the experimental annotations of
+      the same term. Accepted as core MF.
+    action: ACCEPT
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      UniProt SubCell mapping to mitochondrion. Correct core location; redundant with
+      experimental mitochondrial annotations.
+    action: ACCEPT
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic assertion of mitochondrial matrix localization. Consistent with the
+      mature 68-/65-kDa chains being matrix proteins per UniProt. This is the specific
+      compartment within the mitochondrion; accepted.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/GLS/GLS-uniprot.txt
+      supporting_text: &#34;Mitochondrion matrix {ECO:0000250|UniProtKB:P13264}.&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      UniProt SubCell mapping to cytosol. This reflects the ~74-kDa cytosolic
+      precursor of isoform 1 before mitochondrial import, not a steady-state site of
+      catalysis. Real but transient/non-core; keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/GLS/GLS-uniprot.txt
+      supporting_text: &#34;Cytoplasm, cytosol&#34;
+- term:
+    id: GO:0006520
+    label: amino acid metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ARBA electronic annotation to the very general parent &#39;amino acid metabolic
+      process&#39;. Not wrong, but far less informative than the specific L-glutamine
+      catabolic / L-glutamate biosynthetic terms that are directly supported. Keep as
+      a non-core general grouping term.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0006541
+    label: L-glutamine metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro2GO electronic annotation to &#39;L-glutamine metabolic process&#39;, the parent
+      of the specific catabolic term. Correct but general; the specific child
+      GO:0006543 (L-glutamine catabolic process) is the appropriate core term and is
+      already annotated. Generalize/keep as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0006543
+    label: L-glutamine catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Ensembl-Compara electronic transfer of glutamine catabolic process. Correct core
+      BP; redundant with IBA and IDA annotations of the same term.
+    action: ACCEPT
+- term:
+    id: GO:0051289
+    label: protein homotetramerization
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic transfer of protein homotetramerization. GLS does form homotetramers
+      (dimers of dimers), so this captures a real quaternary-structure property rather
+      than the enzyme&#39;s pathway function. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0097054
+    label: L-glutamate biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic transfer of L-glutamate biosynthetic process. This is the product
+      side of the glutaminase reaction and is a legitimate core BP; redundant with the
+      IDA (PMID:22049910) and TAS (PMID:21757002) annotations of the same term.
+    action: ACCEPT
+- term:
+    id: GO:0062133
+    label: negative regulation of L-glutamine biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:16899818
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Derived from the ATCAY/Caytaxin study (PMID:16899818). That paper shows that
+      Caytaxin (ATCAY) binds and inhibits KGA and thereby lowers glutamate; it does
+      not show that GLS itself negatively regulates glutamine biosynthesis. GLS
+      degrades glutamine (catabolism) rather than regulating its synthesis, so this
+      process term is a poor fit for GLS&#39;s own function. As an experimental IDA it is
+      retained but flagged as an over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:16899818
+      supporting_text: &#34;It also reduced the steady-state \nlevels of glutamate by inhibiting KGA enzyme activity.&#34;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      HPA immunofluorescence localization to mitochondrion. Consistent with all other
+      evidence; accepted as core location.
+    action: ACCEPT
+- term:
+    id: GO:0004359
+    label: glutaminase activity
+  evidence_type: EXP
+  original_reference_id: PMID:22538822
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental glutaminase activity from the KGA structure/enzymology study
+      (crystal structures with glutamate/glutamine substrate, catalytic-activity
+      assays, active-site mutagenesis). Directly establishes the core molecular
+      function. Accepted.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:22538822
+      supporting_text: &#34;human kidney-type glutaminase isoform (KGA) is becoming an \nattractive target&#34;
+- term:
+    id: GO:0004359
+    label: glutaminase activity
+  evidence_type: EXP
+  original_reference_id: PMID:24451979
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental glutaminase activity confirmed by the cKGA active-site inhibition
+      study: glutaminase assays plus active-site mutagenesis (Ser286, Lys289, Tyr249,
+      Tyr466) that reduce activity. Directly supports the core MF. Accepted.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:24451979
+      supporting_text: &#34;Glutaminase controls the first step in the glutaminolysis pathway by converting glutamine (Gln) to glutamate (Glu)&#34;
+- term:
+    id: GO:0004359
+    label: glutaminase activity
+  evidence_type: EXP
+  original_reference_id: PMID:26988803
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental glutaminase activity from the glutaminase-inhibitor design study,
+      which assayed catalytic activity and solved KGA/GAC structures. Supports the
+      core MF. Accepted.
+    action: ACCEPT
+- term:
+    id: GO:0004359
+    label: glutaminase activity
+  evidence_type: EXP
+  original_reference_id: PMID:28526749
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental glutaminase activity from the glutaminase evolution/structure study
+      (full-length KGA crystal structure with catalytic-activity determination).
+      Supports the core MF. Accepted.
+    action: ACCEPT
+- term:
+    id: GO:0004359
+    label: glutaminase activity
+  evidence_type: EXP
+  original_reference_id: PMID:29317493
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental glutaminase activity from the GAC allosteric-inhibitor study, which
+      measured enzymatic activity of recombinant GAC. Supports the core MF. Accepted.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:29317493
+      supporting_text: &#34;glutaminase C \n(GAC), which catalyzes the first step in glutamine metabolism&#34;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Sequence-similarity transfer of mitochondrial localization from the rat ortholog
+      (P13264). Correct core location; redundant with experimental evidence.
+    action: ACCEPT
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: EXP
+  original_reference_id: PMID:22228304
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Experimental demonstration that GAC is mitochondrial (subcellular-localization
+      analysis). Directly supports the core mitochondrial localization. Accepted.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:22228304
+      supporting_text: &#34;GAC is distinctly mitochondrial&#34;
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Sequence-similarity transfer of mitochondrial matrix localization from the rat
+      ortholog. Consistent with the mature matrix-resident chains; accepted as the
+      specific compartment.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/GLS/GLS-uniprot.txt
+      supporting_text: &#34;Mitochondrion matrix {ECO:0000250|UniProtKB:P13264}.&#34;
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-70609
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable assertion placing the glutaminase reaction in the
+      mitochondrial matrix. Consistent with UniProt; accepted as the specific
+      compartment of catalysis.
+    action: ACCEPT
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput mitochondrial proteomics detection of GLS. Consistent with the
+      established mitochondrial localization; accepted (corroborating, non-core relative
+      to the direct localization studies).
+    action: ACCEPT
+- term:
+    id: GO:0090461
+    label: intracellular glutamate homeostasis
+  evidence_type: IMP
+  original_reference_id: PMID:30239721
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Supported by the gain-of-function Ser482Cys study: hyperactive GLS raises
+      glutamate and lowers glutamine in patient cells, and inhibiting GLS reverses the
+      phenotype, directly implicating GLS in setting intracellular glutamate levels.
+      Accepted as a physiological process downstream of the core catalytic function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:30239721
+      supporting_text: &#34;increased glutamate and decreased glutamine \nconcentrations were measured in urine and fibroblasts&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16899818
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI capturing the direct interaction with ATCAY/Caytaxin (Q86WG3), a
+      brain-specific regulator that relocalizes GLS and inhibits its activity. The
+      interaction is real and biologically meaningful, but bare &#39;protein binding&#39; is
+      uninformative as a molecular function. Retained as evidence of the ATCAY
+      interaction but flagged as over-annotation; the regulatory biology is captured in
+      the notes.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:16899818
+      supporting_text: &#34;binding studies showed that they interact with each other \ndirectly&#34;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: PMID:16899818
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct localization of KGA to mitochondria (baseline, before ATCAY-induced
+      relocalization to neurite terminals). Supports the core mitochondrial location.
+      Accepted.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:16899818
+      supporting_text: &#34;relocalised \nKGA from the mitochondria to neurite terminals&#34;
+- term:
+    id: GO:0004359
+    label: glutaminase activity
+  evidence_type: IDA
+  original_reference_id: PMID:22049910
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay of glutaminase activity on full-length human GLS/GAC (kinetics; KM
+      for glutamine reported in UniProt). Definitive support for the core molecular
+      function. Accepted.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:22049910
+      supporting_text: &#34;Glutaminase (GLS1/2) catalyzes the conversion of L-glutamine to L-glutamate and \nammonia.&#34;
+- term:
+    id: GO:0006543
+    label: L-glutamine catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:22049910
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct evidence that GLS catalyzes the committed catabolic step for glutamine
+      (glutamine -&gt; glutamate + ammonia). Core biological process. Accepted.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:22049910
+      supporting_text: &#34;Glutaminase (GLS1/2) catalyzes the conversion of L-glutamine to L-glutamate and \nammonia.&#34;
+- term:
+    id: GO:0051289
+    label: protein homotetramerization
+  evidence_type: IDA
+  original_reference_id: PMID:22049910
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct structural evidence for the GAC homotetramer (full-length crystal
+      structure; BPTES binds at the tetramer interface). This is a genuine
+      quaternary-structure property that underlies phosphate activation, but it is not
+      the enzyme&#39;s core pathway function. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:22049910
+      supporting_text: &#34;Two BPTES molecules bind at an interface region of the GAC \ntetramer&#34;
+- term:
+    id: GO:0097054
+    label: L-glutamate biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:22049910
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct evidence that GLS produces L-glutamate from glutamine. This is the product
+      side of the glutaminase reaction and is a legitimate core BP (glutamate
+      biosynthesis via glutamine hydrolysis). Accepted.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:22049910
+      supporting_text: &#34;Glutaminase (GLS1/2) catalyzes the conversion of L-glutamine to L-glutamate and \nammonia.&#34;
+- term:
+    id: GO:0097054
+    label: L-glutamate biosynthetic process
+  evidence_type: TAS
+  original_reference_id: PMID:21757002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Traceable assertion (FXR/hepatic glutamine-glutamate metabolism review context)
+      that glutaminase generates glutamate. Consistent with the core function; the
+      cited paper is about FXR regulation of hepatic glutamine/glutamate metabolism and
+      only contextually establishes GLS&#39;s role. Accepted as corroborating (non-core
+      relative to the direct enzymology).
+    action: ACCEPT
+- term:
+    id: GO:0004359
+    label: glutaminase activity
+  evidence_type: NAS
+  original_reference_id: PMID:10719215
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Non-traceable/author-stated glutaminase activity from the human brain
+      glutaminase cDNA cloning paper (recombinant enzyme was active). Correct core MF;
+      redundant with the experimental annotations.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:10719215
+      supporting_text: &#34;express high levels of properly processed \nand active glutaminase&#34;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: NAS
+  original_reference_id: PMID:10719215
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Author-stated mitochondrial localization inferred from the N-terminal
+      mitochondrial targeting signal in the human brain glutaminase cDNA. Correct core
+      location; redundant with direct evidence.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:10719215
+      supporting_text: &#34;N-terminal mitochondrial targeting signal&#34;
+- term:
+    id: GO:0006543
+    label: L-glutamine catabolic process
+  evidence_type: NAS
+  original_reference_id: PMID:10719215
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Author-stated involvement in glutamine metabolism (the cloned enzyme catalyzes a
+      key reaction in glutamine metabolism and neurotransmitter synthesis). Core BP;
+      redundant with the IBA/IDA annotations.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:10719215
+      supporting_text: &#34;a key reaction in the metabolism of glutamine and the synthesis of \nimportant excitatory and inhibitory neurotransmitters&#34;
+- term:
+    id: GO:0004359
+    label: glutaminase activity
+  evidence_type: NAS
+  original_reference_id: PMID:11015561
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Author-stated glutaminase activity from the isoform-cloning paper (hKGA/hGAC are
+      active kidney-type glutaminases; hGAC has high glutaminase activity in breast
+      cancer cells). Correct core MF; redundant with experimental annotations.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:11015561
+      supporting_text: &#34;a high rate \nof glutamine utilization and glutaminase activity&#34;
+core_functions:
+- description: &gt;-
+    Hydrolyzes L-glutamine to L-glutamate and ammonia in the mitochondrial matrix
+    (glutaminase activity, EC 3.5.1.2), the first, committed step of glutaminolysis
+    that supplies glutamate for TCA-cycle anaplerosis, renal ammoniagenesis, and the
+    neuronal glutamate/glutamine cycle.
+  molecular_function:
+    id: GO:0004359
+    label: glutaminase activity
+  directly_involved_in:
+  - id: GO:0006543
+    label: L-glutamine catabolic process
+  - id: GO:0097054
+    label: L-glutamate biosynthetic process
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  supported_by:
+  - reference_id: file:human/GLS/GLS-uniprot.txt
+    supporting_text: &#34;Reaction=L-glutamine + H2O = L-glutamate + NH4(+);&#34;
+  - reference_id: PMID:22049910
+    supporting_text: &#34;Glutaminase (GLS1/2) catalyzes the conversion of L-glutamine to L-glutamate and \nammonia.&#34;
+  - reference_id: PMID:24451979
+    supporting_text: &#34;Glutaminase controls the first step in the glutaminolysis pathway by converting glutamine (Gln) to glutamate (Glu)&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10719215
+  title: Isolation, characterization and expression of a human brain mitochondrial
+    glutaminase cDNA.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cloning of the human brain mitochondrial glutaminase cDNA; recombinant enzyme is
+      active and carries an N-terminal mitochondrial targeting signal. Abstract-only in
+      cache; supports glutaminase activity and mitochondrial localization.
+- id: PMID:11015561
+  title: Cloning and analysis of unique human glutaminase isoforms generated by tissue-specific
+    alternative splicing.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Defines the human KGA, GAC and GAM splice isoforms and their tissue expression;
+      GAC is the high-glutaminase-activity isoform in breast cancer cells. GAM (isoform
+      2) lacks catalytic activity per UniProt.
+- id: PMID:16899818
+  title: Brain-specific BNIP-2-homology protein Caytaxin relocalises glutaminase to
+    neurite terminals and reduces glutamate levels.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Establishes the direct ATCAY (Caytaxin, Q86WG3)-KGA interaction and shows ATCAY
+      inhibits KGA activity and lowers glutamate. Supports the protein-binding IPI and
+      the mitochondrial IDA; the derived GO:0062133 process term describes ATCAY&#39;s
+      regulatory effect rather than a GLS function (flagged as over-annotation).
+- id: PMID:21757002
+  title: The nuclear receptor FXR regulates hepatic transport and metabolism of glutamine
+    and glutamate.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Primarily about FXR regulation of hepatic glutamine/glutamate metabolism; only
+      contextually supports glutaminase producing glutamate. Basis for a TAS annotation
+      of L-glutamate biosynthetic process.
+- id: PMID:22049910
+  title: Full-length human glutaminase in complex with an allosteric inhibitor.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      First full-length human GAC crystal structure with kinetic assays; directly
+      supports glutaminase activity, glutamine catabolism/glutamate biosynthesis, and
+      the homotetramer.
+- id: PMID:22228304
+  title: Mitochondrial localization and structure-based phosphate activation mechanism
+    of Glutaminase C with implications for cancer metabolism.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Demonstrates GAC is mitochondrial and describes the phosphate/tetramerization
+      activation mechanism relevant to cancer metabolism. Supports the mitochondrial
+      localization annotation.
+- id: PMID:22538822
+  title: Structural basis for the allosteric inhibitory mechanism of human kidney-type
+    glutaminase (KGA) and its regulation by Raf-Mek-Erk signaling in cancer cell metabolism.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      KGA crystal structures with glutamate/glutamine, catalytic-activity assays,
+      active-site mutagenesis, and RAF1/MAP2K2 interaction; supports the EXP glutaminase
+      activity annotation and the homotetramer/regulation biology.
+- id: PMID:24451979
+  title: Structural basis for the active site inhibition mechanism of human kidney-type
+    glutaminase (KGA).
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text available; cKGA:DON structure and active-site mutagenesis (Ser286,
+      Lys289, Tyr249, Tyr466) confirm catalytic residues and glutaminase activity.
+- id: PMID:26988803
+  title: Design and evaluation of novel glutaminase inhibitors.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Glutaminase-inhibitor design study with KGA/GAC structures and activity assays;
+      supports the EXP glutaminase activity annotation.
+- id: PMID:28526749
+  title: The origin and evolution of human glutaminases and their atypical C-terminal
+    ankyrin repeats.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full-length KGA structure and evolutionary/ANK-repeat analysis; determines
+      catalytic activity and subunit structure. Supports the EXP glutaminase activity
+      annotation and the homotetramer/filament biology.
+- id: PMID:29317493
+  title: Characterization of the interactions of potent allosteric inhibitors with
+    glutaminase C, a key enzyme in cancer cell glutamine metabolism.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      GAC allosteric-inhibitor (UPGL00004/CB-839/BPTES) structural and enzymatic
+      characterization; supports the EXP glutaminase activity annotation.
+- id: PMID:30239721
+  title: GLS hyperactivity causes glutamate excess, infantile cataract and profound
+    developmental delay.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Gain-of-function Ser482Cys GLS variant (CASGID) causing glutamate excess;
+      functional basis for the intracellular glutamate homeostasis IMP annotation.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput mitochondrial proteome study; corroborates GLS mitochondrial
+      localization (HTP evidence).
+- id: Reactome:R-HSA-70609
+  title: glutamine + H2O =&gt; glutamate + NH4+ (GLS)
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

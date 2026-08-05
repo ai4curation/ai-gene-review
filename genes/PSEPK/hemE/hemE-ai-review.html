@@ -1,0 +1,2536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hemE - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>hemE</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88CV6" target="_blank" class="term-link">
+                        Q88CV6
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+
+                    <span class="badge">PP_5074</span>
+
+                </div>
+            </div>
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "hemE";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88CV6" data-a="DESCRIPTION: HemE is a cytoplasmic uroporphyrinogen decarboxyla..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>HemE is a cytoplasmic uroporphyrinogen decarboxylase. It removes the four acetate carboxyl groups of uroporphyrinogen III without an external cofactor, producing coproporphyrinogen III for the oxygen-dependent HemF or oxygen-independent HemN branch of protoporphyrinogen IX synthesis.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004853" target="_blank" class="term-link">
+                                    GO:0004853
+                                </a>
+                            </span>
+                            <span class="term-label">uroporphyrinogen decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CV6" data-a="GO:0004853" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the exact substrate-level activity of HemE.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns EC 4.1.1.37 and describes four decarboxylations yielding coproporphyrinogen III.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemE/hemE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the decarboxylation of four acetate groups of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CV6" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasm is compatible with HemE biology but is the broader parent of the separately annotated cytosol term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The more specific cytosol annotation is also present and supported for this soluble enzyme, making cytoplasm redundant as a distinct retained annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemE/hemE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CV6" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol is the more specific informative location for the soluble bacterial HemE enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The TreeGrafter cytosol call is consistent with UniProt&#39;s cytoplasm assignment and avoids retaining both a child term and its broader parent as equivalent annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemE/hemE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006778" target="_blank" class="term-link">
+                                    GO:0006778
+                                </a>
+                            </span>
+                            <span class="term-label">porphyrin-containing compound metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CV6" data-a="GO:0006778" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This broad metabolic-process annotation is correct but not core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HemE does participate in porphyrin-containing compound metabolism, but its substrate-specific decarboxylase activity and biosynthetic process assignments describe the role more informatively.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemE/hemE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">biosynthesis; coproporphyrinogen-III from 5-aminolevulinate: step 4/4.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006779" target="_blank" class="term-link">
+                                    GO:0006779
+                                </a>
+                            </span>
+                            <span class="term-label">porphyrin-containing compound biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CV6" data-a="GO:0006779" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The biosynthetic assignment is sound and can be made endpoint-specific for KT2440.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> In KT2440, HemE supplies coproporphyrinogen III to the HemF/HemN, protoporphyrinogen oxidase, and ferrochelatase reactions that produce heme B, supporting the live endpoint term GO:0006785.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006785" target="_blank" class="term-link">
+                                    heme B biosynthetic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemE/hemE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">uroporphyrinogen-III to yield coproporphyrinogen-III.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006783" target="_blank" class="term-link">
+                                    GO:0006783
+                                </a>
+                            </span>
+                            <span class="term-label">heme biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CV6" data-a="GO:0006783" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HemE is an obligatory shared enzyme in protoporphyrin-dependent heme-b synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Coproporphyrinogen III is required for the subsequent HemF/HemN, protoporphyrinogen oxidase, and ferrochelatase reactions.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemE/hemE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Porphyrin-containing compound metabolism; protoporphyrin-IX</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Decarboxylates the four acetate side chains of uroporphyrinogen III to produce coproporphyrinogen III for protoporphyrinogen IX and heme-b synthesis.</h3>
+                <span class="vote-buttons" data-g="Q88CV6" data-a="FUNCTION: Decarboxylates the four acetate side chains of uro..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004853" target="_blank" class="term-link">
+                            uroporphyrinogen decarboxylase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006785" target="_blank" class="term-link">
+                                heme B biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/hemE/hemE-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Catalyzes the decarboxylation of four acetate groups of</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/hemE/hemE-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PSEPK hemE</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HemE converts uroporphyrinogen III to coproporphyrinogen III.</div>
+
+                        <div class="finding-text">"Catalyzes the decarboxylation of four acetate groups of"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HemE is cytoplasmic.</div>
+
+                        <div class="finding-text">"SUBCELLULAR LOCATION: Cytoplasm"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/hemE/hemE-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist research report for PSEPK hemE</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report recovers the HemE reaction but acknowledges that the target protein has not been characterized directly.</div>
+
+                        <div class="finding-text">"No direct experimental characterization of the *P. putida* KT2440 protein."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does HemE flux constrain use of the HemF versus HemN late-step route?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88CV6" data-a="Q: Does HemE flux constrain use of the HemF versus He..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Quantify tetrapyrrole intermediates after hemE depletion during aerobic growth and oxygen-limited growth.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: HemE supplies coproporphyrinogen III to both late-step alternatives.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88CV6" data-a="EXPERIMENT: Quantify tetrapyrrole intermediates after hemE dep..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hemE-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88CV6" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *hemE* (Uroporphyrinogen Decarboxylase) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">12 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-20T20:35:36.252242</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="hemE-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="hemE-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-heme-uroporphyrinogen-decarboxylase-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>hemE</em> (Uroporphyrinogen Decarboxylase) in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Gene:</strong> <em>hemE</em> (OrderedLocusName PP_5074) · <strong>UniProt:</strong> <a href="https://www.uniprot.org/uniprotkb/Q88CV6">Q88CV6</a> · <strong>EC:</strong> 4.1.1.37<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / KT2440)<br />
+<strong>Protein family:</strong> Uroporphyrinogen decarboxylase family (Pfam PF01208, InterPro IPR000257 / IPR006361)</p>
+<hr />
+<h2 id="identity-verification">Identity Verification</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+<th>Consistent with target?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene symbol</td>
+<td><em>hemE</em></td>
+<td>✅ standard symbol for URO-D in bacteria</td>
+</tr>
+<tr>
+<td>Protein</td>
+<td>Uroporphyrinogen decarboxylase (URO-D/UPD)</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>EC number</td>
+<td>4.1.1.37</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Length</td>
+<td>354 aa</td>
+<td>✅ matches bacterial URO-D (~353 aa in <em>E. coli</em>)</td>
+</tr>
+<tr>
+<td>Family/domains</td>
+<td>URO-D family, PF01208, IPR000257/IPR006361</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>P. putida</em> KT2440 (γ-proteobacterium)</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<p>The gene symbol <em>hemE</em>, the protein description, the EC number, the family/domain assignment, and the protein length are all internally consistent and match the URO-D family. This report proceeds on a confident identification. Note that the deep, direct experimental literature exists for the human, bovine, rat, tobacco and <em>E. coli</em> enzymes; the <em>P. putida</em> KT2440 protein itself has not been individually characterized, so its annotation is established by strong homology and by bacterial genetics in the closely related <em>E. coli</em>.</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>The gene <strong><em>hemE</em></strong> (PP_5074) of <em>Pseudomonas putida</em> KT2440 encodes <strong>uroporphyrinogen decarboxylase (URO-D / UPD, EC 4.1.1.37)</strong>, the fifth enzyme of the heme (tetrapyrrole) biosynthetic pathway. Its primary catalytic function is the <strong>sequential decarboxylation of the four acetate side chains of uroporphyrinogen III</strong> — an octacarboxylic tetrapyrrole — converting each into a methyl group and releasing four molecules of CO₂, to produce <strong>coproporphyrinogen III</strong> (a tetracarboxylic tetrapyrrole). The reaction proceeds stepwise through hepta-, hexa- and penta-carboxylate porphyrinogen intermediates, beginning at the ring-D acetate, with decarboxylation of the heptacarboxylate III intermediate being rate-limiting under physiological conditions (<a href="https://pubmed.ncbi.nlm.nih.gov/9564029/">PMID: 9564029</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/6626522/">PMID: 6626522</a>).</p>
+<p>This step sits at a metabolically decisive point. Uroporphyrinogen III is the last common precursor shared by heme, siroheme, cobalamin (B₁₂) and (in phototrophs) chlorophyll. URO-D is <strong>the first committed enzyme of the branch that leads specifically to protoheme (heme b)</strong> rather than to siroheme or corrinoids, and its activity is therefore essential for supplying heme to the cytochromes, catalase and other hemoproteins that this obligately aerobic soil bacterium requires for respiration and oxidative-stress defense (<a href="https://pubmed.ncbi.nlm.nih.gov/7849561/">PMID: 7849561</a>). The enzyme is a <strong>soluble, cytoplasmic protein</strong> that functions without any metal ion or organic cofactor — an unusual property for a decarboxylase — adopting a distorted (β/α)₈ TIM-barrel fold and acting as a <strong>homodimer</strong> with a deep active-site cleft lined by invariant Arg/Asp/Tyr/His residues (<a href="https://pubmed.ncbi.nlm.nih.gov/9564029/">PMID: 9564029</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/11524417/">PMID: 11524417</a>).</p>
+<p>While no experimental study has been published on the <em>P. putida</em> protein specifically, the functional assignment is exceptionally well supported by transitive evidence. Direct sequence analysis performed in this investigation shows that Q88CV6 (354 aa) shares <strong>~50% identity with the biochemically and structurally characterized human enzyme</strong> and conserves <strong>five of the six invariant active-site residues</strong> (Arg27, Arg31, Asp77, Tyr154, His327), the sixth being the expected conservative bacterial Ser→Thr substitution (Thr209). Bacterial genetics in <em>E. coli</em> demonstrate that loss of <em>hemE</em> blocks the pathway, causing uroporphyrin accumulation and heme/catalase deficiency, and that <em>hemE</em> orthologs from distant bacteria are functionally interchangeable (<a href="https://pubmed.ncbi.nlm.nih.gov/7849561/">PMID: 7849561</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/1104578/">PMID: 1104578</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/8224882/">PMID: 8224882</a>). The evidence collectively provides high confidence in the annotation.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-heme-is-uroporphyrinogen-decarboxylase-uro-d-catalyzing-the-fifth-step-of-heme-biosynthesis">Finding 1 — HemE is uroporphyrinogen decarboxylase (URO-D), catalyzing the fifth step of heme biosynthesis</h3>
+<p>HemE (Q88CV6) is uroporphyrinogen decarboxylase, the enzyme that performs the fifth step of the heme biosynthetic pathway. The reaction is the conversion of <strong>uroporphyrinogen III → coproporphyrinogen III</strong>, achieved by decarboxylating the four acetic-acid side chains of the substrate. Each acetate side chain (–CH₂–COOH) is converted to a methyl group (–CH₃) with loss of one CO₂, giving a net release of four CO₂ molecules and reducing the number of carboxylate groups on the macrocycle from eight to four.</p>
+<p>The definitive statement of this function comes from the human enzyme literature: <em>"Uroporphyrinogen decarboxylase (URO-D) catalyzes the fifth step in the heme biosynthetic pathway, converting uroporphyrinogen to coproporphyrinogen by decarboxylating the four acetate side chains of the substrate. This activity is essential in all organisms"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/9564029/">PMID: 9564029</a>). A single polypeptide performs all four decarboxylations; purified bovine hepatic enzyme <em>"catalyzes all four decarboxylation reactions in the conversion of uroporphyrinogen I or III to the corresponding coproporphyrinogen,"</em> and <em>"the rate-limiting step in the physiologically significant conversion of uroporphyrinogen III to coproporphyrinogen III is the decarboxylation of heptacarboxylate III"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/6626522/">PMID: 6626522</a>).</p>
+<p>The reaction therefore does <strong>not</strong> occur in a single concerted event; it proceeds through a defined sequence of intermediates — <strong>uroporphyrinogen III (8 –COOH) → heptacarboxylate porphyrinogen (7) → hexacarboxylate (6) → pentacarboxylate (5) → coproporphyrinogen III (4)</strong> — with a preference for beginning at the ring-D acetate and processing the remaining rings in clockwise order. The assignment for Q88CV6 rests on HAMAP rule MF_00218, which classifies the <em>P. putida</em> PP_5074 product in the URO-D family (PF01208, IPR000257/IPR006361), fully consistent with all family-level and mechanistic evidence.</p>
+<h3 id="finding-2-substrate-specificity-prefers-the-physiological-iii-isomer-but-is-a-broad-specificity-porphyrinogen-carboxy-lyase">Finding 2 — Substrate specificity: prefers the physiological III isomer but is a broad-specificity porphyrinogen carboxy-lyase</h3>
+<p>The systematic name uroporphyrinogen-III carboxy-lyase reflects the physiological substrate: the type-III isomer of uroporphyrinogen. Kinetic studies of the rat liver enzyme established that <em>"uroporphyrinogen III was the best substrate by the criteria of Km/Vmax and decarboxylation at 1 microM and was converted into coproporphyrinogen more quickly than its series-I isomer"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/7306050/">PMID: 7306050</a>). This isomer discrimination occurs principally at the first (uroporphyrinogen → heptacarboxylate) decarboxylation.</p>
+<p>Despite this physiological preference, the enzyme has intrinsically <strong>low absolute substrate specificity</strong>. Studies of the rat-liver porphyrinogen carboxy-lyase showed that <em>"this enzyme has a low substrate specificity since at least eighteen porphyrinogens were proved to be decarboxylated by the enzyme"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/1052603/">PMID: 1052603</a>). It can act on all four uroporphyrinogen isomers (I, II, III and IV) and on the partially decarboxylated hepta-, hexa- and penta-carboxylate intermediates. A critical mechanistic requirement is that the substrate must be the <strong>reduced porphyrinogen</strong> (hexahydroporphyrin); the corresponding oxidized porphyrin is not a substrate and acts as an inhibitor. The catalytic target is the tetrapyrrole macrocycle bearing acetate side chains.</p>
+<h3 id="finding-3-uro-d-is-a-cofactor-independent-8-tim-barrel-enzyme-functioning-as-a-homodimer">Finding 3 — URO-D is a cofactor-independent (β/α)₈ TIM-barrel enzyme functioning as a homodimer</h3>
+<p>A striking feature of URO-D is that it is a <strong>decarboxylase requiring neither a metal ion nor an organic cofactor</strong> (no pyridoxal phosphate, biotin, thiamine or metal). This is highly unusual, because most decarboxylases rely on a cofactor to stabilize the carbanion intermediate. Instead, URO-D is <em>inhibited</em> by divalent metals (Fe²⁺, Co²⁺, Cu²⁺, Zn²⁺, Pb²⁺) and by sulfhydryl reagents, and uses only protein side chains for catalysis.</p>
+<p>The crystal structure of the human enzyme (1.60 Å) revealed the architecture: <em>"The 40.8 kDa protein is comprised of a single domain containing a (beta/alpha)8-barrel with a deep active site cleft formed by loops at the C-terminal ends of the barrel strands. Many conserved residues cluster at this cleft, including the invariant side chains of Arg37, Arg41 and His339, which probably function in substrate binding, and Asp86, Tyr164 and Ser219, which may function in either binding or catalysis. URO-D is a dimer in solution"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/9564029/">PMID: 9564029</a>). The (β/α)₈-barrel is a <em>distorted</em> TIM barrel conserved across every URO-D structure solved to date, including the tobacco and <em>Plasmodium falciparum</em> enzymes. Dimerization (Kd ≈ 0.1 µM) juxtaposes the two active-site clefts and is important for stability and activity.</p>
+<p>Structural modeling of the tobacco (<em>Nicotiana tabacum</em>) enzyme assigned the catalytic acid/base groups: <em>"Asp(82) and Tyr(159) seem to be the catalytic functional groups, whereas the other residues may serve in substrate recognition and binding, with Arg(32) steering its insertion"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/11524417/">PMID: 11524417</a>) — the tobacco Asp82/Tyr159 correspond to human Asp86/Tyr164. Mechanistically, all four acetate → methyl conversions proceed by an identical route: <em>"In the uroporphyrinogen decarboxylase-catalysed reaction all four acetate side chains are converted into methyl groups by the same mechanism, to produce coproporphyrinogen III. Both methylene hydrogen atoms remain undisturbed and the reaction occurs with the retention of stereochemistry"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/7842850/">PMID: 7842850</a>).</p>
+<h3 id="finding-4-the-p-putida-protein-conserves-the-uro-d-catalytic-machinery-direct-sequence-evidence">Finding 4 — The <em>P. putida</em> protein conserves the URO-D catalytic machinery (direct sequence evidence)</h3>
+<p>To convert the general URO-D characterization into a specific, evidence-based assignment for Q88CV6, a global pairwise alignment was performed in this investigation between the <em>P. putida</em> protein (354 aa) and the biochemically and structurally characterized human enzyme (UniProt P06132, 367 aa). The two share <strong>~49.7% identity</strong> over aligned positions — a value well above the threshold at which enzymatic function is reliably transferable.</p>
+<p>Critically, <strong>five of the six invariant human active-site residues are strictly conserved</strong> at the mapped positions in <em>P. putida</em> HemE:</p>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Human URO-D</th>
+<th><em>P. putida</em> HemE (Q88CV6)</th>
+<th>Conserved?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Substrate binding</td>
+<td>Arg37</td>
+<td>Arg27</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Substrate binding (R-Q-A-G-R motif)</td>
+<td>Arg41</td>
+<td>Arg31</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Catalysis / binding</td>
+<td>Asp86</td>
+<td>Asp77</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Catalysis / binding</td>
+<td>Tyr164</td>
+<td>Tyr154</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Substrate binding / isomer specificity</td>
+<td>His339</td>
+<td>His327</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Binding</td>
+<td>Ser219</td>
+<td>Thr209</td>
+<td>⚠️ conservative Ser→Thr</td>
+</tr>
+</tbody>
+</table>
+<p>The diagnostic <strong>R-Q-A-G-R motif</strong> (present as "MRQAGR" around residues 24–31) anchors the two catalytic arginines. The single non-identity — human Ser219 → Thr209 in <em>P. putida</em> — is precisely the substitution noted by Martins et al. (2001), who reported this residue as "Ser214 (Thr in <em>E. coli</em>)," i.e., a recognized conservative difference in which eukaryotes carry Ser and bacteria carry Thr at this substrate-binding position. This preservation of the full catalytic constellation, combined with ~50% overall identity, provides direct, residue-level evidence that Q88CV6 possesses a functional URO-D active site.</p>
+<h3 id="finding-5-bacterial-genetics-confirm-heme-is-the-committed-branch-point-enzyme-loss-blocks-heme-synthesis">Finding 5 — Bacterial genetics confirm <em>hemE</em> is the committed branch-point enzyme; loss blocks heme synthesis</h3>
+<p>Because the biochemistry was established largely in mammalian and plant systems, it is important that the <em>bacterial</em> function is independently confirmed by genetics in <em>E. coli</em>, a close relative of <em>Pseudomonas</em> (both γ-proteobacteria). Uroporphyrinogen III is the last common tetrapyrrole precursor: <em>"Uroporphyrinogen III is the committed intermediate common to heme and siroheme biosynthesis in E. coli. Uroporphyrinogen III decarboxylase is the first enzyme at the branch point which commits to heme synthesis"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/7849561/">PMID: 7849561</a>). A <em>hemE</em> mutant accumulated uroporphyrin, had no URO-D activity, and was rescued by a heterologous <em>Synechococcus hemE</em> plasmid — after which it accumulated copro- and protoporphyrin instead of uroporphyrin, demonstrating restoration of downstream flux and cross-species interchangeability.</p>
+<p>The first <em>E. coli</em> URO-D-deficient mutant (SASQ85) was, in the authors' words, <em>"the first uroporphyrinogen decarboxylase-deficient mutant isolated in E. coli K-12"</em>; it accumulated uroporphyrin III, was catalase-deficient, and formed dwarf colonies, and cell-free extracts converted δ-aminolevulinic acid / porphobilinogen as far as uroporphyrinogen but no further (<a href="https://pubmed.ncbi.nlm.nih.gov/1104578/">PMID: 1104578</a>). This phenotype directly demonstrates the physiological consequence of losing the enzyme: the pathway stalls at uroporphyrinogen, heme-dependent enzymes such as catalase are not produced, and porphyrin precursors accumulate. Molecular cloning showed <em>"an open reading frame of 353 codons, which encoded a predicted amino acid sequence that exhibited a high degree of homology over its entire length to the amino acid sequence of UPD from humans and other organisms"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/8224882/">PMID: 8224882</a>) — a length (~353 aa) essentially identical to the 354-aa <em>P. putida</em> protein. Finally, site-directed mutagenesis of human His339 showed that this conserved histidine (equivalent to <em>P. putida</em> His327) <em>"is likely important in imparting isomer specificity"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/8980654/">PMID: 8980654</a>), tying a specific conserved residue to a specific functional property.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="position-of-heme-in-the-tetrapyrrole-biosynthetic-pathway">Position of HemE in the tetrapyrrole biosynthetic pathway</h3>
+<div class="codehilite"><pre><span></span><code>   Glutamate / Glycine
+  │  (C5 / C4 route to ALA)
+  ▼
+   δ-Aminolevulinic acid (ALA)
+  │  hemB (ALA dehydratase)
+  ▼
+   Porphobilinogen (PBG)
+  │  hemC (PBG deaminase)
+  ▼
+   Hydroxymethylbilane
+  │  hemD (uroporphyrinogen III synthase)
+  ▼
+   ┌────────────────────────────────────────────┐
+   │      UROPORPHYRINOGEN III  (8 × –COOH)      │  ◄── common branch-point precursor
+   └────────────────────────────────────────────┘
+  │                         │
+  │ hemE  ◄◄◄ THIS GENE     └──►  cysG / siroheme, cobalamin (B12) branch
+  │ (URO-D, EC 4.1.1.37)
+  │  – 4 CO2  (removes 4 acetate side chains)
+  ▼
+   Coproporphyrinogen III  (4 × –COOH)
+  │  hemF / hemN (coproporphyrinogen oxidase)
+  ▼
+   Protoporphyrinogen IX
+  │  hemG / hemY
+  ▼
+   Protoporphyrin IX
+  │  hemH (ferrochelatase) + Fe2+
+  ▼
+   PROTOHEME (heme b)  ──►  cytochromes, catalase, peroxidases, etc.
+</code></pre></div>
+
+<p>HemE catalyzes the <strong>first committed step toward heme</strong> after the last branch point. Everything upstream of uroporphyrinogen III is shared with the siroheme and cobalamin routes; once HemE removes the four acetate carboxylates, the molecule is committed to the coproporphyrinogen → protoheme trajectory. In an obligate aerobe such as <em>P. putida</em> KT2440, this flux is essential to build the cytochromes of the aerobic respiratory chain and the heme-dependent catalases/peroxidases that defend against reactive oxygen species.</p>
+<h3 id="catalytic-mechanism">Catalytic mechanism</h3>
+<p>The four decarboxylations share one chemical mechanism and occur with retention of stereochemistry, using only protein side chains (no cofactor). The current model, drawn from the human crystal structure and tobacco modeling, is:</p>
+<div class="codehilite"><pre><span></span><code>   Acetate side chain (–CH2–COO−)
+    │
+   Arg27 / Arg31  ── electrostatically bind and orient the substrate carboxylates
+   Asp77          ── acid/base; protonates/stabilizes the reactive intermediate
+   Tyr154         ── acid/base partner
+   His327         ── binding + governs isomer specificity
+    │
+    ▼
+   Decarboxylation → loss of CO2 → –CH3 (methyl) side chain
+</code></pre></div>
+
+<p>All six residues cluster in a deep active-site cleft at the C-terminal ends of the (β/α)₈ barrel strands. The homodimer brings two clefts together, important for stability and activity. In <em>P. putida</em> HemE the equivalent residues (Arg27, Arg31, Asp77, Tyr154, His327) are all present, so the same mechanism is expected.</p>
+<h3 id="localization">Localization</h3>
+<p>Bacterial URO-D is a <strong>soluble cytoplasmic enzyme</strong> carrying out its reaction in the cytosol, consistent with the fact that the upstream (substrate-generating) and downstream (heme-forming) bacterial enzymes act in the cytoplasm / at the inner membrane. No signal peptide, transmembrane segment or organellar targeting sequence is expected for the <em>P. putida</em> protein. (In eukaryotes URO-D is cytosolic; in the apicoplast-bearing parasite <em>P. falciparum</em> it is targeted to the apicoplast, reflecting that organism's compartmentalized hybrid pathway — <a href="https://pubmed.ncbi.nlm.nih.gov/19041871/">PMID: 19041871</a> — but this does not apply to a free-living bacterium.)</p>
+<h3 id="confidence-assessment">Confidence assessment</h3>
+<table>
+<thead>
+<tr>
+<th>Line of evidence</th>
+<th>Strength</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Family/domain assignment (HAMAP MF_00218, PF01208)</td>
+<td>High</td>
+<td>Rule-based but well-curated</td>
+</tr>
+<tr>
+<td>~50% identity to characterized human enzyme</td>
+<td>High</td>
+<td>Above reliable function-transfer threshold</td>
+</tr>
+<tr>
+<td>5/6 invariant active-site residues conserved</td>
+<td>High</td>
+<td>Direct residue-level evidence (this work)</td>
+</tr>
+<tr>
+<td>Bacterial genetics (<em>E. coli hemE</em>) confirm role &amp; phenotype</td>
+<td>High</td>
+<td>Closely related γ-proteobacterium</td>
+</tr>
+<tr>
+<td>Cross-species complementation (Synechococcus → <em>E. coli</em>)</td>
+<td>High</td>
+<td>Demonstrates functional interchangeability</td>
+</tr>
+<tr>
+<td>Direct experimental study of <em>P. putida</em> protein</td>
+<td><strong>Absent</strong></td>
+<td>Assignment is transitive, not direct</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Study</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9564029/">9564029</a></td>
+<td><em>Crystal structure of human uroporphyrinogen decarboxylase</em></td>
+<td>Defines the reaction (four acetate side chains decarboxylated, fifth step), the (β/α)₈-barrel fold, the invariant active-site residues, and homodimeric assembly. Foundational structural reference.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/6626522/">6626522</a></td>
+<td><em>Purification of bovine hepatic URO-D</em></td>
+<td>Shows a single enzyme catalyzes all four decarboxylations; identifies heptacarboxylate III decarboxylation as rate-limiting.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/7306050/">7306050</a></td>
+<td><em>Rat liver URO-D: porphyrinogens I vs III</em></td>
+<td>Establishes preference for the physiological III isomer (best Km/Vmax).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/1052603/">1052603</a></td>
+<td><em>Tetrapyrroles as substrates/inhibitors of porphyrinogen carboxy-lyase</em></td>
+<td>Demonstrates broad substrate tolerance (≥18 porphyrinogens decarboxylated).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11524417/">11524417</a></td>
+<td><em>Crystal structure of tobacco URO-D</em></td>
+<td>Assigns Asp82/Tyr159 (= human Asp86/Tyr164) as catalytic acid/base groups; confirms conserved TIM barrel across kingdoms.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/7842850/">7842850</a></td>
+<td><em>Mechanistic &amp; stereochemical studies</em></td>
+<td>Shows all four decarboxylations use one mechanism with retention of stereochemistry.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/8980654/">8980654</a></td>
+<td><em>Mutational analysis of human URO-D</em></td>
+<td>His339 (= <em>P. putida</em> His327) imparts isomer specificity; no single cysteine is essential.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/7849561/">7849561</a></td>
+<td><em>hemA/hemE mutant of E. coli</em></td>
+<td>Defines <em>hemE</em>/URO-D as the committed branch-point enzyme; cross-species complementation restores downstream flux.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/1104578/">1104578</a></td>
+<td><em>Uroporphyrin-accumulating E. coli mutant</em></td>
+<td>First bacterial URO-D-deficient mutant: uroporphyrin accumulation, catalase deficiency, pathway block.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/8224882/">8224882</a></td>
+<td><em>Cloning of E. coli hemE</em></td>
+<td>Bacterial <em>hemE</em> encodes ~353 aa (≈ <em>P. putida</em> 354 aa), homologous full-length to human/other UPDs.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11719352/">11719352</a></td>
+<td><em>Naturally occurring URO-D mutations (F-PCT)</em></td>
+<td>Genotype–phenotype and structural mapping of disease mutations; corroborates residue essentiality.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19041871/">19041871</a></td>
+<td><em>P. falciparum URO-D localization</em></td>
+<td>Confirms conserved TIM-barrel fold and active-site residues in a divergent organism; illustrates organism-specific localization.</td>
+</tr>
+</tbody>
+</table>
+<p>The evidence is internally consistent across mammalian (human, bovine, rat), plant (tobacco), protozoan (<em>Plasmodium</em>) and bacterial (<em>E. coli</em>, <em>Synechococcus</em>) systems: the fold, active-site residues, cofactor-independence, reaction, and substrate preference are conserved throughout. No paper in the reviewed set contradicts the assignment.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct experimental characterization of the <em>P. putida</em> KT2440 protein.</strong> The annotation is transitive — based on sequence homology, conserved active-site residues, and genetics in related bacteria. No published study has purified Q88CV6, measured its kinetic constants, or solved its structure.</p>
+</li>
+<li>
+<p><strong>Kinetic parameters are borrowed from other species.</strong> The rate-limiting step, isomer preference, and cofactor-independence are documented for human, bovine, rat and plant enzymes, not for the <em>P. putida</em> enzyme itself. Quantitative details could differ.</p>
+</li>
+<li>
+<p><strong>Ser→Thr substitution (Thr209).</strong> This is a conservative, expected bacterial substitution at a substrate-binding position, but its precise effect on <em>P. putida</em> enzyme kinetics or isomer discrimination has not been tested.</p>
+</li>
+<li>
+<p><strong>Localization is inferred, not measured.</strong> Cytoplasmic localization is expected from bacterial biology and the absence of targeting signals, but has not been experimentally demonstrated for this protein.</p>
+</li>
+<li>
+<p><strong>Regulation and pathway integration in <em>P. putida</em> specifically</strong> (transcriptional control, flux control, interaction with iron/oxygen status) were not characterized here; <em>E. coli hemE</em> regulation was noted (<a href="https://pubmed.ncbi.nlm.nih.gov/7849561/">PMID: 7849561</a>) but <em>P. putida</em>-specific data are lacking.</p>
+</li>
+<li>
+<p><strong>Essentiality in <em>P. putida</em> is inferred.</strong> Heme biosynthesis is essential in aerobes and <em>E. coli hemE</em> loss is severely deleterious, but a targeted <em>P. putida</em> KT2440 <em>hemE</em> knockout has not been reviewed here.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant expression and enzyme assay.</strong> Clone PP_5074, express Q88CV6 in <em>E. coli</em>, purify, and assay URO-D activity on uroporphyrinogen III (and isomer I) by HPLC or the tandem-MS method of <a href="https://pubmed.ncbi.nlm.nih.gov/18294003/">PMID: 18294003</a> to obtain Km/kcat and confirm the intermediate profile (hepta → hexa → penta → copro).</p>
+</li>
+<li>
+<p><strong>Complementation test.</strong> Verify that PP_5074 rescues an <em>E. coli hemE</em> mutant, mirroring the <em>Synechococcus</em>→<em>E. coli</em> rescue in <a href="https://pubmed.ncbi.nlm.nih.gov/7849561/">PMID: 7849561</a>.</p>
+</li>
+<li>
+<p><strong>Structural determination.</strong> Solve the crystal structure (or generate a high-confidence AlphaFold model with PAE analysis) and confirm the distorted (β/α)₈ TIM barrel, homodimer interface, and positioning of Arg27, Arg31, Asp77, Tyr154, His327, Thr209 in a deep active-site cleft.</p>
+</li>
+<li>
+<p><strong>Active-site mutagenesis.</strong> Test Asp77Asn, Tyr154Phe and His327Asn to confirm catalytic/isomer-specificity roles predicted from human/tobacco homologs (<a href="https://pubmed.ncbi.nlm.nih.gov/11524417/">PMID: 11524417</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/8980654/">PMID: 8980654</a>); test Thr209Ser to probe the bacterial/eukaryotic substrate-binding difference.</p>
+</li>
+<li>
+<p><strong>Cofactor-independence check.</strong> Confirm the absence of a metal/organic cofactor requirement and reproduce inhibition by divalent metals and sulfhydryl reagents for the <em>P. putida</em> enzyme.</p>
+</li>
+<li>
+<p><strong>Localization and essentiality.</strong> Use fluorescent fusion / cell fractionation to confirm cytoplasmic localization, and attempt a conditional knockout to confirm essentiality and the expected uroporphyrin-accumulation / heme-deficiency phenotype in <em>P. putida</em> KT2440.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><em>hemE</em> (PP_5074, Q88CV6) of <em>Pseudomonas putida</em> KT2440 encodes <strong>uroporphyrinogen decarboxylase (URO-D, EC 4.1.1.37)</strong>, a soluble, cytoplasmic, cofactor-independent (β/α)₈ TIM-barrel enzyme that functions as a homodimer. Its primary function is the sequential decarboxylation of the four acetate side chains of <strong>uroporphyrinogen III</strong> — via hepta-, hexa- and penta-carboxylate intermediates — to yield <strong>coproporphyrinogen III</strong> and four CO₂, with physiological preference for the type-III isomer. This is the fifth step and the first committed branch-point step of the heme biosynthetic pathway, directing the common precursor uroporphyrinogen III toward protoheme (heme b) rather than siroheme or cobalamin, thereby supplying heme for the cytochromes, catalases and other hemoproteins essential to this aerobic bacterium. The assignment is strongly supported by ~50% sequence identity and conservation of 5/6 invariant catalytic residues relative to the structurally characterized human enzyme, and by bacterial genetics showing that <em>hemE</em> loss blocks the pathway.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="hemE-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="hemE-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:9564029</li>
+<li>PMID:6626522</li>
+<li>PMID:7849561</li>
+<li>PMID:11524417</li>
+<li>PMID:1104578</li>
+<li>PMID:8224882</li>
+<li>PMID:7306050</li>
+<li>PMID:1052603</li>
+<li>PMID:7842850</li>
+<li>PMID:8980654</li>
+<li>PMID:19041871</li>
+<li>PMID:18294003</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hemE-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88CV6" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="heme-assessment-notes">hemE assessment notes</h1>
+<h2 id="identity-and-core-reaction">Identity and core reaction</h2>
+<p>Q88CV6 (PP_5074) is the reviewed KT2440 uroporphyrinogen decarboxylase.<br />
+UniProt predicts cofactor-independent removal of the four acetate carboxyl<br />
+groups of uroporphyrinogen III to form coproporphyrinogen III and assigns the<br />
+protein to the cytoplasm<br />
+[file:PSEPK/hemE/hemE-uniprot.txt "Catalyzes the decarboxylation of four acetate groups of"]<br />
+[file:PSEPK/hemE/hemE-uniprot.txt "SUBCELLULAR LOCATION: Cytoplasm"].<br />
+These target assignments are HAMAP-rule based rather than direct KT2440<br />
+experiments.</p>
+<h2 id="openscientist-assessment">OpenScientist assessment</h2>
+<p>The OpenScientist report correctly identifies the target and core reaction and<br />
+explicitly notes the absence of direct KT2440 characterization. It presents an<br />
+unsaved alignment to human UROD, exact residue mapping, and ortholog-derived<br />
+claims about kinetics, substrate breadth, mechanism, dimer behavior, and<br />
+essentiality. Its pathway diagram also names HemG/HemY instead of the<br />
+HemJ-family PP_0431 protein present in KT2440. These extrapolations were not<br />
+used as target evidence.</p>
+<h2 id="curation-decisions">Curation decisions</h2>
+<p>GO:0004853 is accepted as the core molecular function. The broad<br />
+porphyrin-biosynthesis row is modified to the endpoint-specific live term<br />
+GO:0006785, while the existing broad heme-biosynthesis row remains correct.<br />
+The more specific cytosol row is accepted and retained in the core function.<br />
+The biologically compatible cytoplasm parent is marked over-annotated because<br />
+retaining both location terms would be redundant. No target-specific<br />
+essentiality or kinetic claim is added.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88CV6
+gene_symbol: hemE
+product_type: PROTEIN
+aliases:
+  - PP_5074
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  HemE is a cytoplasmic uroporphyrinogen decarboxylase. It removes the four
+  acetate carboxyl groups of uroporphyrinogen III without an external cofactor,
+  producing coproporphyrinogen III for the oxygen-dependent HemF or
+  oxygen-independent HemN branch of protoporphyrinogen IX synthesis.
+existing_annotations:
+  - term:
+      id: GO:0004853
+      label: uroporphyrinogen decarboxylase activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: enables
+    review:
+      summary: This is the exact substrate-level activity of HemE.
+      action: ACCEPT
+      reason: &gt;-
+        UniProt assigns EC 4.1.1.37 and describes four decarboxylations yielding
+        coproporphyrinogen III.
+      supported_by:
+        - reference_id: file:PSEPK/hemE/hemE-uniprot.txt
+          supporting_text: Catalyzes the decarboxylation of four acetate groups of
+  - term:
+      id: GO:0005737
+      label: cytoplasm
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        Cytoplasm is compatible with HemE biology but is the broader parent of
+        the separately annotated cytosol term.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: &gt;-
+        The more specific cytosol annotation is also present and supported for
+        this soluble enzyme, making cytoplasm redundant as a distinct retained
+        annotation.
+      supported_by:
+        - reference_id: file:PSEPK/hemE/hemE-uniprot.txt
+          supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+  - term:
+      id: GO:0005829
+      label: cytosol
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000118
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        Cytosol is the more specific informative location for the soluble
+        bacterial HemE enzyme.
+      action: ACCEPT
+      reason: &gt;-
+        The TreeGrafter cytosol call is consistent with UniProt&#39;s cytoplasm
+        assignment and avoids retaining both a child term and its broader
+        parent as equivalent annotations.
+      supported_by:
+        - reference_id: file:PSEPK/hemE/hemE-uniprot.txt
+          supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+  - term:
+      id: GO:0006778
+      label: porphyrin-containing compound metabolic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000117
+    qualifier: involved_in
+    review:
+      summary: This broad metabolic-process annotation is correct but not core.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        HemE does participate in porphyrin-containing compound metabolism, but
+        its substrate-specific decarboxylase activity and biosynthetic process
+        assignments describe the role more informatively.
+      supported_by:
+        - reference_id: file:PSEPK/hemE/hemE-uniprot.txt
+          supporting_text: &#34;biosynthesis; coproporphyrinogen-III from 5-aminolevulinate: step 4/4.&#34;
+  - term:
+      id: GO:0006779
+      label: porphyrin-containing compound biosynthetic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: The biosynthetic assignment is sound and can be made endpoint-specific for KT2440.
+      action: MODIFY
+      reason: &gt;-
+        In KT2440, HemE supplies coproporphyrinogen III to the HemF/HemN,
+        protoporphyrinogen oxidase, and ferrochelatase reactions that produce
+        heme B, supporting the live endpoint term GO:0006785.
+      proposed_replacement_terms:
+        - id: GO:0006785
+          label: heme B biosynthetic process
+      supported_by:
+        - reference_id: file:PSEPK/hemE/hemE-uniprot.txt
+          supporting_text: uroporphyrinogen-III to yield coproporphyrinogen-III.
+  - term:
+      id: GO:0006783
+      label: heme biosynthetic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000118
+    qualifier: involved_in
+    review:
+      summary: HemE is an obligatory shared enzyme in protoporphyrin-dependent heme-b synthesis.
+      action: ACCEPT
+      reason: &gt;-
+        Coproporphyrinogen III is required for the subsequent HemF/HemN,
+        protoporphyrinogen oxidase, and ferrochelatase reactions.
+      supported_by:
+        - reference_id: file:PSEPK/hemE/hemE-uniprot.txt
+          supporting_text: &#34;PATHWAY: Porphyrin-containing compound metabolism; protoporphyrin-IX&#34;
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings: []
+  - id: GO_REF:0000117
+    title: Electronic Gene Ontology annotations created by ARBA machine learning models
+    findings: []
+  - id: GO_REF:0000118
+    title: TreeGrafter-generated GO annotations
+    findings: []
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings: []
+  - id: file:PSEPK/hemE/hemE-uniprot.txt
+    title: UniProtKB entry for PSEPK hemE
+    findings:
+      - statement: HemE converts uroporphyrinogen III to coproporphyrinogen III.
+        supporting_text: Catalyzes the decarboxylation of four acetate groups of
+      - statement: HemE is cytoplasmic.
+        supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+  - id: file:PSEPK/hemE/hemE-deep-research-openscientist.md
+    title: OpenScientist research report for PSEPK hemE
+    findings:
+      - statement: &gt;-
+          The report recovers the HemE reaction but acknowledges that the
+          target protein has not been characterized directly.
+        supporting_text: &gt;-
+          No direct experimental characterization of the *P. putida* KT2440 protein.
+    reference_review:
+      relevance: HIGH
+      correctness: MISCITED
+      review_notes: &gt;-
+        The report correctly identifies the four-decarboxylation reaction,
+        cytoplasmic assignment, and absence of direct KT2440 experiments. It
+        presents an unsaved human-target alignment and exact residue map,
+        transfers kinetics, substrate breadth, mechanism, dimer behavior, and
+        essentiality from other organisms, and its KT2440 pathway sketch omits
+        the HemJ-family PP_0431 step. Those target-specific conclusions were not
+        retained.
+core_functions:
+  - description: &gt;-
+      Decarboxylates the four acetate side chains of uroporphyrinogen III to
+      produce coproporphyrinogen III for protoporphyrinogen IX and heme-b synthesis.
+    molecular_function:
+      id: GO:0004853
+      label: uroporphyrinogen decarboxylase activity
+    directly_involved_in:
+      - id: GO:0006785
+        label: heme B biosynthetic process
+    locations:
+      - id: GO:0005829
+        label: cytosol
+    supported_by:
+      - reference_id: file:PSEPK/hemE/hemE-uniprot.txt
+        supporting_text: Catalyzes the decarboxylation of four acetate groups of
+suggested_questions:
+  - question: Does HemE flux constrain use of the HemF versus HemN late-step route?
+suggested_experiments:
+  - hypothesis: HemE supplies coproporphyrinogen III to both late-step alternatives.
+    description: &gt;-
+      Quantify tetrapyrrole intermediates after hemE depletion during aerobic
+      growth and oxygen-limited growth.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

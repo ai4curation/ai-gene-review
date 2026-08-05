@@ -1,0 +1,3361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAPRT - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>NAPRT</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q6XQN6" target="_blank" class="term-link">
+                        Q6XQN6
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "NAPRT";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q6XQN6" data-a="DESCRIPTION: NAPRT (nicotinate phosphoribosyltransferase, NAPRT..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>NAPRT (nicotinate phosphoribosyltransferase, NAPRTase; also known as FHIP and NAPRT1) is a cytosolic enzyme that catalyzes the first, committed step of the Preiss-Handler pathway of NAD+ biosynthesis from dietary nicotinic acid (niacin). It condenses nicotinate with 5-phospho-alpha-D-ribose 1-diphosphate (PRPP) to form nicotinate mononucleotide (NaMN, also called nicotinate beta-D-ribonucleotide) plus pyrophosphate; in the physiological reaction this phosphoribosyltransfer is coupled to ATP hydrolysis, which increases the enzyme&#39;s affinity for substrates and its catalytic efficiency (reflected in the assigned EC 6.3.4.21 ligase classification). The NaMN produced is the same intermediate generated de novo by quinolinate phosphoribosyltransferase and by nicotinamide salvage, and it feeds into the shared completion steps catalyzed by NMNAT and NAD synthetase. NAPRT requires a divalent metal cofactor (Mg2+ or Mn2+) and acts as a homodimer with the active site at the subunit interface. It is highly expressed in liver, kidney and intestine, tissues in which nicotinic acid is a preferred NAD precursor, and by sustaining cellular NAD levels it contributes to protection against oxidative stress.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004516" target="_blank" class="term-link">
+                                    GO:0004516
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinate phosphoribosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6XQN6" data-a="GO:0004516" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of the core catalytic activity. This is the defining molecular function of NAPRT and is directly supported by human enzymology (PMID:21742010, PMID:26042198) and by the original human identification study (PMID:17604275). Accept as a core function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6XQN6" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference that NAPRT acts in the cytosol, consistent with the experimentally determined subcellular location. Accept as the core site of activity.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034355" target="_blank" class="term-link">
+                                    GO:0034355
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ biosynthetic process via the salvage pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6XQN6" data-a="GO:0034355" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference placing NAPRT in NAD+ biosynthesis via the salvage (Preiss-Handler) pathway. This is the correct, specific biological process and is supported experimentally (PMID:17604275). Accept as a core function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004516" target="_blank" class="term-link">
+                                    GO:0004516
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinate phosphoribosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6XQN6" data-a="GO:0004516" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (IEA) assignment of the catalytic activity from InterPro/ARBA/EC/Rhea mappings (EC:6.3.4.21, RHEA:36163). Correct and redundant with the experimental annotations. Accept.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6XQN6" data-a="GO:0005829" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (IEA) localization from the UniProt Subcellular Location vocabulary mapping (SL-0091, cytosol). Consistent with experimental IDA evidence. Accept.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009435" target="_blank" class="term-link">
+                                    GO:0009435
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6XQN6" data-a="GO:0009435" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (IEA) assignment of the general NAD+ biosynthetic process from InterPro/UniPathway (UPA00253). Correct but a less specific parent of GO:0034355 (NAD+ biosynthesis via the salvage pathway), which is the more informative term for NAPRT. Accept the broader term; the salvage-pathway child is the core BP.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q6XQN6" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a high-throughput yeast two-hybrid interactome map (Rolland et al. 2014) via IntAct (partner RBPMS, Q93062). Uninformative about NAPRT&#39;s molecular function and not a core function; retained but flagged as over-annotated per policy (experimental IPI is not removed).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6XQN6" data-a="GO:0005829" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct immunofluorescence (IDA, Human Protein Atlas) localizing NAPRT to the cytosol. Consistent with all other localization evidence. Accept as core location.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004516" target="_blank" class="term-link">
+                                    GO:0004516
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinate phosphoribosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21742010" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21742010
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of human nicotinate phosphoribosyltransfera...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6XQN6" data-a="GO:0004516" data-r="PMID:21742010" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental characterization of recombinant human NAPRT, including kinetic parameters, cofactor requirement (Mg2+/Mn2+), and site-directed mutagenesis of active-site residues. Directly demonstrates the nicotinate phosphoribosyltransferase activity. Accept as a core function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21742010" target="_blank" class="term-link">
+                                        PMID:21742010
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzes the conversion of nicotinate (Na) to nicotinate mononucleotide, the first reaction of the Preiss-Handler pathway for the biosynthesis of NAD(+)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004516" target="_blank" class="term-link">
+                                    GO:0004516
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinate phosphoribosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26042198" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26042198
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structure of human nicotinic acid phosphoribosyltran...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6XQN6" data-a="GO:0004516" data-r="PMID:26042198" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Crystal structure of human NAPRTase (PDB 4YUB) with functional and catalytic characterization, confirming the phosphoribosyltransferase activity and homodimeric architecture. Accept as a core function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26042198" target="_blank" class="term-link">
+                                        PMID:26042198
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzes the conversion of nicotinic acid (Na) and 5-phosphoribosyl-1-pyrophosphate (PRPP) to nicotinic acid mononucleotide (NaMN) and pyrophosphate (PPi)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034355" target="_blank" class="term-link">
+                                    GO:0034355
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ biosynthetic process via the salvage pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17604275" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17604275
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Elevation of cellular NAD levels by nicotinic acid and invol...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6XQN6" data-a="GO:0034355" data-r="PMID:17604275" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Knockdown of NAPRT abolished nicotinic-acid-driven elevation of cellular NAD, providing mutant-phenotype (IMP) evidence that NAPRT is required for NAD+ biosynthesis via the salvage pathway. Accept as a core function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17604275" target="_blank" class="term-link">
+                                        PMID:17604275
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">NAPRT is essential for NA to increase cellular NAD levels</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6798751
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6XQN6" data-a="GO:0005576" data-r="Reactome:R-HSA-6798751" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome-derived localization from the neutrophil &#34;Exocytosis of azurophil granule lumen proteins&#34; pathway. NAPRT was detected in neutrophil granule/secretory proteomics and modeled as released extracellularly, but it is a soluble cytosolic enzyme; the extracellular location is secondary and not where its NAD-synthesis function occurs. Keep as a non-core localization.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035578" target="_blank" class="term-link">
+                                    GO:0035578
+                                </a>
+                            </span>
+                            <span class="term-label">azurophil granule lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6798751
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6XQN6" data-a="GO:0035578" data-r="Reactome:R-HSA-6798751" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (neutrophil degranulation) localization to the azurophil granule lumen, based on detection of NAPRT in neutrophil granule proteomics. This is a secondary/incidental localization rather than the cytosolic site of catalysis. Keep as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23533145
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In-depth proteomic analyses of exosomes isolated from expres...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6XQN6" data-a="GO:0070062" data-r="PMID:23533145" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mass-spectrometry detection of NAPRT in prostatic-secretion (urinary) exosome preparations. Abundant cytosolic proteins are frequently captured in exosome proteomes; this does not indicate an extracellular functional role. Keep as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19056867
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Large-scale proteomics and phosphoproteomics of urinary exos...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6XQN6" data-a="GO:0070062" data-r="PMID:19056867" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput MS detection of NAPRT in urinary exosomes. As with the other exosome annotation, this reflects proteomic capture of an abundant cytosolic protein and is not the site of catalytic function. Keep as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-197186
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6XQN6" data-a="GO:0005829" data-r="Reactome:R-HSA-197186" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (R-HSA-197186, &#34;NAPRT1 dimer transfers PRIB to NCA to form NAMN&#34;) places the catalytic reaction in the cytosol. Consistent with the experimental IDA localization. Accept as core location.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004516" target="_blank" class="term-link">
+                                    GO:0004516
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinate phosphoribosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17604275" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17604275
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Elevation of cellular NAD levels by nicotinic acid and invol...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6XQN6" data-a="GO:0004516" data-r="PMID:17604275" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay evidence: recombinant/endogenous human NAPRT mediated synthesis of [14C]NAD from [14C]nicotinic acid in human cells, demonstrating nicotinate phosphoribosyltransferase activity. Accept as the defining core function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17604275" target="_blank" class="term-link">
+                                        PMID:17604275
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">mediated [(14)C]NAD synthesis from [(14)C]NA in human cells</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17604275" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17604275
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Elevation of cellular NAD levels by nicotinic acid and invol...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6XQN6" data-a="GO:0005829" data-r="PMID:17604275" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IDA) evidence for cytosolic localization from the original human NAPRT identification study. This is the primary, functionally relevant location. Accept as core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006979" target="_blank" class="term-link">
+                                    GO:0006979
+                                </a>
+                            </span>
+                            <span class="term-label">response to oxidative stress</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17604275" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17604275
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Elevation of cellular NAD levels by nicotinic acid and invol...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6XQN6" data-a="GO:0006979" data-r="PMID:17604275" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAPRT knockdown reversed the nicotinic-acid-induced reduction in H2O2 cytotoxicity, giving IMP evidence that NAPRT participates in the response to oxidative stress. This is a downstream physiological consequence of maintaining cellular NAD levels rather than the enzyme&#39;s direct molecular role. Keep as a non-core biological process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17604275" target="_blank" class="term-link">
+                                        PMID:17604275
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">NAPRT is essential for NA to increase cellular NAD levels and, thus, to prevent oxidative stress of the cells</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+                        <br>
+                        <span class="isoform-badge" title="This annotation was made on a specific isoform">
+                            <a href="https://www.uniprot.org/uniprotkb/Q6XQN6-2" target="_blank" class="term-link" style="font-size: 0.7rem;">
+                                Q6XQN6-2
+                            </a>
+                        </span>
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q6XQN6" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a high-throughput interactome map (IntAct; partners include CCDC57, EHMT2, KRT40, RBPMS on isoform Q6XQN6-2). These uncharacterized binary interactions do not define a specific molecular function and are not core; retained but flagged as over-annotated (experimental IPI is not removed).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>First and committed enzyme of the Preiss-Handler pathway of NAD+ biosynthesis: catalyzes the ATP-dependent condensation of nicotinate with 5-phospho-alpha-D-ribose 1-diphosphate (PRPP) to form nicotinate mononucleotide (NaMN) plus pyrophosphate, requiring a divalent metal (Mg2+/Mn2+) and acting as a homodimer in the cytosol.</h3>
+                <span class="vote-buttons" data-g="Q6XQN6" data-a="FUNCTION: First and committed enzyme of the Preiss-Handler p..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004516" target="_blank" class="term-link">
+                            nicotinate phosphoribosyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034355" target="_blank" class="term-link">
+                                NAD+ biosynthetic process via the salvage pathway
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/NAPRT/NAPRT-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Catalyzes the first step in the biosynthesis of NAD from</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26042198" target="_blank" class="term-link">
+                                PMID:26042198
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">catalyzes the conversion of nicotinic acid (Na) and 5-phosphoribosyl-1-pyrophosphate (PRPP) to nicotinic acid mononucleotide (NaMN) and pyrophosphate (PPi)</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21742010" target="_blank" class="term-link">
+                                PMID:21742010
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">catalyzes the conversion of nicotinate (Na) to nicotinate mononucleotide, the first reaction of the Preiss-Handler pathway for the biosynthesis of NAD(+)</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17604275" target="_blank" class="term-link">
+                            PMID:17604275
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Elevation of cellular NAD levels by nicotinic acid and involvement of nicotinic acid phosphoribosyltransferase in human cells.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Identified human NAPRT and showed it mediates NAD synthesis from nicotinic acid; knockdown abolishes NA-induced NAD elevation and the associated protection against H2O2 cytotoxicity, linking NAPRT to NAD+ salvage biosynthesis and oxidative-stress protection.</div>
+
+                        <div class="finding-text">"NAPRT is essential for NA to increase cellular NAD levels and, thus, to prevent oxidative stress of the cells."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                            PMID:19056867
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Large-scale proteomics and phosphoproteomics of urinary exosomes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21742010" target="_blank" class="term-link">
+                            PMID:21742010
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Characterization of human nicotinate phosphoribosyltransferase: Kinetic studies, structure prediction and functional analysis by site-directed mutagenesis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Kinetic and mutagenesis characterization of recombinant human NAPRT confirming the nicotinate phosphoribosyltransferase activity, its metal cofactor requirement, and active-site residues.</div>
+
+                        <div class="finding-text">"catalyzes the conversion of nicotinate (Na) to nicotinate mononucleotide, the first reaction of the Preiss-Handler pathway for the biosynthesis of NAD(+)"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                            PMID:23533145
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26042198" target="_blank" class="term-link">
+                            PMID:26042198
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Crystal structure of human nicotinic acid phosphoribosyltransferase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Crystal structure (PDB 4YUB) of human NAPRTase establishing it as a type II phosphoribosyltransferase that functions as a homodimer with the active site at the subunit interface and catalyzes NaMN formation from nicotinate and PRPP.</div>
+
+                        <div class="finding-text">"catalyzes the conversion of nicotinic acid (Na) and 5-phosphoribosyl-1-pyrophosphate (PRPP) to nicotinic acid mononucleotide (NaMN) and pyrophosphate (PPi)"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-197186
+
+                    </span>
+                </div>
+
+                <div class="reference-title">NAPRT1 dimer transfers PRIB to NCA to form NAMN</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6798751
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Exocytosis of azurophil granule lumen proteins</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the physiological significance of the transient His-phosphorylation cycle and of the dual ATP stimulation/inhibition, and how do they regulate NAPRT flux across tissues?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q6XQN6" data-a="Q: What is the physiological significance of the tran..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Do any of the reported protein-protein interactions (e.g. the HIT-family partner underlying the FHIP name) confer a regulatory or moonlighting function beyond catalysis?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q6XQN6" data-a="Q: Do any of the reported protein-protein interaction..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Tissue- and tumor-specific measurement of NAPRT-dependent NaMN/NAD flux using isotope tracing with labeled nicotinic acid, to quantify the Preiss-Handler contribution relative to NAMPT-dependent salvage and inform NAPRT status as a biomarker for NAMPT-inhibitor sensitivity.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: metabolic flux / stable-isotope tracing</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q6XQN6" data-a="EXPERIMENT: Tissue- and tumor-specific measurement of NAPRT-de..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(NAPRT-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q6XQN6" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="naprt-human-review-notes">NAPRT (human) review notes</h1>
+<p>UniProt: Q6XQN6 (PNCB_HUMAN), gene symbol NAPRT (synonyms FHIP, NAPRT1). 538 aa. Chromosome 8.</p>
+<h2 id="identity-and-core-function">Identity and core function</h2>
+<p>NAPRT is <strong>nicotinate phosphoribosyltransferase</strong> (NAPRTase). It is the first, committed<br />
+enzyme of the <strong>Preiss–Handler pathway</strong> of NAD+ biosynthesis from dietary nicotinic acid<br />
+(niacin/Na). It condenses nicotinate with 5-phospho-alpha-D-ribose 1-diphosphate (PRPP) to<br />
+form nicotinate mononucleotide (NaMN, = nicotinate beta-D-ribonucleotide), coupled to ATP<br />
+hydrolysis.</p>
+<ul>
+<li>UniProt FUNCTION: "Catalyzes the first step in the biosynthesis of NAD from nicotinic<br />
+  acid, the ATP-dependent synthesis of beta-nicotinate D-ribonucleotide from nicotinate and<br />
+  5-phospho-D-ribose 1-phosphate ... Helps prevent cellular oxidative stress via its role in<br />
+  NAD biosynthesis" [file:human/NAPRT/NAPRT-uniprot.txt].</li>
+<li>CATALYTIC ACTIVITY (Rhea:RHEA:36163, EC=6.3.4.21): 5-phospho-alpha-D-ribose 1-diphosphate +<br />
+  nicotinate + ATP + H2O = nicotinate beta-D-ribonucleotide + ADP + phosphate + diphosphate<br />
+  [file:human/NAPRT/NAPRT-uniprot.txt].</li>
+<li>PATHWAY: "Cofactor biosynthesis; NAD(+) biosynthesis; nicotinate D-ribonucleotide from<br />
+  nicotinate: step 1/1" [file:human/NAPRT/NAPRT-uniprot.txt]. UniPathway UPA00253, UER00457.</li>
+<li>SUBCELLULAR LOCATION: "Cytoplasm, cytosol" [file:human/NAPRT/NAPRT-uniprot.txt].</li>
+<li>SUBUNIT: "Homodimer" [file:human/NAPRT/NAPRT-uniprot.txt]. Confirmed by crystal structure<br />
+  (PDB 4YUB) <a href="https://pubmed.ncbi.nlm.nih.gov/26042198">PMID:26042198</a>.</li>
+</ul>
+<p>Note on EC: UniProt/GO now assign EC <strong>6.3.4.21</strong> (a ligase, because the physiological<br />
+reaction is ATP-coupled). Older literature (PMID:21742010, PMID:26042198 abstracts) cite the<br />
+transferase number <strong>EC 2.4.2.11</strong>; both refer to the same enzyme. The ATP-independent<br />
+phosphoribosyltransfer is the base chemistry; ATP hydrolysis raises efficiency/affinity.</p>
+<h2 id="key-experimental-evidence">Key experimental evidence</h2>
+<ul>
+<li><strong>PMID:17604275</strong> (Hara et al. 2007, JBC; abstract-only): first identification of human<br />
+  NAPRT; "identified NA phosphoribosyltransferase (NAPRT) in humans and provided direct<br />
+  evidence of tight link between NAPRT and the increase in cellular NAD levels"; NAPRT<br />
+  "mediated [(14)C]NAD synthesis from [(14)C]NA in human cells"; NA "almost doubled cellular<br />
+  NAD contents and decreased cytotoxicity by H(2)O(2). Both effects were reversed by knockdown<br />
+  of NAPRT expression ... NAPRT is essential for NA to increase cellular NAD levels and, thus,<br />
+  to prevent oxidative stress of the cells" <a href="https://pubmed.ncbi.nlm.nih.gov/17604275">PMID:17604275</a>. Basis for IDA MF (GO:0004516),<br />
+  IDA cytosol, IMP NAD+ salvage biosynthesis (GO:0034355), and IMP response to oxidative<br />
+  stress (GO:0006979).</li>
+<li><strong>PMID:21742010</strong> (Galassi et al. 2012, Biochimie; abstract-only): recombinant human NAPRT<br />
+  kinetic characterization; "Nicotinate phosphoribosyltransferase (NaPRT, EC 2.4.2.11)<br />
+  catalyzes the conversion of nicotinate (Na) to nicotinate mononucleotide, the first reaction<br />
+  of the Preiss-Handler pathway for the biosynthesis of NAD(+)"; site-directed mutagenesis of<br />
+  conserved residues (D19, Y21, H213, D288, R318, G379, etc.) validated their importance for<br />
+  activity <a href="https://pubmed.ncbi.nlm.nih.gov/21742010">PMID:21742010</a>. Cofactor Mg2+/Mn2+ (highest with Mn2+); ATP shows dual<br />
+  stimulation/inhibition; Pi is an activator [file:human/NAPRT/NAPRT-uniprot.txt kinetics].<br />
+  Basis for EXP MF (GO:0004516).</li>
+<li><strong>PMID:26042198</strong> (Marletta et al. 2015, FEBS Open Bio; full text available): crystal<br />
+  structure of human NaPRTase (PDB 4YUB, 2.9 Å); "the rate-limiting enzyme in the three-step<br />
+  Preiss-Handler pathway for the biosynthesis of NAD"; "catalyzes the conversion of nicotinic<br />
+  acid (Na) and 5-phosphoribosyl-1-pyrophosphate (PRPP) to nicotinic acid mononucleotide<br />
+  (NaMN) and pyrophosphate (PPi)"; "functions as a dimer with the active site located at the<br />
+  interface of the monomers"; type II phosphoribosyltransferase; lacks the FK866 tunnel of<br />
+  NAMPT <a href="https://pubmed.ncbi.nlm.nih.gov/26042198">PMID:26042198</a>. Basis for EXP MF (GO:0004516).</li>
+</ul>
+<h2 id="localization-annotations">Localization annotations</h2>
+<ul>
+<li>Cytosol is well supported: IDA (PMID:17604275), IDA (HPA GO_REF:0000052), IBA, IEA<br />
+  (SubCell), and Reactome TAS (R-HSA-197186). Core location = cytosol (GO:0005829).</li>
+<li><strong>Extracellular / granule / exosome</strong> annotations are proteomics/pathway detections, not<br />
+  the site of catalytic function:</li>
+<li>GO:0070062 extracellular exosome (HDA, PMID:23533145 prostatic-secretion exosomes;<br />
+    PMID:19056867 urinary exosomes) — high-throughput MS detection in exosome preps; keep as<br />
+    non-core.</li>
+<li>GO:0005576 extracellular region + GO:0035578 azurophil granule lumen (TAS,<br />
+    Reactome:R-HSA-6798751 "Exocytosis of azurophil granule lumen proteins" / neutrophil<br />
+    degranulation) — NAPRT was detected in neutrophil granule proteomics and modeled in the<br />
+    degranulation pathway. This is a secondary/moonlighting localization, not the cytosolic<br />
+    NAD-synthesis function. Keep as non-core.<br />
+  These are consistent with NAPRT being a soluble cytosolic protein that is incidentally<br />
+  captured in secretory/vesicular proteomes; they do not indicate an extracellular catalytic<br />
+  role.</li>
+</ul>
+<h2 id="protein-binding-go0005515-ipi-pmid25416956">Protein binding (GO:0005515, IPI, PMID:25416956)</h2>
+<p>Six IPI "protein binding" annotations from the Rolland et al. 2014 human interactome (Y2H)<br />
+map and IntAct (GRAMD2B/Q96HH9, RBPMS/Q93062, CCDC57/Q2TAC2, EHMT2/A2ABF9, KRT40/Q6A162).<br />
+These are bare "protein binding" with no specific downstream function established; not core.<br />
+Per policy, bare protein-binding IPI is not removed — mark as over-annotated (uninformative).<br />
+UniProt also lists an INTERACTION block with these partners [file:human/NAPRT/NAPRT-uniprot.txt].<br />
+The synonym "FHIP" (FHA-HIT-interacting protein) reflects a reported HIT-family interaction<br />
+(Ref.2, GenBank submission), but no specific functional MF term is warranted.</p>
+<h2 id="metal-binding">Metal binding</h2>
+<p>GO:0046872 metal ion binding (IEA UniProtKB-KW) reflects the Mg2+/Mn2+ cofactor requirement<br />
+(COFACTOR block) [file:human/NAPRT/NAPRT-uniprot.txt]. Correct but generic; the catalytic MF<br />
+already captures the enzymatic function. This term is not in the GOA TSV rows seeded into the<br />
+review (the TSV lacks the KW-derived metal-ion-binding row), so it is not adjudicated here.</p>
+<h2 id="biomarker-note-context-not-a-go-annotation">Biomarker note (context, not a GO annotation)</h2>
+<p>NAPRT expression status is a biomarker: NAPRT-deficient tumors depend on NAMPT for NAD and are<br />
+sensitized to NAMPT inhibitors; NAPRT-proficient tumors can bypass NAMPT inhibition via the<br />
+Preiss–Handler route. Relevant to therapeutic context but not a molecular-function annotation.</p>
+<h2 id="summary-of-curation-decisions">Summary of curation decisions</h2>
+<ul>
+<li>Core MF: GO:0004516 nicotinate phosphoribosyltransferase activity (EXP/IDA — ACCEPT; IBA,<br />
+  IEA — ACCEPT).</li>
+<li>Core BP: GO:0034355 NAD+ biosynthetic process via the salvage pathway (IMP/IBA — ACCEPT);<br />
+  GO:0009435 NAD+ biosynthetic process (IEA parent) — ACCEPT (correct but less specific).</li>
+<li>Core CC: GO:0005829 cytosol (IDA/IBA/IEA/TAS — ACCEPT).</li>
+<li>response to oxidative stress (GO:0006979, IMP) — KEEP_AS_NON_CORE (downstream physiological<br />
+  consequence of NAD synthesis, per Hara 2007).</li>
+<li>extracellular exosome / extracellular region / azurophil granule lumen — KEEP_AS_NON_CORE<br />
+  (proteomics/degranulation detections, not catalytic site).</li>
+<li>protein binding IPI ×6 — MARK_AS_OVER_ANNOTATED (bare, uninformative; not removed).</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q6XQN6
+gene_symbol: NAPRT
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  NAPRT (nicotinate phosphoribosyltransferase, NAPRTase; also known as FHIP and NAPRT1) is a
+  cytosolic enzyme that catalyzes the first, committed step of the Preiss-Handler pathway of
+  NAD+ biosynthesis from dietary nicotinic acid (niacin). It condenses nicotinate with
+  5-phospho-alpha-D-ribose 1-diphosphate (PRPP) to form nicotinate mononucleotide (NaMN, also
+  called nicotinate beta-D-ribonucleotide) plus pyrophosphate; in the physiological reaction
+  this phosphoribosyltransfer is coupled to ATP hydrolysis, which increases the enzyme&#39;s
+  affinity for substrates and its catalytic efficiency (reflected in the assigned EC 6.3.4.21
+  ligase classification). The NaMN produced is the same intermediate generated de novo by
+  quinolinate phosphoribosyltransferase and by nicotinamide salvage, and it feeds into the
+  shared completion steps catalyzed by NMNAT and NAD synthetase. NAPRT requires a divalent
+  metal cofactor (Mg2+ or Mn2+) and acts as a homodimer with the active site at the subunit
+  interface. It is highly expressed in liver, kidney and intestine, tissues in which
+  nicotinic acid is a preferred NAD precursor, and by sustaining cellular NAD levels it
+  contributes to protection against oxidative stress.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q6XQN6-1
+- name: &#39;2&#39;
+  id: Q6XQN6-2
+  sequence_note: VSP_030612
+- name: &#39;3&#39;
+  id: Q6XQN6-3
+  sequence_note: VSP_030610
+existing_annotations:
+- term:
+    id: GO:0004516
+    label: nicotinate phosphoribosyltransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference of the core catalytic activity. This is the defining
+      molecular function of NAPRT and is directly supported by human enzymology
+      (PMID:21742010, PMID:26042198) and by the original human identification study
+      (PMID:17604275). Accept as a core function.
+    action: ACCEPT
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference that NAPRT acts in the cytosol, consistent with the
+      experimentally determined subcellular location. Accept as the core site of activity.
+    action: ACCEPT
+- term:
+    id: GO:0034355
+    label: NAD+ biosynthetic process via the salvage pathway
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference placing NAPRT in NAD+ biosynthesis via the salvage
+      (Preiss-Handler) pathway. This is the correct, specific biological process and is
+      supported experimentally (PMID:17604275). Accept as a core function.
+    action: ACCEPT
+- term:
+    id: GO:0004516
+    label: nicotinate phosphoribosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (IEA) assignment of the catalytic activity from InterPro/ARBA/EC/Rhea
+      mappings (EC:6.3.4.21, RHEA:36163). Correct and redundant with the experimental
+      annotations. Accept.
+    action: ACCEPT
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic (IEA) localization from the UniProt Subcellular Location vocabulary mapping
+      (SL-0091, cytosol). Consistent with experimental IDA evidence. Accept.
+    action: ACCEPT
+- term:
+    id: GO:0009435
+    label: NAD+ biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic (IEA) assignment of the general NAD+ biosynthetic process from
+      InterPro/UniPathway (UPA00253). Correct but a less specific parent of GO:0034355
+      (NAD+ biosynthesis via the salvage pathway), which is the more informative term for
+      NAPRT. Accept the broader term; the salvage-pathway child is the core BP.
+    action: ACCEPT
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a high-throughput yeast two-hybrid interactome map
+      (Rolland et al. 2014) via IntAct (partner RBPMS, Q93062). Uninformative about NAPRT&#39;s
+      molecular function and not a core function; retained but flagged as over-annotated per
+      policy (experimental IPI is not removed).
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct immunofluorescence (IDA, Human Protein Atlas) localizing NAPRT to the cytosol.
+      Consistent with all other localization evidence. Accept as core location.
+    action: ACCEPT
+- term:
+    id: GO:0004516
+    label: nicotinate phosphoribosyltransferase activity
+  evidence_type: EXP
+  original_reference_id: PMID:21742010
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental characterization of recombinant human NAPRT, including kinetic parameters,
+      cofactor requirement (Mg2+/Mn2+), and site-directed mutagenesis of active-site residues.
+      Directly demonstrates the nicotinate phosphoribosyltransferase activity. Accept as a
+      core function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:21742010
+      supporting_text: &gt;-
+        catalyzes the conversion of nicotinate (Na) to nicotinate mononucleotide, the first
+        reaction of the Preiss-Handler pathway for the biosynthesis of NAD(+)
+- term:
+    id: GO:0004516
+    label: nicotinate phosphoribosyltransferase activity
+  evidence_type: EXP
+  original_reference_id: PMID:26042198
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Crystal structure of human NAPRTase (PDB 4YUB) with functional and catalytic
+      characterization, confirming the phosphoribosyltransferase activity and homodimeric
+      architecture. Accept as a core function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:26042198
+      supporting_text: &gt;-
+        catalyzes the conversion of nicotinic acid (Na) and 5-phosphoribosyl-1-pyrophosphate
+        (PRPP) to nicotinic acid mononucleotide (NaMN) and pyrophosphate (PPi)
+- term:
+    id: GO:0034355
+    label: NAD+ biosynthetic process via the salvage pathway
+  evidence_type: IMP
+  original_reference_id: PMID:17604275
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Knockdown of NAPRT abolished nicotinic-acid-driven elevation of cellular NAD, providing
+      mutant-phenotype (IMP) evidence that NAPRT is required for NAD+ biosynthesis via the
+      salvage pathway. Accept as a core function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:17604275
+      supporting_text: &gt;-
+        NAPRT is essential for NA to increase cellular NAD levels
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6798751
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome-derived localization from the neutrophil &#34;Exocytosis of azurophil granule
+      lumen proteins&#34; pathway. NAPRT was detected in neutrophil granule/secretory proteomics
+      and modeled as released extracellularly, but it is a soluble cytosolic enzyme; the
+      extracellular location is secondary and not where its NAD-synthesis function occurs.
+      Keep as a non-core localization.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0035578
+    label: azurophil granule lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6798751
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (neutrophil degranulation) localization to the azurophil granule lumen, based
+      on detection of NAPRT in neutrophil granule proteomics. This is a secondary/incidental
+      localization rather than the cytosolic site of catalysis. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:23533145
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput mass-spectrometry detection of NAPRT in prostatic-secretion (urinary)
+      exosome preparations. Abundant cytosolic proteins are frequently captured in exosome
+      proteomes; this does not indicate an extracellular functional role. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:19056867
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput MS detection of NAPRT in urinary exosomes. As with the other exosome
+      annotation, this reflects proteomic capture of an abundant cytosolic protein and is not
+      the site of catalytic function. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-197186
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (R-HSA-197186, &#34;NAPRT1 dimer transfers PRIB to NCA to form NAMN&#34;) places the
+      catalytic reaction in the cytosol. Consistent with the experimental IDA localization.
+      Accept as core location.
+    action: ACCEPT
+- term:
+    id: GO:0004516
+    label: nicotinate phosphoribosyltransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:17604275
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay evidence: recombinant/endogenous human NAPRT mediated synthesis of
+      [14C]NAD from [14C]nicotinic acid in human cells, demonstrating nicotinate
+      phosphoribosyltransferase activity. Accept as the defining core function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:17604275
+      supporting_text: &gt;-
+        mediated [(14)C]NAD synthesis from [(14)C]NA in human cells
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: PMID:17604275
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct experimental (IDA) evidence for cytosolic localization from the original human
+      NAPRT identification study. This is the primary, functionally relevant location. Accept
+      as core.
+    action: ACCEPT
+- term:
+    id: GO:0006979
+    label: response to oxidative stress
+  evidence_type: IMP
+  original_reference_id: PMID:17604275
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      NAPRT knockdown reversed the nicotinic-acid-induced reduction in H2O2 cytotoxicity,
+      giving IMP evidence that NAPRT participates in the response to oxidative stress. This
+      is a downstream physiological consequence of maintaining cellular NAD levels rather than
+      the enzyme&#39;s direct molecular role. Keep as a non-core biological process.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:17604275
+      supporting_text: &gt;-
+        NAPRT is essential for NA to increase cellular NAD levels and, thus, to prevent
+        oxidative stress of the cells
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  isoform: Q6XQN6-2
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a high-throughput interactome map (IntAct; partners include
+      CCDC57, EHMT2, KRT40, RBPMS on isoform Q6XQN6-2). These uncharacterized binary
+      interactions do not define a specific molecular function and are not core; retained but
+      flagged as over-annotated (experimental IPI is not removed).
+    action: MARK_AS_OVER_ANNOTATED
+core_functions:
+- description: &gt;-
+    First and committed enzyme of the Preiss-Handler pathway of NAD+ biosynthesis: catalyzes
+    the ATP-dependent condensation of nicotinate with 5-phospho-alpha-D-ribose 1-diphosphate
+    (PRPP) to form nicotinate mononucleotide (NaMN) plus pyrophosphate, requiring a divalent
+    metal (Mg2+/Mn2+) and acting as a homodimer in the cytosol.
+  molecular_function:
+    id: GO:0004516
+    label: nicotinate phosphoribosyltransferase activity
+  directly_involved_in:
+  - id: GO:0034355
+    label: NAD+ biosynthetic process via the salvage pathway
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:human/NAPRT/NAPRT-uniprot.txt
+    supporting_text: Catalyzes the first step in the biosynthesis of NAD from
+  - reference_id: PMID:26042198
+    supporting_text: &gt;-
+      catalyzes the conversion of nicotinic acid (Na) and 5-phosphoribosyl-1-pyrophosphate
+      (PRPP) to nicotinic acid mononucleotide (NaMN) and pyrophosphate (PPi)
+  - reference_id: PMID:21742010
+    supporting_text: &gt;-
+      catalyzes the conversion of nicotinate (Na) to nicotinate mononucleotide, the first
+      reaction of the Preiss-Handler pathway for the biosynthesis of NAD(+)
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:17604275
+  title: Elevation of cellular NAD levels by nicotinic acid and involvement of nicotinic
+    acid phosphoribosyltransferase in human cells.
+  findings:
+  - statement: &gt;-
+      Identified human NAPRT and showed it mediates NAD synthesis from nicotinic acid;
+      knockdown abolishes NA-induced NAD elevation and the associated protection against
+      H2O2 cytotoxicity, linking NAPRT to NAD+ salvage biosynthesis and oxidative-stress
+      protection.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      NAPRT is essential for NA to increase cellular NAD levels and, thus, to prevent
+      oxidative stress of the cells.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified original identification of human NAPRT; abstract-only cache but directly
+      supports the IDA/IMP catalytic, salvage-biosynthesis, and oxidative-stress annotations.
+- id: PMID:19056867
+  title: Large-scale proteomics and phosphoproteomics of urinary exosomes.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput urinary-exosome proteomics; supports the extracellular exosome location
+      only as MS detection of an abundant cytosolic protein, not a functional localization.
+- id: PMID:21742010
+  title: &#39;Characterization of human nicotinate phosphoribosyltransferase: Kinetic
+    studies, structure prediction and functional analysis by site-directed mutagenesis.&#39;
+  findings:
+  - statement: &gt;-
+      Kinetic and mutagenesis characterization of recombinant human NAPRT confirming the
+      nicotinate phosphoribosyltransferase activity, its metal cofactor requirement, and
+      active-site residues.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      catalyzes the conversion of nicotinate (Na) to nicotinate mononucleotide, the first
+      reaction of the Preiss-Handler pathway for the biosynthesis of NAD(+)
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified enzymology of human NAPRT; abstract cites EC 2.4.2.11 (transferase),
+      the same enzyme now assigned EC 6.3.4.21 (ATP-coupled ligase). Supports the EXP MF.
+- id: PMID:23533145
+  title: In-depth proteomic analyses of exosomes isolated from expressed prostatic
+    secretions in urine.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Prostatic-secretion exosome shotgun proteomics; supports the extracellular exosome
+      location only as MS detection, not a functional site.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Systematic Y2H interactome (Rolland et al. 2014); source of the bare &#34;protein binding&#34;
+      IPI annotations, which are uninformative for NAPRT&#39;s molecular function.
+- id: PMID:26042198
+  title: Crystal structure of human nicotinic acid phosphoribosyltransferase.
+  findings:
+  - statement: &gt;-
+      Crystal structure (PDB 4YUB) of human NAPRTase establishing it as a type II
+      phosphoribosyltransferase that functions as a homodimer with the active site at the
+      subunit interface and catalyzes NaMN formation from nicotinate and PRPP.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      catalyzes the conversion of nicotinic acid (Na) and 5-phosphoribosyl-1-pyrophosphate
+      (PRPP) to nicotinic acid mononucleotide (NaMN) and pyrophosphate (PPi)
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; full text available. Supports the catalytic MF, homodimer subunit, and
+      Preiss-Handler pathway role.
+- id: Reactome:R-HSA-197186
+  title: NAPRT1 dimer transfers PRIB to NCA to form NAMN
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction modeling cytosolic NAPRT catalysis (nicotinate + PRPP -&gt; NaMN);
+      supports the cytosol location and catalytic function.
+- id: Reactome:R-HSA-6798751
+  title: Exocytosis of azurophil granule lumen proteins
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome neutrophil-degranulation pathway; source of the extracellular region and
+      azurophil granule lumen locations, which are secondary to the cytosolic NAD-synthesis
+      function.
+suggested_questions:
+- question: &gt;-
+    What is the physiological significance of the transient His-phosphorylation cycle and of
+    the dual ATP stimulation/inhibition, and how do they regulate NAPRT flux across tissues?
+- question: &gt;-
+    Do any of the reported protein-protein interactions (e.g. the HIT-family partner
+    underlying the FHIP name) confer a regulatory or moonlighting function beyond catalysis?
+suggested_experiments:
+- description: &gt;-
+    Tissue- and tumor-specific measurement of NAPRT-dependent NaMN/NAD flux using isotope
+    tracing with labeled nicotinic acid, to quantify the Preiss-Handler contribution relative
+    to NAMPT-dependent salvage and inform NAPRT status as a biomarker for NAMPT-inhibitor
+    sensitivity.
+  experiment_type: metabolic flux / stable-isotope tracing
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

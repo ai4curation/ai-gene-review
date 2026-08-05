@@ -1,0 +1,4695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COQ4 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>COQ4</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9Y3A0" target="_blank" class="term-link">
+                        Q9Y3A0
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "COQ4";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9Y3A0" data-a="DESCRIPTION: COQ4 is a mitochondrial protein that functions in ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>COQ4 is a mitochondrial protein that functions in the biosynthesis of coenzyme Q (ubiquinone, CoQ10 in humans), a lipid-soluble redox cofactor of the respiratory chain. It is a subunit of the multi-protein CoQ biosynthetic complex (the COQ &#34;synthome&#34; or metabolon), assembled with COQ3, COQ5, COQ6, COQ7 and COQ9 on the matrix face of the inner mitochondrial membrane. COQ4 has a dual character: it is required for the integrity and assembly of the complex (a long-recognized structural/organizing role), and it is itself a zinc-dependent enzyme that catalyzes the C1 decarboxylation step of the CoQ head-group modification pathway (4-hydroxy-3-methoxy-5-polyprenylbenzoate decarboxylase; EC 4.1.1.130), converting a polyprenyl-benzoate precursor to a polyprenyl-phenol with release of CO2. A bound Zn2+ ion, coordinated by a conserved His/Asp/Glu motif, is essential for this activity. Loss of COQ4 function reduces CoQ10 synthesis and causes autosomal recessive primary coenzyme Q10 deficiency-7 (encephalopathy, cardiomyopathy, Leigh syndrome) and a spastic-ataxia/hereditary spastic paraplegia spectrum disorder.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) localization of COQ4 to mitochondrion. Correct but general; the more specific inner-membrane/matrix-face localization is better captured by other annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> COQ4 is a mitochondrial protein, consistent with all direct evidence, but this generic compartment term is subsumed by the specific mitochondrial inner membrane annotations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0006744" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference that COQ4 is involved in ubiquinone biosynthesis. This is the central, well-supported biological process for COQ4 and is independently confirmed by experimental (IDA/IMP) annotations.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120539" target="_blank" class="term-link">
+                                    GO:0120539
+                                </a>
+                            </span>
+                            <span class="term-label">4-hydroxy-3-methoxy-5-polyprenylbenzoate decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0120539" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of the C1 decarboxylase molecular function. This is now confirmed by two independent 2024 experimental (IDA) studies and is the core molecular function of COQ4.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0005743" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic localization to the mitochondrial inner membrane, consistent with the experimental IDA annotation (PMID:27499296) and with UniProt (peripheral membrane protein on the matrix side of the inner membrane).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COQ4/COQ4-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0006744" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation to ubiquinone biosynthesis (InterPro/UniRule/UniPathway). Redundant with the strong experimental support for this core process.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0008270" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Zinc ion binding is genuinely supported: UniProt lists Zn(2+) as the catalytic cofactor with defined binding residues (163, 164, 167, 179), and 2024 work showed COQ4 decarboxylase activity is Zn-dependent (abolished by EDTA and by metal-site mutations). This underpins the catalytic function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COQ4/COQ4-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=Zn(2+)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016831" target="_blank" class="term-link">
+                                    GO:0016831
+                                </a>
+                            </span>
+                            <span class="term-label">carboxy-lyase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0016831" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Carboxy-lyase activity is a correct but general parent of the specific COQ4 activity, 4-hydroxy-3-methoxy-5-polyprenylbenzoate decarboxylase activity (GO:0120539). Keep as a non-core ancestor; the specific decarboxylase term is the core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Ancestor of the specific decarboxylase term already annotated with IDA evidence.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120539" target="_blank" class="term-link">
+                                    4-hydroxy-3-methoxy-5-polyprenylbenzoate decarboxylase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031314" target="_blank" class="term-link">
+                                    GO:0031314
+                                </a>
+                            </span>
+                            <span class="term-label">extrinsic component of mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0031314" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> COQ4 is a peripheral (extrinsic) membrane protein on the matrix side of the inner mitochondrial membrane, consistent with UniProt. This term correctly captures the extrinsic, matrix-facing topology.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COQ4/COQ4-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Matrix side.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120539" target="_blank" class="term-link">
+                                    GO:0120539
+                                </a>
+                            </span>
+                            <span class="term-label">4-hydroxy-3-methoxy-5-polyprenylbenzoate decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000003
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0120539" data-r="GO_REF:0000003" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> EC-based (GO_REF:0000003) electronic mapping to the C1 decarboxylase activity (EC 4.1.1.130). Correct and redundant with the experimental IDA annotations.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27499296" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27499296
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial Protein Interaction Mapping Identifies Regulat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0005515" data-r="PMID:27499296" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct binary interactions of COQ4 with other COQ synthome subunits (COQ3/COQ5/COQ6/COQ7) from the mitochondrial interaction mapping study. These are real physical partners within the CoQ biosynthetic complex, but the bare &#34;protein binding&#34; term is uninformative; the biology is better captured by complex membership (GO:0110142).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative generic MF term; the underlying interactions are complex-subunit contacts represented by ubiquinone biosynthesis complex membership.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27499296" target="_blank" class="term-link">
+                                        PMID:27499296
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">identify a dynamic human coenzyme Q biosynthetic complex that includes multiple MXPs</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Binary interactome (Y2H) interaction (with MAGEA2B). Bare &#34;protein binding&#34; is uninformative and this single high-throughput interaction does not inform COQ4&#39;s core CoQ-biosynthesis function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative generic MF term from a large-scale interactome screen.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2142789
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0006744" data-r="Reactome:R-HSA-2142789" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author statement placing COQ4 in ubiquinol biosynthesis. Consistent with the core biological process.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120539" target="_blank" class="term-link">
+                                    GO:0120539
+                                </a>
+                            </span>
+                            <span class="term-label">4-hydroxy-3-methoxy-5-polyprenylbenzoate decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2162195
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0120539" data-r="Reactome:R-HSA-2162195" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome reaction &#34;COQ4 decarboxylates MHDB&#34; assigns the C1 decarboxylase activity to COQ4. Consistent with the experimentally established core molecular function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27499296" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27499296
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial Protein Interaction Mapping Identifies Regulat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0005743" data-r="PMID:27499296" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct-assay (ComplexPortal-curated IDA) localization of COQ4 to the mitochondrial inner membrane, from the study that mapped the human CoQ biosynthetic complex. Strong support for the inner-membrane location.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COQ4/COQ4-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28927698" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28927698
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Biochemistry of Mitochondrial Coenzyme Q Biosynthesis.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0006744" data-r="PMID:28927698" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Non-traceable author statement (from a CoQ biosynthesis review) that COQ4 is part of the terminal CoQ biosynthetic complex. Consistent with the core process and with the stronger IDA/IMP annotations.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28927698" target="_blank" class="term-link">
+                                        PMID:28927698
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The enzymes in the terminal phase of CoQ biosynthesis form a biosynthetic complex termed complex Q</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0110142" target="_blank" class="term-link">
+                                    GO:0110142
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthesis complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27499296" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27499296
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial Protein Interaction Mapping Identifies Regulat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0110142" data-r="PMID:27499296" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> COQ4 is a subunit of the CoQ biosynthetic complex (COQ synthome / metabolon) composed of at least COQ3, COQ4, COQ5, COQ6, COQ7 and COQ9. This is a core, accurate cellular-component annotation of complex membership.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COQ4/COQ4-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Component of a multi-subunit COQ enzyme complex, composed of</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27499296" target="_blank" class="term-link">
+                                        PMID:27499296
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">identify a dynamic human coenzyme Q biosynthetic complex that includes multiple MXPs</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0005739" data-r="GO_REF:0000052" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Immunofluorescence-based (HPA) mitochondrial localization. Correct but general; subsumed by the specific inner-membrane annotations.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120539" target="_blank" class="term-link">
+                                    GO:0120539
+                                </a>
+                            </span>
+                            <span class="term-label">4-hydroxy-3-methoxy-5-polyprenylbenzoate decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38295803" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:38295803
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    COQ4 is required for the oxidative decarboxylation of the C1...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0120539" data-r="PMID:38295803" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental demonstration that COQ4 catalyzes the oxidative decarboxylation of the C1 carbon of CoQ precursors: COQ4 complemented an E. coli strain deficient for C1 decarboxylation/hydroxylation and showed oxidative decarboxylation activity in a non-CoQ-producer bacterium. This is one of two primary studies establishing COQ4&#39;s core catalytic function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38295803" target="_blank" class="term-link">
+                                        PMID:38295803
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">COQ4 displays oxidative decarboxylation activity in the non-CoQ producer</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120539" target="_blank" class="term-link">
+                                    GO:0120539
+                                </a>
+                            </span>
+                            <span class="term-label">4-hydroxy-3-methoxy-5-polyprenylbenzoate decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38425362" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:38425362
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In vitro construction of the COQ metabolon unveils the molec...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0120539" data-r="PMID:38425362" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> In vitro reconstruction of the animal COQ metabolon showed that purified COQ4, the only synthome subunit with a canonical Zn-binding motif, exercises Zn-dependent decarboxylase activity on the C1 precursor. Directly establishes the core catalytic molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38425362" target="_blank" class="term-link">
+                                        PMID:38425362
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we found that COQ4 exercised decarboxylase activity and production of 4a</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38295803" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:38295803
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    COQ4 is required for the oxidative decarboxylation of the C1...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0006744" data-r="PMID:38295803" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental evidence that COQ4 contributes to CoQ biosynthesis via oxidative decarboxylation of CoQ precursors (in addition to its structural role). Strong support for the core biological process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38295803" target="_blank" class="term-link">
+                                        PMID:38295803
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">COQ4 contributes to CoQ biosynthesis, not only via its previously proposed structural</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38425362" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:38425362
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In vitro construction of the COQ metabolon unveils the molec...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0006744" data-r="PMID:38425362" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> In vitro metabolon reconstruction placed COQ4&#39;s decarboxylase step within the CoQ biosynthetic pathway. Strong support for the core biological process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38425362" target="_blank" class="term-link">
+                                        PMID:38425362
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These findings attest to COQ4</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0005739" data-r="PMID:34800366" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput high-confidence mitochondrial proteome assignment. Correct but general; subsumed by the specific inner-membrane localization.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38014483" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:38014483
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Biallelic COQ4 Variants in Hereditary Spastic Paraplegia: Cl...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0006744" data-r="PMID:38014483" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutant-phenotype evidence: loss-of-function COQ4 variants in patient fibroblasts and knockout complementation lines caused decreased ubiquinone biosynthesis, confirming COQ4&#39;s requirement for CoQ synthesis.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38014483" target="_blank" class="term-link">
+                                        PMID:38014483
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">lower ubiquinone biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30659264" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30659264
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Clinical phenotype, in silico and biomedical analyses, and i...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0006744" data-r="PMID:30659264" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutant-phenotype evidence: the homozygous G124S COQ4 variant caused CoQ10 deficiency with lower CoQ10 levels in patient fibroblasts, supporting COQ4&#39;s role in ubiquinone biosynthesis.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30659264" target="_blank" class="term-link">
+                                        PMID:30659264
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The levels of CoQ10 and mitochondrial respiratory chain complex (C) II + III activity were</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25152161" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25152161
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular characterization of the human COQ5 C-methyltransfe...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0005515" data-r="PMID:25152161" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Physical interaction with COQ5 (Q5HYK3) within the CoQ-synthome. A real complex partner, but the bare &#34;protein binding&#34; term is uninformative; complex membership (GO:0110142) captures the biology.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative generic MF term; the interaction is a CoQ-synthome subunit contact.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25152161" target="_blank" class="term-link">
+                                        PMID:25152161
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">assemble with the multi-subunit complex termed the CoQ-synthome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032991" target="_blank" class="term-link">
+                                    GO:0032991
+                                </a>
+                            </span>
+                            <span class="term-label">protein-containing complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25152161" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25152161
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular characterization of the human COQ5 C-methyltransfe...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0032991" data-r="PMID:25152161" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic protein-containing complex membership. Correct but over-general; the specific complex is the ubiquinone biosynthesis complex (GO:0110142) already annotated.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Over-general ancestor of the specific ubiquinone biosynthesis complex term.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0110142" target="_blank" class="term-link">
+                                    ubiquinone biosynthesis complex
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2162186
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0005743" data-r="Reactome:R-HSA-2162186" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author localization to the mitochondrial inner membrane. Consistent with the experimentally supported location.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2162187
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0005743" data-r="Reactome:R-HSA-2162187" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author localization to the mitochondrial inner membrane (redundant Reactome reaction). Consistent with the supported location.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2162188
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0005743" data-r="Reactome:R-HSA-2162188" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author localization to the mitochondrial inner membrane (redundant Reactome reaction). Consistent with the supported location.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2162193
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0005743" data-r="Reactome:R-HSA-2162193" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author localization to the mitochondrial inner membrane (redundant Reactome reaction). Consistent with the supported location.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2162194
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0005743" data-r="Reactome:R-HSA-2162194" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author localization to the mitochondrial inner membrane (redundant Reactome reaction). Consistent with the supported location.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2162195
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0005743" data-r="Reactome:R-HSA-2162195" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author localization to the mitochondrial inner membrane, associated with the COQ4 decarboxylation reaction. Consistent with the supported location.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000054
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y3A0" data-a="GO:0005739" data-r="GO_REF:0000054" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LIFEdb GFP-fusion localization to mitochondrion. Correct but general; subsumed by the specific inner-membrane annotations.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Zinc-dependent C1 decarboxylase of the coenzyme Q head-group modification pathway. As a subunit of the mitochondrial CoQ biosynthetic complex (COQ synthome / metabolon), COQ4 catalyzes the decarboxylation of a 4-hydroxy-3- methoxy-5-(polyprenyl)benzoate intermediate to the corresponding 2-methoxy-6-(polyprenyl)phenol with release of CO2, a step required for CoQ10 biosynthesis. The activity requires a bound Zn2+ ion.</h3>
+                <span class="vote-buttons" data-g="Q9Y3A0" data-a="FUNCTION: Zinc-dependent C1 decarboxylase of the coenzyme Q ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120539" target="_blank" class="term-link">
+                            4-hydroxy-3-methoxy-5-polyprenylbenzoate decarboxylase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                ubiquinone biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                mitochondrial inner membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0110142" target="_blank" class="term-link">
+                            ubiquinone biosynthesis complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38425362" target="_blank" class="term-link">
+                                PMID:38425362
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">we found that COQ4 exercised decarboxylase activity and production of 4a</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38295803" target="_blank" class="term-link">
+                                PMID:38295803
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">COQ4 displays oxidative decarboxylation activity in the non-CoQ producer</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/COQ4/COQ4-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Lyase that catalyzes the C1-decarboxylation of 4-hydroxy-3-</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds a catalytic Zn2+ ion, coordinated by a conserved His/Asp/His/Glu motif (residues 163, 164, 167, 179), that is essential for COQ4&#39;s decarboxylase activity and for its ability to promote ubiquinone formation.</h3>
+                <span class="vote-buttons" data-g="Q9Y3A0" data-a="FUNCTION: Binds a catalytic Zn2+ ion, coordinated by a conse..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                            zinc ion binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                ubiquinone biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/COQ4/COQ4-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Name=Zn(2+)</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/COQ4/COQ4-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Abolished zinc-binding and ability to promote</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000054.md" target="_blank" class="term-link">
+                            GO_REF:0000054
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of intracellular localizations of expressed fusion proteins in living cells</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25152161" target="_blank" class="term-link">
+                            PMID:25152161
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Molecular characterization of the human COQ5 C-methyltransferase in coenzyme Q10 biosynthesis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27499296" target="_blank" class="term-link">
+                            PMID:27499296
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mitochondrial Protein Interaction Mapping Identifies Regulators of Respiratory Chain Function.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28927698" target="_blank" class="term-link">
+                            PMID:28927698
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Biochemistry of Mitochondrial Coenzyme Q Biosynthesis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30659264" target="_blank" class="term-link">
+                            PMID:30659264
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Clinical phenotype, in silico and biomedical analyses, and intervention for an East Asian population-specific c.370G&gt;A (p.G124S) COQ4 mutation in a Chinese family with CoQ10 deficiency-associated Leigh syndrome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38014483" target="_blank" class="term-link">
+                            PMID:38014483
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Biallelic COQ4 Variants in Hereditary Spastic Paraplegia: Clinical and Molecular Characterization.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38295803" target="_blank" class="term-link">
+                            PMID:38295803
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">COQ4 is required for the oxidative decarboxylation of the C1 carbon of coenzyme Q in eukaryotic cells.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38425362" target="_blank" class="term-link">
+                            PMID:38425362
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In vitro construction of the COQ metabolon unveils the molecular determinants of coenzyme Q biosynthesis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-2142789
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Ubiquinol biosynthesis</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-2162186
+
+                    </span>
+                </div>
+
+                <div class="reference-title">COQ3 methylates DeMQ10H2</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-2162187
+
+                    </span>
+                </div>
+
+                <div class="reference-title">COQ6 hydroxylates DHB</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-2162188
+
+                    </span>
+                </div>
+
+                <div class="reference-title">COQ5 methylates MDMQ10H2</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-2162193
+
+                    </span>
+                </div>
+
+                <div class="reference-title">COQ3 methylates DHDB</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-2162194
+
+                    </span>
+                </div>
+
+                <div class="reference-title">COQ7:COQ9 octamer hydroxylates DMQ10H2</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-2162195
+
+                    </span>
+                </div>
+
+                <div class="reference-title">COQ4 decarboxylates MHDB</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does human COQ4 catalyze only C1 decarboxylation, or also a coupled C1 hydroxylation? PMID:38295803 proposes a single oxidative decarboxylation (decarboxylation + hydroxylation), whereas PMID:38425362 assigns C1 hydroxylation to COQ6; resolving this would refine the molecular-function annotation.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9Y3A0" data-a="Q: Does human COQ4 catalyze only C1 decarboxylation, ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Determine a structure of the human COQ4 (or COQ synthome subcomplex) with bound Zn2+ and a polyprenyl-benzoate substrate analog to define the decarboxylase active site and the basis of substrate presentation within the metabolon.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9Y3A0" data-a="EXPERIMENT: Determine a structure of the human COQ4 (or COQ sy..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute COQ4 metal-site point mutants (e.g. the His/Asp motif) in COQ4-null human cells and quantify CoQ10 and pathway intermediates to separate the catalytic contribution from the structural/assembly contribution of COQ4.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9Y3A0" data-a="EXPERIMENT: Reconstitute COQ4 metal-site point mutants (e.g. t..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(COQ4-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9Y3A0" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="coq4-human-gene-review-notes">COQ4 (human) — gene review notes</h1>
+<p>UniProt: Q9Y3A0 (COQ4_HUMAN). HGNC:19693. Gene ID 51117. Chromosome 9.<br />
+265 aa precursor; mitochondrial transit peptide 1–30; mature chain 31–265.</p>
+<h2 id="summary-of-function">Summary of function</h2>
+<p>COQ4 is a subunit of the mitochondrial coenzyme Q (ubiquinone) biosynthetic<br />
+complex ("COQ synthome" / COQ metabolon) that sits on the matrix face of the<br />
+inner mitochondrial membrane. It has two, non-exclusive roles that have both been<br />
+established experimentally:</p>
+<ol>
+<li>
+<p><strong>Structural/organizing role</strong> — historically COQ4 was regarded as a scaffold<br />
+   that stabilizes the multi-subunit complex and is essential for its assembly and<br />
+   for CoQ biosynthesis. This is the classical view [PMID:18474229; PMID:27499296;<br />
+   PMID:28927698].</p>
+</li>
+<li>
+<p><strong>Catalytic role (established 2024)</strong> — two independent 2024 studies showed that<br />
+   COQ4 is itself a <strong>Zn2+-dependent C1 decarboxylase</strong> (EC 4.1.1.130) that<br />
+   catalyzes the oxidative/decarboxylation step at position C1 of the CoQ head<br />
+   group. This is now the RecName-linked activity in UniProt (GO:0120539,<br />
+   "4-hydroxy-3-methoxy-5-polyprenylbenzoate decarboxylase activity"), with IDA<br />
+   experimental support [PMID:38295803; PMID:38425362].</p>
+</li>
+</ol>
+<p>IMPORTANT: The older "non-catalytic scaffold only" framing has been superseded by<br />
+the 2024 catalytic evidence now captured in the UniProt entry. Both roles are real;<br />
+the catalytic decarboxylase activity is the current core molecular function.</p>
+<h2 id="location">Location</h2>
+<ul>
+<li>Mitochondrion inner membrane; peripheral membrane protein on the matrix side.<br />
+  [file:human/COQ4/COQ4-uniprot.txt "SUBCELLULAR LOCATION: Mitochondrion inner membrane"]<br />
+  ["Peripheral membrane protein; Matrix side."]</li>
+<li>Localizes to mitochondrion (LIFEdb GFP, HPA immunofluorescence, high-confidence<br />
+  mito proteome PMID:34800366).</li>
+</ul>
+<h2 id="complex-membership-coq-synthome-metabolon">Complex membership (COQ synthome / metabolon)</h2>
+<ul>
+<li>"Component of a multi-subunit COQ enzyme complex, composed of at least COQ3,<br />
+  COQ4, COQ5, COQ6, COQ7 and COQ9." [file:human/COQ4/COQ4-uniprot.txt]<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/27499296" title="identified a dynamic human coenzyme Q biosynthetic complex that includes multiple MXPs">PMID:27499296</a></li>
+<li>ComplexPortal CPX-3642 "CoQ biosynthetic complex". GO:0110142 (ubiquinone<br />
+  biosynthesis complex) definition explicitly lists COQ3/4/5/6/7/9.</li>
+<li>Direct binary interactions (IntAct, from PMID:27499296): COQ3 (Q9NZJ6),<br />
+  COQ5 (Q5HYK3), COQ6 (Q9Y2Z9), COQ7 (Q99807). Also MAGEA2B (P43356) from the<br />
+  binary interactome map <a href="https://pubmed.ncbi.nlm.nih.gov/32296183">PMID:32296183</a>.</li>
+<li>COQ5 paper describes the assembly as the "CoQ-synthome" whose stability requires<br />
+  each Coq polypeptide <a href="https://pubmed.ncbi.nlm.nih.gov/25152161" title="assemble with the multi-subunit complex termed the CoQ-synthome">PMID:25152161</a>.</li>
+</ul>
+<h2 id="catalytic-activity-detail">Catalytic activity — detail</h2>
+<ul>
+<li>Reaction (UniProt / Rhea RHEA:81275): 4-hydroxy-3-methoxy-5-(all-trans-<br />
+  decaprenyl)benzoate + H+ = 2-methoxy-6-(all-trans-decaprenyl)phenol + CO2;<br />
+  EC=4.1.1.130.</li>
+<li>Cofactor: Zn(2+). Zn-binding residues 163, 164, 167, 179 (canonical HD-xx-H-(x)11-E<br />
+  motif). [file:human/COQ4/COQ4-uniprot.txt "COFACTOR: Name=Zn(2+)"]</li>
+<li>PMID:38425362 (Nat Catal, full text): reconstructed the whole animal COQ metabolon<br />
+  in vitro. "COQ4 is the only system that possesses a canonical Zn-binding motif...<br />
+  we found that COQ4 exercised decarboxylase activity and production of 4a...<br />
+  These findings attest to COQ4's role as the C1 decarboxylase in CoQ biosynthesis."<br />
+  Zn dependency shown (EC50 2.4 µM ZnCl2; abolished by EDTA; metal-site mutants<br />
+  H142A-H146A and D143A-E158A inactive — numbering in the truncated ancestral<br />
+  construct, corresponding to human 163/164/167/etc).</li>
+<li>PMID:38295803 (Mol Cell, abstract only in cache): "these two reactions occur in a<br />
+  single oxidative decarboxylation step catalyzed by COQ4... COQ4 complements an<br />
+  Escherichia coli strain deficient for C1 decarboxylation and hydroxylation and<br />
+  that COQ4 displays oxidative decarboxylation activity in the non-CoQ producer<br />
+  Corynebacterium glutamicum... COQ4 contributes to CoQ biosynthesis, not only via<br />
+  its previously proposed structural role but also via the oxidative decarboxylation<br />
+  of CoQ precursors."</li>
+<li>Note the two 2024 papers differ on the C1 <em>hydroxylation</em> step: PMID:38295803<br />
+  proposes COQ4 mediates a combined oxidative decarboxylation (decarb+hydroxyl in one<br />
+  step), whereas PMID:38425362 assigns the separate C1 hydroxylation to COQ6 and<br />
+  restricts COQ4 to decarboxylation. UniProt CAUTION notes this. Either way COQ4 =<br />
+  the C1 decarboxylase; GO:0120539 (decarboxylase) is the appropriate MF.</li>
+<li>Zn-binding mutagenesis: "HDMLH-&gt;ADMLA: Abolished zinc-binding." and "D-&gt;A:<br />
+  Abolished zinc-binding... Abolished zinc-binding and ability to promote formation<br />
+  of ubiquinone." [file:human/COQ4/COQ4-uniprot.txt] — links the metal site to<br />
+  ubiquinone production.</li>
+</ul>
+<h2 id="biological-process-requirement">Biological process / requirement</h2>
+<ul>
+<li>"Functional characterization of human COQ4, a gene required for coenzyme Q10<br />
+  biosynthesis" [PMID:18474229 title] — establishes requirement for CoQ10 synthesis.</li>
+<li>Loss-of-function COQ4 variants reduce ubiquinone biosynthesis: patient fibroblasts<br />
+  and knockout complementation lines show "lower ubiquinone biosynthesis"<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/38014483" title="decreased mitochondrial membrane potential, and lower ubiquinone biosynthesis">PMID:38014483</a>;<br />
+  IMP annotation to GO:0006744.</li>
+<li>Leigh syndrome patient with G124S: "levels of CoQ10 ... were clearly lower in<br />
+  cultured fibroblasts derived from the patient" <a href="https://pubmed.ncbi.nlm.nih.gov/30659264">PMID:30659264</a>; IMP to GO:0006744.</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>Primary coenzyme Q10 deficiency-7 (COQ10D7; MIM:616276): autosomal recessive;<br />
+  decreased CoQ10, severe cardiac or neurologic symptoms soon after birth<br />
+  [file:human/COQ4/COQ4-uniprot.txt "Coenzyme Q10 deficiency, primary, 7 (COQ10D7)"].<br />
+  Broad spectrum described in PMID:25658047.</li>
+<li>Spastic ataxia 10, autosomal recessive (SPAX10; MIM:620666): lower-limb<br />
+  spasticity, generalized ataxia [file:human/COQ4/COQ4-uniprot.txt "Spastic ataxia 10"].</li>
+<li>HSP phenotype confirmed by biallelic variants <a href="https://pubmed.ncbi.nlm.nih.gov/38014483">PMID:38014483</a>.</li>
+</ul>
+<h2 id="post-translational-modification">Post-translational modification</h2>
+<ul>
+<li>Phosphoserine at Ser-108 (large-scale phosphoproteomics) <a href="https://pubmed.ncbi.nlm.nih.gov/23186163">PMID:23186163</a>.</li>
+</ul>
+<h2 id="annotation-review-decisions-see-coq4-ai-reviewyaml">Annotation review decisions (see COQ4-ai-review.yaml)</h2>
+<ul>
+<li>Catalytic decarboxylase MF (GO:0120539): ACCEPT the IDA annotations (2024 primary<br />
+  evidence). IBA/IEA/TAS versions KEEP_AS_NON_CORE or ACCEPT (consistent, redundant).</li>
+<li>ubiquinone biosynthetic process (GO:0006744): core BP; ACCEPT the strongest<br />
+  (IDA/IMP) versions; others consistent.</li>
+<li>zinc ion binding (GO:0008270, IEA): ACCEPT — genuinely supported cofactor<br />
+  (Zn2+ in UniProt with experimental FT BINDING sites and 2024 metal-dependence data).</li>
+<li>carboxy-lyase activity (GO:0016831, IEA): parent of GO:0120539; ACCEPT as a<br />
+  correct-but-general ancestor (non-core; the specific term is the core).</li>
+<li>Complex/location terms (GO:0110142, GO:0005743, GO:0031314, GO:0005739,<br />
+  GO:0032991): ACCEPT/KEEP_AS_NON_CORE as appropriate. GO:0032991 (protein-containing<br />
+  complex) is a generic ancestor of GO:0110142 → MARK as over-general (KEEP_AS_NON_CORE).</li>
+<li>protein binding (GO:0005515, IPI): the four PMID:27499296 IntAct entries capture<br />
+  COQ3/5/6/7 co-complex partners (real synthome interactions) → MARK_AS_OVER_ANNOTATED<br />
+  (uninformative bare term; better modeled as complex membership). PMID:32296183<br />
+  (MAGEA2B) and PMID:25152161 (COQ5) IPIs likewise MARK_AS_OVER_ANNOTATED.</li>
+<li>Do NOT REMOVE any experimental annotations. IEA carboxy-lyase and the redundant<br />
+  Reactome location TAS entries are all biologically defensible → keep.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9Y3A0
+gene_symbol: COQ4
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  COQ4 is a mitochondrial protein that functions in the biosynthesis of coenzyme Q
+  (ubiquinone, CoQ10 in humans), a lipid-soluble redox cofactor of the respiratory
+  chain. It is a subunit of the multi-protein CoQ biosynthetic complex (the COQ
+  &#34;synthome&#34; or metabolon), assembled with COQ3, COQ5, COQ6, COQ7 and COQ9 on the
+  matrix face of the inner mitochondrial membrane. COQ4 has a dual character: it is
+  required for the integrity and assembly of the complex (a long-recognized
+  structural/organizing role), and it is itself a zinc-dependent enzyme that
+  catalyzes the C1 decarboxylation step of the CoQ head-group modification pathway
+  (4-hydroxy-3-methoxy-5-polyprenylbenzoate decarboxylase; EC 4.1.1.130), converting
+  a polyprenyl-benzoate precursor to a polyprenyl-phenol with release of CO2. A
+  bound Zn2+ ion, coordinated by a conserved His/Asp/Glu motif, is essential for this
+  activity. Loss of COQ4 function reduces CoQ10 synthesis and causes autosomal
+  recessive primary coenzyme Q10 deficiency-7 (encephalopathy, cardiomyopathy,
+  Leigh syndrome) and a spastic-ataxia/hereditary spastic paraplegia spectrum
+  disorder.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q9Y3A0-1
+- name: &#39;2&#39;
+  id: Q9Y3A0-2
+  sequence_note: VSP_036866
+existing_annotations:
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) localization of COQ4 to mitochondrion. Correct but general;
+      the more specific inner-membrane/matrix-face localization is better captured by
+      other annotations.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      COQ4 is a mitochondrial protein, consistent with all direct evidence, but this
+      generic compartment term is subsumed by the specific mitochondrial inner
+      membrane annotations.
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference that COQ4 is involved in ubiquinone biosynthesis.
+      This is the central, well-supported biological process for COQ4 and is
+      independently confirmed by experimental (IDA/IMP) annotations.
+    action: ACCEPT
+- term:
+    id: GO:0120539
+    label: 4-hydroxy-3-methoxy-5-polyprenylbenzoate decarboxylase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference of the C1 decarboxylase molecular function. This
+      is now confirmed by two independent 2024 experimental (IDA) studies and is the
+      core molecular function of COQ4.
+    action: ACCEPT
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic localization to the mitochondrial inner membrane, consistent with
+      the experimental IDA annotation (PMID:27499296) and with UniProt (peripheral
+      membrane protein on the matrix side of the inner membrane).
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/COQ4/COQ4-uniprot.txt
+      supporting_text: &#34;Mitochondrion inner membrane&#34;
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic annotation to ubiquinone biosynthesis (InterPro/UniRule/UniPathway).
+      Redundant with the strong experimental support for this core process.
+    action: ACCEPT
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Zinc ion binding is genuinely supported: UniProt lists Zn(2+) as the catalytic
+      cofactor with defined binding residues (163, 164, 167, 179), and 2024 work
+      showed COQ4 decarboxylase activity is Zn-dependent (abolished by EDTA and by
+      metal-site mutations). This underpins the catalytic function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/COQ4/COQ4-uniprot.txt
+      supporting_text: &#34;Name=Zn(2+)&#34;
+- term:
+    id: GO:0016831
+    label: carboxy-lyase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Carboxy-lyase activity is a correct but general parent of the specific COQ4
+      activity, 4-hydroxy-3-methoxy-5-polyprenylbenzoate decarboxylase activity
+      (GO:0120539). Keep as a non-core ancestor; the specific decarboxylase term is
+      the core molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Ancestor of the specific decarboxylase term already annotated with IDA
+      evidence.
+    proposed_replacement_terms:
+    - id: GO:0120539
+      label: 4-hydroxy-3-methoxy-5-polyprenylbenzoate decarboxylase activity
+- term:
+    id: GO:0031314
+    label: extrinsic component of mitochondrial inner membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      COQ4 is a peripheral (extrinsic) membrane protein on the matrix side of the
+      inner mitochondrial membrane, consistent with UniProt. This term correctly
+      captures the extrinsic, matrix-facing topology.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/COQ4/COQ4-uniprot.txt
+      supporting_text: &#34;Matrix side.&#34;
+- term:
+    id: GO:0120539
+    label: 4-hydroxy-3-methoxy-5-polyprenylbenzoate decarboxylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  qualifier: enables
+  review:
+    summary: &gt;-
+      EC-based (GO_REF:0000003) electronic mapping to the C1 decarboxylase activity
+      (EC 4.1.1.130). Correct and redundant with the experimental IDA annotations.
+    action: ACCEPT
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:27499296
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IntAct binary interactions of COQ4 with other COQ synthome subunits
+      (COQ3/COQ5/COQ6/COQ7) from the mitochondrial interaction mapping study. These
+      are real physical partners within the CoQ biosynthetic complex, but the bare
+      &#34;protein binding&#34; term is uninformative; the biology is better captured by
+      complex membership (GO:0110142).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative generic MF term; the underlying interactions are complex-subunit
+      contacts represented by ubiquinone biosynthesis complex membership.
+    supported_by:
+    - reference_id: PMID:27499296
+      supporting_text: &#34;identify a dynamic human coenzyme Q biosynthetic complex that includes multiple MXPs&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Binary interactome (Y2H) interaction (with MAGEA2B). Bare &#34;protein binding&#34; is
+      uninformative and this single high-throughput interaction does not inform
+      COQ4&#39;s core CoQ-biosynthesis function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative generic MF term from a large-scale interactome screen.
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2142789
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author statement placing COQ4 in ubiquinol biosynthesis.
+      Consistent with the core biological process.
+    action: ACCEPT
+- term:
+    id: GO:0120539
+    label: 4-hydroxy-3-methoxy-5-polyprenylbenzoate decarboxylase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2162195
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome reaction &#34;COQ4 decarboxylates MHDB&#34; assigns the C1 decarboxylase
+      activity to COQ4. Consistent with the experimentally established core molecular
+      function.
+    action: ACCEPT
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IDA
+  original_reference_id: PMID:27499296
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct-assay (ComplexPortal-curated IDA) localization of COQ4 to the
+      mitochondrial inner membrane, from the study that mapped the human CoQ
+      biosynthetic complex. Strong support for the inner-membrane location.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/COQ4/COQ4-uniprot.txt
+      supporting_text: &#34;Mitochondrion inner membrane&#34;
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: NAS
+  original_reference_id: PMID:28927698
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Non-traceable author statement (from a CoQ biosynthesis review) that COQ4 is
+      part of the terminal CoQ biosynthetic complex. Consistent with the core process
+      and with the stronger IDA/IMP annotations.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:28927698
+      supporting_text: &#34;The enzymes in the terminal phase of CoQ biosynthesis form a biosynthetic complex termed complex Q&#34;
+- term:
+    id: GO:0110142
+    label: ubiquinone biosynthesis complex
+  evidence_type: IPI
+  original_reference_id: PMID:27499296
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      COQ4 is a subunit of the CoQ biosynthetic complex (COQ synthome / metabolon)
+      composed of at least COQ3, COQ4, COQ5, COQ6, COQ7 and COQ9. This is a core,
+      accurate cellular-component annotation of complex membership.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/COQ4/COQ4-uniprot.txt
+      supporting_text: &#34;Component of a multi-subunit COQ enzyme complex, composed of&#34;
+    - reference_id: PMID:27499296
+      supporting_text: &#34;identify a dynamic human coenzyme Q biosynthetic complex that includes multiple MXPs&#34;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Immunofluorescence-based (HPA) mitochondrial localization. Correct but general;
+      subsumed by the specific inner-membrane annotations.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0120539
+    label: 4-hydroxy-3-methoxy-5-polyprenylbenzoate decarboxylase activity
+  evidence_type: IDA
+  original_reference_id: PMID:38295803
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental demonstration that COQ4 catalyzes the oxidative
+      decarboxylation of the C1 carbon of CoQ precursors: COQ4 complemented an
+      E. coli strain deficient for C1 decarboxylation/hydroxylation and showed
+      oxidative decarboxylation activity in a non-CoQ-producer bacterium. This is one
+      of two primary studies establishing COQ4&#39;s core catalytic function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:38295803
+      supporting_text: &#34;COQ4 displays oxidative decarboxylation activity in the non-CoQ producer&#34;
+- term:
+    id: GO:0120539
+    label: 4-hydroxy-3-methoxy-5-polyprenylbenzoate decarboxylase activity
+  evidence_type: IDA
+  original_reference_id: PMID:38425362
+  qualifier: enables
+  review:
+    summary: &gt;-
+      In vitro reconstruction of the animal COQ metabolon showed that purified COQ4,
+      the only synthome subunit with a canonical Zn-binding motif, exercises
+      Zn-dependent decarboxylase activity on the C1 precursor. Directly establishes
+      the core catalytic molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:38425362
+      supporting_text: &#34;we found that COQ4 exercised decarboxylase activity and production of 4a&#34;
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:38295803
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental evidence that COQ4 contributes to CoQ biosynthesis via oxidative
+      decarboxylation of CoQ precursors (in addition to its structural role). Strong
+      support for the core biological process.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:38295803
+      supporting_text: &#34;COQ4 contributes to CoQ biosynthesis, not only via its previously proposed structural&#34;
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:38425362
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      In vitro metabolon reconstruction placed COQ4&#39;s decarboxylase step within the
+      CoQ biosynthetic pathway. Strong support for the core biological process.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:38425362
+      supporting_text: &#34;These findings attest to COQ4&#34;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput high-confidence mitochondrial proteome assignment. Correct but
+      general; subsumed by the specific inner-membrane localization.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: IMP
+  original_reference_id: PMID:38014483
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Mutant-phenotype evidence: loss-of-function COQ4 variants in patient
+      fibroblasts and knockout complementation lines caused decreased ubiquinone
+      biosynthesis, confirming COQ4&#39;s requirement for CoQ synthesis.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:38014483
+      supporting_text: &#34;lower ubiquinone biosynthesis&#34;
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: IMP
+  original_reference_id: PMID:30659264
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Mutant-phenotype evidence: the homozygous G124S COQ4 variant caused CoQ10
+      deficiency with lower CoQ10 levels in patient fibroblasts, supporting COQ4&#39;s
+      role in ubiquinone biosynthesis.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:30659264
+      supporting_text: &#34;The levels of CoQ10 and mitochondrial respiratory chain complex (C) II + III activity were&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25152161
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Physical interaction with COQ5 (Q5HYK3) within the CoQ-synthome. A real complex
+      partner, but the bare &#34;protein binding&#34; term is uninformative; complex
+      membership (GO:0110142) captures the biology.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative generic MF term; the interaction is a CoQ-synthome subunit
+      contact.
+    supported_by:
+    - reference_id: PMID:25152161
+      supporting_text: &#34;assemble with the multi-subunit complex termed the CoQ-synthome&#34;
+- term:
+    id: GO:0032991
+    label: protein-containing complex
+  evidence_type: IDA
+  original_reference_id: PMID:25152161
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Generic protein-containing complex membership. Correct but over-general; the
+      specific complex is the ubiquinone biosynthesis complex (GO:0110142) already
+      annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Over-general ancestor of the specific ubiquinone biosynthesis complex term.
+    proposed_replacement_terms:
+    - id: GO:0110142
+      label: ubiquinone biosynthesis complex
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2162186
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author localization to the mitochondrial inner membrane.
+      Consistent with the experimentally supported location.
+    action: ACCEPT
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2162187
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author localization to the mitochondrial inner membrane
+      (redundant Reactome reaction). Consistent with the supported location.
+    action: ACCEPT
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2162188
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author localization to the mitochondrial inner membrane
+      (redundant Reactome reaction). Consistent with the supported location.
+    action: ACCEPT
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2162193
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author localization to the mitochondrial inner membrane
+      (redundant Reactome reaction). Consistent with the supported location.
+    action: ACCEPT
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2162194
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author localization to the mitochondrial inner membrane
+      (redundant Reactome reaction). Consistent with the supported location.
+    action: ACCEPT
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2162195
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author localization to the mitochondrial inner membrane,
+      associated with the COQ4 decarboxylation reaction. Consistent with the
+      supported location.
+    action: ACCEPT
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000054
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      LIFEdb GFP-fusion localization to mitochondrion. Correct but general; subsumed
+      by the specific inner-membrane annotations.
+    action: KEEP_AS_NON_CORE
+core_functions:
+- description: &gt;-
+    Zinc-dependent C1 decarboxylase of the coenzyme Q head-group modification
+    pathway. As a subunit of the mitochondrial CoQ biosynthetic complex (COQ
+    synthome / metabolon), COQ4 catalyzes the decarboxylation of a 4-hydroxy-3-
+    methoxy-5-(polyprenyl)benzoate intermediate to the corresponding
+    2-methoxy-6-(polyprenyl)phenol with release of CO2, a step required for CoQ10
+    biosynthesis. The activity requires a bound Zn2+ ion.
+  molecular_function:
+    id: GO:0120539
+    label: 4-hydroxy-3-methoxy-5-polyprenylbenzoate decarboxylase activity
+  directly_involved_in:
+  - id: GO:0006744
+    label: ubiquinone biosynthetic process
+  in_complex:
+    id: GO:0110142
+    label: ubiquinone biosynthesis complex
+  locations:
+  - id: GO:0005743
+    label: mitochondrial inner membrane
+  supported_by:
+  - reference_id: PMID:38425362
+    supporting_text: &#34;we found that COQ4 exercised decarboxylase activity and production of 4a&#34;
+  - reference_id: PMID:38295803
+    supporting_text: &#34;COQ4 displays oxidative decarboxylation activity in the non-CoQ producer&#34;
+  - reference_id: file:human/COQ4/COQ4-uniprot.txt
+    supporting_text: &#34;Lyase that catalyzes the C1-decarboxylation of 4-hydroxy-3-&#34;
+- description: &gt;-
+    Binds a catalytic Zn2+ ion, coordinated by a conserved His/Asp/His/Glu motif
+    (residues 163, 164, 167, 179), that is essential for COQ4&#39;s decarboxylase
+    activity and for its ability to promote ubiquinone formation.
+  molecular_function:
+    id: GO:0008270
+    label: zinc ion binding
+  directly_involved_in:
+  - id: GO:0006744
+    label: ubiquinone biosynthetic process
+  supported_by:
+  - reference_id: file:human/COQ4/COQ4-uniprot.txt
+    supporting_text: &#34;Name=Zn(2+)&#34;
+  - reference_id: file:human/COQ4/COQ4-uniprot.txt
+    supporting_text: &#34;Abolished zinc-binding and ability to promote&#34;
+references:
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000054
+  title: Gene Ontology annotation based on curation of intracellular localizations
+    of expressed fusion proteins in living cells
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:25152161
+  title: Molecular characterization of the human COQ5 C-methyltransferase in coenzyme
+    Q10 biosynthesis.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Characterizes human COQ5 and the CoQ-synthome; supports COQ4 as a synthome
+      subunit and its physical interaction with COQ5.
+- id: PMID:27499296
+  title: Mitochondrial Protein Interaction Mapping Identifies Regulators of Respiratory
+    Chain Function.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text available; maps the human CoQ biosynthetic complex and COQ4&#39;s
+      interactions with COQ3/5/6/7. Basis for the complex-membership and
+      inner-membrane annotations.
+- id: PMID:28927698
+  title: Biochemistry of Mitochondrial Coenzyme Q Biosynthesis.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Review of CoQ biosynthesis; provides background on the COQ complex and the
+      then-unresolved catalytic steps.
+- id: PMID:30659264
+  title: Clinical phenotype, in silico and biomedical analyses, and intervention for
+    an East Asian population-specific c.370G&gt;A (p.G124S) COQ4 mutation in a Chinese
+    family with CoQ10 deficiency-associated Leigh syndrome.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Disease/IMP support: homozygous G124S causes CoQ10 deficiency (Leigh syndrome)
+      with reduced CoQ10 in patient fibroblasts.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput binary interactome (HuRI); source of the MAGEA2B interaction.
+      Not directly informative for COQ4&#39;s core function.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-confidence mitochondrial proteome; supports mitochondrial localization
+      only.
+- id: PMID:38014483
+  title: &#39;Biallelic COQ4 Variants in Hereditary Spastic Paraplegia: Clinical and Molecular
+    Characterization.&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      IMP support: loss-of-function COQ4 variants reduce ubiquinone biosynthesis;
+      confirms COQ4-associated hereditary spastic paraplegia (SPAX10 spectrum).
+- id: PMID:38295803
+  title: COQ4 is required for the oxidative decarboxylation of the C1 carbon of coenzyme
+    Q in eukaryotic cells.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Primary evidence (IDA) that COQ4 catalyzes oxidative decarboxylation of the C1
+      carbon; establishes the catalytic core function. Cache is abstract-only but the
+      abstract states the key result directly.
+- id: PMID:38425362
+  title: In vitro construction of the COQ metabolon unveils the molecular determinants
+    of coenzyme Q biosynthesis.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text available; in vitro metabolon reconstruction shows purified COQ4 has
+      Zn-dependent C1 decarboxylase activity. Co-primary evidence for the catalytic
+      core function.
+- id: Reactome:R-HSA-2142789
+  title: Ubiquinol biosynthesis
+  findings: []
+- id: Reactome:R-HSA-2162186
+  title: COQ3 methylates DeMQ10H2
+  findings: []
+- id: Reactome:R-HSA-2162187
+  title: COQ6 hydroxylates DHB
+  findings: []
+- id: Reactome:R-HSA-2162188
+  title: COQ5 methylates MDMQ10H2
+  findings: []
+- id: Reactome:R-HSA-2162193
+  title: COQ3 methylates DHDB
+  findings: []
+- id: Reactome:R-HSA-2162194
+  title: COQ7:COQ9 octamer hydroxylates DMQ10H2
+  findings: []
+- id: Reactome:R-HSA-2162195
+  title: COQ4 decarboxylates MHDB
+  findings: []
+suggested_questions:
+- question: &gt;-
+    Does human COQ4 catalyze only C1 decarboxylation, or also a coupled C1
+    hydroxylation? PMID:38295803 proposes a single oxidative decarboxylation
+    (decarboxylation + hydroxylation), whereas PMID:38425362 assigns C1 hydroxylation
+    to COQ6; resolving this would refine the molecular-function annotation.
+suggested_experiments:
+- description: &gt;-
+    Determine a structure of the human COQ4 (or COQ synthome subcomplex) with bound
+    Zn2+ and a polyprenyl-benzoate substrate analog to define the decarboxylase
+    active site and the basis of substrate presentation within the metabolon.
+- description: &gt;-
+    Reconstitute COQ4 metal-site point mutants (e.g. the His/Asp motif) in COQ4-null
+    human cells and quantify CoQ10 and pathway intermediates to separate the
+    catalytic contribution from the structural/assembly contribution of COQ4.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

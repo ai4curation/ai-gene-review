@@ -1,0 +1,4068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEPSECS - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SEPSECS</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9HD40" target="_blank" class="term-link">
+                        Q9HD40
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "SEPSECS";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9HD40" data-a="DESCRIPTION: SEPSECS (O-phosphoseryl-tRNA(Sec) selenium transfe..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SEPSECS (O-phosphoseryl-tRNA(Sec) selenium transferase, also known as selenocysteine synthase / Sec synthase / SepSecS, and historically as the SLA/LP soluble liver antigen) is a pyridoxal 5&#39;-phosphate (PLP)-dependent enzyme that catalyzes the terminal step of selenocysteine (Sec) biosynthesis. In archaea and eukaryotes, Sec is uniquely synthesized on its cognate tRNA(Sec): seryl-tRNA(Sec) is phosphorylated by PSTK to O-phospho-L-seryl-tRNA(Sec), which SEPSECS then converts, using selenophosphate (produced by SEPHS2) as the selenium donor, into L-selenocysteinyl-tRNA(Sec) (EC 2.9.1.2). The charged Sec-tRNA(Sec) is subsequently delivered by the specialized elongation factor EEFSEC to recode in-frame UGA codons during translation of selenoprotein mRNAs. SEPSECS assembles into a homotetramer comprising a catalytic dimer and a non-catalytic dimer that acts as a binding platform orienting two tRNA(Sec) molecules for catalysis; the PLP cofactor is covalently bound through a Schiff base to the active-site lysine (Lys284). The enzyme acts specifically on phosphoserine attached to tRNA(Sec), not on free phosphoserine. It localizes to the cytoplasm/cytosol and can associate with other components of the selenocysteine-synthesis machinery (SEPHS1, SEPHS2, TRNAU1AP/SECp43). Loss-of-function mutations in SEPSECS cause autosomal recessive pontocerebellar hypoplasia type 2D (progressive cerebello-cerebral atrophy), underscoring the requirement for selenoprotein biosynthesis in the developing nervous system.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001514" target="_blank" class="term-link">
+                                    GO:0001514
+                                </a>
+                            </span>
+                            <span class="term-label">selenocysteine incorporation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HD40" data-a="GO:0001514" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically-inferred involvement in selenocysteine incorporation. SEPSECS charges tRNA(Sec) with Sec, an upstream prerequisite for the downstream ribosomal incorporation of Sec at UGA codons, so this process-level term is biologically appropriate but represents the wider pathway rather than the enzyme&#39;s own catalytic step. Retained as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct pathway-level association (the whole Sec machinery serves Sec incorporation), but SEPSECS&#39;s specific, core role is tRNA charging (GO:0001717 / GO:0098621), not the ribosomal incorporation event itself.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000049" target="_blank" class="term-link">
+                                    GO:0000049
+                                </a>
+                            </span>
+                            <span class="term-label">tRNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HD40" data-a="GO:0000049" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> tRNA binding is a genuine, well-established molecular function of SEPSECS: the tetramer binds two tRNA(Sec) molecules through their acceptor-, TPsiC-, and variable arms, and this binding is required for catalysis.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19608919" target="_blank" class="term-link">
+                                        PMID:19608919
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">SepSecS binds only to the acceptor-, TΨC-, and variable arms of tRNASec</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001717" target="_blank" class="term-link">
+                                    GO:0001717
+                                </a>
+                            </span>
+                            <span class="term-label">conversion of seryl-tRNAsec to selenocys-tRNAsec</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HD40" data-a="GO:0001717" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation to the specific biological process performed by SEPSECS, the conversion of the (phospho)seryl-charged tRNA(Sec) to the selenocysteinyl form. This is exactly the reaction SEPSECS catalyzes and is independently supported by experimental (IDA) evidence.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SEPSECS/SEPSECS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Converts O-phosphoseryl-tRNA(Sec) to selenocysteinyl-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HD40" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization, consistent with the experimentally determined subcellular location and with the cytosolic selenocysteine-synthesis machinery.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SEPSECS/SEPSECS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016740" target="_blank" class="term-link">
+                                    GO:0016740
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HD40" data-a="GO:0016740" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic InterPro-derived transferase activity. This is a high-level parent of the specific and experimentally supported activity (O-phosphoseryl-tRNA(Sec) selenium transferase activity, GO:0098621) and is uninformative on its own.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Over-general; should be replaced by the specific molecular function that is directly supported by experimental evidence.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098621" target="_blank" class="term-link">
+                                    O-phosphoseryl-tRNA(Sec) selenium transferase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098621" target="_blank" class="term-link">
+                                    GO:0098621
+                                </a>
+                            </span>
+                            <span class="term-label">O-phosphoseryl-tRNA(Sec) selenium transferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HD40" data-a="GO:0098621" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation to the precise catalytic activity of SEPSECS (EC 2.9.1.2). This is the core molecular function and is corroborated by experimental (IDA) evidence.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SEPSECS/SEPSECS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=2.9.1.2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22190034" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22190034
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Global landscape of HIV-human protein complexes.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HD40" data-a="GO:0005515" data-r="PMID:22190034" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation from a large-scale HIV-host interactome screen; the recorded partner is the HIV-1 Gag polyprotein (UniProtKB:P04591), a xeno interaction and not a native functional partner. Bare &#34;protein binding&#34; is uninformative about SEPSECS&#39;s molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative generic term derived from a viral-host affinity-capture screen; retained (experimental IPI evidence) but not part of the core function. No specific, biologically meaningful MF can be assigned from it.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000049" target="_blank" class="term-link">
+                                    GO:0000049
+                                </a>
+                            </span>
+                            <span class="term-label">tRNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HD40" data-a="GO:0000049" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> tRNA binding transferred electronically from the mouse ortholog; agrees with the experimentally established binding of tRNA(Sec) by human SEPSECS.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19608919" target="_blank" class="term-link">
+                                        PMID:19608919
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">SepSecS binds only to the acceptor-, TΨC-, and variable arms of tRNASec</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001514" target="_blank" class="term-link">
+                                    GO:0001514
+                                </a>
+                            </span>
+                            <span class="term-label">selenocysteine incorporation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HD40" data-a="GO:0001514" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation to the pathway-level process of selenocysteine incorporation. Duplicate of the IBA/IDA/ISS annotations to this term; correct at the pathway level but represents the downstream process rather than SEPSECS&#39;s own catalytic step.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Pathway-level involvement; SEPSECS&#39;s core, direct role is tRNA(Sec) charging (GO:0001717 / GO:0098621), not the ribosomal incorporation event.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HD40" data-a="GO:0005634" data-r="GO_REF:0000107" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nuclear localization electronically transferred from the mouse ortholog (Q6P6M7) via Ensembl Compara. There is no experimental support for a nuclear pool of SEPSECS; the enzyme and the selenocysteine-synthesis machinery are cytoplasmic/cytosolic.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Clearly-wrong IEA ortholog transfer. The experimentally determined location is cytoplasm/cytosol; a nuclear function is not supported and conflicts with the cytosolic Sec-charging pathway.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36929010" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36929010
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural basis for the tRNA-dependent activation of the te...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HD40" data-a="GO:0005829" data-r="PMID:36929010" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic localization assigned by ComplexPortal for the SepSecS-tRNASec complex. Consistent with the cytoplasmic subcellular location and the cytosolic Sec-biosynthesis pathway.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SEPSECS/SEPSECS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016260" target="_blank" class="term-link">
+                                    GO:0016260
+                                </a>
+                            </span>
+                            <span class="term-label">L-selenocysteine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19608919" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19608919
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The human SepSecS-tRNASec complex reveals the mechanism of s...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HD40" data-a="GO:0016260" data-r="PMID:19608919" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Involvement in L-selenocysteine biosynthesis. SEPSECS catalyzes the final step forming selenocysteine (on tRNA(Sec)), so this biosynthetic-process term is a correct and core biological process for the gene.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19608919" target="_blank" class="term-link">
+                                        PMID:19608919
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">SepSecS catalyzes the conversion of the phosphoseryl moiety into the selenocysteinyl group</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990234" target="_blank" class="term-link">
+                                    GO:1990234
+                                </a>
+                            </span>
+                            <span class="term-label">transferase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36929010" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36929010
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural basis for the tRNA-dependent activation of the te...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HD40" data-a="GO:1990234" data-r="PMID:36929010" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Membership in a transferase complex (the SepSecS-tRNASec complex / SepSecS homotetramer), assigned by ComplexPortal. SEPSECS functions as a homotetramer, so complex membership is well supported; retained as a non-core cellular-component annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct complex-membership annotation, but a high-level &#34;transferase complex&#34; CC term; the informative core content is the enzymatic activity and the homotetrameric assembly it enables.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SEPSECS/SEPSECS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Homotetramer formed by a catalytic dimer and a non-catalytic</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001514" target="_blank" class="term-link">
+                                    GO:0001514
+                                </a>
+                            </span>
+                            <span class="term-label">selenocysteine incorporation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17142313" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17142313
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    RNA-dependent conversion of phosphoserine forms selenocystei...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HD40" data-a="GO:0001514" data-r="PMID:17142313" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) annotation to selenocysteine incorporation. SEPSECS was shown to produce the Sec-tRNA(Sec) required for Sec incorporation, and human SepSecS complements an E. coli Sec-synthase (SelA) deletion in vivo. This supports involvement in the Sec-incorporation process; retained as non-core because SEPSECS&#39;s direct step is tRNA charging, upstream of the ribosomal incorporation event.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental evidence supports pathway involvement, but the term denotes the downstream translational incorporation process; the enzyme&#39;s own core function is the Sep-to-Sec conversion on tRNA(Sec).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17142313" target="_blank" class="term-link">
+                                        PMID:17142313
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">in vivo an Escherichia coli Sec synthase (SelA) deletion strain</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001717" target="_blank" class="term-link">
+                                    GO:0001717
+                                </a>
+                            </span>
+                            <span class="term-label">conversion of seryl-tRNAsec to selenocys-tRNAsec</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17142313" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17142313
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    RNA-dependent conversion of phosphoserine forms selenocystei...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HD40" data-a="GO:0001717" data-r="PMID:17142313" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) annotation to the exact biological process SEPSECS carries out: converting the (phospho)seryl-tRNA(Sec) to selenocysteinyl-tRNA(Sec). Purified recombinant SepSecS was shown to perform this conversion in vitro. Core biological process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17142313" target="_blank" class="term-link">
+                                        PMID:17142313
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">purified recombinant SepSecS converts Sep-tRNA(Sec) into Sec-tRNA(Sec) in vitro</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28414460" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28414460
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Analysis of Novel Interactions between Components of the Sel...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HD40" data-a="GO:0005737" data-r="PMID:28414460" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally determined cytoplasmic localization (basis for the UniProt subcellular-location assertion). Core/accepted location.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SEPSECS/SEPSECS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:28414460}</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098621" target="_blank" class="term-link">
+                                    GO:0098621
+                                </a>
+                            </span>
+                            <span class="term-label">O-phosphoseryl-tRNA(Sec) selenium transferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17142313" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17142313
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    RNA-dependent conversion of phosphoserine forms selenocystei...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HD40" data-a="GO:0098621" data-r="PMID:17142313" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) annotation to the core catalytic activity of SEPSECS (EC 2.9.1.2). Purified recombinant SepSecS converts Sep-tRNA(Sec) to Sec-tRNA(Sec) using selenophosphate as the selenium donor. This is the defining molecular function of the gene.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17142313" target="_blank" class="term-link">
+                                        PMID:17142313
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">purified recombinant SepSecS converts Sep-tRNA(Sec) into Sec-tRNA(Sec) in vitro</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2408555
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HD40" data-a="GO:0005829" data-r="Reactome:R-HSA-2408555" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic localization asserted by Reactome for the reaction in which the SEPSECS tetramer converts Sep-tRNA(Sec) to Sec-tRNA(Sec). Consistent with the experimentally determined cytoplasmic location.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-2408555
+
+                                </span>
+
+                                <div class="support-text">O-phosphoseryl-tRNA(Sec) selenium transferase (SEPSECS) tetramer catalyses the transformation of phosphoserine (Sep) into selenocysteine (Sec)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000049" target="_blank" class="term-link">
+                                    GO:0000049
+                                </a>
+                            </span>
+                            <span class="term-label">tRNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10801173" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10801173
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of target antigen for SLA/LP autoantibodies i...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HD40" data-a="GO:0000049" data-r="PMID:10801173" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> tRNA binding annotation traceable to the identification of SEPSECS (SLA/LP) as the protein component of the tRNA(Ser)Sec ribonucleoprotein (tRNP(Ser)Sec) complex. SEPSECS is a bona fide tRNA(Sec)-binding protein; the association with the tRNA(Sec)-containing particle is the historical basis for this term.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10801173" target="_blank" class="term-link">
+                                        PMID:10801173
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">suggested to be UGA-suppressor</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000049" target="_blank" class="term-link">
+                                    GO:0000049
+                                </a>
+                            </span>
+                            <span class="term-label">tRNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HD40" data-a="GO:0000049" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> tRNA binding inferred by sequence similarity from the mouse ortholog (Q6P6M7); concordant with the experimentally established binding of tRNA(Sec) by human SEPSECS.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19608919" target="_blank" class="term-link">
+                                        PMID:19608919
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">SepSecS binds only to the acceptor-, TΨC-, and variable arms of tRNASec</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001514" target="_blank" class="term-link">
+                                    GO:0001514
+                                </a>
+                            </span>
+                            <span class="term-label">selenocysteine incorporation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HD40" data-a="GO:0001514" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Selenocysteine incorporation inferred by sequence similarity from the mouse ortholog. Duplicate of the IBA/IDA/IEA annotations; correct at the pathway level but downstream of SEPSECS&#39;s direct tRNA-charging step.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Pathway-level process; SEPSECS&#39;s core function is the Sep-to-Sec conversion on tRNA(Sec) rather than ribosomal Sec incorporation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HD40" data-a="GO:0005634" data-r="GO_REF:0000024" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nuclear localization inferred by sequence similarity from the mouse ortholog (Q6P6M7). Not supported by experimental data for human SEPSECS, which is cytoplasmic/cytosolic. Likely an over-annotation of an orthology-transferred location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> No experimental support for a nuclear pool; the enzyme acts in the cytosolic selenocysteine-synthesis pathway. Orthology-transferred (ISS) rather than clearly-wrong IEA, hence flagged rather than removed.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HD40" data-a="GO:0005737" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization inferred by sequence similarity from the mouse ortholog; concordant with the experimentally determined location of human SEPSECS.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SEPSECS/SEPSECS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SEPSECS catalyzes the terminal, PLP-dependent step of selenocysteine biosynthesis, converting O-phospho-L-seryl-tRNA(Sec) plus selenophosphate to L-selenocysteinyl-tRNA(Sec) (EC 2.9.1.2). Acting as a homotetramer in the cytosol, it binds tRNA(Sec) and, with pyridoxal 5&#39;-phosphate as an obligatory cofactor covalently bound to Lys284, performs the Sep-to-Sec conversion on the tRNA, producing the charged Sec-tRNA(Sec) used for selenoprotein synthesis.</h3>
+                <span class="vote-buttons" data-g="Q9HD40" data-a="FUNCTION: SEPSECS catalyzes the terminal, PLP-dependent step..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098621" target="_blank" class="term-link">
+                            O-phosphoseryl-tRNA(Sec) selenium transferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001717" target="_blank" class="term-link">
+                                conversion of seryl-tRNAsec to selenocys-tRNAsec
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016260" target="_blank" class="term-link">
+                                L-selenocysteine biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17142313" target="_blank" class="term-link">
+                                PMID:17142313
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">purified recombinant SepSecS converts Sep-tRNA(Sec) into Sec-tRNA(Sec) in vitro</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/SEPSECS/SEPSECS-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=O-phospho-L-seryl-tRNA(Sec) + selenophosphate + H2O = L-</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SEPSECS binds pyridoxal 5&#39;-phosphate (PLP) as its catalytic cofactor, covalently attached through a Schiff base to the active-site Lys284; removal or reduction of PLP abolishes activity, establishing PLP binding as integral to the enzyme&#39;s function.</h3>
+                <span class="vote-buttons" data-g="Q9HD40" data-a="FUNCTION: SEPSECS binds pyridoxal 5&#39;-phosphate (PLP) as its ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                            pyridoxal phosphate binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/SEPSECS/SEPSECS-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Name=pyridoxal 5&#39;-phosphate</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19608919" target="_blank" class="term-link">
+                                PMID:19608919
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Each SepSecS monomer has a PLP cofactor covalently linked to the Nε-amino group of the conserved Lys284</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SEPSECS binds tRNA(Sec) as an essential part of its catalytic cycle: the homotetramer engages the acceptor-, TPsiC-, and variable arms of tRNA(Sec), and this tRNA binding orients the substrate and activates the catalytic active site.</h3>
+                <span class="vote-buttons" data-g="Q9HD40" data-a="FUNCTION: SEPSECS binds tRNA(Sec) as an essential part of it..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000049" target="_blank" class="term-link">
+                            tRNA binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001717" target="_blank" class="term-link">
+                                conversion of seryl-tRNAsec to selenocys-tRNAsec
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19608919" target="_blank" class="term-link">
+                                PMID:19608919
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">SepSecS binds only to the acceptor-, TΨC-, and variable arms of tRNASec</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36929010" target="_blank" class="term-link">
+                                PMID:36929010
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">organizes the active sites of the catalytic protomer</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10801173" target="_blank" class="term-link">
+                            PMID:10801173
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification of target antigen for SLA/LP autoantibodies in autoimmune hepatitis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Identified SEPSECS (SLA/LP) as the sole target antigen of SLA/LP autoantibodies in autoimmune hepatitis and as the UGA-suppressor tRNA-associated protein component of the tRNP(Ser)Sec ribonucleoprotein.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17142313" target="_blank" class="term-link">
+                            PMID:17142313
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">RNA-dependent conversion of phosphoserine forms selenocysteine in eukaryotes and archaea.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">SEPSECS (Sep-tRNA:Sec-tRNA synthase) is the terminal enzyme of the eukaryal/archaeal Sec pathway; purified recombinant SepSecS converts Sep-tRNA(Sec) to Sec-tRNA(Sec) in vitro and complements an E. coli SelA deletion in vivo.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19608919" target="_blank" class="term-link">
+                            PMID:19608919
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The human SepSecS-tRNASec complex reveals the mechanism of selenocysteine formation.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Crystal structure of human SepSecS with tRNA(Sec), phosphoserine and thiophosphate defines a PLP-dependent mechanism; SepSecS is a homotetramer (catalytic + non-catalytic dimer) binding two tRNA(Sec) via their acceptor-TPsiC-variable arms, with PLP covalently linked to Lys284.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22190034" target="_blank" class="term-link">
+                            PMID:22190034
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Global landscape of HIV-human protein complexes.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Large-scale HIV-host affinity-capture/MS screen; source of the IPI &#34;protein binding&#34; annotation reporting an interaction of SEPSECS with the HIV-1 Gag polyprotein (a xeno interaction).</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28414460" target="_blank" class="term-link">
+                            PMID:28414460
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Analysis of Novel Interactions between Components of the Selenocysteine Biosynthesis Pathway, SEPHS1, SEPHS2, SEPSECS, and SECp43.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">SEPSECS, SECp43 (TRNAU1AP) and selenophosphate synthetases SEPHS1/SEPHS2 form oligomers in eukaryotic cells; SEPHS2 interacts with SEPSECS. Basis for the experimentally determined cytoplasmic localization.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36929010" target="_blank" class="term-link">
+                            PMID:36929010
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural basis for the tRNA-dependent activation of the terminal complex of selenocysteine synthesis in humans.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">High-resolution structures show tRNA(Sec) binding drives conformational changes that organize the catalytic protomer&#39;s active site, supporting a tRNA-dependent activation model. Reference for ComplexPortal cytosol and transferase-complex annotations.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-2408555
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Sep-tRNA(Sec) is converted to Sec-tRNA(Sec) by PXLP-K284-SEPSECS tetramer</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reactome reaction: the SEPSECS tetramer converts Sep-tRNA(Sec) to Sec-tRNA(Sec) using selenophosphate as selenium donor, in the cytosol.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is there any physiologically relevant regulation of SEPSECS activity (e.g. by phosphorylation at Ser14, or by selenium status), or is flux through the Sec pathway controlled entirely upstream (SEPHS2/PSTK)?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9HD40" data-a="Q: Is there any physiologically relevant regulation o..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Do the reported associations with SEPHS1, SEPHS2 and TRNAU1AP (SECp43) represent a stable channeling complex in vivo, or transient interactions?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9HD40" data-a="Q: Do the reported associations with SEPHS1, SEPHS2 a..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Quantitative in vitro kinetic characterization of purified human SEPSECS with defined Sep-tRNA(Sec) and selenophosphate substrates, including PCH2D variants (A239T, T325S, Y334C), to relate residual catalytic activity to disease severity.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9HD40" data-a="EXPERIMENT: Quantitative in vitro kinetic characterization of ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Endogenous subcellular fractionation and proximity-labeling (e.g. BioID) in human neuronal cells to define the SEPSECS interactome and confirm the exclusively cytosolic localization.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9HD40" data-a="EXPERIMENT: Endogenous subcellular fractionation and proximity..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SEPSECS-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9HD40" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="sepsecs-q9hd40-gene-review-notes">SEPSECS (Q9HD40) — Gene Review Notes</h1>
+<h2 id="identity-and-nomenclature">Identity and nomenclature</h2>
+<ul>
+<li>HGNC symbol: <strong>SEPSECS</strong>; synonym TRNP48. UniProt Q9HD40, <code>SPCS_HUMAN</code>, 501 aa, chromosome 4.</li>
+<li>RecName: <strong>O-phosphoseryl-tRNA(Sec) selenium transferase</strong>; EC <strong>2.9.1.2</strong> [file:human/SEPSECS/SEPSECS-uniprot.txt "RecName: Full=O-phosphoseryl-tRNA(Sec) selenium transferase; ... EC=2.9.1.2"].</li>
+<li>Many AltNames reflect its history as an autoantigen: <strong>Liver-pancreas antigen (LP)</strong>, <strong>SLA-p35</strong>, <strong>SLA/LP autoantigen</strong>, <strong>Soluble liver antigen (SLA)</strong>, <strong>Selenocysteine synthase / Sec synthase</strong>, <strong>Sep-tRNA:Sec-tRNA synthase (SepSecS)</strong>, <strong>UGA suppressor tRNA-associated protein</strong>, <strong>tRNA(Ser/Sec)-associated antigenic protein</strong> [file:human/SEPSECS/SEPSECS-uniprot.txt "AltName: Full=Selenocysteine synthase; Short=Sec synthase"].</li>
+</ul>
+<h2 id="molecular-function-catalysis">Molecular function (catalysis)</h2>
+<ul>
+<li>Final (terminal) step of selenocysteine (Sec) biosynthesis, which uniquely occurs <strong>on the cognate tRNA</strong> in archaea/eukaryotes.</li>
+<li>CATALYTIC ACTIVITY (RHEA:25041): <strong>O-phospho-L-seryl-tRNA(Sec) + selenophosphate + H2O = L-selenocysteinyl-tRNA(Sec) + 2 phosphate</strong>, EC 2.9.1.2 [file:human/SEPSECS/SEPSECS-uniprot.txt "Reaction=O-phospho-L-seryl-tRNA(Sec) + selenophosphate + H2O = L- selenocysteinyl-tRNA(Sec) + 2 phosphate"].</li>
+<li>FUNCTION: "Converts O-phosphoseryl-tRNA(Sec) to selenocysteinyl- tRNA(Sec) required for selenoprotein biosynthesis." [file:human/SEPSECS/SEPSECS-uniprot.txt] (ECO:0000269|PubMed:17142313).</li>
+<li><strong>PLP (pyridoxal 5'-phosphate)-dependent enzyme</strong>: COFACTOR = pyridoxal 5'-phosphate (ECO:0000269|PubMed:17142313, PubMed:19608919). PLP is covalently bound via Schiff base to Lys284 (MOD_RES 284 = N6-(pyridoxal phosphate)lysine) [file:human/SEPSECS/SEPSECS-uniprot.txt].</li>
+<li>Belongs to the <strong>SepSecS family</strong>, a distinct branch of <strong>fold-type I PLP enzymes</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/19608919" title="SepSecS forms its own branch in the family of fold-type I pyridoxal phosphate (PLP) enzymes that goes back to the last universal common ancestor">PMID:19608919</a>.</li>
+</ul>
+<h3 id="mechanism-pmid17142313-pmid19608919">Mechanism (PMID:17142313, PMID:19608919)</h3>
+<ul>
+<li>Two-step eukaryal/archaeal Sec route: Ser is charged onto tRNA(Sec) by SerRS → PSTK phosphorylates it to Sep-tRNA(Sec) → <strong>SepSecS converts Sep-tRNA(Sec) to Sec-tRNA(Sec)</strong> using selenophosphate (from SEPHS2/SelD) as the Se donor <a href="https://pubmed.ncbi.nlm.nih.gov/17142313" title="O-phosphoseryl-tRNA(Sec) kinase (PSTK) converts Ser-tRNA(Sec) to Sep-tRNA(Sec). This misacylated tRNA is the obligatory precursor for a Sep-tRNA:Sec-tRNA synthase (SepSecS)">PMID:17142313</a>.</li>
+<li>SepSecS acts on <strong>phosphoserine linked to tRNA(Sec), not free phosphoserine or Ser-tRNA(Sec)</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/19608919" title="SepSecS acts on phosphoserine that is linked to tRNASec and not on free phosphoserine or Ser-tRNASec">PMID:19608919</a>.</li>
+<li>PLP-based mechanism: amino group of Sep attacks the Lys284–PLP Schiff base → external aldimine → β-elimination of phosphate → dehydroalanyl-tRNA(Sec) intermediate → nucleophilic attack of selenium from selenophosphate → Sec-tRNA(Sec) <a href="https://pubmed.ncbi.nlm.nih.gov/19608919" title="The reaction begins by the covalently attached Sep being brought into the proximity of the Schiff base ... rapid β-elimination of the phosphate group, which produces an intermediate dehydroalanyl-tRNASec">PMID:19608919</a>.</li>
+<li>Reduction of the Schiff base (NaBH4 cross-linking PLP to Lys284) or removal of PLP (hydroxylamine) renders SepSecS <strong>completely inactive</strong> — confirms PLP dependence <a href="https://pubmed.ncbi.nlm.nih.gov/19608919" title="the reduction of the Schiff base by sodium borohydride ... renders SepSecS completely inactive in vitro. The catalytic activity of SepSecS is also quenched on removal of PLP">PMID:19608919</a>.</li>
+<li>Human and archaeal SepSecS complement an <em>E. coli</em> SelA (Sec synthase) deletion in vivo; purified recombinant SepSecS converts Sep-tRNA(Sec) to Sec-tRNA(Sec) in vitro with Na-selenite + SelD (in vitro validation) <a href="https://pubmed.ncbi.nlm.nih.gov/17142313" title="purified recombinant SepSecS converts Sep-tRNA(Sec) into Sec-tRNA(Sec) in vitro">PMID:17142313</a>.</li>
+<li>Lys284→Ala abolishes activity (MUTAGEN); active-site/tRNA-binding residues Arg75, Gln105, Arg313 (substrate/PLP phosphate) and Arg398 (discriminator base G73), Arg271 (variable arm) are catalytically/recognition critical [file:human/SEPSECS/SEPSECS-uniprot.txt; PMID:19608919].</li>
+</ul>
+<h2 id="trna-binding-substrate">tRNA binding / substrate</h2>
+<ul>
+<li>SepSecS binds the <strong>acceptor-, TΨC-, and variable arms of tRNA(Sec)</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/19608919" title="SepSecS binds only to the acceptor-, TΨC-, and variable arms of tRNASec">PMID:19608919</a>.</li>
+<li>Recognition via discriminator base G73 (↔ Arg398) and the unusual 13-bp acceptor-TΨC arm / long variable arm of the 90-nt tRNA(Sec); tRNA(Ser) cannot bind (shorter acceptor-TΨC arm) <a href="https://pubmed.ncbi.nlm.nih.gov/19608919">PMID:19608919</a>.</li>
+<li>tRNA binding induces conformational changes that organize the catalytic protomer's active site — tRNA-dependent activation <a href="https://pubmed.ncbi.nlm.nih.gov/36929010" title="tRNASec binding organizes the active sites of the catalytic protomer, while stabilizing the N- and C-termini of the non-catalytic protomer">PMID:36929010</a>.</li>
+<li>Historically identified as the antigen of the <strong>tRNP(Ser)Sec</strong> ribonucleoprotein (SLA/LP), i.e. the tRNA(Sec)-associated antigenic protein <a href="https://pubmed.ncbi.nlm.nih.gov/10801173">PMID:10801173</a>.</li>
+</ul>
+<h2 id="quaternary-structure-complex">Quaternary structure / complex</h2>
+<ul>
+<li><strong>Homotetramer</strong> = catalytic dimer + non-catalytic dimer; the non-catalytic dimer is a binding platform orienting tRNA(Sec) for catalysis; each tetramer binds two tRNA(Sec) via their CCA ends pointing to the catalytic dimer's active sites [file:human/SEPSECS/SEPSECS-uniprot.txt "Homotetramer formed by a catalytic dimer and a non-catalytic dimer serving as a binding platform"; PMID:19608919 "Two SepSecS monomers form a homodimer ... The two homodimers associate into a tetramer"].</li>
+<li>Also reported as component of a wider complex with <strong>SEPHS1, SEPHS2, SEPSECS and TRNAU1AP (SECp43)</strong> (supramolecular Sec machinery) [file:human/SEPSECS/SEPSECS-uniprot.txt "Component of a complex composed of SEPHS1, SEPHS2, SEPSECS and TRNAU1AP"; PMID:28414460 "selenocysteine synthase (SEPSECS), SECp43, and selenophosphate synthetases SEPHS1 and SEPHS2 form oligomers in eukaryotic cells"].</li>
+<li>ComplexPortal CPX-26538 "SepSecS-tRNASec complex" (referenced by GOA ComplexPortal annotations to GO:0005829 cytosol and GO:1990234 transferase complex, PMID:36929010).</li>
+</ul>
+<h2 id="subcellular-location">Subcellular location</h2>
+<ul>
+<li><strong>Cytoplasm / cytosol</strong> [file:human/SEPSECS/SEPSECS-uniprot.txt "SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:28414460}"]. No credible evidence for a nuclear function; the nucleus annotations are ISS/IEA transfers from mouse ortholog Q6P6M7 and are treated as over-annotations.</li>
+</ul>
+<h2 id="biological-process">Biological process</h2>
+<ul>
+<li><strong>Selenocysteinyl-tRNA(Sec) biosynthesis</strong> (UniPathway UPA00906, UER00898): "Aminoacyl-tRNA biosynthesis; selenocysteinyl-tRNA(Sec) biosynthesis; selenocysteinyl-tRNA(Sec) from L-seryl-tRNA(Sec) (archaeal/eukaryal route): step 2/2." [file:human/SEPSECS/SEPSECS-uniprot.txt].</li>
+<li>Feeds selenoprotein synthesis: charged Sec-tRNA(Sec) is delivered by EEFSEC to recode UGA codons during translation <a href="https://pubmed.ncbi.nlm.nih.gov/19608919" title="UGA is recoded by the interaction of a specialized elongation factor ... EFsec in humans">PMID:19608919</a>.</li>
+<li>GO:0001514 "selenocysteine incorporation" is the downstream translational process the whole Sec pathway serves; SEPSECS is upstream (tRNA charging) rather than itself the ribosomal incorporation step, but is legitimately annotated <code>involved_in</code> this process.</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li><strong>Pontocerebellar hypoplasia type 2D (PCH2D) [MIM:613811]</strong> / progressive cerebello-cerebral atrophy — autosomal recessive; postnatal progressive cerebral+cerebellar atrophy, microcephaly, profound intellectual disability, spasticity, seizures [file:human/SEPSECS/SEPSECS-uniprot.txt "Pontocerebellar hypoplasia 2D (PCH2D)"; PMID:20920667].</li>
+<li>Pathogenic missense variants: <strong>A239T</strong> and <strong>Y334C</strong> both abrogate enzyme activity (VARIANT, characterized) [file:human/SEPSECS/SEPSECS-uniprot.txt "A -&gt; T (in PCH2D; abrogates enzyme activity)"]; also T325S <a href="https://pubmed.ncbi.nlm.nih.gov/26115735">PMID:26115735</a>. Establishes that loss of SepSecS catalytic activity (loss of selenoprotein biosynthesis) is the disease mechanism.</li>
+</ul>
+<h2 id="term-by-term-reasoning-see-yaml">Term-by-term reasoning (see YAML)</h2>
+<p>Core molecular function = <strong>GO:0098621</strong> O-phosphoseryl-tRNA(Sec) selenium transferase activity (IDA, PMID:17142313) + <strong>GO:0030170</strong> pyridoxal phosphate binding (cofactor). Core BP = <strong>GO:0001717</strong> conversion of seryl-tRNAsec to selenocys-tRNAsec (IDA) and the broader <strong>GO:0016260</strong> L-selenocysteine biosynthetic process. tRNA binding (GO:0000049) is a genuine, well-supported MF (structural + TAS). Cytoplasm/cytosol (GO:0005737/GO:0005829) accepted. Nucleus (GO:0005634, ISS/IEA from mouse) = over-annotation. Generic GO:0016740 transferase activity (IEA) is a redundant parent of GO:0098621. GO:0005515 protein binding (IPI, HIV gag) kept as non-core (uninformative; not a native functional partner). GO:1990234 transferase complex (part_of, ComplexPortal) accepted as non-core CC (the SepSecS tetramer / Sec machinery complex).</p>
+<p>Note: GO:0097056 "selenocysteinyl-tRNA(Sec) biosynthetic process" is now <strong>obsolete</strong>, replaced by GO:0001717 — do not introduce it.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9HD40
+gene_symbol: SEPSECS
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  SEPSECS (O-phosphoseryl-tRNA(Sec) selenium transferase, also known as
+  selenocysteine synthase / Sec synthase / SepSecS, and historically as the
+  SLA/LP soluble liver antigen) is a pyridoxal 5&#39;-phosphate (PLP)-dependent
+  enzyme that catalyzes the terminal step of selenocysteine (Sec) biosynthesis.
+  In archaea and eukaryotes, Sec is uniquely synthesized on its cognate
+  tRNA(Sec): seryl-tRNA(Sec) is phosphorylated by PSTK to
+  O-phospho-L-seryl-tRNA(Sec), which SEPSECS then converts, using selenophosphate
+  (produced by SEPHS2) as the selenium donor, into L-selenocysteinyl-tRNA(Sec)
+  (EC 2.9.1.2). The charged Sec-tRNA(Sec) is subsequently delivered by the
+  specialized elongation factor EEFSEC to recode in-frame UGA codons during
+  translation of selenoprotein mRNAs. SEPSECS assembles into a homotetramer
+  comprising a catalytic dimer and a non-catalytic dimer that acts as a binding
+  platform orienting two tRNA(Sec) molecules for catalysis; the PLP cofactor is
+  covalently bound through a Schiff base to the active-site lysine (Lys284). The
+  enzyme acts specifically on phosphoserine attached to tRNA(Sec), not on free
+  phosphoserine. It localizes to the cytoplasm/cytosol and can associate with
+  other components of the selenocysteine-synthesis machinery (SEPHS1, SEPHS2,
+  TRNAU1AP/SECp43). Loss-of-function mutations in SEPSECS cause autosomal
+  recessive pontocerebellar hypoplasia type 2D (progressive cerebello-cerebral
+  atrophy), underscoring the requirement for selenoprotein biosynthesis in the
+  developing nervous system.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q9HD40-1
+- name: &#39;2&#39;
+  id: Q9HD40-2
+  sequence_note: VSP_038078, VSP_038079
+- name: &#39;3&#39;
+  id: Q9HD40-3
+  sequence_note: VSP_038080
+existing_annotations:
+- term:
+    id: GO:0001514
+    label: selenocysteine incorporation
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetically-inferred involvement in selenocysteine incorporation.
+      SEPSECS charges tRNA(Sec) with Sec, an upstream prerequisite for the
+      downstream ribosomal incorporation of Sec at UGA codons, so this
+      process-level term is biologically appropriate but represents the wider
+      pathway rather than the enzyme&#39;s own catalytic step. Retained as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct pathway-level association (the whole Sec machinery serves Sec
+      incorporation), but SEPSECS&#39;s specific, core role is tRNA charging
+      (GO:0001717 / GO:0098621), not the ribosomal incorporation event itself.
+- term:
+    id: GO:0000049
+    label: tRNA binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      tRNA binding is a genuine, well-established molecular function of SEPSECS:
+      the tetramer binds two tRNA(Sec) molecules through their acceptor-, TPsiC-,
+      and variable arms, and this binding is required for catalysis.
+    action: ACCEPT
+    supported_by:
+      - reference_id: PMID:19608919
+        supporting_text: &gt;-
+          SepSecS binds only to the acceptor-, TΨC-, and variable arms of
+          tRNASec
+- term:
+    id: GO:0001717
+    label: conversion of seryl-tRNAsec to selenocys-tRNAsec
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic annotation to the specific biological process performed by
+      SEPSECS, the conversion of the (phospho)seryl-charged tRNA(Sec) to the
+      selenocysteinyl form. This is exactly the reaction SEPSECS catalyzes and
+      is independently supported by experimental (IDA) evidence.
+    action: ACCEPT
+    supported_by:
+      - reference_id: file:human/SEPSECS/SEPSECS-uniprot.txt
+        supporting_text: &gt;-
+          Converts O-phosphoseryl-tRNA(Sec) to selenocysteinyl-
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytoplasmic localization, consistent with the experimentally determined
+      subcellular location and with the cytosolic selenocysteine-synthesis
+      machinery.
+    action: ACCEPT
+    supported_by:
+      - reference_id: file:human/SEPSECS/SEPSECS-uniprot.txt
+        supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0016740
+    label: transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Generic InterPro-derived transferase activity. This is a high-level parent
+      of the specific and experimentally supported activity
+      (O-phosphoseryl-tRNA(Sec) selenium transferase activity, GO:0098621) and
+      is uninformative on its own.
+    action: MODIFY
+    reason: &gt;-
+      Over-general; should be replaced by the specific molecular function that
+      is directly supported by experimental evidence.
+    proposed_replacement_terms:
+      - id: GO:0098621
+        label: O-phosphoseryl-tRNA(Sec) selenium transferase activity
+- term:
+    id: GO:0098621
+    label: O-phosphoseryl-tRNA(Sec) selenium transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic annotation to the precise catalytic activity of SEPSECS
+      (EC 2.9.1.2). This is the core molecular function and is corroborated by
+      experimental (IDA) evidence.
+    action: ACCEPT
+    supported_by:
+      - reference_id: file:human/SEPSECS/SEPSECS-uniprot.txt
+        supporting_text: &#39;EC=2.9.1.2&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:22190034
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI annotation from a large-scale HIV-host interactome screen; the
+      recorded partner is the HIV-1 Gag polyprotein (UniProtKB:P04591), a
+      xeno interaction and not a native functional partner. Bare &#34;protein
+      binding&#34; is uninformative about SEPSECS&#39;s molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Uninformative generic term derived from a viral-host affinity-capture
+      screen; retained (experimental IPI evidence) but not part of the core
+      function. No specific, biologically meaningful MF can be assigned from it.
+- term:
+    id: GO:0000049
+    label: tRNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: enables
+  review:
+    summary: &gt;-
+      tRNA binding transferred electronically from the mouse ortholog; agrees
+      with the experimentally established binding of tRNA(Sec) by human SEPSECS.
+    action: ACCEPT
+    supported_by:
+      - reference_id: PMID:19608919
+        supporting_text: &gt;-
+          SepSecS binds only to the acceptor-, TΨC-, and variable arms of
+          tRNASec
+- term:
+    id: GO:0001514
+    label: selenocysteine incorporation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic annotation to the pathway-level process of selenocysteine
+      incorporation. Duplicate of the IBA/IDA/ISS annotations to this term;
+      correct at the pathway level but represents the downstream process rather
+      than SEPSECS&#39;s own catalytic step.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Pathway-level involvement; SEPSECS&#39;s core, direct role is tRNA(Sec)
+      charging (GO:0001717 / GO:0098621), not the ribosomal incorporation event.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Nuclear localization electronically transferred from the mouse ortholog
+      (Q6P6M7) via Ensembl Compara. There is no experimental support for a
+      nuclear pool of SEPSECS; the enzyme and the selenocysteine-synthesis
+      machinery are cytoplasmic/cytosolic.
+    action: REMOVE
+    reason: &gt;-
+      Clearly-wrong IEA ortholog transfer. The experimentally determined
+      location is cytoplasm/cytosol; a nuclear function is not supported and
+      conflicts with the cytosolic Sec-charging pathway.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IPI
+  original_reference_id: PMID:36929010
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytosolic localization assigned by ComplexPortal for the SepSecS-tRNASec
+      complex. Consistent with the cytoplasmic subcellular location and the
+      cytosolic Sec-biosynthesis pathway.
+    action: ACCEPT
+    supported_by:
+      - reference_id: file:human/SEPSECS/SEPSECS-uniprot.txt
+        supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0016260
+    label: L-selenocysteine biosynthetic process
+  evidence_type: NAS
+  original_reference_id: PMID:19608919
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Involvement in L-selenocysteine biosynthesis. SEPSECS catalyzes the final
+      step forming selenocysteine (on tRNA(Sec)), so this biosynthetic-process
+      term is a correct and core biological process for the gene.
+    action: ACCEPT
+    supported_by:
+      - reference_id: PMID:19608919
+        supporting_text: &gt;-
+          SepSecS catalyzes the conversion of the phosphoseryl moiety into the
+          selenocysteinyl group
+- term:
+    id: GO:1990234
+    label: transferase complex
+  evidence_type: IPI
+  original_reference_id: PMID:36929010
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Membership in a transferase complex (the SepSecS-tRNASec complex /
+      SepSecS homotetramer), assigned by ComplexPortal. SEPSECS functions as a
+      homotetramer, so complex membership is well supported; retained as a
+      non-core cellular-component annotation.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct complex-membership annotation, but a high-level &#34;transferase
+      complex&#34; CC term; the informative core content is the enzymatic activity
+      and the homotetrameric assembly it enables.
+    supported_by:
+      - reference_id: file:human/SEPSECS/SEPSECS-uniprot.txt
+        supporting_text: &gt;-
+          Homotetramer formed by a catalytic dimer and a non-catalytic
+- term:
+    id: GO:0001514
+    label: selenocysteine incorporation
+  evidence_type: IDA
+  original_reference_id: PMID:17142313
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental (IDA) annotation to selenocysteine incorporation. SEPSECS was
+      shown to produce the Sec-tRNA(Sec) required for Sec incorporation, and
+      human SepSecS complements an E. coli Sec-synthase (SelA) deletion in vivo.
+      This supports involvement in the Sec-incorporation process; retained as
+      non-core because SEPSECS&#39;s direct step is tRNA charging, upstream of the
+      ribosomal incorporation event.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Experimental evidence supports pathway involvement, but the term denotes
+      the downstream translational incorporation process; the enzyme&#39;s own core
+      function is the Sep-to-Sec conversion on tRNA(Sec).
+    supported_by:
+      - reference_id: PMID:17142313
+        supporting_text: &gt;-
+          in vivo an Escherichia coli Sec synthase (SelA) deletion strain
+- term:
+    id: GO:0001717
+    label: conversion of seryl-tRNAsec to selenocys-tRNAsec
+  evidence_type: IDA
+  original_reference_id: PMID:17142313
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental (IDA) annotation to the exact biological process SEPSECS
+      carries out: converting the (phospho)seryl-tRNA(Sec) to
+      selenocysteinyl-tRNA(Sec). Purified recombinant SepSecS was shown to
+      perform this conversion in vitro. Core biological process.
+    action: ACCEPT
+    supported_by:
+      - reference_id: PMID:17142313
+        supporting_text: &gt;-
+          purified recombinant SepSecS converts Sep-tRNA(Sec) into Sec-tRNA(Sec)
+          in vitro
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:28414460
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Experimentally determined cytoplasmic localization (basis for the UniProt
+      subcellular-location assertion). Core/accepted location.
+    action: ACCEPT
+    supported_by:
+      - reference_id: file:human/SEPSECS/SEPSECS-uniprot.txt
+        supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:28414460}&#39;
+- term:
+    id: GO:0098621
+    label: O-phosphoseryl-tRNA(Sec) selenium transferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:17142313
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (IDA) annotation to the core catalytic activity of SEPSECS
+      (EC 2.9.1.2). Purified recombinant SepSecS converts Sep-tRNA(Sec) to
+      Sec-tRNA(Sec) using selenophosphate as the selenium donor. This is the
+      defining molecular function of the gene.
+    action: ACCEPT
+    supported_by:
+      - reference_id: PMID:17142313
+        supporting_text: &gt;-
+          purified recombinant SepSecS converts Sep-tRNA(Sec) into Sec-tRNA(Sec)
+          in vitro
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2408555
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytosolic localization asserted by Reactome for the reaction in which the
+      SEPSECS tetramer converts Sep-tRNA(Sec) to Sec-tRNA(Sec). Consistent with
+      the experimentally determined cytoplasmic location.
+    action: ACCEPT
+    supported_by:
+      - reference_id: Reactome:R-HSA-2408555
+        supporting_text: &gt;-
+          O-phosphoseryl-tRNA(Sec) selenium transferase (SEPSECS) tetramer
+          catalyses the transformation of phosphoserine (Sep) into selenocysteine
+          (Sec)
+- term:
+    id: GO:0000049
+    label: tRNA binding
+  evidence_type: TAS
+  original_reference_id: PMID:10801173
+  qualifier: enables
+  review:
+    summary: &gt;-
+      tRNA binding annotation traceable to the identification of SEPSECS
+      (SLA/LP) as the protein component of the tRNA(Ser)Sec ribonucleoprotein
+      (tRNP(Ser)Sec) complex. SEPSECS is a bona fide tRNA(Sec)-binding protein;
+      the association with the tRNA(Sec)-containing particle is the historical
+      basis for this term.
+    action: ACCEPT
+    supported_by:
+      - reference_id: PMID:10801173
+        supporting_text: &gt;-
+          suggested to be UGA-suppressor
+- term:
+    id: GO:0000049
+    label: tRNA binding
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      tRNA binding inferred by sequence similarity from the mouse ortholog
+      (Q6P6M7); concordant with the experimentally established binding of
+      tRNA(Sec) by human SEPSECS.
+    action: ACCEPT
+    supported_by:
+      - reference_id: PMID:19608919
+        supporting_text: &gt;-
+          SepSecS binds only to the acceptor-, TΨC-, and variable arms of
+          tRNASec
+- term:
+    id: GO:0001514
+    label: selenocysteine incorporation
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Selenocysteine incorporation inferred by sequence similarity from the
+      mouse ortholog. Duplicate of the IBA/IDA/IEA annotations; correct at the
+      pathway level but downstream of SEPSECS&#39;s direct tRNA-charging step.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Pathway-level process; SEPSECS&#39;s core function is the Sep-to-Sec
+      conversion on tRNA(Sec) rather than ribosomal Sec incorporation.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Nuclear localization inferred by sequence similarity from the mouse
+      ortholog (Q6P6M7). Not supported by experimental data for human SEPSECS,
+      which is cytoplasmic/cytosolic. Likely an over-annotation of an
+      orthology-transferred location.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      No experimental support for a nuclear pool; the enzyme acts in the
+      cytosolic selenocysteine-synthesis pathway. Orthology-transferred (ISS)
+      rather than clearly-wrong IEA, hence flagged rather than removed.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytoplasmic localization inferred by sequence similarity from the mouse
+      ortholog; concordant with the experimentally determined location of human
+      SEPSECS.
+    action: ACCEPT
+    supported_by:
+      - reference_id: file:human/SEPSECS/SEPSECS-uniprot.txt
+        supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+core_functions:
+- description: &gt;-
+    SEPSECS catalyzes the terminal, PLP-dependent step of selenocysteine
+    biosynthesis, converting O-phospho-L-seryl-tRNA(Sec) plus selenophosphate to
+    L-selenocysteinyl-tRNA(Sec) (EC 2.9.1.2). Acting as a homotetramer in the
+    cytosol, it binds tRNA(Sec) and, with pyridoxal 5&#39;-phosphate as an
+    obligatory cofactor covalently bound to Lys284, performs the Sep-to-Sec
+    conversion on the tRNA, producing the charged Sec-tRNA(Sec) used for
+    selenoprotein synthesis.
+  molecular_function:
+    id: GO:0098621
+    label: O-phosphoseryl-tRNA(Sec) selenium transferase activity
+  directly_involved_in:
+    - id: GO:0001717
+      label: conversion of seryl-tRNAsec to selenocys-tRNAsec
+    - id: GO:0016260
+      label: L-selenocysteine biosynthetic process
+  locations:
+    - id: GO:0005829
+      label: cytosol
+  supported_by:
+    - reference_id: PMID:17142313
+      supporting_text: &gt;-
+        purified recombinant SepSecS converts Sep-tRNA(Sec) into Sec-tRNA(Sec)
+        in vitro
+    - reference_id: file:human/SEPSECS/SEPSECS-uniprot.txt
+      supporting_text: &gt;-
+        Reaction=O-phospho-L-seryl-tRNA(Sec) + selenophosphate + H2O = L-
+- description: &gt;-
+    SEPSECS binds pyridoxal 5&#39;-phosphate (PLP) as its catalytic cofactor,
+    covalently attached through a Schiff base to the active-site Lys284;
+    removal or reduction of PLP abolishes activity, establishing PLP binding as
+    integral to the enzyme&#39;s function.
+  molecular_function:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  locations:
+    - id: GO:0005829
+      label: cytosol
+  supported_by:
+    - reference_id: file:human/SEPSECS/SEPSECS-uniprot.txt
+      supporting_text: &gt;-
+        Name=pyridoxal 5&#39;-phosphate
+    - reference_id: PMID:19608919
+      supporting_text: &gt;-
+        Each SepSecS monomer has a PLP cofactor covalently linked to the
+        Nε-amino group of the conserved Lys284
+- description: &gt;-
+    SEPSECS binds tRNA(Sec) as an essential part of its catalytic cycle: the
+    homotetramer engages the acceptor-, TPsiC-, and variable arms of tRNA(Sec),
+    and this tRNA binding orients the substrate and activates the catalytic
+    active site.
+  molecular_function:
+    id: GO:0000049
+    label: tRNA binding
+  directly_involved_in:
+    - id: GO:0001717
+      label: conversion of seryl-tRNAsec to selenocys-tRNAsec
+  locations:
+    - id: GO:0005829
+      label: cytosol
+  supported_by:
+    - reference_id: PMID:19608919
+      supporting_text: &gt;-
+        SepSecS binds only to the acceptor-, TΨC-, and variable arms of tRNASec
+    - reference_id: PMID:36929010
+      supporting_text: &gt;-
+        organizes the active sites of the catalytic protomer
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Is there any physiologically relevant regulation of SEPSECS activity (e.g.
+    by phosphorylation at Ser14, or by selenium status), or is flux through the
+    Sec pathway controlled entirely upstream (SEPHS2/PSTK)?
+- question: &gt;-
+    Do the reported associations with SEPHS1, SEPHS2 and TRNAU1AP (SECp43)
+    represent a stable channeling complex in vivo, or transient interactions?
+suggested_experiments:
+- description: &gt;-
+    Quantitative in vitro kinetic characterization of purified human SEPSECS
+    with defined Sep-tRNA(Sec) and selenophosphate substrates, including PCH2D
+    variants (A239T, T325S, Y334C), to relate residual catalytic activity to
+    disease severity.
+- description: &gt;-
+    Endogenous subcellular fractionation and proximity-labeling (e.g. BioID) in
+    human neuronal cells to define the SEPSECS interactome and confirm the
+    exclusively cytosolic localization.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10801173
+  title: Identification of target antigen for SLA/LP autoantibodies in autoimmune
+    hepatitis.
+  findings:
+  - statement: &gt;-
+      Identified SEPSECS (SLA/LP) as the sole target antigen of SLA/LP
+      autoantibodies in autoimmune hepatitis and as the UGA-suppressor
+      tRNA-associated protein component of the tRNP(Ser)Sec ribonucleoprotein.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Establishes SEPSECS identity/antigenicity and its
+      association with the tRNA(Sec)-containing particle; basis for the TAS
+      tRNA-binding annotation. Abstract-only in cache.
+- id: PMID:17142313
+  title: RNA-dependent conversion of phosphoserine forms selenocysteine in eukaryotes
+    and archaea.
+  findings:
+  - statement: &gt;-
+      SEPSECS (Sep-tRNA:Sec-tRNA synthase) is the terminal enzyme of the
+      eukaryal/archaeal Sec pathway; purified recombinant SepSecS converts
+      Sep-tRNA(Sec) to Sec-tRNA(Sec) in vitro and complements an E. coli SelA
+      deletion in vivo.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; UniProt cites this for FUNCTION, CATALYTIC ACTIVITY,
+      PATHWAY, COFACTOR and Lys284 mutagenesis. Basis for the core-function IDA
+      annotations. Cache is abstract-only but the assertions are also anchored
+      in UniProt.
+- id: PMID:19608919
+  title: The human SepSecS-tRNASec complex reveals the mechanism of selenocysteine
+    formation.
+  findings:
+  - statement: &gt;-
+      Crystal structure of human SepSecS with tRNA(Sec), phosphoserine and
+      thiophosphate defines a PLP-dependent mechanism; SepSecS is a homotetramer
+      (catalytic + non-catalytic dimer) binding two tRNA(Sec) via their
+      acceptor-TPsiC-variable arms, with PLP covalently linked to Lys284.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; full text available in cache. Supports tetramer, tRNA
+      binding, PLP cofactor/Lys284 and the catalytic mechanism.
+- id: PMID:22190034
+  title: Global landscape of HIV-human protein complexes.
+  findings:
+  - statement: &gt;-
+      Large-scale HIV-host affinity-capture/MS screen; source of the IPI
+      &#34;protein binding&#34; annotation reporting an interaction of SEPSECS with the
+      HIV-1 Gag polyprotein (a xeno interaction).
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Correctly cited for a viral-host interactome hit; not a
+      native functional partner, so the derived &#34;protein binding&#34; term is
+      non-core.
+- id: PMID:28414460
+  title: Analysis of Novel Interactions between Components of the Selenocysteine Biosynthesis
+    Pathway, SEPHS1, SEPHS2, SEPSECS, and SECp43.
+  findings:
+  - statement: &gt;-
+      SEPSECS, SECp43 (TRNAU1AP) and selenophosphate synthetases SEPHS1/SEPHS2
+      form oligomers in eukaryotic cells; SEPHS2 interacts with SEPSECS. Basis
+      for the experimentally determined cytoplasmic localization.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; UniProt cites this for SUBUNIT and SUBCELLULAR LOCATION
+      (Cytoplasm). Abstract-only in cache.
+- id: PMID:36929010
+  title: Structural basis for the tRNA-dependent activation of the terminal complex
+    of selenocysteine synthesis in humans.
+  findings:
+  - statement: &gt;-
+      High-resolution structures show tRNA(Sec) binding drives conformational
+      changes that organize the catalytic protomer&#39;s active site, supporting a
+      tRNA-dependent activation model. Reference for ComplexPortal cytosol and
+      transferase-complex annotations.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; full text available in cache. Supports tRNA-dependent
+      activation and complex membership.
+- id: Reactome:R-HSA-2408555
+  title: Sep-tRNA(Sec) is converted to Sec-tRNA(Sec) by PXLP-K284-SEPSECS tetramer
+  findings:
+  - statement: &gt;-
+      Reactome reaction: the SEPSECS tetramer converts Sep-tRNA(Sec) to
+      Sec-tRNA(Sec) using selenophosphate as selenium donor, in the cytosol.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction matching the enzyme&#39;s core catalytic step; basis for the
+      TAS cytosol annotation.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

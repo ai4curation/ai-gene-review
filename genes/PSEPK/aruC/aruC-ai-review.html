@@ -1,0 +1,2443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aruC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>aruC</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88QW2" target="_blank" class="term-link">
+                        Q88QW2
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "aruC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88QW2" data-a="DESCRIPTION: AruC/PP_0372 is a predicted pyridoxal-phosphate-de..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>AruC/PP_0372 is a predicted pyridoxal-phosphate-dependent class-III acetylornithine aminotransferase (EC 2.6.1.11). Orthology and family evidence place it in the anabolic ArgD-like branch that forms N-acetyl-L-ornithine during L-arginine biosynthesis, distinct from the AstC-like PP_4481 enzyme in the arginine succinyltransferase catabolic operon. Direct PP_0372 substrate-specificity and genetic data are not available, and its additional free-ornithine or lysine-pathway activities remain unresolved.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003992" target="_blank" class="term-link">
+                                    GO:0003992
+                                </a>
+                            </span>
+                            <span class="term-label">N2-acetyl-L-ornithine:2-oxoglutarate 5-transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000003
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QW2" data-a="GO:0003992" data-r="GO_REF:0000003" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the predicted anabolic ArgD-like reaction of PP_0372.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns EC 2.6.1.11, PANTHER places Q88QW2 in the predominantly anabolic SF79 branch, and OpenScientist retrieved a separate K00821 orthology from the PP_4481/K00840 catabolic enzyme. The assignment remains an inference because PP_0372 has not been assayed directly.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/aruC/aruC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Acetylornithine aminotransferase 2</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/aruC/aruC-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">**PP_0372 (UniProt Q88QW2), labelled &#34;aruC,&#34; encodes a cytoplasmic, pyridoxal-5′-phosphate (PLP)-dependent class-III aminotransferase whose primary annotated function is acetylornithine aminotransferase (EC 2.6.1.11), the ArgD step of L-arginine biosynthesis.**</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004587" target="_blank" class="term-link">
+                                    GO:0004587
+                                </a>
+                            </span>
+                            <span class="term-label">L-ornithine transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000003
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QW2" data-a="GO:0004587" data-r="GO_REF:0000003" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Free L-ornithine transamination is possible but not established for PP_0372.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> EC 2.6.1.13 is present in the submitted UniProt annotation, but no direct substrate screen exists and the anabolic clade is better supported for N-acetylornithine transamination.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/aruC/aruC-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">**Residual EC ambiguity.** UniProt lists EC 2.6.1.11 **and** 2.6.1.13 (ornithine aminotransferase), and KEGG adds 2.6.1.17.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008483" target="_blank" class="term-link">
+                                    GO:0008483
+                                </a>
+                            </span>
+                            <span class="term-label">transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QW2" data-a="GO:0008483" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This generic term is redundant with the substrate-specific ArgD-like activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0003992 provides the informative predicted reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                                    GO:0030170
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxal phosphate binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QW2" data-a="GO:0030170" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PLP is the expected cofactor of this class-III aminotransferase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The cofactor assignment is credible but secondary to the catalytic activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/aruC/aruC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=pyridoxal 5&#39;-phosphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QW2" data-a="GO:0042802" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic self-binding does not identify a distinct biological function of PP_0372.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The TreeGrafter term is less informative than the enzyme reaction and lacks target-specific oligomer evidence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006526" target="_blank" class="term-link">
+                                    GO:0006526
+                                </a>
+                            </span>
+                            <span class="term-label">L-arginine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/aruC/aruC-deep-research-openscientist.md
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QW2" data-a="GO:0006526" data-r="file:PSEPK/aruC/aruC-deep-research-openscientist.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PP_0372 is the strongest KT2440 candidate for the anabolic acetylornithine-transaminase step.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> K00821 orthology, the SF79 family assignment, separation from the PP_4481 AST operon, and the retained prototrophy of a PP_4481 insertion mutant support an inferred role in L-arginine biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/aruC/aruC-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">PP_0372 (Q88QW2) is best described as the **cytoplasmic, PLP-dependent acetylornithine aminotransferase (ArgD) of L-arginine biosynthesis** in *P. putida* KT2440</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Predicted PLP-dependent transamination of N-acetyl-L-glutamate 5-semialdehyde to N-acetyl-L-ornithine in L-arginine biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88QW2" data-a="FUNCTION: Predicted PLP-dependent transamination of N-acetyl..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003992" target="_blank" class="term-link">
+                            N2-acetyl-L-ornithine:2-oxoglutarate 5-transaminase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006526" target="_blank" class="term-link">
+                                L-arginine biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/aruC/aruC-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Full=Acetylornithine aminotransferase 2</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/aruC/aruC-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">PP_0372 (Q88QW2) is best described as the **cytoplasmic, PLP-dependent acetylornithine aminotransferase (ArgD) of L-arginine biosynthesis** in *P. putida* KT2440</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31451546" target="_blank" class="term-link">
+                            PMID:31451546
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Arginine Biosynthesis Modulates Pyoverdine Production and Release in Pseudomonas putida as Part of the Mechanism of Adaptation to Oxidative Stress.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A KT2440 PP_4481 insertion mutant, identified in the paper as argD (= astC), remains arginine prototrophic; the authors infer compensation by another transaminase but do not identify PP_0372 directly.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/aruC/aruC-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PSEPK AruC/PP_0372</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Assigns EC 2.6.1.11 and EC 2.6.1.13 to an unreviewed class-III PLP aminotransferase.</div>
+
+                        <div class="finding-text">"Full=Acetylornithine aminotransferase 2"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Places Q88QW2 in PANTHER SF79.</div>
+
+                        <div class="finding-text">"PTHR11986:SF79"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/aruC/aruC-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO annotation snapshot for PSEPK AruC/PP_0372</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains the five existing annotations reviewed above.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/aruC/aruC-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist functional synthesis for PSEPK AruC/PP_0372</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Orthology and pathway context separate PP_0372 as the anabolic ArgD-like enzyme from catabolic PP_4481 while documenting the absence of direct PP_0372 enzymology.</div>
+
+                        <div class="finding-text">"The key caveat is that all substrate and localization assignments for PP_0372 derive from orthology, genomic context, and conserved active-site residues — no direct enzymology has been performed on PP_0372 or its close ortholog PA0530 themselves."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does PP_0372 preferentially transaminate N-acetylornithine in vivo, and does it also contribute measurably to free-ornithine or N-succinyldiaminopimelate metabolism?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: microbial arginine and lysine metabolism, PLP-dependent aminotransferases</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88QW2" data-a="Q: Does PP_0372 preferentially transaminate N-acetylo..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify Q88QW2 and compare catalytic efficiencies for N-acetylornithine, free ornithine, N-succinylornithine, and N-succinyl-LL-diaminopimelate; test PP_0372 and PP_4481 single and double mutants for arginine auxotrophy.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: comparative enzyme kinetics and targeted genetics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88QW2" data-a="EXPERIMENT: Purify Q88QW2 and compare catalytic efficiencies f..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(aruC-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88QW2" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *aruC* / PP_0372 (UniProt Q88QW2) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">6 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-17T17:05:43.844245</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="aruC-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="aruC-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-aruc-pp_0372-uniprot-q88qw2-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>aruC</em> / PP_0372 (UniProt Q88QW2) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>PP_0372 (UniProt Q88QW2), labelled "aruC," encodes a cytoplasmic, pyridoxal-5′-phosphate (PLP)-dependent class-III aminotransferase whose primary annotated function is acetylornithine aminotransferase (EC 2.6.1.11), the ArgD step of L-arginine biosynthesis.</strong> In this reaction the enzyme catalyses the reversible transamination <em>N</em>-acetyl-L-glutamate-5-semialdehyde + L-glutamate ⇌ <em>N</em>²-acetyl-L-ornithine + 2-oxoglutarate (KEGG reaction R02283), converting a glutamate-derived carbon skeleton into the acetylated ornithine precursor of arginine. The protein carries the diagnostic Aminotrans_3 fold and an intact class-III active site, and it belongs to a family whose members characteristically prefer <em>N</em>-acylated ornithine substrates over free ornithine.</p>
+<p><strong>A central conclusion of this investigation is that the "aruC" gene symbol is an annotation artifact and does NOT denote the catabolic arginine-succinyltransferase (AST) pathway enzyme.</strong> The genuine <em>aruC</em> of the AST catabolic pathway — N²-succinylornithine 5-aminotransferase (EC 2.6.1.81) — was originally defined in <em>Pseudomonas aeruginosa</em> (gene PA0895) and, in <em>P. putida</em> KT2440, is encoded by a separate gene, <strong>PP_4481</strong>, sitting within a complete, dedicated catabolic AST gene cluster (PP_4475–PP_4481). PP_0372 instead maps by KEGG orthology to K00821 (anabolic acetylornithine/<em>N</em>-succinyl-DAP aminotransferase), lies in an unrelated genomic neighborhood, and is only ~40–42 % identical to the characterized catabolic AruC/AstC/ArgD clade while being 61 % identical to its true anabolic ortholog PA0530.</p>
+<p><strong>The family to which PP_0372 belongs is experimentally bifunctional.</strong> The archetypal enzyme, <em>E. coli</em> ArgD, exhibits both <em>N</em>-acetylornithine aminotransferase activity (arginine biosynthesis, EC 2.6.1.11) and <em>N</em>-succinyl-L,L-diaminopimelate aminotransferase activity (DapC, lysine biosynthesis, EC 2.6.1.17), with comparable specificity constants for both substrates. Accordingly, KEGG assigns PP_0372 to modules for both arginine biosynthesis (ppu00220) and succinyl-DAP lysine biosynthesis (M00016), and UniProt lists EC 2.6.1.11 and 2.6.1.13. <strong>The key caveat is that all substrate and localization assignments for PP_0372 derive from orthology, genomic context, and conserved active-site residues — no direct enzymology has been performed on PP_0372 or its close ortholog PA0530 themselves.</strong></p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="f1-the-catabolic-aruc-function-n2-succinylornithine-5-aminotransferase-in-the-ast-pathway">F1 — The catabolic AruC function: N²-succinylornithine 5-aminotransferase in the AST pathway</h3>
+<p>The gene symbol <em>aruC</em> was coined in <em>Pseudomonas aeruginosa</em> PAO1, where cloning and sequencing of the 26-kb <em>aru</em> cluster established that the <em>aruCFGDB</em> operon, under the control of the ArgR regulator, encodes the enzymes of the catabolic <strong>arginine succinyltransferase (AST) pathway</strong>. In that landmark study, AruC was assigned the function of <strong>N²-succinylornithine 5-aminotransferase</strong>, one step in the five-enzyme route that dissimilates arginine via succinylated intermediates (<a href="https://pubmed.ncbi.nlm.nih.gov/9393691/">PMID: 9393691</a>). The verified quotation is unambiguous: <em>"The aruR, aruC, aruD, aruB, and aruE genes specify the ArgR regulatory protein, N2-succinylornithine 5-aminotransferase, N-succinylglutamate 5-semialdehyde dehydrogenase, N2-succinylarginine dihydrolase, and N-succinylglutamate desuccinylase, respectively."</em></p>
+<p>This finding matters because it defines what "<em>aruC</em>" <em>originally</em> means — a catabolic enzyme (EC 2.6.1.81) — and thereby frames the central identification problem: the <em>P. putida</em> protein Q88QW2, though bearing the same label, is not this catabolic enzyme (see F4).</p>
+<h3 id="f2-class-iii-plp-fold-with-specificity-for-n-acylated-ornithine">F2 — Class-III PLP fold with specificity for N-acylated ornithine</h3>
+<p>The acyl-ornithine aminotransferase family is defined structurally and mechanistically by work on the <em>E. coli</em> catabolic homolog <strong>AstC</strong>. X-ray structures of AstC in apo, holo (PLP-bound), and succinylornithine-bound states, complemented by docking, showed that AstC (catabolic) and ArgD (anabolic) are only <strong>58 % identical yet functionally interchangeable</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/23484010/">PMID: 23484010</a>): <em>"Escherichia coli possesses two acyl ornithine aminotransferases, one catabolic (AstC) and the other anabolic (ArgD), that participate in L-arginine metabolism. Although only 58% identical, the enzymes have been shown to be functionally interchangeable."</em></p>
+<p>Critically, the same study established the substrate-specificity logic of the entire family: <em>"The docking studies support our observations that AstC has a strong preference for acylated ornithine species over ornithine itself, and suggest that the increase in specificity associated with acylation is caused by steric and desolvation effects rather than specific interactions between the substrate and enzyme."</em> This means the enzymes discriminate the acyl group (succinyl- or acetyl-) primarily through steric and desolvation effects rather than dedicated binding contacts — explaining why members of this family can accommodate more than one acyl-ornithine substrate and why the family gives rise to the multiple EC numbers (2.6.1.11 / 2.6.1.13 / 2.6.1.17 / 2.6.1.81) seen across paralogs. Q88QW2 belongs to this Aminotrans_3 (IPR005814) / class-III (IPR050103) family.</p>
+<h3 id="f3-the-ast-pathway-dissimilates-the-arginineornithine-carbon-skeleton-in-p-putida">F3 — The AST pathway dissimilates the arginine/ornithine carbon skeleton in <em>P. putida</em></h3>
+<p>In <em>Pseudomonas</em>, including <em>P. putida</em>, the AST pathway is inducible by arginine and is responsible for catabolizing the carbon backbone of arginine. Direct in vivo evidence comes from inhibitor studies: blocking succinylornithine transaminase (the AruC step) with aminooxyacetic acid caused <strong>accumulation of succinylornithine</strong>, demonstrating that this pathway dissimilates the arginine carbon skeleton (<a href="https://pubmed.ncbi.nlm.nih.gov/3129535/">PMID: 3129535</a>): <em>"The accumulation of succinylornithine following in vivo inhibition of succinylornithine transaminase activity by aminooxyacetic acid showed that this pathway is responsible for the dissimilation of the carbon skeleton of arginine."</em> Genetic dissection of <em>P. putida</em> mutants further mapped arginine utilization to both the AST pathway and the arginine oxidase route, with arginine channelled mainly through the oxidase route (<a href="https://pubmed.ncbi.nlm.nih.gov/1791443/">PMID: 1791443</a>). This establishes the physiological context of the catabolic AruC — but again, this is the PP_4481 enzyme, not PP_0372.</p>
+<h3 id="f4-pp_0372-is-the-anabolic-acetylornithine-aminotransferase-not-the-catabolic-ast-enzyme">F4 — PP_0372 is the ANABOLIC acetylornithine aminotransferase, not the catabolic AST enzyme</h3>
+<p>This is the pivotal correction of the database label. Multiple orthogonal lines of bioinformatic evidence converge:</p>
+<table>
+<thead>
+<tr>
+<th>Line of evidence</th>
+<th>Observation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>KEGG orthology</strong></td>
+<td>PP_0372 → <strong>K00821</strong> (acetylornithine / <em>N</em>-succinyl-DAP aminotransferase, EC 2.6.1.11 / 2.6.1.17), pathway <strong>ppu00220 Arginine biosynthesis</strong> + module <strong>M00016</strong> (succinyl-DAP lysine biosynthesis)</td>
+</tr>
+<tr>
+<td><strong><em>P. aeruginosa</em> ortholog</strong></td>
+<td>PA0530 — also K00821, class-III PLP AT, arginine biosynthesis (the true anabolic ortholog)</td>
+</tr>
+<tr>
+<td><strong>Genuine catabolic <em>aruC</em></strong></td>
+<td><em>P. aeruginosa</em> PA0895 — <strong>K00840</strong>, succinylornithine aminotransferase, EC 2.6.1.81 (matches <a href="https://pubmed.ncbi.nlm.nih.gov/9393691/">PMID: 9393691</a>)</td>
+</tr>
+<tr>
+<td><strong>KT2440 catabolic cluster</strong></td>
+<td>Separate, complete AST cluster <strong>PP_4475–PP_4481</strong> (module M00879, arginine→glutamate); its dedicated succinylornithine aminotransferase is <strong>PP_4481</strong> (K00840)</td>
+</tr>
+<tr>
+<td><strong>Genomic neighborhood</strong></td>
+<td>PP_0372 is flanked by an acyl-CoA dehydrogenase (PP_0370), a LysR-family regulator (PP_0371), and a membrane protein (PP_0373) — <strong>no <em>aru</em>/<em>ast</em> genes nearby</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Thus PP_0372 and the catabolic AST enzyme are distinct gene products with distinct KEGG orthology (K00821 vs K00840), distinct EC numbers (2.6.1.11 vs 2.6.1.81), distinct pathways (biosynthesis vs catabolism), and distinct genomic locations. The "aruC" symbol applied to PP_0372 is an annotation artifact propagated from the ambiguous acyl-ornithine aminotransferase family.</p>
+<h3 id="f5-the-argd-family-is-experimentally-bifunctional-arginine-lysine-biosynthesis">F5 — The ArgD family is experimentally bifunctional (arginine + lysine biosynthesis)</h3>
+<p>The anabolic identity of PP_0372 is reinforced by direct enzymology on its family archetype. Purified <em>E. coli</em> <em>argD</em>-encoded <em>N</em>-acetylornithine aminotransferase was shown to possess <strong>both</strong> activities: <em>N</em>-acetylornithine aminotransferase (EC 2.6.1.11, arginine biosynthesis) <strong>and</strong> <em>N</em>-succinyl-L,L-diaminopimelate aminotransferase (DapC, EC 2.6.1.17, lysine biosynthesis), with similar specificity constants for the two substrates (<a href="https://pubmed.ncbi.nlm.nih.gov/10074354/">PMID: 10074354</a>): <em>"This enzyme exhibits both NAcOATase and DapATase activity, with similar specificity constants for N-acetylornithine and N-succinyl-L,L-DAP, suggesting that it can function in both lysine and arginine biosynthesis."</em> Because PP_0372 is orthologous to this ArgD (KEGG K00821, member of both arginine-biosynthesis and succinyl-DAP-lysine-biosynthesis modules), the same dual biosynthetic capability is the most parsimonious prediction for PP_0372.</p>
+<h3 id="f6-pp_0372-belongs-to-a-divergent-pseudomonas-acetylornithine-at-subfamily">F6 — PP_0372 belongs to a divergent <em>Pseudomonas</em> acetylornithine-AT subfamily</h3>
+<p>Global pairwise alignments quantify the phylogenetic placement of PP_0372 and confirm it is anabolic:</p>
+<table>
+<thead>
+<tr>
+<th>Comparison</th>
+<th>% identity to PP_0372</th>
+<th>Clade</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PA0530</strong> (<em>P. aeruginosa</em>, K00821, arginine biosynthesis)</td>
+<td><strong>61.2 %</strong></td>
+<td>anabolic (true ortholog)</td>
+</tr>
+<tr>
+<td><em>P. aeruginosa</em> AruC / PA0895 (catabolic, K00840)</td>
+<td>42.0 %</td>
+<td>catabolic</td>
+</tr>
+<tr>
+<td>KT2440 catabolic PP_4481 (K00840)</td>
+<td>42.1 %</td>
+<td>catabolic</td>
+</tr>
+<tr>
+<td><em>E. coli</em> ArgD</td>
+<td>40.7 %</td>
+<td>anabolic <em>E. coli</em></td>
+</tr>
+<tr>
+<td><em>E. coli</em> AstC</td>
+<td>40.3 %</td>
+<td>catabolic <em>E. coli</em></td>
+</tr>
+</tbody>
+</table>
+<p>The characterized catabolic clade is internally 60–80 % identical (PP_4481–PA0895 = 79.9 %; <em>E. coli</em> ArgD–AstC = 60 %), whereas PP_0372 sits well outside it (~40–42 %) and instead pairs tightly with PA0530 (61 %). KT2440 in fact encodes <strong>three related class-III paralogs</strong> with divided labor:</p>
+<ul>
+<li><strong>PP_0372</strong> (K00821) — acetylornithine AT, arginine biosynthesis (this protein)</li>
+<li><strong>PP_1588</strong> (K14267) — dedicated DapC / <em>N</em>-succinyl-DAP AT, lysine biosynthesis</li>
+<li><strong>PP_4481</strong> (K00840) — catabolic succinylornithine AT, AST pathway</li>
+</ul>
+<p>Because <em>P. putida</em> maintains a separate dedicated DapC (PP_1588), the DapC "moonlighting" activity may be less physiologically important for PP_0372 than for <em>E. coli</em> ArgD, though it remains chemically plausible. No direct enzymology exists for PP_0372 or PA0530 themselves.</p>
+<h3 id="f7-cytoplasmic-localization-and-an-intact-class-iii-active-site">F7 — Cytoplasmic localization and an intact class-III active site</h3>
+<p>Sequence analysis of the 426-residue protein supports a soluble cytoplasmic enzyme with a functional PLP active site. The sequence contains the diagnostic class-III catalytic motif <strong><code>...IITLGKGLGGG...</code></strong> (residues ~285–295); the lysine in this G-x-K-x-G/GGG context is the conserved <strong>PLP Schiff-base (internal aldimine) residue</strong>, and the adjacent glycine-rich stretch forms the phosphate-binding loop. Kyte–Doolittle hydropathy analysis found <strong>no N-terminal signal peptide and no transmembrane segment</strong> (maximum 19-residue window hydrophobicity 1.57, occurring internally at position 304, below the ~1.6 TM threshold), and the N-terminus (MNLFNLRRSAP…) lacks a cleavable signal architecture. UniProt confirms PLP as cofactor and family assignment to class-III PLP-dependent aminotransferases. Together these indicate a cytoplasmic enzyme — the expected localization for an amino-acid-biosynthetic aminotransferase.</p>
+<h3 id="f8-the-exact-catalyzed-reaction-kegg-r02283-ec-26111">F8 — The exact catalyzed reaction (KEGG R02283, EC 2.6.1.11)</h3>
+<p>The precise reaction assigned to PP_0372 via KEGG KO K00821 is <strong>R02283</strong>, <em>N</em>²-acetyl-L-ornithine:2-oxoglutarate aminotransferase:</p>
+<div class="codehilite"><pre><span></span><code>N-Acetyl-L-ornithine + 2-Oxoglutarate  ⇌  N-Acetyl-L-glutamate 5-semialdehyde + L-Glutamate
+   (C00437)          (C00026)               (C01250)                        (C00025)
+                  EC 2.6.1.11 — Arginine biosynthesis (map00220)
+</code></pre></div>
+
+<p>The same KO also carries EC 2.6.1.17 (<em>N</em>-succinyl-DAP aminotransferase, module M00016), formalizing the dual biosynthetic assignment.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="where-pp_0372-sits-in-metabolism">Where PP_0372 sits in metabolism</h3>
+<p>PP_0372 catalyzes the fourth step of the acetylated branch of L-arginine biosynthesis, the transamination that installs the future α-amino group of ornithine while the α-amino group remains masked as an acetyl group:</p>
+<div class="codehilite"><pre><span></span><code> Glutamate
+    │  N-acetylglutamate synthase (ArgA)
+    ▼
+ N-acetylglutamate
+    │  N-acetylglutamate kinase (ArgB)
+    ▼
+ N-acetylglutamyl-phosphate
+    │  N-acetyl-γ-glutamyl-phosphate reductase (ArgC)
+    ▼
+ N-acetylglutamate-5-semialdehyde
+    │  ◄────  PP_0372  (acetylornithine aminotransferase, ArgD; EC 2.6.1.11; R02283)
+    │         + L-glutamate  →  + 2-oxoglutarate
+    ▼
+ N2-acetyl-L-ornithine
+    │  (deacetylation / acetyl transfer)
+    ▼
+ L-ornithine ──► citrulline ──► argininosuccinate ──► L-arginine
+</code></pre></div>
+
+<p>In parallel, the same enzyme family can act on <em>N</em>-succinyl-L,L-diaminopimelate in the lysine/<em>meso</em>-DAP pathway (DapC, EC 2.6.1.17), converting the 2-oxo intermediate to <em>N</em>-succinyl-L,L-DAP en route to <em>meso</em>-DAP and L-lysine (KEGG module M00016).</p>
+<h3 id="why-the-aruc-label-is-misleading-a-tale-of-two-clades">Why the "aruC" label is misleading — a tale of two clades</h3>
+<p>The acyl-ornithine aminotransferases form two functionally distinct but sequence-related clades that a naive symbol transfer conflates:</p>
+<div class="codehilite"><pre><span></span><code>CLASS-III PLP AMINOTRANSFERASES (Aminotrans_3, IPR005814)
+│
+  ┌─────┴───────────────────────────────┐
+  │                                       │
+ ANABOLIC clade (K00821)          CATABOLIC AST clade (K00840)
+ acetylornithine AT / ArgD        succinylornithine AT / AruC(true)
+ EC 2.6.1.11 (+2.6.1.17)          EC 2.6.1.81
+ arginine (+lysine) BIOSYNTHESIS  arginine CATABOLISM (AST pathway)
+  │                                       │
+  ├─ E. coli ArgD                         ├─ E. coli AstC
+  ├─ P. aeruginosa PA0530                 ├─ P. aeruginosa PA0895 (real aruC)
+  └─ P. putida PP_0372  ◄── THIS PROTEIN  └─ P. putida PP_4481 (real catabolic AruC)
+</code></pre></div>
+
+<p>PP_0372 clearly belongs to the left (anabolic) clade: 61 % identity to PA0530, only ~40–42 % to any catabolic-clade member, K00821 orthology, biosynthesis-pathway membership, and a genomic location divorced from the <em>aru</em>/<em>ast</em> operons. The catabolic AST role in KT2440 is fully accounted for by the separate PP_4475–PP_4481 cluster with PP_4481 as its succinylornithine aminotransferase. Hence the "aruC" symbol on PP_0372 is a mis-transferred label; its EC 2.6.1.13 annotation (ornithine aminotransferase-like) likewise reflects family-level ambiguity rather than a measured activity.</p>
+<h3 id="localization-and-cofactor">Localization and cofactor</h3>
+<p>As a class-III PLP aminotransferase with no signal peptide or transmembrane helix, PP_0372 functions in the <strong>cytoplasm</strong>, where amino-acid biosynthesis occurs. It uses <strong>pyridoxal-5′-phosphate</strong> covalently tethered via a Schiff base to the active-site lysine identified in the <code>IITLGKGLGGG</code> motif, cycling between the pyridoxal (PLP) and pyridoxamine (PMP) forms during the ping-pong transamination mechanism.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>Role in this report</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9393691/">9393691</a></td>
+<td><em>Cloning and characterization of the aru genes … AST pathway in P. aeruginosa</em></td>
+<td>Defines the <strong>true catabolic AruC</strong> as N²-succinylornithine 5-aminotransferase (F1); anchors the identity contrast in F4</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23484010/">23484010</a></td>
+<td><em>Structure of the catabolic N-succinylornithine transaminase (AstC) from E. coli</em></td>
+<td>Establishes the <strong>acyl-ornithine AT family</strong>, catabolic/anabolic interchangeability, and <strong>acylated-ornithine substrate preference</strong> (F2)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/3129535/">3129535</a></td>
+<td><em>Catabolism of arginine, citrulline and ornithine by Pseudomonas</em></td>
+<td>In vivo inhibitor evidence that the AST/succinylornithine transaminase step <strong>dissimilates the arginine carbon skeleton</strong> (F3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/1791443/">1791443</a></td>
+<td><em>P. putida mutants affected in arginine/ornithine/citrulline catabolism</em></td>
+<td>Genetic mapping of <em>P. putida</em> arginine catabolism to the <strong>AST and oxidase routes</strong> (F3 context)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10074354/">10074354</a></td>
+<td><em>Dual biosynthetic capability of N-acetylornithine aminotransferase</em></td>
+<td>Direct enzymology showing the <strong>ArgD family is bifunctional</strong> (EC 2.6.1.11 + DapC 2.6.1.17) — the anabolic-function basis for PP_0372 (F5)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26913973/">26913973</a></td>
+<td><em>Revisited genome of P. putida KT2440</em></td>
+<td>Supports careful re-annotation of KT2440 gene functions; context for treating legacy labels critically (F4)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/6423769/">6423769</a></td>
+<td><em>L-arginine utilization by Pseudomonas species</em></td>
+<td>Background on the multiplicity of arginine catabolic pathways in <em>P. putida</em> (F3 context)</td>
+</tr>
+</tbody>
+</table>
+<p>Supporting database evidence (KEGG KO K00821/K00840, EC numbers, module membership, InterPro domains IPR005814/IPR050103/IPR049704/IPR015421/IPR015424, and UniProt cofactor/family annotation) was used to place PP_0372 in the anabolic clade and to identify PP_4481 as the true catabolic enzyme.</p>
+<p><strong>How the evidence fits together:</strong> The primary literature (<a href="https://pubmed.ncbi.nlm.nih.gov/9393691/">9393691</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/23484010/">23484010</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/10074354/">10074354</a>) is direct and experimental but was performed on <em>homologs</em> (<em>P. aeruginosa</em> AruC, <em>E. coli</em> AstC and ArgD), not on PP_0372. The bioinformatic evidence (orthology, alignments, genomic context, active-site motif, hydropathy) transfers those findings to PP_0372 with a clear, testable logic. No paper reports direct biochemistry on PP_0372 or PA0530.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct enzymology on PP_0372 or PA0530.</strong> Every functional assignment — substrate (acetylornithine), reaction (R02283), kinetics, and the possible DapC side-activity — is inferred from orthology and characterized homologs, not measured on the <em>P. putida</em> protein. Kinetic constants (k_cat, K_M) for PP_0372 are unknown.</p>
+</li>
+<li>
+<p><strong>Residual EC ambiguity.</strong> UniProt lists EC 2.6.1.11 <strong>and</strong> 2.6.1.13 (ornithine aminotransferase), and KEGG adds 2.6.1.17. These reflect family-level promiscuity rather than experimentally resolved specificity for PP_0372. Which reaction(s) it catalyzes physiologically in <em>P. putida</em> has not been demonstrated.</p>
+</li>
+<li>
+<p><strong>DapC role uncertain in <em>P. putida</em>.</strong> Because KT2440 encodes a dedicated DapC (PP_1588, K14267), the lysine-biosynthetic side activity that is important for <em>E. coli</em> ArgD may be dispensable for PP_0372. The division of labor among the three KT2440 paralogs (PP_0372, PP_1588, PP_4481) has not been tested genetically.</p>
+</li>
+<li>
+<p><strong>Localization inferred, not observed.</strong> Cytoplasmic localization rests on the absence of signal/TM features and family expectation; no proteomic or fluorescence-based localization data specific to PP_0372 were found.</p>
+</li>
+<li>
+<p><strong>No phenotype/fitness data specific to PP_0372.</strong> Although RB-TnSeq fitness datasets exist for <em>Pseudomonas</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/38323821/">PMID: 38323821</a>), no PP_0372-specific arginine-auxotrophy phenotype was retrieved to confirm the biosynthetic role in vivo.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Direct enzyme assay.</strong> Heterologously express and purify PP_0372, reconstitute with PLP, and assay transaminase activity against <em>N</em>-acetyl-L-ornithine + 2-oxoglutarate (forward/reverse), reporting k_cat and K_M. Include <em>N</em>-succinyl-L,L-DAP, <em>N</em>-succinylornithine, and free ornithine to map substrate specificity and test the predicted acylated-ornithine preference (F2, F8).</p>
+</li>
+<li>
+<p><strong>Genetic complementation / auxotrophy test.</strong> Delete PP_0372 in KT2440 and test for arginine auxotrophy on minimal medium; complement an <em>E. coli argD</em> mutant with PP_0372 to confirm the biosynthetic role. Cross with ΔPP_1588 (DapC) to probe whether PP_0372 contributes to lysine biosynthesis.</p>
+</li>
+<li>
+<p><strong>Confirm the catabolic assignment of PP_4481.</strong> Delete the PP_4475–PP_4481 cluster and test loss of growth on arginine as sole carbon/nitrogen source; assay PP_4481 for succinylornithine aminotransferase activity to formally separate the catabolic function from PP_0372.</p>
+</li>
+<li>
+<p><strong>Structural validation.</strong> Solve or model (AlphaFold + docking) the PP_0372 structure and verify the class-III fold, the Schiff-base lysine in the <code>IITLGKGLGGG</code> motif, and the acyl-binding pocket geometry that governs steric/desolvation-based specificity.</p>
+</li>
+<li>
+<p><strong>Curate the annotation.</strong> Recommend updating the "aruC / acetylornithine aminotransferase 2 / EC 2.6.1.13" label for Q88QW2 to the anabolic <strong>acetylornithine aminotransferase (ArgD; EC 2.6.1.11, +DapC 2.6.1.17)</strong> assignment, and reserve the catabolic <em>aruC</em> / succinylornithine aminotransferase designation for PP_4481.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>PP_0372 (Q88QW2) is best described as the <strong>cytoplasmic, PLP-dependent acetylornithine aminotransferase (ArgD) of L-arginine biosynthesis</strong> in <em>P. putida</em> KT2440, catalysing the reversible EC 2.6.1.11 transamination (KEGG R02283) with the broad <em>N</em>-acyl-ornithine specificity of its class-III family and a plausible secondary DapC role in lysine biosynthesis. Its "aruC" symbol is an annotation artifact: the catabolic AST-pathway succinylornithine aminotransferase is a separate gene, PP_4481. All assignments rest on orthology, genomic context, and conserved active-site residues rather than on direct characterization of PP_0372 itself, which remains the principal knowledge gap.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="aruC-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="aruC-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:9393691</li>
+<li>PMID:23484010</li>
+<li>PMID:3129535</li>
+<li>PMID:1791443</li>
+<li>PMID:10074354</li>
+<li>PMID:38323821</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(aruC-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88QW2" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="aruc-pp_0372-curation-notes">aruC / PP_0372 curation notes</h1>
+<p>PP_0372 is named <code>aruC</code> in the submitted genome annotation, but the standard<br />
+Pseudomonas AruC/AstC role is the catabolic succinylornithine transaminase in the<br />
+arginine succinyltransferase operon. In KT2440 that operon contains PP_4481,<br />
+whereas PP_0372 belongs to the separate K00821/SF79 anabolic branch and is the<br />
+strongest candidate for the acetylornithine aminotransferase step. The<br />
+assignment is still indirect: no PP_0372 enzyme assay or knockout phenotype was<br />
+retrieved [file:PSEPK/aruC/aruC-deep-research-openscientist.md, "no direct<br />
+enzymology has been performed on PP_0372 or its close ortholog PA0530<br />
+themselves"].</p>
+<p>A direct KT2440 study identifies its tested PP_4481 insertion as <code>argD (= astC
+[PP_4481])</code> and reports that this mutant remains arginine prototrophic because<br />
+another transaminase can compensate; it does not identify PP_0372 as that<br />
+enzyme [PMID:31451546, full text checked online; local cache is abstract-only].</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88QW2
+gene_symbol: aruC
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  AruC/PP_0372 is a predicted pyridoxal-phosphate-dependent class-III
+  acetylornithine aminotransferase (EC 2.6.1.11). Orthology and family evidence
+  place it in the anabolic ArgD-like branch that forms N-acetyl-L-ornithine
+  during L-arginine biosynthesis, distinct from the AstC-like PP_4481 enzyme in
+  the arginine succinyltransferase catabolic operon. Direct PP_0372
+  substrate-specificity and genetic data are not available, and its additional
+  free-ornithine or lysine-pathway activities remain unresolved.
+existing_annotations:
+- term:
+    id: GO:0003992
+    label: N2-acetyl-L-ornithine:2-oxoglutarate 5-transaminase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  qualifier: enables
+  review:
+    summary: This is the predicted anabolic ArgD-like reaction of PP_0372.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt assigns EC 2.6.1.11, PANTHER places Q88QW2 in the predominantly
+      anabolic SF79 branch, and OpenScientist retrieved a separate K00821
+      orthology from the PP_4481/K00840 catabolic enzyme. The assignment remains
+      an inference because PP_0372 has not been assayed directly.
+    supported_by:
+    - reference_id: file:PSEPK/aruC/aruC-uniprot.txt
+      supporting_text: Full=Acetylornithine aminotransferase 2
+    - reference_id: file:PSEPK/aruC/aruC-deep-research-openscientist.md
+      supporting_text: &gt;-
+        **PP_0372 (UniProt Q88QW2), labelled &#34;aruC,&#34; encodes a cytoplasmic,
+        pyridoxal-5′-phosphate (PLP)-dependent class-III aminotransferase whose
+        primary annotated function is acetylornithine aminotransferase (EC
+        2.6.1.11), the ArgD step of L-arginine biosynthesis.**
+- term:
+    id: GO:0004587
+    label: L-ornithine transaminase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  qualifier: enables
+  review:
+    summary: Free L-ornithine transamination is possible but not established for PP_0372.
+    action: UNDECIDED
+    reason: &gt;-
+      EC 2.6.1.13 is present in the submitted UniProt annotation, but no direct
+      substrate screen exists and the anabolic clade is better supported for
+      N-acetylornithine transamination.
+    supported_by:
+    - reference_id: file:PSEPK/aruC/aruC-deep-research-openscientist.md
+      supporting_text: &gt;-
+        **Residual EC ambiguity.** UniProt lists EC 2.6.1.11 **and** 2.6.1.13
+        (ornithine aminotransferase), and KEGG adds 2.6.1.17.
+- term:
+    id: GO:0008483
+    label: transaminase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: This generic term is redundant with the substrate-specific ArgD-like activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0003992 provides the informative predicted reaction.
+- term:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: PLP is the expected cofactor of this class-III aminotransferase.
+    action: KEEP_AS_NON_CORE
+    reason: The cofactor assignment is credible but secondary to the catalytic activity.
+    supported_by:
+    - reference_id: file:PSEPK/aruC/aruC-uniprot.txt
+      supporting_text: Name=pyridoxal 5&#39;-phosphate
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: Generic self-binding does not identify a distinct biological function of PP_0372.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The TreeGrafter term is less informative than the enzyme reaction and lacks target-specific oligomer evidence.
+- term:
+    id: GO:0006526
+    label: L-arginine biosynthetic process
+  evidence_type: ISS
+  original_reference_id: file:PSEPK/aruC/aruC-deep-research-openscientist.md
+  qualifier: involved_in
+  review:
+    summary: PP_0372 is the strongest KT2440 candidate for the anabolic acetylornithine-transaminase step.
+    action: NEW
+    reason: &gt;-
+      K00821 orthology, the SF79 family assignment, separation from the
+      PP_4481 AST operon, and the retained prototrophy of a PP_4481 insertion
+      mutant support an inferred role in L-arginine biosynthesis.
+    supported_by:
+    - reference_id: file:PSEPK/aruC/aruC-deep-research-openscientist.md
+      supporting_text: &gt;-
+        PP_0372 (Q88QW2) is best described as the **cytoplasmic, PLP-dependent
+        acetylornithine aminotransferase (ArgD) of L-arginine biosynthesis** in
+        *P. putida* KT2440
+references:
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:31451546
+  title: Arginine Biosynthesis Modulates Pyoverdine Production and Release in Pseudomonas
+    putida as Part of the Mechanism of Adaptation to Oxidative Stress.
+  full_text_unavailable: true
+  findings:
+  - statement: &gt;-
+      A KT2440 PP_4481 insertion mutant, identified in the paper as argD (= astC),
+      remains arginine prototrophic; the authors infer compensation by another
+      transaminase but do not identify PP_0372 directly.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and accessible publisher/PMC full text were checked. The
+      local cache is abstract-only, and the paper does not directly test PP_0372.
+- id: file:PSEPK/aruC/aruC-uniprot.txt
+  title: UniProtKB entry for PSEPK AruC/PP_0372
+  findings:
+  - statement: Assigns EC 2.6.1.11 and EC 2.6.1.13 to an unreviewed class-III PLP aminotransferase.
+    supporting_text: Full=Acetylornithine aminotransferase 2
+  - statement: Places Q88QW2 in PANTHER SF79.
+    supporting_text: PTHR11986:SF79
+- id: file:PSEPK/aruC/aruC-goa.tsv
+  title: QuickGO annotation snapshot for PSEPK AruC/PP_0372
+  findings:
+  - statement: Contains the five existing annotations reviewed above.
+- id: file:PSEPK/aruC/aruC-deep-research-openscientist.md
+  title: OpenScientist functional synthesis for PSEPK AruC/PP_0372
+  findings:
+  - statement: &gt;-
+      Orthology and pathway context separate PP_0372 as the anabolic ArgD-like
+      enzyme from catabolic PP_4481 while documenting the absence of direct
+      PP_0372 enzymology.
+    supporting_text: &gt;-
+      The key caveat is that all substrate and localization assignments for
+      PP_0372 derive from orthology, genomic context, and conserved active-site
+      residues — no direct enzymology has been performed on PP_0372 or its close
+      ortholog PA0530 themselves.
+core_functions:
+- description: &gt;-
+    Predicted PLP-dependent transamination of N-acetyl-L-glutamate
+    5-semialdehyde to N-acetyl-L-ornithine in L-arginine biosynthesis.
+  molecular_function:
+    id: GO:0003992
+    label: N2-acetyl-L-ornithine:2-oxoglutarate 5-transaminase activity
+  directly_involved_in:
+  - id: GO:0006526
+    label: L-arginine biosynthetic process
+  supported_by:
+  - reference_id: file:PSEPK/aruC/aruC-uniprot.txt
+    supporting_text: Full=Acetylornithine aminotransferase 2
+  - reference_id: file:PSEPK/aruC/aruC-deep-research-openscientist.md
+    supporting_text: &gt;-
+      PP_0372 (Q88QW2) is best described as the **cytoplasmic, PLP-dependent
+      acetylornithine aminotransferase (ArgD) of L-arginine biosynthesis** in
+      *P. putida* KT2440
+suggested_questions:
+- question: &gt;-
+    Does PP_0372 preferentially transaminate N-acetylornithine in vivo, and
+    does it also contribute measurably to free-ornithine or
+    N-succinyldiaminopimelate metabolism?
+  experts:
+  - microbial arginine and lysine metabolism
+  - PLP-dependent aminotransferases
+suggested_experiments:
+- description: &gt;-
+    Purify Q88QW2 and compare catalytic efficiencies for N-acetylornithine,
+    free ornithine, N-succinylornithine, and N-succinyl-LL-diaminopimelate;
+    test PP_0372 and PP_4481 single and double mutants for arginine auxotrophy.
+  experiment_type: comparative enzyme kinetics and targeted genetics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

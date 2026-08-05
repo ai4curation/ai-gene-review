@@ -1,0 +1,2731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ecmA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ecmA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q54YG2" target="_blank" class="term-link">
+                        Q54YG2
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Dictyostelium discoideum</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ecmA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q54YG2" data-a="DESCRIPTION: EcmA (also known as ST430 or Dd63) is a large, sec..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>EcmA (also known as ST430 or Dd63) is a large, secreted, cysteine-rich extracellular matrix glycoprotein of the social amoeba Dictyostelium discoideum. The mature protein is dominated by dozens of tandem Cys-rich repeats (the Dictyostelium &#34;CT&#34;/Dicty_CTDC repeat) and carries a cleaved N-terminal signal peptide and numerous N-glycosylation sites, consistent with secretion into the extracellular space. EcmA is deposited as a structural constituent of the developmental extracellular matrix, contributing to the slime sheath that surrounds the migrating slug (pseudoplasmodium) and to the cellulose-rich stalk-tube matrix formed during culmination. Its expression is essentially confined to prestalk cells, chiefly the anterior-most prestalk zone, and is induced by the chlorinated stalk morphogen DIF-1 (differentiation-inducing factor). Because of this tightly regulated, cell-type-restricted expression, ecmA is a classic molecular marker for prestalk cell differentiation and is widely used (often as an ecmA/ecmAO promoter reporter) to follow prestalk fate, cell sorting, and morphogenesis in the Dictyostelium developmental cycle.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031012" target="_blank" class="term-link">
+                                    GO:0031012
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54YG2" data-a="GO:0031012" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred localization to the extracellular matrix. This is consistent with direct proteomic and experimental evidence that EcmA is a structural component of the Dictyostelium developmental ECM (slime sheath / stalk tube), and represents a core aspect of the protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> EcmA is a secreted extracellular-matrix protein; ECM localization is directly supported by proteomic profiling of the slime sheath, so the IBA inference is corroborated by primary evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26152465" target="_blank" class="term-link">
+                                        PMID:26152465
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">identified numerous expected (e.g. EcmA, EcmD, discoidin I, discoidin II)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0099120" target="_blank" class="term-link">
+                                    GO:0099120
+                                </a>
+                            </span>
+                            <span class="term-label">socially cooperative development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q54YG2" data-a="GO:0099120" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference that EcmA participates in the multicellular (social) developmental program. EcmA is indeed a prestalk-expressed ECM protein deposited during slug and fruiting-body morphogenesis, so involvement in cooperative development is reasonable, but this is a very general process term that does not capture the protein&#39;s specific structural role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> EcmA contributes to development only as a downstream structural ECM constituent of prestalk-derived matrix; the broad &#34;socially cooperative development&#34; term is correct in spirit but too general to represent the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/41057014" target="_blank" class="term-link">
+                                        PMID:41057014
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">During multicellular development, the ecmA and ecmB genes encode extracellular matrix proteins, which are mainly expressed in the most anterior prestalk cells of slugs and can regulate the morphogenesis of Dictyostelium</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54YG2" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation from the UniProt &#34;Secreted&#34; subcellular location. EcmA has a cleaved signal peptide and is a bona fide secreted ECM protein, so extracellular localization is correct.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The UniProt record documents a signal peptide and secreted location, and the protein is experimentally recovered from the extracellular slime sheath; extracellular-region localization is well supported.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26152465" target="_blank" class="term-link">
+                                        PMID:26152465
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">identified numerous expected (e.g. EcmA, EcmD, discoidin I, discoidin II)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009642" target="_blank" class="term-link">
+                                    GO:0009642
+                                </a>
+                            </span>
+                            <span class="term-label">response to light intensity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HEP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/41057014" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:41057014
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Transcriptomic and metabolomic insights into light-mediated ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q54YG2" data-a="GO:0009642" data-r="PMID:41057014" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput expression (HEP) annotation reflecting that ecmA transcript levels increase upon light exposure during the unicellular-to-multicellular transition. This captures the transcriptional responsiveness of the prestalk marker to light, not a mechanistic role for the EcmA protein in phototransduction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The annotation is based on ecmA being upregulated by light, i.e. it is a downstream transcriptional readout of prestalk differentiation, which is known to be light-sensitive. EcmA is a structural ECM protein and does not itself mediate the light response, so this is retained as a non-core, expression-based association.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/41057014" target="_blank" class="term-link">
+                                        PMID:41057014
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Our findings revealed that both of ecmA and ecmB genes are upregulated when exposed to light</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0099120" target="_blank" class="term-link">
+                                    GO:0099120
+                                </a>
+                            </span>
+                            <span class="term-label">socially cooperative development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38561423" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:38561423
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Prestalk-like positioning of de-differentiated cells in the ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q54YG2" data-a="GO:0099120" data-r="PMID:38561423" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay annotation from a study of prestalk-like cell positioning during Dictyostelium development, in which ecmA (as an ecmAO reporter) was used as the prestalk cell-type marker and its expression tracked differentiation and de-differentiation. The annotation places EcmA within the cooperative developmental program.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Per curation policy this experimental (IDA) annotation is retained. However, EcmA participates in cooperative development as a downstream, prestalk-restricted structural ECM constituent and differentiation marker, so the very general process term is best marked non-core rather than as the protein&#39;s core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38561423" target="_blank" class="term-link">
+                                        PMID:38561423
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Refed (RF) cells harbored prespore (pspA-GFP, green) and prestalk (ecmAO-RFP, magenta) markers.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031012" target="_blank" class="term-link">
+                                    GO:0031012
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26152465" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26152465
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Proteomic profiling of the extracellular matrix (slime sheat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54YG2" data-a="GO:0031012" data-r="PMID:26152465" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput direct-assay (proteomic) localization of EcmA to the Dictyostelium extracellular matrix (slime sheath). LC/MS/MS of slug ECM recovered EcmA among the expected structural components, providing strong evidence for ECM localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> EcmA was directly identified by mass spectrometry in the purified slug ECM (slime sheath), confirming that the extracellular matrix is its site of deposition. This is a core localization for the protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26152465" target="_blank" class="term-link">
+                                        PMID:26152465
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">identified numerous expected (e.g. EcmA, EcmD, discoidin I, discoidin II)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031154" target="_blank" class="term-link">
+                                    GO:0031154
+                                </a>
+                            </span>
+                            <span class="term-label">culmination involved in sorocarp development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25887420" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25887420
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Leaps and lulls in the developmental transcriptome of Dictyo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q54YG2" data-a="GO:0031154" data-r="PMID:25887420" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Expression-pattern (IEP) annotation. In the developmental transcriptome, ecmA is induced during late development and upregulated dramatically around culmination (16-18 h), coincident with stalk/fruiting-body formation, consistent with a role for the prestalk ECM protein during culmination.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The annotation rests on ecmA&#39;s culmination-phase expression as a prestalk gene rather than on a demonstrated mechanistic requirement of the EcmA protein for culmination. EcmA contributes to stalk-tube matrix formation, so involvement in culmination is plausible but retained as non-core given the expression-based evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25887420" target="_blank" class="term-link">
+                                        PMID:25887420
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Expression of the prestalk genes ecmA, ecmB and ecmF ([19,36], could be detected as early as 12 h, but were up-regulated more dramatically between 16 h and 18 h</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902168" target="_blank" class="term-link">
+                                    GO:1902168
+                                </a>
+                            </span>
+                            <span class="term-label">response to catechin</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23516620" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23516620
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The green tea catechin epigallocatechin gallate (EGCG) block...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q54YG2" data-a="GO:1902168" data-r="PMID:23516620" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Annotation derived from a study showing that the green-tea catechin EGCG blocks Dictyostelium development, with near-complete loss of prestalk-specific ecmA (and prespore pspA) expression in treated cells. This reflects that ecmA expression is suppressed when development is blocked by catechin, not that EcmA has a dedicated function in a catechin-response pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The evidence is that ecmA transcription is downregulated as a nonspecific consequence of EGCG-induced developmental arrest (a general differentiation-marker readout), not that EcmA functions in &#34;response to catechin.&#34; Treating this as a biological function of the protein over-interprets a downstream transcriptional effect.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23516620" target="_blank" class="term-link">
+                                        PMID:23516620
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we detected almost no expression of prespore specific pspA and prestalk specific ecmA genes in EGCG treated cells at 10 to 12 h into starvation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                                    GO:0005198
+                                </a>
+                            </span>
+                            <span class="term-label">structural molecule activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8016318" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8016318
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Prestalk cell-differentiation and movement during the morpho...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54YG2" data-a="GO:0005198" data-r="PMID:8016318" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable-author annotation assigning EcmA a structural molecule activity. As a secreted, Cys-rich repeat glycoprotein deposited in the slime sheath and stalk-tube matrix, EcmA acts as a structural constituent of the developmental ECM; this is the best representation of its core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> EcmA is an abundant structural ECM protein with no known catalytic activity; structural molecule activity correctly captures its core molecular role as a matrix building block.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/41057014" target="_blank" class="term-link">
+                                        PMID:41057014
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">During multicellular development, the ecmA and ecmB genes encode extracellular matrix proteins, which are mainly expressed in the most anterior prestalk cells of slugs and can regulate the morphogenesis of Dictyostelium</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030198" target="_blank" class="term-link">
+                                    GO:0030198
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular matrix organization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8016318" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8016318
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Prestalk cell-differentiation and movement during the morpho...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54YG2" data-a="GO:0030198" data-r="PMID:8016318" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable-author annotation that EcmA participates in organizing the extracellular matrix. As a structural constituent deposited into the slime sheath and stalk tube, EcmA contributes to assembly/organization of the developmental ECM.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> EcmA is deposited into and helps constitute the developmental ECM whose assembly accompanies slug and stalk morphogenesis; extracellular matrix organization is an appropriate biological-process annotation for a core matrix component.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/41057014" target="_blank" class="term-link">
+                                        PMID:41057014
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">During multicellular development, the ecmA and ecmB genes encode extracellular matrix proteins, which are mainly expressed in the most anterior prestalk cells of slugs and can regulate the morphogenesis of Dictyostelium</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031012" target="_blank" class="term-link">
+                                    GO:0031012
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8016318" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8016318
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Prestalk cell-differentiation and movement during the morpho...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54YG2" data-a="GO:0031012" data-r="PMID:8016318" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable-author localization of EcmA to the extracellular matrix, consistent with all other evidence (proteomic recovery from the slime sheath, secreted status). This is a core localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ECM localization of EcmA is corroborated by direct proteomic evidence and its secreted nature; the TAS annotation is accurate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26152465" target="_blank" class="term-link">
+                                        PMID:26152465
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">identified numerous expected (e.g. EcmA, EcmD, discoidin I, discoidin II)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>EcmA is a secreted, cysteine-rich repeat glycoprotein that acts as a structural constituent of the Dictyostelium developmental extracellular matrix. Deposited by prestalk cells into the slime sheath surrounding the slug and into the stalk-tube matrix during culmination, it contributes to the mechanical integrity and organization of the ECM that supports multicellular morphogenesis.</h3>
+                <span class="vote-buttons" data-g="Q54YG2" data-a="FUNCTION: EcmA is a secreted, cysteine-rich repeat glycoprot..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                            structural molecule activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030198" target="_blank" class="term-link">
+                                extracellular matrix organization
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031012" target="_blank" class="term-link">
+                                extracellular matrix
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26152465" target="_blank" class="term-link">
+                                PMID:26152465
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">identified numerous expected (e.g. EcmA, EcmD, discoidin I, discoidin II)</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/41057014" target="_blank" class="term-link">
+                                PMID:41057014
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">During multicellular development, the ecmA and ecmB genes encode extracellular matrix proteins, which are mainly expressed in the most anterior prestalk cells of slugs and can regulate the morphogenesis of Dictyostelium</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23516620" target="_blank" class="term-link">
+                            PMID:23516620
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The green tea catechin epigallocatechin gallate (EGCG) blocks cell motility, chemotaxis and development in Dictyostelium discoideum.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">EGCG treatment abolishes expression of the prestalk marker ecmA (and prespore pspA), reflecting a block of Dictyostelium differentiation rather than a specific catechin-response function of EcmA.</div>
+
+                        <div class="finding-text">"we detected almost no expression of prespore specific pspA and prestalk specific ecmA genes in EGCG treated cells at 10 to 12 h into starvation"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25887420" target="_blank" class="term-link">
+                            PMID:25887420
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Leaps and lulls in the developmental transcriptome of Dictyostelium discoideum.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ecmA is a prestalk gene strongly upregulated during late development (16-18 h), coincident with culmination and fruiting-body formation.</div>
+
+                        <div class="finding-text">"Expression of the prestalk genes ecmA, ecmB and ecmF ([19,36], could be detected as early as 12 h, but were up-regulated more dramatically between 16 h and 18 h"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26152465" target="_blank" class="term-link">
+                            PMID:26152465
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Proteomic profiling of the extracellular matrix (slime sheath) of Dictyostelium discoideum.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LC/MS/MS of purified slug extracellular matrix (slime sheath) directly identified EcmA as an expected structural ECM component.</div>
+
+                        <div class="finding-text">"identified numerous expected (e.g. EcmA, EcmD, discoidin I, discoidin II)"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38561423" target="_blank" class="term-link">
+                            PMID:38561423
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Prestalk-like positioning of de-differentiated cells in the social amoeba Dictyostelium discoideum.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ecmA (via an ecmAO reporter) is used as the prestalk cell-type marker to track differentiation, sorting, and de-differentiation during development.</div>
+
+                        <div class="finding-text">"Refed (RF) cells harbored prespore (pspA-GFP, green) and prestalk (ecmAO-RFP, magenta) markers."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/41057014" target="_blank" class="term-link">
+                            PMID:41057014
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Transcriptomic and metabolomic insights into light-mediated unicellular-to-multicellular transition in Dictyostelium discoideum.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ecmA and ecmB encode extracellular matrix proteins expressed mainly in anterior prestalk cells and are transcriptionally upregulated by light.</div>
+
+                        <div class="finding-text">"During multicellular development, the ecmA and ecmB genes encode extracellular matrix proteins, which are mainly expressed in the most anterior prestalk cells of slugs and can regulate the morphogenesis of Dictyostelium"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Light exposure upregulates ecmA (and ecmB) transcript levels.</div>
+
+                        <div class="finding-text">"Our findings revealed that both of ecmA and ecmB genes are upregulated when exposed to light"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8016318" target="_blank" class="term-link">
+                            PMID:8016318
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Prestalk cell-differentiation and movement during the morphogenesis of Dictyostelium discoideum.</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q54YG2
+gene_symbol: ecmA
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:44689
+  label: Dictyostelium discoideum
+description: EcmA (also known as ST430 or Dd63) is a large, secreted, cysteine-rich
+  extracellular matrix glycoprotein of the social amoeba Dictyostelium discoideum.
+  The mature protein is dominated by dozens of tandem Cys-rich repeats
+  (the Dictyostelium &#34;CT&#34;/Dicty_CTDC repeat) and carries a cleaved N-terminal signal
+  peptide and numerous N-glycosylation sites, consistent with secretion into the
+  extracellular space. EcmA is deposited as a structural constituent of the developmental
+  extracellular matrix, contributing to the slime sheath that surrounds the migrating
+  slug (pseudoplasmodium) and to the cellulose-rich stalk-tube matrix formed during
+  culmination. Its expression is essentially confined to prestalk cells, chiefly the
+  anterior-most prestalk zone, and is induced by the chlorinated stalk morphogen DIF-1
+  (differentiation-inducing factor). Because of this tightly regulated, cell-type-restricted
+  expression, ecmA is a classic molecular marker for prestalk cell differentiation and
+  is widely used (often as an ecmA/ecmAO promoter reporter) to follow prestalk fate,
+  cell sorting, and morphogenesis in the Dictyostelium developmental cycle.
+existing_annotations:
+- term:
+    id: GO:0031012
+    label: extracellular matrix
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Phylogenetically inferred localization to the extracellular matrix. This
+      is consistent with direct proteomic and experimental evidence that EcmA is a
+      structural component of the Dictyostelium developmental ECM (slime sheath / stalk
+      tube), and represents a core aspect of the protein.
+    action: ACCEPT
+    reason: EcmA is a secreted extracellular-matrix protein; ECM localization is directly
+      supported by proteomic profiling of the slime sheath, so the IBA inference is
+      corroborated by primary evidence.
+    supported_by:
+    - reference_id: PMID:26152465
+      supporting_text: identified numerous expected (e.g. EcmA, EcmD, discoidin I,
+        discoidin II)
+- term:
+    id: GO:0099120
+    label: socially cooperative development
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Phylogenetic inference that EcmA participates in the multicellular (social)
+      developmental program. EcmA is indeed a prestalk-expressed ECM protein deposited
+      during slug and fruiting-body morphogenesis, so involvement in cooperative development
+      is reasonable, but this is a very general process term that does not capture the
+      protein&#39;s specific structural role.
+    action: KEEP_AS_NON_CORE
+    reason: EcmA contributes to development only as a downstream structural ECM constituent
+      of prestalk-derived matrix; the broad &#34;socially cooperative development&#34; term is
+      correct in spirit but too general to represent the core molecular function.
+    supported_by:
+    - reference_id: PMID:41057014
+      supporting_text: During multicellular development, the ecmA and ecmB genes encode
+        extracellular matrix proteins, which are mainly expressed in the most anterior
+        prestalk cells of slugs and can regulate the morphogenesis of Dictyostelium
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Electronic annotation from the UniProt &#34;Secreted&#34; subcellular location.
+      EcmA has a cleaved signal peptide and is a bona fide secreted ECM protein, so
+      extracellular localization is correct.
+    action: ACCEPT
+    reason: The UniProt record documents a signal peptide and secreted location, and
+      the protein is experimentally recovered from the extracellular slime sheath;
+      extracellular-region localization is well supported.
+    supported_by:
+    - reference_id: PMID:26152465
+      supporting_text: identified numerous expected (e.g. EcmA, EcmD, discoidin I,
+        discoidin II)
+- term:
+    id: GO:0009642
+    label: response to light intensity
+  evidence_type: HEP
+  original_reference_id: PMID:41057014
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: High-throughput expression (HEP) annotation reflecting that ecmA transcript
+      levels increase upon light exposure during the unicellular-to-multicellular transition.
+      This captures the transcriptional responsiveness of the prestalk marker to light,
+      not a mechanistic role for the EcmA protein in phototransduction.
+    action: KEEP_AS_NON_CORE
+    reason: The annotation is based on ecmA being upregulated by light, i.e. it is a
+      downstream transcriptional readout of prestalk differentiation, which is known
+      to be light-sensitive. EcmA is a structural ECM protein and does not itself mediate
+      the light response, so this is retained as a non-core, expression-based association.
+    supported_by:
+    - reference_id: PMID:41057014
+      supporting_text: Our findings revealed that both of ecmA and ecmB genes are upregulated
+        when exposed to light
+- term:
+    id: GO:0099120
+    label: socially cooperative development
+  evidence_type: IDA
+  original_reference_id: PMID:38561423
+  qualifier: involved_in
+  review:
+    summary: Direct assay annotation from a study of prestalk-like cell positioning
+      during Dictyostelium development, in which ecmA (as an ecmAO reporter) was used
+      as the prestalk cell-type marker and its expression tracked differentiation and
+      de-differentiation. The annotation places EcmA within the cooperative developmental
+      program.
+    action: KEEP_AS_NON_CORE
+    reason: Per curation policy this experimental (IDA) annotation is retained. However,
+      EcmA participates in cooperative development as a downstream, prestalk-restricted
+      structural ECM constituent and differentiation marker, so the very general process
+      term is best marked non-core rather than as the protein&#39;s core function.
+    supported_by:
+    - reference_id: PMID:38561423
+      supporting_text: Refed (RF) cells harbored prespore (pspA-GFP, green) and prestalk
+        (ecmAO-RFP, magenta) markers.
+- term:
+    id: GO:0031012
+    label: extracellular matrix
+  evidence_type: HDA
+  original_reference_id: PMID:26152465
+  qualifier: located_in
+  review:
+    summary: High-throughput direct-assay (proteomic) localization of EcmA to the Dictyostelium
+      extracellular matrix (slime sheath). LC/MS/MS of slug ECM recovered EcmA among
+      the expected structural components, providing strong evidence for ECM localization.
+    action: ACCEPT
+    reason: EcmA was directly identified by mass spectrometry in the purified slug ECM
+      (slime sheath), confirming that the extracellular matrix is its site of deposition.
+      This is a core localization for the protein.
+    supported_by:
+    - reference_id: PMID:26152465
+      supporting_text: identified numerous expected (e.g. EcmA, EcmD, discoidin I,
+        discoidin II)
+- term:
+    id: GO:0031154
+    label: culmination involved in sorocarp development
+  evidence_type: IEP
+  original_reference_id: PMID:25887420
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: Expression-pattern (IEP) annotation. In the developmental transcriptome,
+      ecmA is induced during late development and upregulated dramatically around culmination
+      (16-18 h), coincident with stalk/fruiting-body formation, consistent with a role
+      for the prestalk ECM protein during culmination.
+    action: KEEP_AS_NON_CORE
+    reason: The annotation rests on ecmA&#39;s culmination-phase expression as a prestalk
+      gene rather than on a demonstrated mechanistic requirement of the EcmA protein
+      for culmination. EcmA contributes to stalk-tube matrix formation, so involvement
+      in culmination is plausible but retained as non-core given the expression-based
+      evidence.
+    supported_by:
+    - reference_id: PMID:25887420
+      supporting_text: Expression of the prestalk genes ecmA, ecmB and ecmF ([19,36],
+        could be detected as early as 12 h, but were up-regulated more dramatically
+        between 16 h and 18 h
+- term:
+    id: GO:1902168
+    label: response to catechin
+  evidence_type: IDA
+  original_reference_id: PMID:23516620
+  qualifier: involved_in
+  review:
+    summary: Annotation derived from a study showing that the green-tea catechin EGCG
+      blocks Dictyostelium development, with near-complete loss of prestalk-specific
+      ecmA (and prespore pspA) expression in treated cells. This reflects that ecmA
+      expression is suppressed when development is blocked by catechin, not that EcmA
+      has a dedicated function in a catechin-response pathway.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The evidence is that ecmA transcription is downregulated as a nonspecific
+      consequence of EGCG-induced developmental arrest (a general differentiation-marker
+      readout), not that EcmA functions in &#34;response to catechin.&#34; Treating this as a
+      biological function of the protein over-interprets a downstream transcriptional
+      effect.
+    supported_by:
+    - reference_id: PMID:23516620
+      supporting_text: we detected almost no expression of prespore specific pspA and
+        prestalk specific ecmA genes in EGCG treated cells at 10 to 12 h into starvation
+- term:
+    id: GO:0005198
+    label: structural molecule activity
+  evidence_type: TAS
+  original_reference_id: PMID:8016318
+  qualifier: enables
+  review:
+    summary: Traceable-author annotation assigning EcmA a structural molecule activity.
+      As a secreted, Cys-rich repeat glycoprotein deposited in the slime sheath and
+      stalk-tube matrix, EcmA acts as a structural constituent of the developmental
+      ECM; this is the best representation of its core molecular function.
+    action: ACCEPT
+    reason: EcmA is an abundant structural ECM protein with no known catalytic activity;
+      structural molecule activity correctly captures its core molecular role as a
+      matrix building block.
+    supported_by:
+    - reference_id: PMID:41057014
+      supporting_text: During multicellular development, the ecmA and ecmB genes encode
+        extracellular matrix proteins, which are mainly expressed in the most anterior
+        prestalk cells of slugs and can regulate the morphogenesis of Dictyostelium
+- term:
+    id: GO:0030198
+    label: extracellular matrix organization
+  evidence_type: TAS
+  original_reference_id: PMID:8016318
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: Traceable-author annotation that EcmA participates in organizing the extracellular
+      matrix. As a structural constituent deposited into the slime sheath and stalk
+      tube, EcmA contributes to assembly/organization of the developmental ECM.
+    action: ACCEPT
+    reason: EcmA is deposited into and helps constitute the developmental ECM whose
+      assembly accompanies slug and stalk morphogenesis; extracellular matrix organization
+      is an appropriate biological-process annotation for a core matrix component.
+    supported_by:
+    - reference_id: PMID:41057014
+      supporting_text: During multicellular development, the ecmA and ecmB genes encode
+        extracellular matrix proteins, which are mainly expressed in the most anterior
+        prestalk cells of slugs and can regulate the morphogenesis of Dictyostelium
+- term:
+    id: GO:0031012
+    label: extracellular matrix
+  evidence_type: TAS
+  original_reference_id: PMID:8016318
+  qualifier: located_in
+  review:
+    summary: Traceable-author localization of EcmA to the extracellular matrix, consistent
+      with all other evidence (proteomic recovery from the slime sheath, secreted status).
+      This is a core localization.
+    action: ACCEPT
+    reason: ECM localization of EcmA is corroborated by direct proteomic evidence and
+      its secreted nature; the TAS annotation is accurate.
+    supported_by:
+    - reference_id: PMID:26152465
+      supporting_text: identified numerous expected (e.g. EcmA, EcmD, discoidin I,
+        discoidin II)
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: PMID:23516620
+  title: The green tea catechin epigallocatechin gallate (EGCG) blocks cell motility,
+    chemotaxis and development in Dictyostelium discoideum.
+  findings:
+  - statement: EGCG treatment abolishes expression of the prestalk marker ecmA (and
+      prespore pspA), reflecting a block of Dictyostelium differentiation rather than
+      a specific catechin-response function of EcmA.
+    supporting_text: we detected almost no expression of prespore specific pspA and
+      prestalk specific ecmA genes in EGCG treated cells at 10 to 12 h into starvation
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Citation verified against cached full text; supports that ecmA expression
+      is suppressed under EGCG-induced developmental arrest. Does not establish a
+      dedicated EcmA role in catechin response, hence the over-annotation call.
+- id: PMID:25887420
+  title: Leaps and lulls in the developmental transcriptome of Dictyostelium discoideum.
+  findings:
+  - statement: ecmA is a prestalk gene strongly upregulated during late development
+      (16-18 h), coincident with culmination and fruiting-body formation.
+    supporting_text: Expression of the prestalk genes ecmA, ecmB and ecmF ([19,36],
+      could be detected as early as 12 h, but were up-regulated more dramatically
+      between 16 h and 18 h
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Cached full text confirms culmination-phase induction of ecmA;
+      supports the IEP culmination annotation as an expression-based association.
+- id: PMID:26152465
+  title: Proteomic profiling of the extracellular matrix (slime sheath) of Dictyostelium
+    discoideum.
+  findings:
+  - statement: LC/MS/MS of purified slug extracellular matrix (slime sheath) directly
+      identified EcmA as an expected structural ECM component.
+    supporting_text: identified numerous expected (e.g. EcmA, EcmD, discoidin I,
+      discoidin II)
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Directly demonstrates EcmA presence in the developmental ECM proteome,
+      anchoring the extracellular-matrix localization annotations.
+- id: PMID:38561423
+  title: Prestalk-like positioning of de-differentiated cells in the social amoeba
+    Dictyostelium discoideum.
+  findings:
+  - statement: ecmA (via an ecmAO reporter) is used as the prestalk cell-type marker
+      to track differentiation, sorting, and de-differentiation during development.
+    supporting_text: Refed (RF) cells harbored prespore (pspA-GFP, green) and prestalk
+      (ecmAO-RFP, magenta) markers.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Confirms ecmA&#39;s use as a prestalk marker within the cooperative
+      developmental program; supports the developmental (non-core) annotation.
+- id: PMID:41057014
+  title: Transcriptomic and metabolomic insights into light-mediated unicellular-to-multicellular
+    transition in Dictyostelium discoideum.
+  findings:
+  - statement: ecmA and ecmB encode extracellular matrix proteins expressed mainly
+      in anterior prestalk cells and are transcriptionally upregulated by light.
+    supporting_text: During multicellular development, the ecmA and ecmB genes encode
+      extracellular matrix proteins, which are mainly expressed in the most anterior
+      prestalk cells of slugs and can regulate the morphogenesis of Dictyostelium
+  - statement: Light exposure upregulates ecmA (and ecmB) transcript levels.
+    supporting_text: Our findings revealed that both of ecmA and ecmB genes are upregulated
+      when exposed to light
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Cached full text describes EcmA as a prestalk ECM protein and
+      documents its light-induced upregulation; supports both the structural/ECM
+      framing and the light-response (non-core) annotation.
+- id: PMID:8016318
+  title: Prestalk cell-differentiation and movement during the morphogenesis of Dictyostelium
+    discoideum.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: UNVERIFIED
+    review_notes: Abstract-only review (full_text_available:false in cache); cited by
+      dictyBase as TAS for EcmA structural/ECM annotations, which are independently
+      corroborated by proteomic evidence. Supporting quotes for these annotations are
+      drawn from other cached full-text sources.
+core_functions:
+- description: EcmA is a secreted, cysteine-rich repeat glycoprotein that acts as a
+    structural constituent of the Dictyostelium developmental extracellular matrix.
+    Deposited by prestalk cells into the slime sheath surrounding the slug and into
+    the stalk-tube matrix during culmination, it contributes to the mechanical integrity
+    and organization of the ECM that supports multicellular morphogenesis.
+  molecular_function:
+    id: GO:0005198
+    label: structural molecule activity
+  locations:
+  - id: GO:0031012
+    label: extracellular matrix
+  - id: GO:0005576
+    label: extracellular region
+  directly_involved_in:
+  - id: GO:0030198
+    label: extracellular matrix organization
+  supported_by:
+  - reference_id: PMID:26152465
+    supporting_text: identified numerous expected (e.g. EcmA, EcmD, discoidin I,
+      discoidin II)
+  - reference_id: PMID:41057014
+    supporting_text: During multicellular development, the ecmA and ecmB genes encode
+      extracellular matrix proteins, which are mainly expressed in the most anterior
+      prestalk cells of slugs and can regulate the morphogenesis of Dictyostelium
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

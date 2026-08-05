@@ -1,0 +1,2563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ABHD18 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ABHD18</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q0P651" target="_blank" class="term-link">
+                        Q0P651
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ABHD18";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q0P651" data-a="DESCRIPTION: ABHD18 is a mitochondrial alpha/beta-hydrolase-fol..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ABHD18 is a mitochondrial alpha/beta-hydrolase-fold enzyme that deacylates cardiolipin. It hydrolyses acyl chains from tetra-acylated cardiolipin, first giving the tri-acylated intermediate monolysocardiolipin and then continuing stepwise to dilyso-cardiolipin, and it prefers substrates with shorter, saturated chains - species with more than five double bonds resist it. It is functionally homologous to yeast Cld1. That reaction is the long-sought first half of cardiolipin acyl-chain remodelling: nascent cardiolipin is deacylated by ABHD18 and then re-acylated by tafazzin with longer, unsaturated chains, and repeated cycles of hydrolysis and reacylation give mature cardiolipin the acyl composition required for inner-membrane and respiratory-chain function. Whether that pairing is best read as a remodelling cycle or as degradation opposed by tafazzin is framed differently by the two 2025 studies that characterised the enzyme. The identity of the deacylase had remained unknown until ABHD18 was found in a genetic suppressor screen. That screen also gives the gene direct clinical significance: Barth syndrome is caused by inactivating mutations in tafazzin and is characterised by accumulation of monolysocardiolipin, so inactivating the upstream deacylase relieves the block. Loss of ABHD18 rescues mitochondrial defects in Barth syndrome cells and rescues morbidity and mortality in mouse models, and a selective covalent ABHD18 inhibitor rescues tafazzin-mutant phenotypes in patient fibroblasts and fish embryos.</p>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>cardiolipin deacylase activity</h3>
+                <span class="vote-buttons" data-g="Q0P651" data-a="cardiolipin deacylase activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+
+            <p><strong>Definition:</strong> Catalysis of the hydrolysis of acyl chains from cardiolipin, producing monolysocardiolipin and, on further hydrolysis, dilyso-cardiolipin, with release of fatty acids. Registered in Rhea as RHEA:32935 for the first step.</p>
+
+
+
+            <p><strong>Justification:</strong> GO covers the rest of cardiolipin metabolism at substrate-specific resolution - cardiolipin synthase activity (GO:0008808), cardiolipin synthase (CMP-forming) activity (GO:0043337), cardiolipin phospholipase D activity (GO:0035755), cardiolipin dehydrogenase (NAD+) activity (GO:0160241) - but has no term for the deacylation step, even though that step is half of the cycle described by GO:0035965 cardiolipin acyl-chain remodeling. The gap is historical: the responsible enzyme was unidentified until ABHD18 was described, so the most specific molecular function available is GO:0004623 phospholipase A2 activity - and even that conveys neither substrate nor product, while its generic parent GO:0004620 glycerophospholipase activity conveys less still. The reaction is registered in Rhea as RHEA:32935 and recorded in UniProt with that cross-reference, so the chemistry is unambiguous; RHEA:32935 also places the removed chain at sn-2, which is why the A2-type term is used as the interim parent - though that placement is a Rhea reaction representation behind a UniProt ECO:0000305 curator inference rather than measured regiospecificity. The activity is conserved - ABHD18 is functionally homologous to yeast Cld1 - and it is stepwise rather than single-turnover, proceeding past monolysocardiolipin to dilyso-cardiolipin, so a term naming only the first product would itself be incomplete. A term at this granularity would also let the deacylase and the reacylase (tafazzin) be distinguished by molecular function rather than only by their shared process term.</p>
+
+
+
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004623" target="_blank" class="term-link">
+                    A2-type glycerophospholipase activity
+                </a>
+            </p>
+
+
+
+
+
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+
+                <li>
+
+                    <a href="https://pubmed.ncbi.nlm.nih.gov/40903572" target="_blank" class="term-link">
+                        PMID:40903572
+                    </a>
+
+
+                    : ABHD18 converts CL into monolysocardiolipin (MLCL) in vitro, and
+its inactivation in cells and mice results in a shift to nCL in serum and
+tissues.
+
+                </li>
+
+                <li>
+
+                    file:human/ABHD18/ABHD18-uniprot.txt
+
+
+                    : CC   -!- FUNCTION: Catalyzes the hydrolysis of an acyl chain from the tetra-
+
+                </li>
+
+                <li>
+
+                    <a href="https://pubmed.ncbi.nlm.nih.gov/40378955" target="_blank" class="term-link">
+                        PMID:40378955
+                    </a>
+
+
+                    : Rather than removing just one fatty acid, we show
+that ABHD18 deacylates CL further.
+
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q0P651" data-a="GO:0005739" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic mapping from the UniProt &#34;Mitochondrion&#34; subcellular location, which is itself experimentally supported. Correct and core: cardiolipin is synthesised and remodelled in the mitochondrion, so this is where ABHD18&#39;s deacylase activity must act. The compartment could in principle be stated more precisely - cardiolipin remodelling occurs at the inner membrane - but no evidence at that resolution exists for this protein yet.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ABHD18/ABHD18-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SUBCELLULAR LOCATION: Mitochondrion {ECO:0000269|PubMed:34800366,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q0P651" data-a="GO:0005739" data-r="PMID:34800366" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Assignment to the high-confidence human mitochondrial proteome (MitoCoP). High-throughput, but it is one of the two ECO:0000269 sources behind UniProt&#39;s own subcellular location statement for this protein, and it agrees with the compartment the enzyme&#39;s substrate occupies. Correct.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ABHD18/ABHD18-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SUBCELLULAR LOCATION: Mitochondrion {ECO:0000269|PubMed:34800366,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004623" target="_blank" class="term-link">
+                                    GO:0004623
+                                </a>
+                            </span>
+                            <span class="term-label">A2-type glycerophospholipase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40903572" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40903572
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genetic suppression features ABHD18 as a Barth syndrome ther...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q0P651" data-a="GO:0004623" data-r="PMID:40903572" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new annotation supplying the molecular function, which GOA lacks entirely. ABHD18 hydrolyses acyl chains from cardiolipin, shown directly in vitro; UniProt records the reaction with a Rhea cross-reference (RHEA:32935).
+
+The regiochemistry justifies the A2-type child rather than the generic parent. RHEA:32935 writes the product as 1&#39;-[1,2-diacyl-sn-glycero-3-phospho],3&#39;-[1-acyl-sn-glycero-3-phospho]-glycerol - the remaining chain on the deacylated glycerol is at sn-1, implying the chain removed was at sn-2, which is A2 regiochemistry. This is a caveat rather than a demonstration: UniProt tags the CATALYTIC ACTIVITY block ECO:0000305 (curator inference), so RHEA:32935 is a reaction REPRESENTATION and neither 2025 paper determines regiochemistry experimentally. GO:0004623 is used as the more informative of the two available terms on that basis; the generic GO:0004620 would also be defensible, and if regiospecificity is later measured and differs, this row should move.
+
+Neither term names the substrate. There is no cardiolipin-specific hydrolase term - GO has cardiolipin synthase (GO:0008808), cardiolipin phospholipase D (GO:0035755) and cardiolipin dehydrogenase (GO:0160241), but nothing for deacylation - so that gap is filed under proposed_new_terms rather than forced.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The gene has no molecular function annotation at all despite a directly demonstrated, Rhea-registered catalytic activity. A2-type is chosen over the generic parent because RHEA:32935 places the removed chain at sn-2 - but that is the Rhea reaction representation behind a UniProt ECO:0000305 curator inference, not measured regiospecificity, so the choice is provisional.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40903572" target="_blank" class="term-link">
+                                        PMID:40903572
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ABHD18 converts CL into monolysocardiolipin (MLCL) in vitro, and
+its inactivation in cells and mice results in a shift to nCL in serum and
+tissues.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ABHD18/ABHD18-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- FUNCTION: Catalyzes the hydrolysis of an acyl chain from the tetra-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035965" target="_blank" class="term-link">
+                                    GO:0035965
+                                </a>
+                            </span>
+                            <span class="term-label">cardiolipin acyl-chain remodeling</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40903572" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40903572
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genetic suppression features ABHD18 as a Barth syndrome ther...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q0P651" data-a="GO:0035965" data-r="PMID:40903572" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new annotation. Cardiolipin acyl-chain remodelling is the cycle in which nascent cardiolipin is deacylated and then re-acylated with longer, unsaturated chains; ABHD18 performs the deacylation and tafazzin the reacylation. Tafazzin already carries this term, so annotating ABHD18 completes a process that until 2025 had only one identified enzyme.
+
+Two independent 2025 studies frame the same enzymology differently and the difference is worth recording. PMID:40903572 presents ABHD18 as the missing deacylase of the remodelling pathway. PMID:40378955 presents it as a degradative lipase functionally homologous to yeast Cld1, concluding that ABHD18 catalyses the breakdown of cardiolipin whereas tafazzin protects cardiolipin from degradation - and shows the deacylation is stepwise, proceeding past monolysocardiolipin to dilyso-cardiolipin, with species carrying more than five double bonds resistant.
+
+GO:0035965 is retained because both accounts agree ABHD18 supplies the deacylation step of the ABHD18/tafazzin pair, and because GO has no cardiolipin catabolic process term to express the degradative reading. A curator taking the PMID:40378955 framing at face value would want one; that gap is noted in suggested_questions.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Places the gene in the pathway its catalytic activity belongs to, using the term its partner enzyme already carries; GOA currently records no biological process for ABHD18.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40903572" target="_blank" class="term-link">
+                                        PMID:40903572
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ABHD18 converts CL into monolysocardiolipin (MLCL) in vitro, and
+its inactivation in cells and mice results in a shift to nCL in serum and
+tissues.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ABHD18/ABHD18-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Together with Tafazzin (TAZ), it participates in the mechanism of CL</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40378955" target="_blank" class="term-link">
+                                        PMID:40378955
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Knockdown of
+Abhd18 decreased the concentration of MLCL in murine, Taz-knockout myoblasts.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Cardiolipin deacylation, the first half of cardiolipin acyl-chain remodelling. ABHD18 removes acyl chains from tetra-acylated cardiolipin stepwise - first to tri-acylated monolysocardiolipin and, on further hydrolysis, past it to dilyso-cardiolipin - preferring substrates with shorter, saturated chains - that is, preferring the nascent cardiolipin newly made by cardiolipin synthase. Tafazzin then re-acylates the product with longer, unsaturated chains, and repeated cycles of this hydrolysis and reacylation pair establish the acyl composition mature cardiolipin needs for inner-membrane and respiratory-chain function. ABHD18 is the enzyme that had been missing from this cycle.</h3>
+                <span class="vote-buttons" data-g="Q0P651" data-a="FUNCTION: Cardiolipin deacylation, the first half of cardiol..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004623" target="_blank" class="term-link">
+                            A2-type glycerophospholipase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035965" target="_blank" class="term-link">
+                                cardiolipin acyl-chain remodeling
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                mitochondrion
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40903572" target="_blank" class="term-link">
+                                PMID:40903572
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">describe ABHD18 as a candidate deacylase in the CL biosynthesis pathway.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/ABHD18/ABHD18-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">CC   -!- FUNCTION: Catalyzes the hydrolysis of an acyl chain from the tetra-</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40378955" target="_blank" class="term-link">
+                                PMID:40378955
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Rather than removing just one fatty acid, we show
+that ABHD18 deacylates CL further.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40903572" target="_blank" class="term-link">
+                            PMID:40903572
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genetic suppression features ABHD18 as a Barth syndrome therapeutic target.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ABHD18 is the candidate deacylase of the cardiolipin biosynthesis pathway - the enzyme cleaving nascent cardiolipin, which had previously remained unidentified.</div>
+
+                        <div class="finding-text">"describe ABHD18 as a candidate deacylase in the CL biosynthesis pathway."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ABHD18 converts cardiolipin into monolysocardiolipin in vitro, and its inactivation in cells and mice shifts the lipid profile toward nascent cardiolipin.</div>
+
+                        <div class="finding-text">"ABHD18 converts CL into monolysocardiolipin (MLCL) in vitro, and
+its inactivation in cells and mice results in a shift to nCL in serum and
+tissues."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Inactivating ABHD18 rescues the mitochondrial defects of Barth syndrome cells and the morbidity and mortality of Barth syndrome mice.</div>
+
+                        <div class="finding-text">"Notably, ABHD18 deactivation rescues the mitochondrial defects in cells
+and the morbidity and mortality in mice associated with Barth syndrome."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/ABHD18/ABHD18-deep-research-affinage.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Affinage mechanistic annotation for ABHD18 (human)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40378955" target="_blank" class="term-link">
+                            PMID:40378955
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ABHD18 degrades cardiolipin by stepwise hydrolysis of fatty acids.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ABHD18 is functionally homologous to yeast Cld1 and is the long-sought lipase that hydrolyses cardiolipin in mice and flies.</div>
+
+                        <div class="finding-text">"we
+demonstrate that α/β-hydrolase domain 18 (ABHD18), a highly conserved protein of
+plants, animals, and humans, is functionally homologous to Cld1."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Deacylation is stepwise rather than removal of a single fatty acid, proceeding past monolysocardiolipin.</div>
+
+                        <div class="finding-text">"Rather than removing just one fatty acid, we show
+that ABHD18 deacylates CL further."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ABHD18 catalyses the breakdown of cardiolipin while tafazzin protects cardiolipin from degradation.</div>
+
+                        <div class="finding-text">"Thus, ABHD18 catalyzes the breakdown of CL,
+whereas TAZ protects CL from degradation."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Abhd18 knockdown decreased monolysocardiolipin in murine Taz-knockout myoblasts, and Drosophila inactivation increased cardiolipin abundance.</div>
+
+                        <div class="finding-text">"Knockdown of
+Abhd18 decreased the concentration of MLCL in murine, Taz-knockout myoblasts."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The authors explicitly dissent from the orthodox remodelling mechanism and place ABHD18&#39;s degradative activity outside it, while still describing ABHD18 as participating in TAZ-catalysed remodelling - which is why GO:0035965 is retained rather than removed.</div>
+
+                        <div class="finding-text">"This is inconsistent with the orthodox remodeling mechanism but suggests that ABHD18 and TAZ have opposing effects on CL metabolism."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The same Discussion states the participation directly, so the dissenting paper itself supports retaining the remodelling process annotation.</div>
+
+                        <div class="finding-text">"Apart from its participation in TAZ-catalyzed remodeling, ABHD18 alters the CL species composition by species-selective degradation."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Where in the mitochondrion does ABHD18 act? Cardiolipin remodelling happens at the inner membrane, and its partner tafazzin is annotated to both the inner and outer mitochondrial membranes, but ABHD18&#39;s only localisation evidence is an unqualified &#34;mitochondrion&#34; from a proteomic survey. Submitochondrial localisation would sharpen the cellular component annotation and constrain how the deacylase and the reacylase meet their shared substrate.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q0P651" data-a="Q: Where in the mitochondrion does ABHD18 act? Cardio..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is ABHD18 the only cardiolipin deacylase, or one of several? It was found as a suppressor of tafazzin loss rather than by a systematic search, so other contributing enzymes may exist. That matters therapeutically, since redundancy would limit how completely an ABHD18 inhibitor can normalise the monolysocardiolipin-to-cardiolipin ratio in Barth syndrome.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q0P651" data-a="Q: Is ABHD18 the only cardiolipin deacylase, or one o..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What determines the acyl-chain preference? ABHD18 prefers cardiolipin with shorter, saturated chains, which is what makes the remodelling cycle directional - nascent species are consumed and mature ones spared. The structural basis is unknown, and it is the key to designing inhibitors that spare mature cardiolipin.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q0P651" data-a="Q: What determines the acyl-chain preference? ABHD18 ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does ABHD18 have substrates besides cardiolipin? It is an alpha/beta-hydrolase, a fold with broad substrate range across the family, and only cardiolipin has been tested. A selective covalent inhibitor now exists, so off-target lipid changes can be surveyed directly.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q0P651" data-a="Q: Does ABHD18 have substrates besides cardiolipin? I..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is ABHD18 better described as remodelling or as degradation, and does GO need a cardiolipin catabolic process term? PMID:40903572 presents ABHD18 as the missing deacylase of the remodelling cycle; PMID:40378955 concludes that ABHD18 catalyses the breakdown of cardiolipin whereas tafazzin protects it, and shows deacylation continues past monolysocardiolipin to dilyso-cardiolipin. GO has cardiolipin biosynthetic process and cardiolipin acyl-chain remodeling but no catabolic term, so the degradative reading currently cannot be expressed.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q0P651" data-a="Q: Is ABHD18 better described as remodelling or as de..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Determine the submitochondrial localisation and topology of ABHD18 by protease protection on isolated mitochondria and mitoplasts combined with immuno-electron microscopy, and test for proximity to tafazzin and CRLS1 by split-reporter or proximity-labelling assays.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: ABHD18 acts at the mitochondrial inner membrane, in proximity to tafazzin and cardiolipin synthase.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: cell biology</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q0P651" data-a="EXPERIMENT: Determine the submitochondrial localisation and to..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure kinetics of purified ABHD18 against a defined panel of cardiolipin species varying systematically in chain length and unsaturation, then test whether that selectivity, modelled together with tafazzin&#39;s known reacylation preferences, is sufficient to explain the observed steady-state cardiolipin composition.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: ABHD18&#39;s preference for short, saturated acyl chains is what makes cardiolipin remodelling directional.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: enzymology</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q0P651" data-a="EXPERIMENT: Measure kinetics of purified ABHD18 against a defi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare the lipidomic consequences of complete ABHD18 loss with those of the covalent inhibitor at saturating concentration; residual monolysocardiolipin production in the null background would indicate additional deacylases and set an upper bound on what inhibition can achieve therapeutically.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: ABHD18 is the sole non-redundant cardiolipin deacylase.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: lipidomics and genetics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q0P651" data-a="EXPERIMENT: Compare the lipidomic consequences of complete ABH..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Affinage</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ABHD18-deep-research-affinage.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q0P651" data-a="DEEP_RESEARCH: Affinage" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Affinage mechanistic annotation for ABHD18 (human)</span>
+
+
+                    <span class="report-badge">Affinage</span>
+
+
+                    <span class="report-badge">Affinage (Claude Sonnet reading pass + Opus synthesis pass)</span>
+
+
+                    <span class="report-badge">2 citations</span>
+
+
+
+
+
+                </div>
+
+
+                <h1 id="affinage-mechanistic-annotation-for-abhd18-human">Affinage mechanistic annotation for ABHD18 (human)</h1>
+<h2 id="current-model-mechanistic-narrative">Current model (mechanistic narrative)</h2>
+<p>ABHD18 is a conserved α/β-hydrolase that acts as the cardiolipin (CL) lipase in the CL remodelling pathway, functionally homologous to yeast Cld1 [PMID:40903572, PMID:40378955]. It deacylates CL to generate monolysocardiolipin (MLCL) in vitro, and its inactivation in cells and mice shifts the lipidome toward nascent CL <a href="https://pubmed.ncbi.nlm.nih.gov/40903572">PMID:40903572</a>. Rather than removing a single acyl chain, ABHD18 carries out stepwise hydrolysis, further deacylating CL to dilyso-CL and beyond, with CL species bearing more than five double bonds being resistant to its activity <a href="https://pubmed.ncbi.nlm.nih.gov/40378955">PMID:40378955</a>. In the context of TAZ deficiency (Barth syndrome), inactivation of ABHD18—genetically or with a selective covalent small-molecule inhibitor—suppresses pathological MLCL accumulation and rescues mitochondrial dysfunction and organismal morbidity/mortality across TAZ-mutant cells, mice, human patient fibroblasts, and zebrafish embryos, establishing ABHD18 as a genetic suppressor of TAZ loss-of-function and a druggable node in CL metabolism [PMID:40903572, PMID:40378955].</p>
+<h2 id="affinage-mechanism-profile-affinages-own-goreactome-grounding">Affinage mechanism profile (Affinage's own GO/Reactome grounding)</h2>
+<ul>
+<li><strong>molecular_activity:</strong> GO:0016787 hydrolase activity, GO:0016740 transferase activity</li>
+<li><strong>localization:</strong> <em>(none)</em></li>
+<li><strong>pathway (Reactome):</strong> R-HSA-1430728 Metabolism</li>
+<li><strong>partners:</strong> <em>(none)</em></li>
+<li><strong>complexes:</strong> <em>(none)</em></li>
+</ul>
+<h2 id="dated-findings-citation-anchored">Dated findings (citation-anchored)</h2>
+<table>
+<thead>
+<tr>
+<th>Year</th>
+<th>Confidence</th>
+<th>Finding</th>
+<th>PMIDs</th>
+<th>Journal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2025</td>
+<td>High</td>
+<td>ABHD18 functions as a deacylase (lipase) in the cardiolipin (CL) biosynthesis/remodelling pathway, converting CL into monolysocardiolipin (MLCL) in vitro; its inactivation in cells and mice results in a shift toward nascent CL (nCL) in serum and tissues.</td>
+<td>PMID:40903572</td>
+<td>Nature</td>
+</tr>
+<tr>
+<td>2025</td>
+<td>High</td>
+<td>ABHD18 inactivation rescues mitochondrial defects in TAZ-mutant cells and rescues morbidity/mortality in Barth syndrome mice, establishing ABHD18 as a genetic suppressor of TAZ loss-of-function in the CL remodelling cascade.</td>
+<td>PMID:40903572</td>
+<td>Nature</td>
+</tr>
+<tr>
+<td>2025</td>
+<td>High</td>
+<td>A selective covalent small-molecule inhibitor of ABHD18 was identified and shown to rescue TAZ-mutant phenotypes in human patient fibroblasts and in zebrafish embryos, pharmacologically validating ABHD18 enzymatic activity as the therapeutic target.</td>
+<td>PMID:40903572</td>
+<td>Nature</td>
+</tr>
+<tr>
+<td>2025</td>
+<td>High</td>
+<td>ABHD18 is functionally homologous to yeast Cld1 (the CL lipase); knockdown of Abhd18 decreased MLCL concentration in murine TAZ-knockout myoblasts, and inactivation in Drosophila substantially increased CL abundance and reversed the accumulation of deacylated CLs (MLCL and dilyso-CL) in TAZ-deficient flies.</td>
+<td>PMID:40378955</td>
+<td>The Journal of biological chemistry</td>
+</tr>
+<tr>
+<td>2025</td>
+<td>Medium</td>
+<td>ABHD18 does not merely remove a single fatty acid from CL but performs stepwise hydrolysis, deacylating CL further to produce dilyso-CL and beyond; CL species with more than five double bonds are resistant to ABHD18 activity.</td>
+<td>PMID:40378955</td>
+<td>The Journal of biological chemistry</td>
+</tr>
+</tbody>
+</table>
+<h2 id="citations">Citations</h2>
+<ul>
+<li>PMID:40378955</li>
+<li>PMID:40903572</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ABHD18-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q0P651" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="abhd18-review-notes">ABHD18 — review notes</h1>
+<p>PAINT no-IBA project review, using the <code>affinage</code> deep-research provider plus UniProt Q0P651,<br />
+the GOA TSV and the primary literature.</p>
+<h2 id="the-gap">The gap</h2>
+<p>Two GO annotations, both <code>mitochondrion</code>. <strong>No molecular function, no biological process</strong> —<br />
+despite UniProt naming the protein <em>"Cardiolipin-specific deacylase, mitochondrial"</em> and carrying<br />
+a Rhea-referenced <code>CATALYTIC ACTIVITY</code> block (<code>RHEA:32935</code>).</p>
+<p>Two independent 2025 papers characterised the enzyme. Both are now used.</p>
+<h2 id="two-framings-of-the-same-enzymology">Two framings of the same enzymology</h2>
+<p>This is the interesting curation problem, and it only surfaced because a PR reviewer noticed the<br />
+affinage record cited a paper I had not adjudicated.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>PMID:40903572 (<em>Nature</em>)</th>
+<th>PMID:40378955 (<em>JBC</em>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Framing</td>
+<td>the <strong>missing deacylase</strong> of the remodelling cycle</td>
+<td>a <strong>degradative lipase</strong>, homolog of yeast Cld1</td>
+</tr>
+<tr>
+<td>ABHD18/TAZ relationship</td>
+<td>partners in a hydrolysis–reacylation cycle</td>
+<td><em>"ABHD18 catalyzes the breakdown of CL, whereas TAZ protects CL from degradation"</em></td>
+</tr>
+<tr>
+<td>Extent of reaction</td>
+<td>CL → MLCL</td>
+<td><strong>stepwise</strong>, past MLCL to dilyso-CL</td>
+</tr>
+<tr>
+<td>Clinical angle</td>
+<td>Barth syndrome therapeutic target — ABHD18 loss rescues TAZ-mutant phenotypes</td>
+<td>knockdown lowers MLCL in <em>Taz</em>-KO myoblasts</td>
+</tr>
+</tbody>
+</table>
+<p>Both describe the same chemistry. <code>GO:0035965 cardiolipin acyl-chain remodeling</code> is retained<br />
+because both agree ABHD18 supplies the deacylation step of the ABHD18/tafazzin pair — and because<br />
+<strong>GO has no cardiolipin catabolic process term</strong>, so the degradative reading cannot currently be<br />
+expressed at all. Filed as a <code>suggested_question</code>.</p>
+<p>My first draft said "removes one acyl chain". PMID:40378955 is explicit that this is wrong:<br />
+<em>"Rather than removing just one fatty acid, we show that ABHD18 deacylates CL further."</em> Corrected<br />
+in the description, <code>core_functions</code> and the proposed term.</p>
+<h2 id="why-a2-type-not-the-generic-parent">Why A2-type, not the generic parent</h2>
+<p><code>RHEA:32935</code> writes the product as <code>1'-[1,2-diacyl-sn-glycero-3-phospho],3'-[1-acyl-sn-glycero-3-phospho]-glycerol</code>.<br />
+The chain remaining on the deacylated glycerol is at <strong>sn-1</strong>, so the chain removed was at<br />
+<strong>sn-2</strong> — which is A2 regiochemistry. <code>GO:0004623 A2-type glycerophospholipase activity</code> is<br />
+therefore more precise than <code>GO:0004620</code>, and is used.</p>
+<h2 id="the-go-gap">The GO gap</h2>
+<p>GO resolves cardiolipin metabolism at substrate level almost everywhere — synthase<br />
+(<code>GO:0008808</code>), CMP-forming synthase (<code>GO:0043337</code>), phospholipase D (<code>GO:0035755</code>),<br />
+dehydrogenase (<code>GO:0160241</code>) — but has <strong>nothing for deacylation</strong>, even though that step is half<br />
+of <code>GO:0035965</code>. The gap is historical: the enzyme was unidentified until 2025.</p>
+<p>Proposed: <em>cardiolipin deacylase activity</em>, defined to cover the stepwise reaction rather than<br />
+only the first product.</p>
+<h2 id="provider-note">Provider note</h2>
+<p>Affinage's prose added little here — UniProt had already curated the primary paper with a Rhea<br />
+cross-reference, and for a gene with one recent, promptly-curated paper the provider is<br />
+redundant. But an earlier draft concluded it "added nothing", and <strong>that was wrong</strong>: its<br />
+citation list contained PMID:40378955, which I had missed and which materially qualifies the<br />
+framing. A concrete case where the provider's value was in its <strong>reference list</strong>, not its<br />
+narrative.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q0P651
+gene_symbol: ABHD18
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &#39;ABHD18 is a mitochondrial alpha/beta-hydrolase-fold enzyme that deacylates cardiolipin.
+  It hydrolyses acyl chains from tetra-acylated cardiolipin, first giving the tri-acylated intermediate
+  monolysocardiolipin and then continuing stepwise to dilyso-cardiolipin, and it prefers substrates with
+  shorter, saturated chains - species with more than five double bonds resist it. It is functionally homologous
+  to yeast Cld1. That reaction is the long-sought first half of cardiolipin acyl-chain remodelling: nascent
+  cardiolipin is deacylated by ABHD18 and then re-acylated by tafazzin with longer, unsaturated chains,
+  and repeated cycles of hydrolysis and reacylation give mature cardiolipin the acyl composition required
+  for inner-membrane and respiratory-chain function. Whether that pairing is best read as a remodelling
+  cycle or as degradation opposed by tafazzin is framed differently by the two 2025 studies that characterised
+  the enzyme. The identity of the deacylase had remained unknown until ABHD18 was found in a genetic suppressor
+  screen. That screen also gives the gene direct clinical significance: Barth syndrome is caused by inactivating
+  mutations in tafazzin and is characterised by accumulation of monolysocardiolipin, so inactivating the
+  upstream deacylase relieves the block. Loss of ABHD18 rescues mitochondrial defects in Barth syndrome
+  cells and rescues morbidity and mortality in mouse models, and a selective covalent ABHD18 inhibitor
+  rescues tafazzin-mutant phenotypes in patient fibroblasts and fish embryos.&#39;
+existing_annotations:
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &#39;Electronic mapping from the UniProt &#34;Mitochondrion&#34; subcellular location, which is itself
+      experimentally supported. Correct and core: cardiolipin is synthesised and remodelled in the mitochondrion,
+      so this is where ABHD18&#39;&#39;s deacylase activity must act. The compartment could in principle be stated
+      more precisely - cardiolipin remodelling occurs at the inner membrane - but no evidence at that
+      resolution exists for this protein yet.&#39;
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ABHD18/ABHD18-uniprot.txt
+      supporting_text: &#39;CC   -!- SUBCELLULAR LOCATION: Mitochondrion {ECO:0000269|PubMed:34800366,&#39;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: Assignment to the high-confidence human mitochondrial proteome (MitoCoP). High-throughput,
+      but it is one of the two ECO:0000269 sources behind UniProt&#39;s own subcellular location statement
+      for this protein, and it agrees with the compartment the enzyme&#39;s substrate occupies. Correct.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ABHD18/ABHD18-uniprot.txt
+      supporting_text: &#39;CC   -!- SUBCELLULAR LOCATION: Mitochondrion {ECO:0000269|PubMed:34800366,&#39;
+- term:
+    id: GO:0004623
+    label: A2-type glycerophospholipase activity
+  evidence_type: IDA
+  original_reference_id: PMID:40903572
+  qualifier: enables
+  review:
+    summary: &#39;Proposed new annotation supplying the molecular function, which GOA lacks entirely. ABHD18
+      hydrolyses acyl chains from cardiolipin, shown directly in vitro; UniProt records the reaction with
+      a Rhea cross-reference (RHEA:32935).
+
+
+      The regiochemistry justifies the A2-type child rather than the generic parent. RHEA:32935 writes
+      the product as 1&#39;&#39;-[1,2-diacyl-sn-glycero-3-phospho],3&#39;&#39;-[1-acyl-sn-glycero-3-phospho]-glycerol
+      - the remaining chain on the deacylated glycerol is at sn-1, implying the chain removed was at
+      sn-2, which is A2 regiochemistry. This is a caveat rather than a demonstration: UniProt tags the
+      CATALYTIC ACTIVITY block ECO:0000305 (curator inference), so RHEA:32935 is a reaction
+      REPRESENTATION and neither 2025 paper determines regiochemistry experimentally. GO:0004623 is
+      used as the more informative of the two available terms on that basis; the generic GO:0004620
+      would also be defensible, and if regiospecificity is later measured and differs, this row should
+      move.
+
+
+      Neither term names the substrate. There is no cardiolipin-specific hydrolase term - GO has cardiolipin
+      synthase (GO:0008808), cardiolipin phospholipase D (GO:0035755) and cardiolipin dehydrogenase (GO:0160241),
+      but nothing for deacylation - so that gap is filed under proposed_new_terms rather than forced.&#39;
+    action: NEW
+    reason: The gene has no molecular function annotation at all despite a directly demonstrated, Rhea-registered
+      catalytic activity. A2-type is chosen over the generic parent because RHEA:32935 places the removed
+      chain at sn-2 - but that is the Rhea reaction representation behind a UniProt ECO:0000305 curator
+      inference, not measured regiospecificity, so the choice is provisional.
+    supported_by:
+    - reference_id: PMID:40903572
+      supporting_text: &#39;ABHD18 converts CL into monolysocardiolipin (MLCL) in vitro, and
+
+        its inactivation in cells and mice results in a shift to nCL in serum and
+
+        tissues.&#39;
+    - reference_id: file:human/ABHD18/ABHD18-uniprot.txt
+      supporting_text: &#39;CC   -!- FUNCTION: Catalyzes the hydrolysis of an acyl chain from the tetra-&#39;
+- term:
+    id: GO:0035965
+    label: cardiolipin acyl-chain remodeling
+  evidence_type: IMP
+  original_reference_id: PMID:40903572
+  qualifier: involved_in
+  review:
+    summary: &#39;Proposed new annotation. Cardiolipin acyl-chain remodelling is the cycle in which nascent
+      cardiolipin is deacylated and then re-acylated with longer, unsaturated chains; ABHD18 performs
+      the deacylation and tafazzin the reacylation. Tafazzin already carries this term, so annotating
+      ABHD18 completes a process that until 2025 had only one identified enzyme.
+
+
+      Two independent 2025 studies frame the same enzymology differently and the difference is worth recording.
+      PMID:40903572 presents ABHD18 as the missing deacylase of the remodelling pathway. PMID:40378955
+      presents it as a degradative lipase functionally homologous to yeast Cld1, concluding that ABHD18
+      catalyses the breakdown of cardiolipin whereas tafazzin protects cardiolipin from degradation -
+      and shows the deacylation is stepwise, proceeding past monolysocardiolipin to dilyso-cardiolipin,
+      with species carrying more than five double bonds resistant.
+
+
+      GO:0035965 is retained because both accounts agree ABHD18 supplies the deacylation step of the ABHD18/tafazzin
+      pair, and because GO has no cardiolipin catabolic process term to express the degradative reading.
+      A curator taking the PMID:40378955 framing at face value would want one; that gap is noted in suggested_questions.&#39;
+    action: NEW
+    reason: Places the gene in the pathway its catalytic activity belongs to, using the term its partner
+      enzyme already carries; GOA currently records no biological process for ABHD18.
+    supported_by:
+    - reference_id: PMID:40903572
+      supporting_text: &#39;ABHD18 converts CL into monolysocardiolipin (MLCL) in vitro, and
+
+        its inactivation in cells and mice results in a shift to nCL in serum and
+
+        tissues.&#39;
+    - reference_id: file:human/ABHD18/ABHD18-uniprot.txt
+      supporting_text: Together with Tafazzin (TAZ), it participates in the mechanism of CL
+    - reference_id: PMID:40378955
+      supporting_text: &#34;Knockdown of \nAbhd18 decreased the concentration of MLCL in murine, Taz-knockout\
+        \ myoblasts.&#34;
+    additional_reference_ids:
+    - PMID:40378955
+references:
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping,
+    accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Cached record title matches. High-throughput mitochondrial proteome (MitoCoP), and one
+      of the two ECO:0000269 sources behind UniProt&#39;s subcellular location for this protein.
+- id: PMID:40903572
+  title: Genetic suppression features ABHD18 as a Barth syndrome therapeutic target.
+  findings:
+  - statement: ABHD18 is the candidate deacylase of the cardiolipin biosynthesis pathway - the enzyme
+      cleaving nascent cardiolipin, which had previously remained unidentified.
+    supporting_text: describe ABHD18 as a candidate deacylase in the CL biosynthesis pathway.
+  - statement: ABHD18 converts cardiolipin into monolysocardiolipin in vitro, and its inactivation in
+      cells and mice shifts the lipid profile toward nascent cardiolipin.
+    supporting_text: &#39;ABHD18 converts CL into monolysocardiolipin (MLCL) in vitro, and
+
+      its inactivation in cells and mice results in a shift to nCL in serum and
+
+      tissues.&#39;
+  - statement: Inactivating ABHD18 rescues the mitochondrial defects of Barth syndrome cells and the morbidity
+      and mortality of Barth syndrome mice.
+    supporting_text: &#34;Notably, ABHD18 deactivation rescues the mitochondrial defects in cells \nand the\
+      \ morbidity and mortality in mice associated with Barth syndrome.&#34;
+  full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Cached record title matches the citation. The paper that identifies ABHD18&#39;s function
+      and the sole basis for both proposed annotations and the proposed new term. Abstract-only cache,
+      but every claim used is stated explicitly in the abstract, and UniProt has already incorporated
+      the findings with a Rhea-referenced CATALYTIC ACTIVITY block citing the same PubMed id.
+- id: file:human/ABHD18/ABHD18-deep-research-affinage.md
+  title: Affinage mechanistic annotation for ABHD18 (human)
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: UNVERIFIED
+    review_notes: &#39;Machine-fetched Affinage record. Its narrative added little beyond UniProt&#39;&#39;s own curated
+      FUNCTION and Rhea-referenced CATALYTIC ACTIVITY blocks, which is expected for a gene whose function
+      was published recently and curated promptly. But an earlier draft of this review concluded the provider
+      &#39;&#39;added nothing&#39;&#39;, and that was wrong: its citation list included PMID:40378955, a second 2025 primary
+      paper that this review had missed and that materially qualifies the framing - stepwise deacylation
+      rather than single-chain removal, yeast Cld1 homology, and the degradation-versus-protection reading
+      of the ABHD18/tafazzin relationship. Recorded because it is a concrete case where the provider&#39;&#39;s
+      value lay in its reference list rather than its prose.&#39;
+- id: PMID:40378955
+  title: ABHD18 degrades cardiolipin by stepwise hydrolysis of fatty acids.
+  findings:
+  - statement: ABHD18 is functionally homologous to yeast Cld1 and is the long-sought lipase that hydrolyses
+      cardiolipin in mice and flies.
+    supporting_text: &#34;we \ndemonstrate that α/β-hydrolase domain 18 (ABHD18), a highly conserved protein\
+      \ of \nplants, animals, and humans, is functionally homologous to Cld1.&#34;
+  - statement: Deacylation is stepwise rather than removal of a single fatty acid, proceeding past monolysocardiolipin.
+    supporting_text: &#34;Rather than removing just one fatty acid, we show \nthat ABHD18 deacylates CL further.&#34;
+  - statement: ABHD18 catalyses the breakdown of cardiolipin while tafazzin protects cardiolipin from
+      degradation.
+    supporting_text: &#34;Thus, ABHD18 catalyzes the breakdown of CL, \nwhereas TAZ protects CL from degradation.&#34;
+  - statement: Abhd18 knockdown decreased monolysocardiolipin in murine Taz-knockout myoblasts, and Drosophila
+      inactivation increased cardiolipin abundance.
+    supporting_text: &#34;Knockdown of \nAbhd18 decreased the concentration of MLCL in murine, Taz-knockout\
+      \ myoblasts.&#34;
+  - statement: The authors explicitly dissent from the orthodox remodelling mechanism and place ABHD18&#39;s
+      degradative activity outside it, while still describing ABHD18 as participating in TAZ-catalysed
+      remodelling - which is why GO:0035965 is retained rather than removed.
+    supporting_text: This is inconsistent with the orthodox remodeling mechanism but suggests that ABHD18
+      and TAZ have opposing effects on CL metabolism.
+  - statement: The same Discussion states the participation directly, so the dissenting paper itself
+      supports retaining the remodelling process annotation.
+    supporting_text: Apart from its participation in TAZ-catalyzed remodeling, ABHD18 alters the CL species
+      composition by species-selective degradation.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Cached record title matches the citation, and the cache has full text (Results and
+      Discussion), not abstract only - an earlier draft of this entry wrongly carried
+      full_text_unavailable. Added after PR review pointed out that the affinage record cited it while
+      this review neither used nor adjudicated it - a fair catch, since it materially qualifies the
+      framing. It corrects &#39;removes one acyl chain&#39; to stepwise deacylation past monolysocardiolipin,
+      supplies the yeast Cld1 homology, adds loss-of-function evidence in Drosophila and murine myoblasts
+      that corroborates the GO:0035965 IMP, and frames the ABHD18/tafazzin relationship as degradation
+      opposed by protection rather than as a partnership. The disagreement is sharper than a difference
+      of framing - the Discussion calls the orthodox cycle &#39;inconsistent&#39; with their backbone-turnover
+      data and calls ABHD18&#39;s degradation &#39;a function that is separate from CL remodeling&#39;. GO:0035965
+      is nonetheless retained, on this paper&#39;s own words - &#39;Apart from its participation in TAZ-catalyzed
+      remodeling&#39; concedes the participation.
+core_functions:
+- description: Cardiolipin deacylation, the first half of cardiolipin acyl-chain remodelling. ABHD18 removes
+    acyl chains from tetra-acylated cardiolipin stepwise - first to tri-acylated monolysocardiolipin and,
+    on further hydrolysis, past it to dilyso-cardiolipin - preferring
+    substrates with shorter, saturated chains - that is, preferring the nascent cardiolipin newly made
+    by cardiolipin synthase. Tafazzin then re-acylates the product with longer, unsaturated chains, and
+    repeated cycles of this hydrolysis and reacylation pair establish the acyl composition mature cardiolipin
+    needs for inner-membrane and respiratory-chain function. ABHD18 is the enzyme that had been missing
+    from this cycle.
+  molecular_function:
+    id: GO:0004623
+    label: A2-type glycerophospholipase activity
+  directly_involved_in:
+  - id: GO:0035965
+    label: cardiolipin acyl-chain remodeling
+  locations:
+  - id: GO:0005739
+    label: mitochondrion
+  supported_by:
+  - reference_id: PMID:40903572
+    supporting_text: describe ABHD18 as a candidate deacylase in the CL biosynthesis pathway.
+  - reference_id: file:human/ABHD18/ABHD18-uniprot.txt
+    supporting_text: &#39;CC   -!- FUNCTION: Catalyzes the hydrolysis of an acyl chain from the tetra-&#39;
+  - reference_id: PMID:40378955
+    supporting_text: &#34;Rather than removing just one fatty acid, we show \nthat ABHD18 deacylates CL further.&#34;
+proposed_new_terms:
+- proposed_name: cardiolipin deacylase activity
+  proposed_definition: Catalysis of the hydrolysis of acyl chains from cardiolipin, producing monolysocardiolipin
+    and, on further hydrolysis, dilyso-cardiolipin, with release of fatty acids. Registered in Rhea as
+    RHEA:32935 for the first step.
+  justification: &#39;GO covers the rest of cardiolipin metabolism at substrate-specific resolution - cardiolipin
+    synthase activity (GO:0008808), cardiolipin synthase (CMP-forming) activity (GO:0043337), cardiolipin
+    phospholipase D activity (GO:0035755), cardiolipin dehydrogenase (NAD+) activity (GO:0160241) - but
+    has no term for the deacylation step, even though that step is half of the cycle described by GO:0035965
+    cardiolipin acyl-chain remodeling. The gap is historical: the responsible enzyme was unidentified
+    until ABHD18 was described, so the most specific molecular function available is
+    GO:0004623 phospholipase A2 activity - and even that conveys neither substrate nor product, while
+    its generic parent GO:0004620 glycerophospholipase activity conveys less still. The reaction is
+    registered in Rhea as RHEA:32935 and recorded in UniProt with that cross-reference, so the chemistry
+    is unambiguous; RHEA:32935 also places the removed chain at sn-2, which is why the A2-type term is
+    used as the interim parent - though that placement is a Rhea reaction representation behind a UniProt
+    ECO:0000305 curator inference rather than measured regiospecificity. The activity is conserved - ABHD18 is functionally homologous to yeast Cld1 - and it is stepwise
+    rather than single-turnover, proceeding past monolysocardiolipin to dilyso-cardiolipin, so a term
+    naming only the first product would itself be incomplete. A term at this granularity would also let
+    the deacylase and the reacylase (tafazzin) be distinguished by molecular function rather than only
+    by their shared process term.&#39;
+  proposed_parent:
+    id: GO:0004623
+    label: A2-type glycerophospholipase activity
+  supported_by:
+  - reference_id: PMID:40903572
+    supporting_text: &#39;ABHD18 converts CL into monolysocardiolipin (MLCL) in vitro, and
+
+      its inactivation in cells and mice results in a shift to nCL in serum and
+
+      tissues.&#39;
+  - reference_id: file:human/ABHD18/ABHD18-uniprot.txt
+    supporting_text: &#39;CC   -!- FUNCTION: Catalyzes the hydrolysis of an acyl chain from the tetra-&#39;
+  - reference_id: PMID:40378955
+    supporting_text: &#34;Rather than removing just one fatty acid, we show \nthat ABHD18 deacylates CL further.&#34;
+suggested_questions:
+- question: Where in the mitochondrion does ABHD18 act? Cardiolipin remodelling happens at the inner membrane,
+    and its partner tafazzin is annotated to both the inner and outer mitochondrial membranes, but ABHD18&#39;s
+    only localisation evidence is an unqualified &#34;mitochondrion&#34; from a proteomic survey. Submitochondrial
+    localisation would sharpen the cellular component annotation and constrain how the deacylase and the
+    reacylase meet their shared substrate.
+- question: Is ABHD18 the only cardiolipin deacylase, or one of several? It was found as a suppressor
+    of tafazzin loss rather than by a systematic search, so other contributing enzymes may exist. That
+    matters therapeutically, since redundancy would limit how completely an ABHD18 inhibitor can normalise
+    the monolysocardiolipin-to-cardiolipin ratio in Barth syndrome.
+- question: What determines the acyl-chain preference? ABHD18 prefers cardiolipin with shorter, saturated
+    chains, which is what makes the remodelling cycle directional - nascent species are consumed and mature
+    ones spared. The structural basis is unknown, and it is the key to designing inhibitors that spare
+    mature cardiolipin.
+- question: Does ABHD18 have substrates besides cardiolipin? It is an alpha/beta-hydrolase, a fold with
+    broad substrate range across the family, and only cardiolipin has been tested. A selective covalent
+    inhibitor now exists, so off-target lipid changes can be surveyed directly.
+- question: Is ABHD18 better described as remodelling or as degradation, and does GO need a cardiolipin
+    catabolic process term? PMID:40903572 presents ABHD18 as the missing deacylase of the remodelling
+    cycle; PMID:40378955 concludes that ABHD18 catalyses the breakdown of cardiolipin whereas tafazzin
+    protects it, and shows deacylation continues past monolysocardiolipin to dilyso-cardiolipin. GO has
+    cardiolipin biosynthetic process and cardiolipin acyl-chain remodeling but no catabolic term, so the
+    degradative reading currently cannot be expressed.
+suggested_experiments:
+- hypothesis: ABHD18 acts at the mitochondrial inner membrane, in proximity to tafazzin and cardiolipin
+    synthase.
+  description: Determine the submitochondrial localisation and topology of ABHD18 by protease protection
+    on isolated mitochondria and mitoplasts combined with immuno-electron microscopy, and test for proximity
+    to tafazzin and CRLS1 by split-reporter or proximity-labelling assays.
+  experiment_type: cell biology
+- hypothesis: ABHD18&#39;s preference for short, saturated acyl chains is what makes cardiolipin remodelling
+    directional.
+  description: Measure kinetics of purified ABHD18 against a defined panel of cardiolipin species varying
+    systematically in chain length and unsaturation, then test whether that selectivity, modelled together
+    with tafazzin&#39;s known reacylation preferences, is sufficient to explain the observed steady-state
+    cardiolipin composition.
+  experiment_type: enzymology
+- hypothesis: ABHD18 is the sole non-redundant cardiolipin deacylase.
+  description: Compare the lipidomic consequences of complete ABHD18 loss with those of the covalent inhibitor
+    at saturating concentration; residual monolysocardiolipin production in the null background would
+    indicate additional deacylases and set an upper bound on what inhibition can achieve therapeutically.
+  experiment_type: lipidomics and genetics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

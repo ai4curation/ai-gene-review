@@ -1,0 +1,64 @@
+---
+provider: affinage
+model: Affinage (Claude Sonnet reading pass + Opus synthesis pass)
+source_url: https://affinage.wi.mit.edu/api/gene/ACRBP
+affinage_run_date: 2026-06-09T22:02:39
+uniprot_accession: Q8NEB7
+self_evaluation_pairwise: win
+faith_pct: 100.0
+n_discoveries: 12
+citation_count: 12
+note: >-
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
+---
+
+# Affinage mechanistic annotation for ACRBP (human)
+
+## Current model (mechanistic narrative)
+
+ACRBP (SP32/OY-TES-1/CT23) is an acrosomal matrix protein that controls the packaging and timed activation of the sperm protease proacrosin during spermiogenesis and fertilization [PMID:8144514, PMID:27303034]. It was first purified as a proacrosin-binding protein that selectively recognizes the 55-/53-/49-kDa proacrosin and acrosin-intermediate forms and accelerates proacrosin autoactivation at basic pH in vitro, acting through both amino- and carboxyl-terminal sequences of proacrosin [PMID:8144514]. In mouse, alternative splicing generates two functionally distinct isoforms that bind separate domains of the proacrosin C-terminus: ACRBP-V5 drives formation and configuration of the large acrosomal granule during early spermiogenesis, while the processed ACRBP-C retains proacrosin in an inactive state and accelerates its autoactivation upon acrosomal exocytosis [PMID:23426433, PMID:27303034]. Genetic ablation of both isoforms causes acrosome malformation, fragmented acrosomes, and severe subfertility, with ACRBP-V5 transgenic rescue restoring acrosomal granule formation; the subfertility reflects an incomplete acrosome reaction rather than impaired sperm migration [PMID:27303034, PMID:30606959]. Maturation of ACRBP from precursor to mature form depends on the proprotein convertase PCSK4, and ACRBP undergoes tyrosine phosphorylation during capacitation, with surface ACRBP contributing to sperm–zona pellucida binding and priming of the acrosome reaction [PMID:22357636, PMID:15955892, PMID:34086710]. A separate body of low-confidence work links ACRBP/OY-TES-1/CT23 knockdown to proliferation, migration, and apoptosis phenotypes in mesenchymal stem cells and hepatocellular carcinoma lines, but this somatic role has not been mechanistically resolved in the available corpus.
+
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
+
+- **molecular_activity:** GO:0098772 molecular function regulator activity, GO:0140313 molecular sequestering activity
+- **localization:** GO:0031410 cytoplasmic vesicle, GO:0005886 plasma membrane
+- **pathway (Reactome):** R-HSA-1474165 Reproduction
+- **partners:** ACR, PCSK4
+- **complexes:** *(none)*
+
+## Dated findings (citation-anchored)
+
+| Year | Confidence | Finding | PMIDs | Journal |
+|------|-----------|---------|-------|---------|
+| 1994 | High | SP32 (ACRBP) was purified from porcine sperm and identified as a binding protein specific for 55-, 53-, and 49-kDa forms of proacrosin and an acrosin intermediate, but not for the 43-kDa acrosin intermediate or 35-kDa mature acrosin. SP32 significantly accelerated autoactivation of proacrosin at basic pH in vitro and shifted the maturation pathway to accumulate the 49-kDa intermediate instead of the 43-kDa intermediate, suggesting it interacts with both amino- and carboxyl-terminal sequences of the 53-kDa proacrosin. SP32 is produced as a 61-kDa precursor with a signal peptide, and the carboxyl-terminal half corresponds to the mature protein. | PMID:8144514 | The Journal of biological chemistry |
+| 2005 | High | SP32 (ACRBP) in pig sperm undergoes tyrosine phosphorylation specifically during capacitation, as demonstrated by mass spectrometry identification, immunoprecipitation with anti-phosphotyrosine and anti-sp32 antibodies, and indirect immunofluorescence. After ionophore-induced acrosome reaction, anti-sp32 and anti-phosphotyrosine labeling on the acrosome disappeared, linking tyrosine-phosphorylated sp32 to capacitation-associated events. | PMID:15955892 | Journal of andrology |
+| 2012 | Medium | ACRBP/sp32 normally undergoes proteolytic processing from a 58.5 kDa precursor to a 27.5 kDa mature form in mouse sperm, and this processing does not occur in PCSK4 null mice, identifying ACRBP as a likely substrate (direct or indirect) of proprotein convertase PCSK4. In PCSK4 null mice, proacrosin failed to undergo autoactivation and sperm head/acrosome morphological defects were observed, supporting a role for mature ACRBP in regulating proacrosin conversion. | PMID:22357636 | Molecular human reproduction |
+| 2013 | High | In mouse, two forms of ACRBP are generated by alternative splicing: ACRBP-W (wild-type) processed to mature ACRBP-C, and ACRBP-V5 (intron 5-retaining variant). GST pull-down assays revealed that ACRBP-V5 and ACRBP-C bind different domains in the C-terminal region of proacrosin (pro-ACR). ACRBP-C significantly accelerated autoactivation of pro-ACR in vitro. ACRBP-W and ACRBP-V5 co-localize with pro-ACR in acrosomal granules of early round spermatids, while sperm acrosome contains only ACRBP-C. | PMID:23426433 | Biology of reproduction |
+| 2016 | High | ACRBP-null male mice lacking both ACRBP-W and ACRBP-V5 exhibit severely reduced fertility due to acrosome malformation; spermatids fail to form a large acrosomal granule, resulting in fragmented acrosome structure. Transgenic rescue with ACRBP-V5 alone restored acrosomal granule formation, demonstrating that ACRBP-V5 functions specifically in formation and configuration of the acrosomal granule during early spermiogenesis. Exogenously expressed ACRBP-W blocked proacrosin autoactivation in the acrosome, establishing its role in retaining proacrosin in an inactive state until acrosomal exocytosis. | PMID:27303034 | Proceedings of the National Academy of Sciences of the United States of America |
+| 2018 | Medium | ACRBP-deficient mouse sperm showed markedly reduced numbers in the oviduct after mating and a marked reduction in ability to access unfertilized oocytes, despite normal sperm motility and head morphology in recovered oviductal sperm. This suggests male subfertility in ACRBP-null mice is attributable primarily to incompleteness of the acrosome reaction rather than impaired sperm migration. | PMID:30606959 | The Journal of reproduction and development |
+| 2021 | Medium | In boar sperm, antibody blocking of ACRBP on the sperm surface reduced capacitation and spontaneous acrosome reaction, and decreased sperm-zona pellucida (ZP) binding. Anti-ACRBP antibodies on the sperm head also reduced the ability of sperm to undergo the acrosome reaction in response to solubilized ZP or SERCA inhibition, indicating ACRBP on the sperm surface participates in sperm-ZP binding and primes sperm for the acrosome reaction. | PMID:34086710 | PloS one |
+| 2013 | Low | sp32 tyrosine phosphorylation levels increase during proacrosin activation in pig sperm capacitation and acrosome reaction, correlating with conversion of 55 kDa proacrosin to 35 kDa active acrosin forms, as measured by Western blot in differently processed sperm populations. | PMID:24391004 | Genetics and molecular research : GMR |
+| 2015 | Low | Expression level and tyrosine phosphorylation of sp32 differed across capacitated, frozen-thawed, and post-acrosomal reaction boar sperm, with sp32 expression higher in capacitated and post-acrosomal reaction sperm vs. fresh or frozen-thawed sperm, supporting a role for sp32 phosphorylation in activation of the proacrosin/acrosin system. | PMID:25867384 | Genetics and molecular research : GMR |
+| 2012 | Low | Knockdown of OY-TES-1 (ACRBP) by RNAi in human bone marrow-derived mesenchymal stem cells caused cell growth inhibition, cell cycle arrest, apoptosis induction, and reduced migration ability, indicating ACRBP influences proliferation and migration in these cells. | PMID:22651134 | Cell biology international |
+| 2015 | Low | Knockdown of OY-TES-1 (ACRBP) by siRNA in hepatocellular carcinoma cell lines (HepG2 and BEL-7404) decreased cell growth, induced G0/G1 arrest and apoptosis, and reduced migration and invasion. This was accompanied by increased caspase-3 expression, decreased cyclin E, and decreased MMP2 and MMP9 protein levels. | PMID:26339343 | International journal of clinical and experimental pathology |
+| 2021 | Low | Knockdown of CT23 (ACRBP) in BEL-7404 HCC cells altered expression of 1051 genes; functional analysis identified metallothionein 1 (MT1) as maximally enriched. Western blot and cell behavior assays confirmed CT23 modulates cell proliferation, migration, and apoptosis through regulation of MT1 expression in HCC cells. | PMID:33559934 | Cell biology international |
+
+## Citations
+
+- PMID:15955892
+- PMID:22357636
+- PMID:22651134
+- PMID:23426433
+- PMID:24391004
+- PMID:25867384
+- PMID:26339343
+- PMID:27303034
+- PMID:30606959
+- PMID:33559934
+- PMID:34086710
+- PMID:8144514

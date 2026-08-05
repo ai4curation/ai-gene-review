@@ -1,0 +1,2690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hemN - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>hemN</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88F35" target="_blank" class="term-link">
+                        Q88F35
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+
+                    <span class="badge">PP_4264</span>
+
+                </div>
+            </div>
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "hemN";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88F35" data-a="DESCRIPTION: HemN is a cytoplasmic radical-SAM coproporphyrinog..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>HemN is a cytoplasmic radical-SAM coproporphyrinogen-III dehydrogenase that provides an oxygen-independent route to protoporphyrinogen IX. It binds a catalytic [4Fe-4S] cluster and consumes S-adenosyl-L-methionine while converting two propionate side chains of coproporphyrinogen III to vinyl groups. KT2440 also encodes the oxygen-dependent alternative HemF.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F35" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HemN is catalytic, but this root molecular-function term is uninformative.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0051989 captures the specific radical-SAM coproporphyrinogen dehydrogenase reaction and should replace generic catalytic activity.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051989" target="_blank" class="term-link">
+                                    coproporphyrinogen dehydrogenase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemN/hemN-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=1.3.98.3;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004109" target="_blank" class="term-link">
+                                    GO:0004109
+                                </a>
+                            </span>
+                            <span class="term-label">coproporphyrinogen oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F35" data-a="GO:0004109" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This describes the pathway position but not HemN&#39;s specific radical-SAM chemistry.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The oxygen-independent EC 1.3.98.3 reaction is represented by GO:0051989, whereas GO:0004109 is used for the distinct HemF-type oxidase activity.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051989" target="_blank" class="term-link">
+                                    coproporphyrinogen dehydrogenase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemN/hemN-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=coproporphyrinogen III + 2 S-adenosyl-L-methionine =</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F35" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization is explicitly predicted for HemN.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns the soluble radical-SAM enzyme to the cytoplasm.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemN/hemN-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006779" target="_blank" class="term-link">
+                                    GO:0006779
+                                </a>
+                            </span>
+                            <span class="term-label">porphyrin-containing compound biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F35" data-a="GO:0006779" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The pathway assignment is correct and can be made endpoint-specific for KT2440.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HemN forms protoporphyrinogen IX in the oxygen-independent late route leading to heme B, supporting the live endpoint term GO:0006785.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006785" target="_blank" class="term-link">
+                                    heme B biosynthetic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemN/hemN-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">route): step 1/1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F35" data-a="GO:0046872" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This broad metal-binding term is correct but less informative than the cluster term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HemN&#39;s relevant metal center is a defined [4Fe-4S] radical-SAM cluster; generic metal binding remains true but is ancillary to catalysis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemN/hemN-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=[4Fe-4S] cluster; Xref=ChEBI:CHEBI:49883;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051536" target="_blank" class="term-link">
+                                    GO:0051536
+                                </a>
+                            </span>
+                            <span class="term-label">iron-sulfur cluster binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F35" data-a="GO:0051536" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This parent is valid but less informative than the specific cluster-type term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0051539 states the [4Fe-4S] cluster type established for HemN and is preferable as cofactor detail; the broader parent is still correct.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemN/hemN-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Binds 1 [4Fe-4S] cluster.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051539" target="_blank" class="term-link">
+                                    GO:0051539
+                                </a>
+                            </span>
+                            <span class="term-label">4 iron, 4 sulfur cluster binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F35" data-a="GO:0051539" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A [4Fe-4S] center is integral to radical-SAM catalysis by HemN.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The cofactor assignment is specific and well supported by family-level residue predictions, but the substrate-level dehydrogenase term remains the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemN/hemN-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Binds 1 [4Fe-4S] cluster.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051989" target="_blank" class="term-link">
+                                    GO:0051989
+                                </a>
+                            </span>
+                            <span class="term-label">coproporphyrinogen dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F35" data-a="GO:0051989" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the most precise available molecular-function term for HemN.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns EC 1.3.98.3 and RHEA:15425, the radical-SAM conversion of coproporphyrinogen III to protoporphyrinogen IX.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemN/hemN-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=coproporphyrinogen III + 2 S-adenosyl-L-methionine =</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Uses radical-SAM chemistry and a [4Fe-4S] cluster to convert coproporphyrinogen III to protoporphyrinogen IX without molecular oxygen.</h3>
+                <span class="vote-buttons" data-g="Q88F35" data-a="FUNCTION: Uses radical-SAM chemistry and a [4Fe-4S] cluster ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051989" target="_blank" class="term-link">
+                            coproporphyrinogen dehydrogenase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006785" target="_blank" class="term-link">
+                                heme B biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/hemN/hemN-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=coproporphyrinogen III + 2 S-adenosyl-L-methionine =</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/hemN/hemN-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Binds 1 [4Fe-4S] cluster.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/hemN/hemN-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PSEPK hemN</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HemN catalyzes radical-SAM formation of protoporphyrinogen IX.</div>
+
+                        <div class="finding-text">"Reaction=coproporphyrinogen III + 2 S-adenosyl-L-methionine ="</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HemN binds one [4Fe-4S] cluster.</div>
+
+                        <div class="finding-text">"Binds 1 [4Fe-4S] cluster."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/hemN/hemN-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist research report for PSEPK hemN</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report recovers the HemN reaction but acknowledges the absence of direct experimental characterization of the KT2440 protein.</div>
+
+                        <div class="finding-text">"No direct experimental characterization of the *P. putida* KT2440 protein."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is HemN used only under anoxia, or does it contribute under microoxic conditions where HemF is also expressed?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88F35" data-a="Q: Is HemN used only under anoxia, or does it contrib..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare hemN and hemF mutant phenotypes across controlled oxygen gradients, including heme-b and pathway-intermediate measurements.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: HemN becomes the principal late-step enzyme when oxygen limits HemF activity.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88F35" data-a="EXPERIMENT: Compare hemN and hemF mutant phenotypes across con..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hemN-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88F35" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *hemN* (PP_4264, UniProt Q88F35) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">6 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-20T21:06:09.998576</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="hemN-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="hemN-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-hemn-pp_4264-uniprot-q88f35-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>hemN</em> (PP_4264, UniProt Q88F35) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>hemN</strong> (ordered locus <strong>PP_4264</strong>; UniProt accession <strong>Q88F35</strong>) of <em>Pseudomonas putida</em> KT2440 encodes the <strong>oxygen-independent (anaerobic) coproporphyrinogen-III oxidase</strong> (EC 1.3.98.3), a soluble cytoplasmic enzyme of the <strong>heme (tetrapyrrole) biosynthetic pathway</strong>. Its primary and defining function is to catalyze the <strong>oxidative decarboxylation of the two ring-A/ring-B propionate side chains of coproporphyrinogen III to the corresponding vinyl groups of protoporphyrinogen IX</strong>, executing the antepenultimate step of protoporphyrin-IX biosynthesis without requiring molecular oxygen. This assignment is supported by direct biochemical and structural characterization of the <em>Escherichia coli</em> ortholog, by phenotypic/regulatory studies of orthologs in closely related <em>Pseudomonas</em> and <em>Alcaligenes</em> species, and by sequence-level confirmation that the <em>P. putida</em> protein carries every diagnostic catalytic motif at conserved positions.</p>
+<p>Mechanistically, HemN is the <strong>founding structurally-characterized member of the radical S-adenosyl-L-methionine (radical SAM) superfamily</strong>. It harbors a <strong>[4Fe-4S] cluster</strong> ligated by three cysteines of a conserved CX₃CX₂C motif (the <strong>CANICYYC</strong> sequence at residues 63–70 in Q88F35) and binds <strong>two molecules of SAM</strong> in adjacent sites. Reductive cleavage of one SAM generates a highly reactive <strong>5′-deoxyadenosyl radical</strong> that abstracts a hydrogen from a substrate propionate; the second SAM acts as a hydrogen relay. The two propionate decarboxylations proceed <strong>sequentially through a mono-decarboxylated intermediate, harderoporphyrinogen</strong>, consuming two SAM and releasing two CO₂, two 5′-deoxyadenosine, and two L-methionine per turnover (Rhea:15425).</p>
+<p>Biologically, HemN provides the <strong>O₂-independent route</strong> to protoporphyrinogen IX, complementing the oxygen-dependent enzyme <strong>HemF</strong> (PP_0073) and enabling heme synthesis under anaerobic/microaerobic conditions. In <em>Pseudomonas</em>, hemN transcription is controlled by the <strong>Fnr-type redox regulators Anr and Dnr</strong>, and loss of HemN function causes accumulation and excretion of <strong>coproporphyrin III</strong>, the oxidized form of the blocked substrate. The <em>P. putida</em> genome additionally encodes a <strong>second HemN-family paralog (PP_3781)</strong>, giving a redundant, redox-responsive coproporphyrinogen-III oxidase system that parallels the HemF/HemN/HemZ arrangement documented in <em>P. aeruginosa</em> and <em>Bacillus subtilis</em>. The enzyme carries out its function in the <strong>cytoplasm</strong> as a soluble monomer.</p>
+<h3 id="identity-verification">Identity verification</h3>
+<p>The gene symbol "hemN" corresponds precisely to the UniProt protein description, the organism is correct, and the protein family/domains align with the characterized literature. No gene-symbol ambiguity was encountered — "hemN" is used uniformly across bacteria for this radical-SAM enzyme.</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>UniProt reference (Q88F35)</th>
+<th>Confirmed by investigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene symbol</td>
+<td>hemN</td>
+<td>✔ Matches characterized HemN family</td>
+</tr>
+<tr>
+<td>Protein</td>
+<td>Coproporphyrinogen-III oxidase, EC 1.3.98.3</td>
+<td>✔ O₂-independent copro-III oxidase</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>P. putida</em> KT2440 (taxid 160488)</td>
+<td>✔ PP_4264 confirmed in genome</td>
+</tr>
+<tr>
+<td>Length / mass</td>
+<td>460 aa / 52.6 kDa</td>
+<td>✔ Consistent with ~52 kDa orthologs</td>
+</tr>
+<tr>
+<td>Family</td>
+<td>Anaerobic coproporphyrinogen-III oxidase</td>
+<td>✔ InterPro IPR004558</td>
+</tr>
+<tr>
+<td>Domains</td>
+<td>rSAM (IPR007197), HemN_C (IPR010723), Elp3/MiaA/NifB-like rSAM (IPR006638)</td>
+<td>✔ Radical-SAM architecture confirmed</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-hemn-is-the-oxygen-independent-coproporphyrinogen-iii-oxidase-of-heme-biosynthesis">Finding 1 — HemN is the oxygen-independent coproporphyrinogen-III oxidase of heme biosynthesis</h3>
+<p>The core function of HemN is the <strong>O₂-independent conversion of coproporphyrinogen III to protoporphyrinogen IX</strong> (EC 1.3.98.3): the oxidative decarboxylation of the two propionate side chains on pyrrole rings A and B of coproporphyrinogen III to vinyl groups. In vitro anaerobic enzyme assays of recombinant <em>E. coli</em> HemN directly demonstrated coproporphyrinogen-III oxidase activity (<a href="https://pubmed.ncbi.nlm.nih.gov/12114526/">PMID: 12114526</a>), described explicitly as: <em>"In bacteria the oxygen-independent coproporphyrinogen-III oxidase catalyzes the oxygen-independent conversion of coproporphyrinogen-III to protoporphyrinogen-IX."</em> The structural study reinforced the physiological essentiality: <em>"HemN catalyzes the essential conversion of coproporphyrinogen III to protoporphyrinogen IX during heme biosynthesis"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/14633981/">PMID: 14633981</a>).</p>
+<p>The physiological substrate is coproporphyrinogen III specifically (the type-III isomer). HemN acts on the two propionates of rings A and B, retaining the other two propionates (rings C and D) in protoporphyrinogen IX — the same regiochemical outcome as the unrelated O₂-dependent HemF but achieved by radical chemistry. The <em>P. putida</em> HemN (hemN/PP_4264) is orthologous to the characterized enzymes and belongs to the anaerobic coproporphyrinogen-III oxidase family (InterPro IPR004558), so the reaction assignment transfers with high confidence given the conserved sequence signatures (Finding 5).</p>
+<h3 id="finding-2-hemn-is-a-radical-sam-enzyme-with-a-4fe-4s-cluster-and-two-bound-sam-molecules">Finding 2 — HemN is a radical SAM enzyme with a [4Fe-4S] cluster and two bound SAM molecules</h3>
+<p>HemN was the <strong>first radical SAM enzyme to have its crystal structure solved</strong> (2.07 Å, <em>E. coli</em>), defining the structural template for the entire superfamily. The structure shows a <strong>[4Fe-4S] cluster ligated by three cysteines</strong> of the conserved CXXXCXXC motif, with a SAM molecule coordinating the fourth, unique iron: <em>"HemN binds a 4Fe-4S cluster through three cysteine residues conserved in all Radical SAM enzymes. A juxtaposed SAM coordinates the fourth Fe ion through its amide nitrogen and carboxylate oxygen"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/14633981/">PMID: 14633981</a>). The SAM sulfonium sits ~3.5 Å from the cluster, positioned for single-electron transfer and reductive cleavage to a 5′-deoxyadenosyl radical.</p>
+<p>A striking, functionally important feature is that HemN binds a <strong>second SAM immediately adjacent to the first</strong>: <em>"HemN, strikingly, binds a second SAM immediately adjacent to the first. It may thus successively catalyze two propionate decarboxylations"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/14633981/">PMID: 14633981</a>). This provides the structural basis for the two sequential decarboxylation events.</p>
+<p>Biochemical work confirmed the cluster's identity and the essentiality of its ligands: the enzyme contains an <strong>O₂-sensitive Fe-S cluster</strong>, and <em>"Cysteine residues Cys(62), Cys(66), and Cys(69), which are part of the conserved CXXXCXXC motif found in all HemN proteins, are essential for iron-sulfur cluster formation and enzyme function"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/12114526/">PMID: 12114526</a>). The oxygen sensitivity of this cluster is the molecular basis for HemN serving as the <em>anaerobic</em> branch of coproporphyrinogen oxidation.</p>
+<h3 id="finding-3-sequential-radical-decarboxylation-via-a-harderoporphyrinogen-intermediate-requiring-sam-and-nadph">Finding 3 — Sequential radical decarboxylation via a harderoporphyrinogen intermediate, requiring SAM and NAD(P)H</h3>
+<p>The catalytic cycle proceeds by <strong>radical chemistry</strong> and requires <strong>SAM, NAD(P)H, and additional cytoplasmic components</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/12114526/">PMID: 12114526</a>): <em>"The enzyme requires S-adenosyl-l-methionine (SAM), NAD(P)H, and additional cytoplasmatic components for catalysis."</em> Mechanistic re-investigation established that the two propionate groups are decarboxylated <strong>one at a time</strong>, passing through the <strong>mono-decarboxylated intermediate harderoporphyrinogen</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/30884058/">PMID: 30884058</a>). The revised mechanism assigns distinct roles to the two SAM molecules: <em>"a SAM serves as a hydrogen relay which mediates a radical-based hydrogen transfer from the propionate to the 5'-deoxyadenosyl (dAdo) radical generated from another SAM in the active site."</em> One SAM is the source of the initiating 5′-deoxyadenosyl radical, while the second SAM mediates hydrogen transfer during radical-based decarboxylation.</p>
+<h3 id="finding-4-cytoplasmic-soluble-monomer-anrdnr-redox-regulation-loss-of-function-causes-coproporphyrin-iii-accumulation">Finding 4 — Cytoplasmic soluble monomer; Anr/Dnr redox regulation; loss-of-function causes coproporphyrin III accumulation</h3>
+<p>Anaerobically purified HemN is a <strong>monomeric, soluble cytoplasmic protein</strong> of native mass ~52 kDa (<a href="https://pubmed.ncbi.nlm.nih.gov/12114526/">PMID: 12114526</a>): <em>"Anaerobically purified HemN is a monomeric protein with a native M(r) = 52,000 +/- 5,000."</em> This establishes both the oligomeric state (monomer) and subcellular localization (cytoplasm). HemN has no signal peptide or membrane-spanning region, and tetrapyrrole biosynthesis occurs in the bacterial cytoplasm.</p>
+<p>In <em>P. aeruginosa</em>, hemN is strongly induced under anaerobic conditions through two Fnr-type redox regulators: <em>"An approximately 10-fold anaerobic induction of hemN gene expression was mediated by the dual action of Anr and a second Fnr-type regulator, Dnr"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/9767567/">PMID: 9767567</a>). The physiological importance is shown by the loss-of-function phenotype: <em>"An anr mutant did not contain detectable amounts of hemN mRNA and accumulated coproporphyrin III both aerobically and anaerobically, indicating the importance of HemN for aerobic and anaerobic haem formation"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/9767567/">PMID: 9767567</a>). Accumulation of <strong>coproporphyrin III</strong> (the oxidized, aromatized form of unprocessed coproporphyrinogen III) is the diagnostic metabolic signature of a blocked coproporphyrinogen-III oxidase step.</p>
+<p>The orthologous <em>Alcaligenes eutrophus</em> hemN shows the same logic: Fnr-regulated, O₂-repressed, required for anaerobic growth on nitrate/nitrite, with coproporphyrin III excretion upon inactivation (<a href="https://pubmed.ncbi.nlm.nih.gov/9396835/">PMID: 9396835</a>). Because <em>P. putida</em> KT2440 encodes the Anr regulator and hemN (PP_4264), the same redox-responsive control is expected in the target organism (inferred by orthology).</p>
+<h3 id="finding-5-sequence-level-confirmation-of-catalytic-motifs-in-q88f35">Finding 5 — Sequence-level confirmation of catalytic motifs in Q88F35</h3>
+<p>Direct inspection of the 460-aa, 52.6 kDa <em>P. putida</em> KT2440 HemN sequence (Q88F35) confirms the two essential functional motifs at conserved positions:</p>
+<ul>
+<li>The radical-SAM [4Fe-4S]-binding motif <strong>CANICYYC</strong> (a CxxxCxxC motif) at <strong>residues 63–70</strong>, positionally equivalent to the essential Cys62/Cys66/Cys69 of <em>E. coli</em> HemN. Their essentiality was established experimentally: <em>"Cysteine residues Cys(62), Cys(66), and Cys(69) ... are essential for iron-sulfur cluster formation and enzyme function"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/12114526/">PMID: 12114526</a>).</li>
+<li>The <strong>SAM-binding GGGTP motif</strong> at <strong>residues 113–117</strong>, matching the <em>E. coli</em> Gly111/Gly113 whose mutation abolished activity: <em>"Mutation of Gly(111) and Gly(113), which are part of the potential GGGTP S-adenosyl-l-methionine binding motif, completely abolished enzymatic function"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/12114526/">PMID: 12114526</a>).</li>
+</ul>
+<p>UniProt (rule-based, PIRNR000167) assigns the exact catalytic reaction (Rhea:15425): <strong>coproporphyrinogen III + 2 SAM → protoporphyrinogen IX + 2 5′-deoxyadenosine + 2 L-methionine + 2 CO₂</strong> (EC 1.3.98.3); cofactor: one [4Fe-4S] cluster coordinated by 3 cysteines plus an exchangeable SAM; pathway: protoporphyrin-IX biosynthesis (protoporphyrinogen-IX from coproporphyrinogen-III, AdoMet route, step 1/1); subcellular location: cytoplasm.</p>
+<h3 id="finding-6-a-redundant-coproporphyrinogen-iii-oxidase-system-in-p-putida-kt2440">Finding 6 — A redundant coproporphyrinogen-III oxidase system in <em>P. putida</em> KT2440</h3>
+<p><em>P. putida</em> KT2440 encodes <strong>three coproporphyrinogen-III oxidase-related genes</strong>, giving redundancy across oxygen regimes:</p>
+<table>
+<thead>
+<tr>
+<th>Gene</th>
+<th>Locus</th>
+<th>UniProt</th>
+<th>Length</th>
+<th>EC</th>
+<th>Oxygen requirement</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>hemF</strong></td>
+<td>PP_0073</td>
+<td>Q88RQ6</td>
+<td>303 aa</td>
+<td>1.3.3.3</td>
+<td>O₂-<strong>dependent</strong></td>
+<td>Aerobic copro-III oxidase</td>
+</tr>
+<tr>
+<td><strong>hemN</strong> (target)</td>
+<td>PP_4264</td>
+<td>Q88F35</td>
+<td>460 aa</td>
+<td>1.3.98.3</td>
+<td>O₂-<strong>independent</strong></td>
+<td>Radical-SAM anaerobic copro-III oxidase</td>
+</tr>
+<tr>
+<td>HemN-family paralog</td>
+<td>PP_3781</td>
+<td>Q88GE3</td>
+<td>471 aa</td>
+<td>(1.3.98.3-type)</td>
+<td>O₂-independent (predicted)</td>
+<td>Second HemN/HemZ/HemW-type enzyme</td>
+</tr>
+</tbody>
+</table>
+<p>This mirrors the HemF + HemN (+ HemZ) arrangement documented in <em>P. aeruginosa</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/9767567/">PMID: 9767567</a>) and <em>B. subtilis</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/10498703/">PMID: 10498703</a>). In <em>P. aeruginosa</em>, <em>"Mutation of hemN and hemF did not abolish aerobic or anaerobic growth, indicating the existence of an additional HemN-type enzyme, which was termed HemZ"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/9767567/">PMID: 9767567</a>) — paralleling the three <em>P. putida</em> genes. <strong>Caveat:</strong> some HemN-family proteins (HemW-type) are radical-SAM heme chaperones rather than coproporphyrinogen oxidases, so PP_3781's exact activity should not be assumed from family membership alone. This redundancy explains why heme synthesis is robust across the aerobic–anaerobic spectrum that <em>P. putida</em> encounters in soil and rhizosphere niches, and why loss of a single enzyme is typically non-lethal yet causes coproporphyrin III accumulation when the alternate route cannot compensate.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="position-in-the-heme-biosynthetic-pathway">Position in the heme biosynthetic pathway</h3>
+<div class="codehilite"><pre><span></span><code>  <span class="p">...</span>  <span class="err">→</span>  <span class="n">Coproporphyrinogen</span> <span class="n">III</span>
+     <span class="err">│</span>
+     <span class="err">│</span>  <span class="p">[</span><span class="n">Oxidative</span> <span class="n">decarboxylation</span> <span class="n">of</span> <span class="mi">2</span> <span class="n">propionate</span> <span class="err">→</span> <span class="mi">2</span> <span class="n">vinyl</span> <span class="n">groups</span><span class="p">]</span>
+     <span class="err">│</span>
+<span class="err">┌────────────┴─────────────┐</span>
+<span class="err">│</span>                          <span class="err">│</span>
+   <span class="n">O2</span><span class="o">-</span><span class="n">DEPENDENT</span>               <span class="n">O2</span><span class="o">-</span><span class="n">INDEPENDENT</span>
+   <span class="n">HemF</span> <span class="p">(</span><span class="n">PP_0073</span><span class="p">)</span>             <span class="n">HemN</span> <span class="p">(</span><span class="n">PP_4264</span><span class="p">)</span>  <span class="err">←</span> <span class="n">TARGET</span>
+   <span class="n">EC</span> <span class="mf">1.3</span><span class="p">.</span><span class="mf">3.3</span>                 <span class="n">EC</span> <span class="mf">1.3</span><span class="p">.</span><span class="mf">98.3</span>      <span class="p">(</span><span class="o">+</span> <span class="n">paralog</span> <span class="n">PP_3781</span><span class="p">)</span>
+   <span class="n">uses</span> <span class="n">O2</span>                    <span class="n">radical</span><span class="o">-</span><span class="n">SAM</span><span class="p">;</span> <span class="n">no</span> <span class="n">O2</span> <span class="n">required</span>
+<span class="err">│</span>                          <span class="err">│</span>
+<span class="err">└────────────┬─────────────┘</span>
+     <span class="err">▼</span>
+   <span class="n">Protoporphyrinogen</span> <span class="n">IX</span>
+     <span class="err">│</span>
+     <span class="err">▼</span>  <span class="p">(</span><span class="n">HemG</span><span class="o">/</span><span class="n">HemY</span> <span class="n">protoporphyrinogen</span> <span class="n">oxidase</span><span class="p">)</span>
+     <span class="n">Protoporphyrin</span> <span class="n">IX</span>
+     <span class="err">│</span>
+     <span class="err">▼</span>  <span class="p">(</span><span class="n">HemH</span> <span class="n">ferrochelatase</span><span class="p">)</span>
+   <span class="n">Heme</span> <span class="n">b</span>
+</code></pre></div>
+
+<h3 id="catalytic-cycle-of-hemn-radical-sam-chemistry">Catalytic cycle of HemN (radical-SAM chemistry)</h3>
+<div class="codehilite"><pre><span></span><code>   [4Fe-4S]1+  +  SAM(1)  ──►  [4Fe-4S]2+  +  L-Met  +  5&#39;-deoxyadenosyl radical (dAdo•)
+                                              │
+                                              ▼
+        dAdo•  abstracts H from propionate β-carbon of substrate
+                                              │
+                                              ▼
+      Substrate radical  →  decarboxylation (–CO2)  →  vinyl group formed
+                                              │
+        SAM(2) acts as H-relay in radical-based H transfer
+                                              │
+                                              ▼
+        Repeat on 2nd propionate (via harderoporphyrinogen intermediate)
+                                              │
+                                              ▼
+   Net: Coproporphyrinogen III + 2 SAM  →  Protoporphyrinogen IX
+              + 2 CO2 + 2 5&#39;-deoxyadenosine + 2 L-Met     (Rhea:15425)
+</code></pre></div>
+
+<p>The coherent picture is of a <strong>cytoplasmic, soluble, monomeric radical-SAM metalloenzyme</strong> that uses an oxygen-sensitive [4Fe-4S] cluster and two SAM cofactors to perform demanding C–C bond chemistry (decarboxylation of unactivated propionate side chains) without molecular oxygen. This capability is precisely why the enzyme exists as a distinct paralog to the oxygen-dependent HemF: it allows the cell to complete heme biosynthesis when oxygen is scarce or absent. In <em>Pseudomonas</em>, this need arises under low-oxygen/denitrifying conditions, when the Anr/Dnr regulators induce hemN. The metabolic redundancy — HemF for aerobic conditions, HemN and PP_3781 for anaerobic/microaerobic conditions — insulates the essential supply of heme (for cytochromes, catalases, and other hemoproteins) from the oxygen fluctuations that an environmentally versatile soil/rhizosphere organism like <em>P. putida</em> KT2440 routinely experiences.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>Contribution to this report</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12114526/">12114526</a></td>
+<td><em>Oxygen-independent coproporphyrinogen-III oxidase HemN from E. coli</em></td>
+<td>Primary biochemistry: reaction, O₂-sensitive Fe-S cluster, essential Cys62/66/69 and GGGTP motif, SAM/NAD(P)H requirement, monomeric cytoplasmic ~52 kDa protein</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/14633981/">14633981</a></td>
+<td><em>Crystal structure of coproporphyrinogen III oxidase reveals cofactor geometry of Radical SAM enzymes</em></td>
+<td>First radical-SAM crystal structure; [4Fe-4S]/SAM coordination; two-SAM binding rationalizing two sequential decarboxylations; confirms essential role in heme biosynthesis</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30884058/">30884058</a></td>
+<td><em>Revisiting the Mechanism of the Anaerobic Coproporphyrinogen III Oxidase HemN</em></td>
+<td>Sequential decarboxylation via harderoporphyrinogen intermediate; two-SAM hydrogen-relay mechanism</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9767567/">9767567</a></td>
+<td><em>Regulation of P. aeruginosa hemF and hemN by Anr and Dnr</em></td>
+<td>Anr/Dnr redox regulation (~10-fold anaerobic induction); coproporphyrin III accumulation in anr mutant; evidence for a third HemZ-type enzyme</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9396835/">9396835</a></td>
+<td><em>A. eutrophus hemN required for heme biosynthesis during anaerobic growth</em></td>
+<td>Ortholog: Fnr-regulated, O₂-repressed, required for anaerobic growth; coproporphyrin III excretion on loss; cross-complements <em>S. typhimurium</em> hemF/hemN mutant</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10498703/">10498703</a></td>
+<td><em>Transcriptional control of B. subtilis hemN and hemZ</em></td>
+<td>Confirms the multi-enzyme redundant copro-III oxidase system and redox-cascade regulation in another bacterium</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16218869/">16218869</a></td>
+<td><em>Structural and functional comparison of HemN to other radical SAM enzymes</em></td>
+<td>Review placing HemN within the radical-SAM superfamily; notes extreme O₂ sensitivity of the family</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15450488/">15450488</a></td>
+<td><em>Structure and function of radical SAM enzymes</em></td>
+<td>Review of HemN cofactor geometry and the radical-SAM paradigm</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26913973/">26913973</a></td>
+<td><em>Revisited genome of P. putida KT2440</em></td>
+<td>Genomic/annotation context for the KT2440 metabolic chassis</td>
+</tr>
+</tbody>
+</table>
+<p>All directly cited snippets were verified against the source abstracts. The primary biochemical/structural/mechanistic evidence (PMIDs 12114526, 14633981, 30884058) derives from <em>E. coli</em> HemN, and the primary regulatory/phenotypic evidence (PMIDs 9767567, 9396835) from <em>P. aeruginosa</em> and <em>A. eutrophus</em> orthologs; the transfer to <em>P. putida</em> PP_4264 rests on orthology plus direct sequence-motif conservation (Finding 5).</p>
+<hr />
+<h2 id="supported-and-refuted-hypotheses">Supported and Refuted Hypotheses</h2>
+<table>
+<thead>
+<tr>
+<th>Hypothesis</th>
+<th>Status</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>hemN encodes O₂-independent coproporphyrinogen-III oxidase (copro III → protoporphyrinogen IX)</td>
+<td><strong>Supported</strong></td>
+<td>PMID 12114526, 14633981</td>
+</tr>
+<tr>
+<td>HemN is a radical SAM enzyme with a [4Fe-4S] cluster and generates a dAdo radical</td>
+<td><strong>Supported</strong></td>
+<td>PMID 14633981, 12114526</td>
+</tr>
+<tr>
+<td>HemN uses two SAM for sequential decarboxylation via harderoporphyrinogen</td>
+<td><strong>Supported</strong></td>
+<td>PMID 14633981, 30884058</td>
+</tr>
+<tr>
+<td>HemN acts in the cytoplasm as a soluble monomer</td>
+<td><strong>Supported</strong></td>
+<td>PMID 12114526</td>
+</tr>
+<tr>
+<td>hemN is redox-regulated (Anr/Dnr) and functionally important for heme formation in <em>Pseudomonas</em></td>
+<td><strong>Supported</strong></td>
+<td>PMID 9767567, 9396835</td>
+</tr>
+<tr>
+<td>P. putida encodes a redundant HemF/HemN/HemN-paralog system</td>
+<td><strong>Supported</strong></td>
+<td>UniProt enumeration; PMID 9767567, 10498703</td>
+</tr>
+<tr>
+<td>"hemN" is an ambiguous symbol / wrong-gene risk</td>
+<td><strong>Refuted</strong></td>
+<td>Symbol uniform across bacteria; UniProt domains match</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct experimental characterization of the <em>P. putida</em> KT2440 protein.</strong> All enzymatic, structural, and mechanistic data come from orthologs (chiefly <em>E. coli</em> HemN). The functional assignment to Q88F35 is by orthology and conserved catalytic motifs, not by direct assay of the <em>P. putida</em> enzyme. Confidence is nonetheless high given the family-defining conserved motifs (CXXXCXXC, GGGTP) and unambiguous domain architecture.</p>
+</li>
+<li>
+<p><strong>Regulation in <em>P. putida</em> is inferred, not measured.</strong> Anr/Dnr control of hemN is demonstrated in <em>P. aeruginosa</em> and Fnr control in <em>A. eutrophus</em>; the presence of Anr and hemN in KT2440 makes the same control likely, but the specific promoter architecture (Anr-box position) and induction magnitude in KT2440 have not been experimentally confirmed. Note also that, unlike <em>P. aeruginosa</em>, <em>P. putida</em> KT2440 cannot grow by denitrification, so the HemN role likely relates to microaerobic rather than fully anaerobic physiology.</p>
+</li>
+<li>
+<p><strong>Functional status of the paralog PP_3781 is unverified.</strong> It is annotated as an oxygen-independent coproporphyrinogen-III oxidase family protein, but whether it is catalytically active, whether it is a true HemN/HemZ or a HemW-type radical-SAM heme chaperone, and its physiological contribution in KT2440 are unknown.</p>
+</li>
+<li>
+<p><strong>Substrate-specificity fine detail.</strong> While the reaction and the ring-A/B propionate targets are established for the family, the precise regiochemical order of the two decarboxylations and any <em>P. putida</em>-specific kinetic parameters (K_m, k_cat, redox-partner identity) are undefined.</p>
+</li>
+<li>
+<p><strong>Physiological reductant in vivo.</strong> In vitro assays used NAD(P)H plus additional cytoplasmic components; the actual in vivo electron donor that reduces the [4Fe-4S] cluster in <em>P. putida</em> is not established.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Heterologous expression and anaerobic enzyme assay</strong> of recombinant <em>P. putida</em> HemN (Q88F35) to directly confirm coproporphyrinogen-III oxidase activity, measure kinetic parameters, and verify harderoporphyrinogen-intermediate formation, closing the orthology-inference gap.</p>
+</li>
+<li>
+<p><strong>Targeted gene deletion of PP_4264</strong> (and combinatorial deletions with PP_0073/hemF and PP_3781) in KT2440, followed by growth phenotyping across aerobic, microaerobic, and anaerobic conditions, with HPLC/fluorescence monitoring for <strong>coproporphyrin III accumulation</strong> as the diagnostic readout.</p>
+</li>
+<li>
+<p><strong>Test the redundancy hypothesis directly</strong>: determine whether a hemN single mutant is heme-prototrophic under microaerobiosis (predicting compensation by PP_3781/HemF), and whether a hemN/PP_3781 double mutant becomes conditionally heme-auxotrophic.</p>
+</li>
+<li>
+<p><strong>Map and validate the Anr/Dnr regulation</strong>: identify Anr/Dnr binding site(s) upstream of PP_4264 and quantify anaerobic/microaerobic induction by RT-qPCR or reporter fusion in wild-type vs. an <em>anr</em> mutant of KT2440.</p>
+</li>
+<li>
+<p><strong>Biochemically characterize PP_3781</strong> to determine whether it is an active anaerobic copro-III oxidase (HemN/HemZ-type) or a HemW-type protein with a different in vivo role.</p>
+</li>
+<li>
+<p><strong>EPR/Mössbauer or structural analysis</strong> (or a high-confidence AlphaFold model plus cofactor docking) of <em>P. putida</em> HemN to confirm the [4Fe-4S] cluster geometry and the two-SAM arrangement predicted from the <em>E. coli</em> structure.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><em>hemN</em> (PP_4264; UniProt Q88F35) encodes the <strong>oxygen-independent, cytoplasmic, radical-SAM coproporphyrinogen-III oxidase</strong> of <em>Pseudomonas putida</em> KT2440. It catalyzes the oxidative decarboxylation of the two ring-A/B propionate side chains of coproporphyrinogen III to yield protoporphyrinogen IX in heme biosynthesis, using a [4Fe-4S] cluster and two SAM molecules to drive sequential radical decarboxylations through a harderoporphyrinogen intermediate. It is the anaerobic counterpart of the oxygen-dependent HemF within a redundant, redox-regulated (Anr/Dnr) system, ensuring heme supply irrespective of oxygen availability. The identity is unambiguous and all diagnostic catalytic motifs are conserved in the target sequence.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="hemN-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="hemN-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:12114526</li>
+<li>PMID:14633981</li>
+<li>PMID:30884058</li>
+<li>PMID:9767567</li>
+<li>PMID:9396835</li>
+<li>PMID:10498703</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hemN-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88F35" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="hemn-assessment-notes">hemN assessment notes</h1>
+<h2 id="identity-and-core-reaction">Identity and core reaction</h2>
+<p>Q88F35 (PP_4264) is a predicted oxygen-independent coproporphyrinogen-III<br />
+dehydrogenase of the HemN radical-SAM family. UniProt assigns the two-SAM<br />
+conversion of coproporphyrinogen III to protoporphyrinogen IX and one [4Fe-4S]<br />
+cluster<br />
+[file:PSEPK/hemN/hemN-uniprot.txt "Reaction=coproporphyrinogen III + 2 S-adenosyl-L-methionine ="]<br />
+[file:PSEPK/hemN/hemN-uniprot.txt "Binds 1 [4Fe-4S] cluster."]. These are<br />
+family- and rule-based assignments rather than direct KT2440 experiments.</p>
+<h2 id="openscientist-assessment">OpenScientist assessment</h2>
+<p>The OpenScientist report correctly identifies the target, radical-SAM<br />
+reaction, and [4Fe-4S] requirement and explicitly notes that Q88F35 has not<br />
+been experimentally characterized. It presents unarchived target residue<br />
+mapping, transfers E. coli structural and mechanistic details, and transfers<br />
+Anr/Dnr regulation and mutant phenotypes from other species. It also promotes<br />
+PP_3781 from an uncharacterized HemN-family protein to a redundant KT2440<br />
+oxidase even while acknowledging that it could be a HemW-type protein. The<br />
+pathway diagram substitutes HemG/HemY for the KT2440 HemJ-family PP_0431 step.<br />
+These extrapolations were not used as target evidence.</p>
+<h2 id="curation-decisions">Curation decisions</h2>
+<p>GO:0051989 is accepted as the most precise core molecular function and<br />
+GO:0006785 is used for the heme-B endpoint. Cytoplasmic localization and the<br />
+[4Fe-4S] cofactor remain grounded in UniProt family rules, with broad metal and<br />
+iron-sulfur binding kept non-core. KT2440-specific regulation, oxygen-regime<br />
+dominance, and any PP_3781 redundancy remain open questions.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88F35
+gene_symbol: hemN
+product_type: PROTEIN
+aliases:
+  - PP_4264
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  HemN is a cytoplasmic radical-SAM coproporphyrinogen-III dehydrogenase that
+  provides an oxygen-independent route to protoporphyrinogen IX. It binds a
+  catalytic [4Fe-4S] cluster and consumes S-adenosyl-L-methionine while
+  converting two propionate side chains of coproporphyrinogen III to vinyl
+  groups. KT2440 also encodes the oxygen-dependent alternative HemF.
+existing_annotations:
+  - term:
+      id: GO:0003824
+      label: catalytic activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: HemN is catalytic, but this root molecular-function term is uninformative.
+      action: MODIFY
+      reason: &gt;-
+        GO:0051989 captures the specific radical-SAM coproporphyrinogen
+        dehydrogenase reaction and should replace generic catalytic activity.
+      proposed_replacement_terms:
+        - id: GO:0051989
+          label: coproporphyrinogen dehydrogenase activity
+      supported_by:
+        - reference_id: file:PSEPK/hemN/hemN-uniprot.txt
+          supporting_text: &#34;EC=1.3.98.3;&#34;
+  - term:
+      id: GO:0004109
+      label: coproporphyrinogen oxidase activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: This describes the pathway position but not HemN&#39;s specific radical-SAM chemistry.
+      action: MODIFY
+      reason: &gt;-
+        The oxygen-independent EC 1.3.98.3 reaction is represented by
+        GO:0051989, whereas GO:0004109 is used for the distinct HemF-type
+        oxidase activity.
+      proposed_replacement_terms:
+        - id: GO:0051989
+          label: coproporphyrinogen dehydrogenase activity
+      supported_by:
+        - reference_id: file:PSEPK/hemN/hemN-uniprot.txt
+          supporting_text: &#34;Reaction=coproporphyrinogen III + 2 S-adenosyl-L-methionine =&#34;
+  - term:
+      id: GO:0005737
+      label: cytoplasm
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: located_in
+    review:
+      summary: Cytoplasmic localization is explicitly predicted for HemN.
+      action: ACCEPT
+      reason: UniProt assigns the soluble radical-SAM enzyme to the cytoplasm.
+      supported_by:
+        - reference_id: file:PSEPK/hemN/hemN-uniprot.txt
+          supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+  - term:
+      id: GO:0006779
+      label: porphyrin-containing compound biosynthetic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: involved_in
+    review:
+      summary: The pathway assignment is correct and can be made endpoint-specific for KT2440.
+      action: MODIFY
+      reason: &gt;-
+        HemN forms protoporphyrinogen IX in the oxygen-independent late route
+        leading to heme B, supporting the live endpoint term GO:0006785.
+      proposed_replacement_terms:
+        - id: GO:0006785
+          label: heme B biosynthetic process
+      supported_by:
+        - reference_id: file:PSEPK/hemN/hemN-uniprot.txt
+          supporting_text: &#34;route): step 1/1.&#34;
+  - term:
+      id: GO:0046872
+      label: metal ion binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000104
+    qualifier: enables
+    review:
+      summary: This broad metal-binding term is correct but less informative than the cluster term.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        HemN&#39;s relevant metal center is a defined [4Fe-4S] radical-SAM cluster;
+        generic metal binding remains true but is ancillary to catalysis.
+      supported_by:
+        - reference_id: file:PSEPK/hemN/hemN-uniprot.txt
+          supporting_text: &#34;Name=[4Fe-4S] cluster; Xref=ChEBI:CHEBI:49883;&#34;
+  - term:
+      id: GO:0051536
+      label: iron-sulfur cluster binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: This parent is valid but less informative than the specific cluster-type term.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        GO:0051539 states the [4Fe-4S] cluster type established for HemN and is
+        preferable as cofactor detail; the broader parent is still correct.
+      supported_by:
+        - reference_id: file:PSEPK/hemN/hemN-uniprot.txt
+          supporting_text: &#34;Binds 1 [4Fe-4S] cluster.&#34;
+  - term:
+      id: GO:0051539
+      label: 4 iron, 4 sulfur cluster binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: enables
+    review:
+      summary: A [4Fe-4S] center is integral to radical-SAM catalysis by HemN.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        The cofactor assignment is specific and well supported by family-level
+        residue predictions, but the substrate-level dehydrogenase term remains
+        the core molecular function.
+      supported_by:
+        - reference_id: file:PSEPK/hemN/hemN-uniprot.txt
+          supporting_text: &#34;Binds 1 [4Fe-4S] cluster.&#34;
+  - term:
+      id: GO:0051989
+      label: coproporphyrinogen dehydrogenase activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: enables
+    review:
+      summary: This is the most precise available molecular-function term for HemN.
+      action: ACCEPT
+      reason: &gt;-
+        UniProt assigns EC 1.3.98.3 and RHEA:15425, the radical-SAM conversion
+        of coproporphyrinogen III to protoporphyrinogen IX.
+      supported_by:
+        - reference_id: file:PSEPK/hemN/hemN-uniprot.txt
+          supporting_text: &#34;Reaction=coproporphyrinogen III + 2 S-adenosyl-L-methionine =&#34;
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings: []
+  - id: GO_REF:0000104
+    title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+    findings: []
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings: []
+  - id: file:PSEPK/hemN/hemN-uniprot.txt
+    title: UniProtKB entry for PSEPK hemN
+    findings:
+      - statement: HemN catalyzes radical-SAM formation of protoporphyrinogen IX.
+        supporting_text: &#34;Reaction=coproporphyrinogen III + 2 S-adenosyl-L-methionine =&#34;
+      - statement: HemN binds one [4Fe-4S] cluster.
+        supporting_text: &#34;Binds 1 [4Fe-4S] cluster.&#34;
+  - id: file:PSEPK/hemN/hemN-deep-research-openscientist.md
+    title: OpenScientist research report for PSEPK hemN
+    findings:
+      - statement: &gt;-
+          The report recovers the HemN reaction but acknowledges the absence of
+          direct experimental characterization of the KT2440 protein.
+        supporting_text: &gt;-
+          No direct experimental characterization of the *P. putida* KT2440
+          protein.
+    reference_review:
+      relevance: HIGH
+      correctness: MISCITED
+      review_notes: &gt;-
+        The report correctly identifies the radical-SAM
+        coproporphyrinogen-III dehydrogenase reaction and [4Fe-4S] cofactor. It
+        presents unarchived sequence-to-residue mapping, transfers E. coli
+        structure and mechanism, transfers P. aeruginosa Anr/Dnr regulation,
+        and treats the uncharacterized PP_3781 family protein as a redundant
+        oxidase. Its pathway sketch also omits the KT2440 HemJ-family PP_0431
+        step. Those target-specific conclusions were not retained.
+core_functions:
+  - description: &gt;-
+      Uses radical-SAM chemistry and a [4Fe-4S] cluster to convert
+      coproporphyrinogen III to protoporphyrinogen IX without molecular oxygen.
+    molecular_function:
+      id: GO:0051989
+      label: coproporphyrinogen dehydrogenase activity
+    directly_involved_in:
+      - id: GO:0006785
+        label: heme B biosynthetic process
+    locations:
+      - id: GO:0005737
+        label: cytoplasm
+    supported_by:
+      - reference_id: file:PSEPK/hemN/hemN-uniprot.txt
+        supporting_text: &#34;Reaction=coproporphyrinogen III + 2 S-adenosyl-L-methionine =&#34;
+      - reference_id: file:PSEPK/hemN/hemN-uniprot.txt
+        supporting_text: &#34;Binds 1 [4Fe-4S] cluster.&#34;
+suggested_questions:
+  - question: &gt;-
+      Is HemN used only under anoxia, or does it contribute under microoxic
+      conditions where HemF is also expressed?
+suggested_experiments:
+  - hypothesis: HemN becomes the principal late-step enzyme when oxygen limits HemF activity.
+    description: &gt;-
+      Compare hemN and hemF mutant phenotypes across controlled oxygen gradients,
+      including heme-b and pathway-intermediate measurements.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 ---
 title: Human Genes Annotation Re-Review
-status: in_progress
+maturity: IN_PROGRESS
 autolink_gene_symbols: true
 species:
   - human

@@ -1,0 +1,3837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATP5MD - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ATP5MD</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q96IX5" target="_blank" class="term-link">
+                        Q96IX5
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ATP5MD";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q96IX5" data-a="DESCRIPTION: ATP5MD (also ATP5MK; synonyms DAPIT, USMG5, HCVFTP..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ATP5MD (also ATP5MK; synonyms DAPIT, USMG5, HCVFTP2) is a small 58-residue, single-pass transmembrane protein that is subunit k of the membrane-embedded F(o) sector of the mitochondrial F1Fo ATP synthase (Complex V). It is a non-catalytic, structural/accessory subunit: the catalytic and proton-conducting activities belong to the assembled complex rather than to this subunit. ATP5MD is required for the stability and assembly of Complex V and, in particular, for its dimerization (oligomerization); the ATP synthase dimer helps shape mitochondrial cristae and thereby optimizes proton flow and ATP production. Loss of ATP5MD reduces the population and dimeric form of ATP synthase in mitochondria and lowers the rate of proton motive force-driven ATP synthesis. The protein is anchored in the mitochondrial inner membrane. In humans, biallelic loss-of-function variants cause mitochondrial complex V deficiency, nuclear type 6 (a Leigh-syndrome presentation).</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045259" target="_blank" class="term-link">
+                                    GO:0045259
+                                </a>
+                            </span>
+                            <span class="term-label">proton-transporting ATP synthase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96IX5" data-a="GO:0045259" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference that ATP5MD is part of the proton-transporting ATP synthase complex. This is the well-established core cellular-component assignment for this protein: it is subunit k of the membrane F(o) sector of mitochondrial ATP synthase (Complex V).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and core. UniProt describes the protein as &#34;Subunit k, of the mitochondrial membrane ATP synthase complex&#34; and a component of the F(o) domain; the IBA assignment matches the experimental and orthology evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ATP5MD/ATP5MD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Subunit k, of the mitochondrial membrane ATP synthase complex</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29917077" target="_blank" class="term-link">
+                                        PMID:29917077
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a novel CV subunit disease gene, USMG5</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031966" target="_blank" class="term-link">
+                                    GO:0031966
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96IX5" data-a="GO:0031966" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation (from the UniProt Subcellular Location keyword mapping) placing ATP5MD in the mitochondrial membrane. This is correct but less specific than the mitochondrial inner membrane, where the F(o) sector actually resides.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the curated UniProt subcellular location (&#34;Mitochondrion membrane&#34;; single-pass membrane protein). It is a valid, if broad, location; the more specific GO:0005743 (mitochondrial inner membrane) captures the exact compartment and is retained as core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ATP5MD/ATP5MD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96IX5" data-a="GO:0005739" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation (Ensembl Compara transfer from mouse ortholog) placing ATP5MD in the mitochondrion. Correct but the least specific of the location terms for this protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uncontroversial; ATP5MD is a mitochondrial protein. Retained as accurate but general; the inner-membrane term is the informative core location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ATP5MD/ATP5MD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Subunit k, of the mitochondrial membrane ATP synthase complex</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26297831" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26297831
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Assembly of human mitochondrial ATP synthase through two sep...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96IX5" data-a="GO:0005743" data-r="PMID:26297831" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal-curated (NAS) annotation locating ATP5MD in the mitochondrial inner membrane, the compartment that houses the membrane F(o) sector of ATP synthase. This is the most specific and informative location for this subunit.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and core. As a single-pass membrane subunit of the F(o) sector, ATP5MD resides in the inner mitochondrial membrane where oxidative phosphorylation occurs. The cited assembly study establishes the inner-membrane ATP synthase context.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29917077" target="_blank" class="term-link">
+                                        PMID:29917077
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">OXPHOS occurs at the inner mitochondrial membrane through the integrated</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26297831" target="_blank" class="term-link">
+                                        PMID:26297831
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mitochondrial ATP synthase is a motor enzyme in which a central shaft rotates</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015986" target="_blank" class="term-link">
+                                    GO:0015986
+                                </a>
+                            </span>
+                            <span class="term-label">proton motive force-driven ATP synthesis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26297831" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26297831
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Assembly of human mitochondrial ATP synthase through two sep...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96IX5" data-a="GO:0015986" data-r="PMID:26297831" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal-curated (NAS) annotation that ATP5MD is involved in proton motive force-driven ATP synthesis. As a subunit of the F(o) proton-channel sector, ATP5MD contributes to the complex that synthesizes ATP using the transmembrane proton gradient.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core biological process for a Complex V subunit. Knockdown/loss of DAPIT reduces mitochondrial ATP synthesis, linking this subunit to the ATP-synthesis process. The more specific mitochondrial term (GO:0042776) is used in core_functions.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21345788" target="_blank" class="term-link">
+                                        PMID:21345788
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DAPIT-knockdown cells show smaller mitochondrial ATP synthesis activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29917077" target="_blank" class="term-link">
+                                        PMID:29917077
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">reduced both CV dimer expression and ATP synthesis rate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045259" target="_blank" class="term-link">
+                                    GO:0045259
+                                </a>
+                            </span>
+                            <span class="term-label">proton-transporting ATP synthase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26297831" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26297831
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Assembly of human mitochondrial ATP synthase through two sep...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96IX5" data-a="GO:0045259" data-r="PMID:26297831" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal-curated (NAS) statement of complex membership, duplicating the IBA/ISS/IMP assignments to the proton-transporting ATP synthase complex. Correct and core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ATP5MD is a bona fide subunit (subunit k) of the F(o) sector of mitochondrial ATP synthase. Duplicate complex-membership annotations with different evidence are acceptable and mutually reinforcing.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ATP5MD/ATP5MD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">a membrane F(0) domain - the membrane proton channel (subunits c, a, 8, e, f, g, k and j)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96IX5" data-a="GO:0005739" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Human Protein Atlas immunofluorescence (IDA) localizing ATP5MD to the mitochondrion. Directly consistent with all other evidence for this protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental localization consistent with a mitochondrial ATP synthase subunit. Correct but general; the inner-membrane term is the informative core location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ATP5MD/ATP5MD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Subunit k, of the mitochondrial membrane ATP synthase complex</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031966" target="_blank" class="term-link">
+                                    GO:0031966
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21345788" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21345788
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Knockdown of DAPIT (diabetes-associated protein in insulin-s...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96IX5" data-a="GO:0031966" data-r="PMID:21345788" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP) annotation of mitochondrial membrane localization from the DAPIT knockdown study, which characterized DAPIT as associated with mitochondrial ATP synthase in the mitochondrial membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supported by experimental characterization of DAPIT as a mitochondrial ATP synthase-associated membrane protein. Correct; the inner-membrane term is the more specific location retained as core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21345788" target="_blank" class="term-link">
+                                        PMID:21345788
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the suppressed expression of DAPIT in DAPIT-knockdown HeLa cells causes</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031966" target="_blank" class="term-link">
+                                    GO:0031966
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29917077" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29917077
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    USMG5 Ashkenazi Jewish founder mutation impairs mitochondria...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96IX5" data-a="GO:0031966" data-r="PMID:29917077" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP) annotation of mitochondrial membrane localization from the USMG5 disease study, which analyzed the protein in the context of inner-membrane Complex V.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the protein&#39;s role as a membrane subunit of Complex V embedded in the inner mitochondrial membrane. Correct; general term retained alongside the specific inner-membrane assignment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29917077" target="_blank" class="term-link">
+                                        PMID:29917077
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">OXPHOS occurs at the inner mitochondrial membrane through the integrated</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96IX5" data-a="GO:0005739" data-r="PMID:34800366" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput (HTP) proteomic identification of ATP5MD in the high-confidence human mitochondrial proteome. Corroborates mitochondrial localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent, high-throughput support for mitochondrial localization. Correct but general; retained as corroborating evidence for the mitochondrial location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                                        PMID:34800366
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">high-confidence human mitochondrial proteome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045259" target="_blank" class="term-link">
+                                    GO:0045259
+                                </a>
+                            </span>
+                            <span class="term-label">proton-transporting ATP synthase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96IX5" data-a="GO:0045259" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity (ISS) transfer, from the bovine ortholog (UniProtKB:Q3ZBI7), of membership in the proton-transporting ATP synthase complex. Duplicate of the core complex-membership assignment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The bovine ortholog is a validated ATP synthase subunit k; ISS transfer to the human protein is well justified and matches the experimental IMP/NAS evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ATP5MD/ATP5MD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Subunit k, of the mitochondrial membrane ATP synthase complex</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045259" target="_blank" class="term-link">
+                                    GO:0045259
+                                </a>
+                            </span>
+                            <span class="term-label">proton-transporting ATP synthase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29917077" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29917077
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    USMG5 Ashkenazi Jewish founder mutation impairs mitochondria...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96IX5" data-a="GO:0045259" data-r="PMID:29917077" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation of complex membership from the USMG5 disease study: a founder splice mutation abolished the protein and selectively reduced Complex V dimer expression and ATP synthesis, with wild-type cDNA rescue restoring both, directly demonstrating that the protein is a functional subunit of Complex V.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Strong experimental evidence (mutation plus rescue) that ATP5MD/USMG5 is a subunit of the proton-transporting ATP synthase complex required for its dimeric assembly. Core annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29917077" target="_blank" class="term-link">
+                                        PMID:29917077
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">reduced both CV dimer expression and ATP synthesis rate</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29917077" target="_blank" class="term-link">
+                                        PMID:29917077
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Rescue with wild-type USMG5 cDNA in proband fibroblasts restored USMG5 protein, increased CV</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-164832
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96IX5" data-a="GO:0005743" data-r="Reactome:R-HSA-164832" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author-statement (TAS) inner-membrane localization associated with the &#34;ATPase synthesizes ATP&#34; reaction of the F1Fo ATP synthase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reactome places ATP synthase and its subunits in the mitochondrial inner membrane, consistent with all other evidence. Correct core location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29917077" target="_blank" class="term-link">
+                                        PMID:29917077
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">OXPHOS occurs at the inner mitochondrial membrane through the integrated</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-164834
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96IX5" data-a="GO:0005743" data-r="Reactome:R-HSA-164834" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS inner-membrane localization associated with the &#34;Enzyme-bound ATP is released&#34; reaction of the F1Fo ATP synthase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct inner-membrane location for an ATP synthase subunit; consistent with the curated UniProt and experimental evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29917077" target="_blank" class="term-link">
+                                        PMID:29917077
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">OXPHOS occurs at the inner mitochondrial membrane through the integrated</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-164840
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96IX5" data-a="GO:0005743" data-r="Reactome:R-HSA-164840" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS inner-membrane localization associated with the &#34;ADP and Pi bind to ATPase&#34; reaction of the F1Fo ATP synthase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct inner-membrane location for an ATP synthase subunit; duplicate Reactome reaction-level annotation, consistent with core biology.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29917077" target="_blank" class="term-link">
+                                        PMID:29917077
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">OXPHOS occurs at the inner mitochondrial membrane through the integrated</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-8949580
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96IX5" data-a="GO:0005743" data-r="Reactome:R-HSA-8949580" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS inner-membrane localization associated with the &#34;F1Fo ATP synthase dimerizes&#34; reaction — directly relevant given ATP5MD&#39;s role in Complex V dimerization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct inner-membrane location; especially apt because this subunit is required for the dimerization event this Reactome reaction represents.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ATP5MD/ATP5MD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Required for dimerization of the ATP synthase complex and as such regulates ATP synthesis in the mitochondria</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29917077" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29917077
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    USMG5 Ashkenazi Jewish founder mutation impairs mitochondria...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96IX5" data-a="GO:0005739" data-r="PMID:29917077" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation of mitochondrial localization from the USMG5 disease study. Correct but the least specific of the location terms.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with experimental characterization of the protein as a mitochondrial Complex V subunit; general location retained alongside the specific inner-membrane term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29917077" target="_blank" class="term-link">
+                                        PMID:29917077
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a novel CV subunit disease gene, USMG5</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                                    GO:0005198
+                                </a>
+                            </span>
+                            <span class="term-label">structural molecule activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q96IX5" data-a="GO:0005198" data-r="GO_REF:0000033" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed subunit-specific molecular function. ATP5MD is a small non-catalytic membrane subunit that acts as a structural constituent of the F(o) sector of ATP synthase; it does not independently catalyze ATP synthesis but is required for complex stability and dimerization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GOA carries the complex-membership CC and the ATP-synthesis BP but no molecular function for this subunit. The appropriate subunit-level MF is structural molecule activity, reflecting its role as a structural/accessory component whose loss destabilizes Complex V (the complex-level rotary activity is captured in core_functions via contributes_to GO:0046933).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ATP5MD/ATP5MD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Required for dimerization of the ATP synthase complex and as such regulates ATP synthesis in the mitochondria</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21345788" target="_blank" class="term-link">
+                                        PMID:21345788
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a critical role of DAPIT in</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042776" target="_blank" class="term-link">
+                                    GO:0042776
+                                </a>
+                            </span>
+                            <span class="term-label">proton motive force-driven mitochondrial ATP synthesis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29917077" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29917077
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    USMG5 Ashkenazi Jewish founder mutation impairs mitochondria...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q96IX5" data-a="GO:0042776" data-r="PMID:29917077" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> More specific (mitochondrial) counterpart of the GOA-carried GO:0015986. ATP5MD is part of the mitochondrial ATP synthase that produces ATP from the proton motive force across the inner membrane, and its loss reduces the mitochondrial ATP synthesis rate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Refines the existing GO:0015986 (proton motive force-driven ATP synthesis) to the mitochondrial-specific term, better fitting a mitochondrial inner-membrane Complex V subunit. Supported experimentally by reduced ATP synthesis on DAPIT/USMG5 loss.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29917077" target="_blank" class="term-link">
+                                        PMID:29917077
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">reduced both CV dimer expression and ATP synthesis rate</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21345788" target="_blank" class="term-link">
+                                        PMID:21345788
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DAPIT-knockdown cells show smaller mitochondrial ATP synthesis activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033615" target="_blank" class="term-link">
+                                    GO:0033615
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial proton-transporting ATP synthase complex assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29917077" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29917077
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    USMG5 Ashkenazi Jewish founder mutation impairs mitochondria...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q96IX5" data-a="GO:0033615" data-r="PMID:29917077" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed process annotation capturing ATP5MD&#39;s role in the assembly/oligomerization of mitochondrial ATP synthase. Loss of ATP5MD reduces Complex V dimer formation and the overall ATP synthase population, and wild-type rescue restores dimerization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well supported by both DAPIT knockdown (loss of ATP synthase population) and the USMG5 disease study (selective loss of the dimeric complex with rescue), which together establish a role in ATP synthase complex assembly/dimerization not otherwise captured by the GOA terms.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29917077" target="_blank" class="term-link">
+                                        PMID:29917077
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">reduced both CV dimer expression and ATP synthesis rate</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ATP5MD/ATP5MD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Required for dimerization of the ATP synthase complex and as such regulates ATP synthesis in the mitochondria</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Structural/accessory subunit k of the membrane F(o) sector of mitochondrial F1Fo ATP synthase (Complex V); contributes to the complex-level rotary ATP synthase activity that couples proton translocation across the inner membrane to ATP synthesis. As a subunit it is a structural constituent (does not independently catalyze ATP synthesis).</h3>
+                <span class="vote-buttons" data-g="Q96IX5" data-a="FUNCTION: Structural/accessory subunit k of the membrane F(o..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                            structural molecule activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042776" target="_blank" class="term-link">
+                                proton motive force-driven mitochondrial ATP synthesis
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033615" target="_blank" class="term-link">
+                                mitochondrial proton-transporting ATP synthase complex assembly
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                mitochondrial inner membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045259" target="_blank" class="term-link">
+                            proton-transporting ATP synthase complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/ATP5MD/ATP5MD-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Subunit k, of the mitochondrial membrane ATP synthase complex</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/ATP5MD/ATP5MD-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Required for dimerization of the ATP synthase complex and as such regulates ATP synthesis in the mitochondria</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29917077" target="_blank" class="term-link">
+                                PMID:29917077
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">reduced both CV dimer expression and ATP synthesis rate</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21345788" target="_blank" class="term-link">
+                            PMID:21345788
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Knockdown of DAPIT (diabetes-associated protein in insulin-sensitive tissue) results in loss of ATP synthase in mitochondria.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">DAPIT knockdown in HeLa cells reduces the population of ATP synthase in mitochondria and lowers mitochondrial ATP synthesis activity, indicating that DAPIT is required to maintain the ATP synthase complex.</div>
+
+                        <div class="finding-text">"DAPIT-knockdown cells show smaller mitochondrial ATP synthesis activity"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26297831" target="_blank" class="term-link">
+                            PMID:26297831
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Assembly of human mitochondrial ATP synthase through two separate intermediates, F1-c-ring and b-e-g complex.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human mitochondrial ATP synthase assembles from separately formed rotor and stator modules; the abstract foregrounds d-subunit knockdown, but ComplexPortal uses this study as the reference for ATP5MD complex membership, PMF-driven ATP synthesis, and inner-membrane localization.</div>
+
+                        <div class="finding-text">"human cells could not form ATP synthase holocomplex"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29917077" target="_blank" class="term-link">
+                            PMID:29917077
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">USMG5 Ashkenazi Jewish founder mutation impairs mitochondrial complex V dimerization and ATP synthesis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A homozygous USMG5 (ATP5MD/ATP5MK) splice mutation abolishes the protein and selectively reduces Complex V dimer expression and ATP synthesis without affecting monomeric CV; wild-type cDNA rescue restores dimerization and ATP production, defining USMG5 as a Complex V subunit required for dimerization.</div>
+
+                        <div class="finding-text">"reduced both CV dimer expression and ATP synthesis rate"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ATP5MD is identified as part of the high-confidence human mitochondrial proteome, corroborating its mitochondrial localization.</div>
+
+                        <div class="finding-text">"high-confidence human mitochondrial proteome"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-164832
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ATPase synthesizes ATP</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-164834
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Enzyme-bound ATP is released</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-164840
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ADP and Pi bind to ATPase</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-8949580
+
+                    </span>
+                </div>
+
+                <div class="reference-title">F1Fo ATP synthase dimerizes</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/ATP5MD/ATP5MD-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB Q96IX5 (ATPMK_HUMAN) - ATP synthase F(0) complex subunit k, mitochondrial</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt curates ATP5MD as subunit k of the mitochondrial membrane ATP synthase complex (Complex V), part of the F(o) domain, required for dimerization of the complex and localized to the mitochondrion membrane as a single-pass membrane protein.</div>
+
+                        <div class="finding-text">"Subunit k, of the mitochondrial membrane ATP synthase complex"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ATP5MD-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q96IX5" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="atp5md-atp5mk-dapit-usmg5-review-notes">ATP5MD / ATP5MK (DAPIT / USMG5) review notes</h1>
+<p>UniProtKB: <strong>Q96IX5</strong> (ATPMK_HUMAN). 58 aa protein; single-pass transmembrane<br />
+(TRANSMEM 23-45). HGNC:30889, gene symbol now <strong>ATP5MK</strong> (prior ATP5MD; synonyms<br />
+DAPIT, HCVFTP2, USMG5). "ATP synthase F(0) complex subunit k, mitochondrial".</p>
+<p>Deep research: falcon provider OUT OF CREDITS (402) at time of review — no<br />
+<code>-deep-research-falcon.md</code> generated. This review is grounded in the UniProt record,<br />
+the seeded GOA, and cached publications.</p>
+<h2 id="core-biology-from-uniprot-q96ix5-cached-pmids">Core biology (from UniProt Q96IX5 + cached PMIDs)</h2>
+<ul>
+<li><strong>Subunit k of mitochondrial F1Fo ATP synthase (Complex V)</strong>, part of the membrane<br />
+  F(0) domain [UniProt FUNCTION: "Subunit k, of the mitochondrial membrane ATP synthase<br />
+  complex (F(1)F(0) ATP synthase or Complex V)"; "Part of the complex F(0) domain"].</li>
+<li><strong>Non-catalytic / structural</strong>: the complex (not this subunit) has the catalytic /<br />
+  rotary activity. UniProt: "In vivo, can only synthesize ATP although its ATP hydrolase<br />
+  activity can be activated artificially in vitro" — this refers to the whole complex.<br />
+  Subunit k itself is a small membrane accessory subunit; no independent catalytic MF<br />
+  should be invented. Use GO:0005198 structural molecule activity (subunit-specific) +<br />
+  contributes_to GO:0046933 (complex rotational ATP synthase activity).</li>
+<li><strong>Required for dimerization/oligomerisation and stability of Complex V</strong>:<br />
+  UniProt: "Required for dimerization of the ATP synthase complex and as such regulates<br />
+  ATP synthesis in the mitochondria (PubMed:21345788, PubMed:29917077)". The complex<br />
+  "exists as a monomeric and a dimeric supercomplex that helps shape mitochondrial<br />
+  cristae to optimize proton flow (PubMed:29917077)".</li>
+<li><strong>Localisation</strong>: Mitochondrion inner membrane / membrane; single-pass membrane protein.</li>
+</ul>
+<h2 id="key-papers">Key papers</h2>
+<ul>
+<li><strong>PMID:21345788</strong> (Ohsakaya 2011, JBC) — DAPIT knockdown in HeLa causes loss of ATP<br />
+  synthase population in mitochondria; reduced mitochondrial ATP synthesis activity;<br />
+  slower growth; α/β mRNA unchanged. Supports FUNCTION (complex stability, ATP synthesis)<br />
+  and mitochondrial membrane localization (EXP). Abstract-only cache (full_text_available:<br />
+  false).</li>
+<li><strong>PMID:29917077</strong> (Barca 2018, HMG) — USMG5 (=ATP5MK) Ashkenazi founder splice mutation<br />
+  causes Leigh syndrome (MC5DN6). Mutation reduced CV <strong>dimer</strong> expression and ATP<br />
+  synthesis rate without altering monomeric CV; WT cDNA rescue restored dimerization and<br />
+  ATP production. Supports complex membership (IMP), dimerization role, ATP synthesis,<br />
+  inner-membrane localization. Abstract-only cache.</li>
+<li><strong>PMID:26297831</strong> (Fujikawa 2015, FEBS Lett) — human ATP synthase assembly via two<br />
+  intermediates (F1-c-ring, b-e-g). Used by ComplexPortal as NAS reference for complex<br />
+  membership + PMF-driven ATP synthesis + inner-membrane localization. Abstract foregrounds<br />
+  d-subunit knockdown; ComplexPortal curator used full text / complex context. Abstract-only.</li>
+<li><strong>PMID:34800366</strong> (Morgenstern 2021, Cell Metab) — high-confidence human mitochondrial<br />
+  proteome; HTP evidence for mitochondrion localization. Full text available but gene named<br />
+  only in supplementary tables (not in extracted body text). Cite verbatim framing phrase.</li>
+</ul>
+<h2 id="goa-17-annotations-lines-2-18">GOA (17 annotations, lines 2-18)</h2>
+<p>All CC/BP terms consistent with a mitochondrial Complex V Fo subunit:<br />
+- GO:0045259 proton-transporting ATP synthase complex (IBA, NAS, ISS, IMP) — ACCEPT (core)<br />
+- GO:0005743 mitochondrial inner membrane (NAS, TAS x4) — ACCEPT (core location)<br />
+- GO:0031966 mitochondrial membrane (IEA, EXP x2) — ACCEPT (correct but less specific than 0005743)<br />
+- GO:0005739 mitochondrion (IEA, IDA, HTP, IMP) — ACCEPT (correct but least specific)<br />
+- GO:0015986 proton motive force-driven ATP synthesis (NAS) — ACCEPT (core BP)</p>
+<p>No annotations warrant REMOVE. No bare <code>protein binding</code> IPIs present. No IEAs are wrong.</p>
+<h2 id="core_functions-term-ids-verified-via-ols">core_functions term IDs (verified via OLS)</h2>
+<ul>
+<li>GO:0005198 structural molecule activity (MF, subunit-specific)</li>
+<li>GO:0046933 proton-transporting ATP synthase activity, rotational mechanism (contributes_to)</li>
+<li>GO:0042776 proton motive force-driven mitochondrial ATP synthesis (BP)</li>
+<li>GO:0033615 mitochondrial proton-transporting ATP synthase complex assembly (BP)</li>
+<li>GO:0005743 mitochondrial inner membrane (location)</li>
+<li>GO:0045259 proton-transporting ATP synthase complex (in_complex)</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q96IX5
+gene_symbol: ATP5MD
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  ATP5MD (also ATP5MK; synonyms DAPIT, USMG5, HCVFTP2) is a small 58-residue,
+  single-pass transmembrane protein that is subunit k of the membrane-embedded
+  F(o) sector of the mitochondrial F1Fo ATP synthase (Complex V). It is a
+  non-catalytic, structural/accessory subunit: the catalytic and proton-conducting
+  activities belong to the assembled complex rather than to this subunit. ATP5MD
+  is required for the stability and assembly of Complex V and, in particular, for
+  its dimerization (oligomerization); the ATP synthase dimer helps shape
+  mitochondrial cristae and thereby optimizes proton flow and ATP production. Loss
+  of ATP5MD reduces the population and dimeric form of ATP synthase in mitochondria
+  and lowers the rate of proton motive force-driven ATP synthesis. The protein is
+  anchored in the mitochondrial inner membrane. In humans, biallelic loss-of-function
+  variants cause mitochondrial complex V deficiency, nuclear type 6 (a Leigh-syndrome
+  presentation).
+existing_annotations:
+- term:
+    id: GO:0045259
+    label: proton-transporting ATP synthase complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference that ATP5MD is part of the proton-transporting
+      ATP synthase complex. This is the well-established core cellular-component
+      assignment for this protein: it is subunit k of the membrane F(o) sector of
+      mitochondrial ATP synthase (Complex V).
+    action: ACCEPT
+    reason: &gt;-
+      Correct and core. UniProt describes the protein as &#34;Subunit k, of the
+      mitochondrial membrane ATP synthase complex&#34; and a component of the F(o)
+      domain; the IBA assignment matches the experimental and orthology evidence.
+    supported_by:
+    - reference_id: file:human/ATP5MD/ATP5MD-uniprot.txt
+      supporting_text: Subunit k, of the mitochondrial membrane ATP synthase complex
+    - reference_id: PMID:29917077
+      supporting_text: a novel CV subunit disease gene, USMG5
+- term:
+    id: GO:0031966
+    label: mitochondrial membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic annotation (from the UniProt Subcellular Location keyword mapping)
+      placing ATP5MD in the mitochondrial membrane. This is correct but less specific
+      than the mitochondrial inner membrane, where the F(o) sector actually resides.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the curated UniProt subcellular location (&#34;Mitochondrion
+      membrane&#34;; single-pass membrane protein). It is a valid, if broad, location;
+      the more specific GO:0005743 (mitochondrial inner membrane) captures the exact
+      compartment and is retained as core.
+    supported_by:
+    - reference_id: file:human/ATP5MD/ATP5MD-uniprot.txt
+      supporting_text: Mitochondrion membrane
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic annotation (Ensembl Compara transfer from mouse ortholog) placing
+      ATP5MD in the mitochondrion. Correct but the least specific of the location
+      terms for this protein.
+    action: ACCEPT
+    reason: &gt;-
+      Uncontroversial; ATP5MD is a mitochondrial protein. Retained as accurate but
+      general; the inner-membrane term is the informative core location.
+    supported_by:
+    - reference_id: file:human/ATP5MD/ATP5MD-uniprot.txt
+      supporting_text: Subunit k, of the mitochondrial membrane ATP synthase complex
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: NAS
+  original_reference_id: PMID:26297831
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ComplexPortal-curated (NAS) annotation locating ATP5MD in the mitochondrial
+      inner membrane, the compartment that houses the membrane F(o) sector of ATP
+      synthase. This is the most specific and informative location for this subunit.
+    action: ACCEPT
+    reason: &gt;-
+      Correct and core. As a single-pass membrane subunit of the F(o) sector, ATP5MD
+      resides in the inner mitochondrial membrane where oxidative phosphorylation
+      occurs. The cited assembly study establishes the inner-membrane ATP synthase
+      context.
+    supported_by:
+    - reference_id: PMID:29917077
+      supporting_text: OXPHOS occurs at the inner mitochondrial membrane through the integrated
+    - reference_id: PMID:26297831
+      supporting_text: Mitochondrial ATP synthase is a motor enzyme in which a central shaft rotates
+- term:
+    id: GO:0015986
+    label: proton motive force-driven ATP synthesis
+  evidence_type: NAS
+  original_reference_id: PMID:26297831
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ComplexPortal-curated (NAS) annotation that ATP5MD is involved in proton motive
+      force-driven ATP synthesis. As a subunit of the F(o) proton-channel sector,
+      ATP5MD contributes to the complex that synthesizes ATP using the transmembrane
+      proton gradient.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core biological process for a Complex V subunit. Knockdown/loss of DAPIT
+      reduces mitochondrial ATP synthesis, linking this subunit to the ATP-synthesis
+      process. The more specific mitochondrial term (GO:0042776) is used in core_functions.
+    supported_by:
+    - reference_id: PMID:21345788
+      supporting_text: DAPIT-knockdown cells show smaller mitochondrial ATP synthesis activity
+    - reference_id: PMID:29917077
+      supporting_text: reduced both CV dimer expression and ATP synthesis rate
+- term:
+    id: GO:0045259
+    label: proton-transporting ATP synthase complex
+  evidence_type: NAS
+  original_reference_id: PMID:26297831
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      ComplexPortal-curated (NAS) statement of complex membership, duplicating the
+      IBA/ISS/IMP assignments to the proton-transporting ATP synthase complex.
+      Correct and core.
+    action: ACCEPT
+    reason: &gt;-
+      ATP5MD is a bona fide subunit (subunit k) of the F(o) sector of mitochondrial
+      ATP synthase. Duplicate complex-membership annotations with different evidence
+      are acceptable and mutually reinforcing.
+    supported_by:
+    - reference_id: file:human/ATP5MD/ATP5MD-uniprot.txt
+      supporting_text: a membrane F(0) domain - the membrane proton channel (subunits c, a, 8, e, f, g, k and j)
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Human Protein Atlas immunofluorescence (IDA) localizing ATP5MD to the
+      mitochondrion. Directly consistent with all other evidence for this protein.
+    action: ACCEPT
+    reason: &gt;-
+      Experimental localization consistent with a mitochondrial ATP synthase subunit.
+      Correct but general; the inner-membrane term is the informative core location.
+    supported_by:
+    - reference_id: file:human/ATP5MD/ATP5MD-uniprot.txt
+      supporting_text: Subunit k, of the mitochondrial membrane ATP synthase complex
+- term:
+    id: GO:0031966
+    label: mitochondrial membrane
+  evidence_type: EXP
+  original_reference_id: PMID:21345788
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Experimental (EXP) annotation of mitochondrial membrane localization from the
+      DAPIT knockdown study, which characterized DAPIT as associated with mitochondrial
+      ATP synthase in the mitochondrial membrane.
+    action: ACCEPT
+    reason: &gt;-
+      Supported by experimental characterization of DAPIT as a mitochondrial ATP
+      synthase-associated membrane protein. Correct; the inner-membrane term is the
+      more specific location retained as core.
+    supported_by:
+    - reference_id: PMID:21345788
+      supporting_text: the suppressed expression of DAPIT in DAPIT-knockdown HeLa cells causes
+- term:
+    id: GO:0031966
+    label: mitochondrial membrane
+  evidence_type: EXP
+  original_reference_id: PMID:29917077
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Experimental (EXP) annotation of mitochondrial membrane localization from the
+      USMG5 disease study, which analyzed the protein in the context of inner-membrane
+      Complex V.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the protein&#39;s role as a membrane subunit of Complex V embedded
+      in the inner mitochondrial membrane. Correct; general term retained alongside the
+      specific inner-membrane assignment.
+    supported_by:
+    - reference_id: PMID:29917077
+      supporting_text: OXPHOS occurs at the inner mitochondrial membrane through the integrated
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput (HTP) proteomic identification of ATP5MD in the high-confidence
+      human mitochondrial proteome. Corroborates mitochondrial localization.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent, high-throughput support for mitochondrial localization. Correct but
+      general; retained as corroborating evidence for the mitochondrial location.
+    supported_by:
+    - reference_id: PMID:34800366
+      supporting_text: high-confidence human mitochondrial proteome
+- term:
+    id: GO:0045259
+    label: proton-transporting ATP synthase complex
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Sequence-similarity (ISS) transfer, from the bovine ortholog (UniProtKB:Q3ZBI7),
+      of membership in the proton-transporting ATP synthase complex. Duplicate of the
+      core complex-membership assignment.
+    action: ACCEPT
+    reason: &gt;-
+      The bovine ortholog is a validated ATP synthase subunit k; ISS transfer to the
+      human protein is well justified and matches the experimental IMP/NAS evidence.
+    supported_by:
+    - reference_id: file:human/ATP5MD/ATP5MD-uniprot.txt
+      supporting_text: Subunit k, of the mitochondrial membrane ATP synthase complex
+- term:
+    id: GO:0045259
+    label: proton-transporting ATP synthase complex
+  evidence_type: IMP
+  original_reference_id: PMID:29917077
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      IMP annotation of complex membership from the USMG5 disease study: a founder
+      splice mutation abolished the protein and selectively reduced Complex V dimer
+      expression and ATP synthesis, with wild-type cDNA rescue restoring both, directly
+      demonstrating that the protein is a functional subunit of Complex V.
+    action: ACCEPT
+    reason: &gt;-
+      Strong experimental evidence (mutation plus rescue) that ATP5MD/USMG5 is a subunit
+      of the proton-transporting ATP synthase complex required for its dimeric assembly.
+      Core annotation.
+    supported_by:
+    - reference_id: PMID:29917077
+      supporting_text: reduced both CV dimer expression and ATP synthesis rate
+    - reference_id: PMID:29917077
+      supporting_text: Rescue with wild-type USMG5 cDNA in proband fibroblasts restored USMG5 protein, increased CV
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-164832
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author-statement (TAS) inner-membrane localization associated
+      with the &#34;ATPase synthesizes ATP&#34; reaction of the F1Fo ATP synthase.
+    action: ACCEPT
+    reason: &gt;-
+      Reactome places ATP synthase and its subunits in the mitochondrial inner membrane,
+      consistent with all other evidence. Correct core location.
+    supported_by:
+    - reference_id: PMID:29917077
+      supporting_text: OXPHOS occurs at the inner mitochondrial membrane through the integrated
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-164834
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome TAS inner-membrane localization associated with the &#34;Enzyme-bound ATP is
+      released&#34; reaction of the F1Fo ATP synthase.
+    action: ACCEPT
+    reason: &gt;-
+      Correct inner-membrane location for an ATP synthase subunit; consistent with the
+      curated UniProt and experimental evidence.
+    supported_by:
+    - reference_id: PMID:29917077
+      supporting_text: OXPHOS occurs at the inner mitochondrial membrane through the integrated
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-164840
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome TAS inner-membrane localization associated with the &#34;ADP and Pi bind to
+      ATPase&#34; reaction of the F1Fo ATP synthase.
+    action: ACCEPT
+    reason: &gt;-
+      Correct inner-membrane location for an ATP synthase subunit; duplicate Reactome
+      reaction-level annotation, consistent with core biology.
+    supported_by:
+    - reference_id: PMID:29917077
+      supporting_text: OXPHOS occurs at the inner mitochondrial membrane through the integrated
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-8949580
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome TAS inner-membrane localization associated with the &#34;F1Fo ATP synthase
+      dimerizes&#34; reaction — directly relevant given ATP5MD&#39;s role in Complex V dimerization.
+    action: ACCEPT
+    reason: &gt;-
+      Correct inner-membrane location; especially apt because this subunit is required for
+      the dimerization event this Reactome reaction represents.
+    supported_by:
+    - reference_id: file:human/ATP5MD/ATP5MD-uniprot.txt
+      supporting_text: Required for dimerization of the ATP synthase complex and as such regulates ATP synthesis in the mitochondria
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IMP
+  original_reference_id: PMID:29917077
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      IMP annotation of mitochondrial localization from the USMG5 disease study.
+      Correct but the least specific of the location terms.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with experimental characterization of the protein as a mitochondrial
+      Complex V subunit; general location retained alongside the specific inner-membrane term.
+    supported_by:
+    - reference_id: PMID:29917077
+      supporting_text: a novel CV subunit disease gene, USMG5
+- term:
+    id: GO:0005198
+    label: structural molecule activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Proposed subunit-specific molecular function. ATP5MD is a small non-catalytic
+      membrane subunit that acts as a structural constituent of the F(o) sector of ATP
+      synthase; it does not independently catalyze ATP synthesis but is required for
+      complex stability and dimerization.
+    action: NEW
+    reason: &gt;-
+      GOA carries the complex-membership CC and the ATP-synthesis BP but no molecular
+      function for this subunit. The appropriate subunit-level MF is structural molecule
+      activity, reflecting its role as a structural/accessory component whose loss
+      destabilizes Complex V (the complex-level rotary activity is captured in
+      core_functions via contributes_to GO:0046933).
+    supported_by:
+    - reference_id: file:human/ATP5MD/ATP5MD-uniprot.txt
+      supporting_text: Required for dimerization of the ATP synthase complex and as such regulates ATP synthesis in the mitochondria
+    - reference_id: PMID:21345788
+      supporting_text: a critical role of DAPIT in
+- term:
+    id: GO:0042776
+    label: proton motive force-driven mitochondrial ATP synthesis
+  evidence_type: NAS
+  original_reference_id: PMID:29917077
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      More specific (mitochondrial) counterpart of the GOA-carried GO:0015986. ATP5MD is
+      part of the mitochondrial ATP synthase that produces ATP from the proton motive force
+      across the inner membrane, and its loss reduces the mitochondrial ATP synthesis rate.
+    action: NEW
+    reason: &gt;-
+      Refines the existing GO:0015986 (proton motive force-driven ATP synthesis) to the
+      mitochondrial-specific term, better fitting a mitochondrial inner-membrane Complex V
+      subunit. Supported experimentally by reduced ATP synthesis on DAPIT/USMG5 loss.
+    supported_by:
+    - reference_id: PMID:29917077
+      supporting_text: reduced both CV dimer expression and ATP synthesis rate
+    - reference_id: PMID:21345788
+      supporting_text: DAPIT-knockdown cells show smaller mitochondrial ATP synthesis activity
+- term:
+    id: GO:0033615
+    label: mitochondrial proton-transporting ATP synthase complex assembly
+  evidence_type: IMP
+  original_reference_id: PMID:29917077
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proposed process annotation capturing ATP5MD&#39;s role in the assembly/oligomerization
+      of mitochondrial ATP synthase. Loss of ATP5MD reduces Complex V dimer formation and
+      the overall ATP synthase population, and wild-type rescue restores dimerization.
+    action: NEW
+    reason: &gt;-
+      Well supported by both DAPIT knockdown (loss of ATP synthase population) and the USMG5
+      disease study (selective loss of the dimeric complex with rescue), which together
+      establish a role in ATP synthase complex assembly/dimerization not otherwise captured
+      by the GOA terms.
+    supported_by:
+    - reference_id: PMID:29917077
+      supporting_text: reduced both CV dimer expression and ATP synthesis rate
+    - reference_id: file:human/ATP5MD/ATP5MD-uniprot.txt
+      supporting_text: Required for dimerization of the ATP synthase complex and as such regulates ATP synthesis in the mitochondria
+core_functions:
+- description: &gt;-
+    Structural/accessory subunit k of the membrane F(o) sector of mitochondrial F1Fo ATP
+    synthase (Complex V); contributes to the complex-level rotary ATP synthase activity that
+    couples proton translocation across the inner membrane to ATP synthesis. As a subunit it
+    is a structural constituent (does not independently catalyze ATP synthesis).
+  molecular_function:
+    id: GO:0005198
+    label: structural molecule activity
+  contributes_to_molecular_function:
+    id: GO:0046933
+    label: proton-transporting ATP synthase activity, rotational mechanism
+  directly_involved_in:
+  - id: GO:0042776
+    label: proton motive force-driven mitochondrial ATP synthesis
+  - id: GO:0033615
+    label: mitochondrial proton-transporting ATP synthase complex assembly
+  locations:
+  - id: GO:0005743
+    label: mitochondrial inner membrane
+  in_complex:
+    id: GO:0045259
+    label: proton-transporting ATP synthase complex
+  supported_by:
+  - reference_id: file:human/ATP5MD/ATP5MD-uniprot.txt
+    supporting_text: Subunit k, of the mitochondrial membrane ATP synthase complex
+  - reference_id: file:human/ATP5MD/ATP5MD-uniprot.txt
+    supporting_text: Required for dimerization of the ATP synthase complex and as such regulates ATP synthesis in the mitochondria
+  - reference_id: PMID:29917077
+    supporting_text: reduced both CV dimer expression and ATP synthesis rate
+references:
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: PMID:21345788
+  title: Knockdown of DAPIT (diabetes-associated protein in insulin-sensitive tissue)
+    results in loss of ATP synthase in mitochondria.
+  findings:
+  - statement: &gt;-
+      DAPIT knockdown in HeLa cells reduces the population of ATP synthase in
+      mitochondria and lowers mitochondrial ATP synthesis activity, indicating that
+      DAPIT is required to maintain the ATP synthase complex.
+    supporting_text: DAPIT-knockdown cells show smaller mitochondrial ATP synthesis activity
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified primary study establishing DAPIT&#39;s requirement for the ATP synthase
+      population and mitochondrial ATP synthesis. Cache is abstract-only; supporting quotes
+      taken verbatim from the abstract.
+- id: PMID:26297831
+  title: Assembly of human mitochondrial ATP synthase through two separate intermediates,
+    F1-c-ring and b-e-g complex.
+  findings:
+  - statement: &gt;-
+      Human mitochondrial ATP synthase assembles from separately formed rotor and stator
+      modules; the abstract foregrounds d-subunit knockdown, but ComplexPortal uses this
+      study as the reference for ATP5MD complex membership, PMF-driven ATP synthesis, and
+      inner-membrane localization.
+    supporting_text: human cells could not form ATP synthase holocomplex
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Correctly cited assembly study; used by ComplexPortal as the NAS reference for several
+      ATP5MD annotations. Abstract-only cache; ATP5MD is not foregrounded in the abstract but
+      the complex context is appropriate.
+- id: PMID:29917077
+  title: USMG5 Ashkenazi Jewish founder mutation impairs mitochondrial complex V dimerization
+    and ATP synthesis.
+  findings:
+  - statement: &gt;-
+      A homozygous USMG5 (ATP5MD/ATP5MK) splice mutation abolishes the protein and selectively
+      reduces Complex V dimer expression and ATP synthesis without affecting monomeric CV;
+      wild-type cDNA rescue restores dimerization and ATP production, defining USMG5 as a
+      Complex V subunit required for dimerization.
+    supporting_text: reduced both CV dimer expression and ATP synthesis rate
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified disease study directly demonstrating that ATP5MD/USMG5 is a Complex V
+      subunit required for dimeric assembly and ATP synthesis (mutation plus rescue). Cache is
+      abstract-only; quotes are verbatim from the abstract.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings:
+  - statement: &gt;-
+      ATP5MD is identified as part of the high-confidence human mitochondrial proteome,
+      corroborating its mitochondrial localization.
+    supporting_text: high-confidence human mitochondrial proteome
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput proteomic study; supports mitochondrial localization (HTP). Gene named
+      only in supplementary tables; the verbatim quote used is the proteome framing from the body text.
+- id: Reactome:R-HSA-164832
+  title: ATPase synthesizes ATP
+  findings: []
+- id: Reactome:R-HSA-164834
+  title: Enzyme-bound ATP is released
+  findings: []
+- id: Reactome:R-HSA-164840
+  title: ADP and Pi bind to ATPase
+  findings: []
+- id: Reactome:R-HSA-8949580
+  title: F1Fo ATP synthase dimerizes
+  findings: []
+- id: file:human/ATP5MD/ATP5MD-uniprot.txt
+  title: UniProtKB Q96IX5 (ATPMK_HUMAN) - ATP synthase F(0) complex subunit k, mitochondrial
+  findings:
+  - statement: &gt;-
+      UniProt curates ATP5MD as subunit k of the mitochondrial membrane ATP synthase complex
+      (Complex V), part of the F(o) domain, required for dimerization of the complex and
+      localized to the mitochondrion membrane as a single-pass membrane protein.
+    supporting_text: Subunit k, of the mitochondrial membrane ATP synthase complex
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Primary UniProt record for the reviewed protein (Q96IX5). All file: quotes verified as
+      verbatim substrings of the cached UniProt text.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

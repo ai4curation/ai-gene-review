@@ -1,0 +1,3429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAR2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>FAR2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q96K12" target="_blank" class="term-link">
+                        Q96K12
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "FAR2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q96K12" data-a="DESCRIPTION: FAR2 (fatty acyl-CoA reductase 2) is a peroxisomal..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>FAR2 (fatty acyl-CoA reductase 2) is a peroxisomal, NADPH-dependent, alcohol-forming fatty acyl-CoA reductase (EC 1.2.1.84) and a paralog of FAR1. It reduces a fatty acyl-CoA to the corresponding primary fatty alcohol with release of CoA. FAR2 has a more saturation-restricted substrate preference than FAR1, favoring saturated C16/C18 acyl-CoA (with lower activity on shorter chains), and can also generate very-long-chain and ultra-long-chain fatty alcohols, including branched-chain species. The fatty alcohols it produces are substrates for wax monoester synthesis and for ether lipid (plasmalogen) biosynthesis. FAR2 is a single-pass, tail-anchored peroxisomal membrane protein with a large cytoplasmic N-terminal catalytic region and a short C-terminal tail in the peroxisomal lumen. Its mRNA has a restricted tissue distribution, being most abundant in the eyelid, where wax-laden Meibomian glands produce meibum lipids, and is also present in brain, a tissue rich in ether lipids.</p>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>fatty alcohol biosynthetic process</h3>
+                <span class="vote-buttons" data-g="Q96K12" data-a="fatty alcohol biosynthetic process" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+
+            <p><strong>Definition:</strong> The chemical reactions and pathways resulting in the formation of fatty alcohol. (Existing term GO:1903175; proposed here as a more direct product-level process annotation for FAR2, which is not currently in GOA.)</p>
+
+
+
+            <p><strong>Justification:</strong> FAR2 directly produces primary fatty alcohols from fatty acyl-CoA. GOA currently annotates the substrate side (GO:0035336 long-chain fatty-acyl-CoA metabolic process) and downstream products (GO:0010025 wax biosynthetic process) but not the fatty alcohol biosynthetic process itself (GO:1903175), which is the most direct product-level process term for this enzyme.</p>
+
+
+
+
+
+
+
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+
+                <li>
+
+                    <a href="https://pubmed.ncbi.nlm.nih.gov/15220348" target="_blank" class="term-link">
+                        PMID:15220348
+                    </a>
+
+
+                    : FAR1 and FAR2 cDNAs encoded isozymes that reduced fatty acids to fatty alcohols
+
+                </li>
+
+            </ul>
+
+        </div>
+
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ether lipid biosynthetic process</h3>
+                <span class="vote-buttons" data-g="Q96K12" data-a="ether lipid biosynthetic process" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+
+            <p><strong>Definition:</strong> The chemical reactions and pathways resulting in the formation of ether lipids. (Existing term GO:0008611; proposed here to capture FAR2&#39;s documented role in supplying fatty alcohols for ether lipid/plasmalogen synthesis, not currently in GOA.)</p>
+
+
+
+            <p><strong>Justification:</strong> UniProt states FAR2 is involved in the production of ether lipids/plasmalogens, whose synthesis requires fatty alcohols as substrates. An ether lipid biosynthetic process annotation (GO:0008611) would capture this documented role, which is not currently represented in GOA.</p>
+
+
+
+
+
+
+
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+
+                <li>
+
+                    file:human/FAR2/FAR2-uniprot.txt
+
+
+                    : Involved in the production of ether
+
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005778" target="_blank" class="term-link">
+                                    GO:0005778
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisomal membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96K12" data-a="GO:0005778" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FAR2 is a peroxisomal membrane protein; the phylogenetic (IBA) inference to peroxisomal membrane is consistent with direct experimental evidence and UniProt annotation, and represents a core localization for this gene.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> FAR2 is experimentally localized to the peroxisome (PMID:15220348) and annotated by UniProt as a single-pass peroxisomal membrane protein. The IBA transfer across the fatty acyl-CoA reductase family is well founded.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FAR2/FAR2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Peroxisome membrane {ECO:0000269|PubMed:15220348,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0080019" target="_blank" class="term-link">
+                                    GO:0080019
+                                </a>
+                            </span>
+                            <span class="term-label">alcohol-forming very long-chain fatty acyl-CoA reductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96K12" data-a="GO:0080019" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. FAR2 is an alcohol-forming fatty acyl-CoA reductase that can also produce very-long-chain fatty alcohols; the phylogenetic inference across the FAR family is supported by direct experimental evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt records that FAR2 can produce very long-chain and ultra long-chain fatty alcohols; this term captures the family-conserved catalytic activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FAR2/FAR2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Can produce very long-chain and ultra long-chain</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035336" target="_blank" class="term-link">
+                                    GO:0035336
+                                </a>
+                            </span>
+                            <span class="term-label">long-chain fatty-acyl-CoA metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96K12" data-a="GO:0035336" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FAR2 acts on long-chain fatty acyl-CoA substrates (C16/C18), so involvement in long-chain fatty-acyl-CoA metabolism is a reasonable process-level annotation consistent with its enzymatic role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Long-chain fatty acyl-CoAs (e.g. palmitoyl-CoA, stearoyl-CoA) are the preferred substrates that FAR2 consumes; the IBA process annotation follows directly from the catalytic activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15220348" target="_blank" class="term-link">
+                                        PMID:15220348
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FAR2 preferred saturated fatty acids of 16 or 18 carbons</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005777" target="_blank" class="term-link">
+                                    GO:0005777
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96K12" data-a="GO:0005777" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Peroxisome localization is correct for FAR2 and is supported experimentally; this ARBA electronic annotation is a correct parent of the more specific peroxisomal membrane localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> FAR2 was localized to the peroxisome by confocal microscopy and is a peroxisomal membrane protein; the compartment-level term is correct.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15220348" target="_blank" class="term-link">
+                                        PMID:15220348
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FAR1 and FAR2 were localized in the peroxisome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005778" target="_blank" class="term-link">
+                                    GO:0005778
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisomal membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96K12" data-a="GO:0005778" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core localization derived from the UniProt Subcellular Location &#34;Peroxisome membrane&#34; mapping. Redundant with the experimental IDA but correct; retained as ACCEPT.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt curates FAR2 as a single-pass peroxisomal membrane protein; the SubCell mapping to peroxisomal membrane is accurate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FAR2/FAR2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Peroxisome membrane {ECO:0000269|PubMed:15220348,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010025" target="_blank" class="term-link">
+                                    GO:0010025
+                                </a>
+                            </span>
+                            <span class="term-label">wax biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96K12" data-a="GO:0010025" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FAR2 supplies fatty alcohols for wax monoester synthesis; involvement in wax biosynthesis is a correct core process annotation for this gene.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The fatty alcohols produced by FAR2 are required substrates for wax monoester biosynthesis; FAR2 is expressed at high levels in the eyelid, which contains wax-laden Meibomian glands.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15220348" target="_blank" class="term-link">
+                                        PMID:15220348
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">conversion of fatty acids to fatty alcohols is required for the synthesis of wax monoesters and ether lipids</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0080019" target="_blank" class="term-link">
+                                    GO:0080019
+                                </a>
+                            </span>
+                            <span class="term-label">alcohol-forming very long-chain fatty acyl-CoA reductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96K12" data-a="GO:0080019" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Redundant electronic annotation of the core alcohol-forming reductase activity (very-long-chain form). Correct and supported; retained as ACCEPT rather than flagged as over-annotation because it is FAR2&#39;s own core MF.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Matches the IBA and IDA annotations of the same term; UniProt records very-long-chain and ultra-long-chain fatty alcohol production by FAR2.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FAR2/FAR2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Can produce very long-chain and ultra long-chain</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0102965" target="_blank" class="term-link">
+                                    GO:0102965
+                                </a>
+                            </span>
+                            <span class="term-label">alcohol-forming long-chain fatty acyl-CoA reductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96K12" data-a="GO:0102965" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function corresponding to EC 1.2.1.84 acting on long-chain (C16/C18) fatty acyl-CoA. This is FAR2&#39;s best-characterized reaction (palmitoyl-CoA to hexadecanol) and is strongly supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> FAR2 reduces long-chain fatty acyl-CoA (e.g. palmitoyl-CoA) to the corresponding primary fatty alcohol using NADPH; UniProt assigns EC 1.2.1.84 and a long-chain fatty acyl-CoA reductase reaction (RHEA:52716).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FAR2/FAR2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">a long-chain primary fatty alcohol + 2 NADP(+) + CoA</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010025" target="_blank" class="term-link">
+                                    GO:0010025
+                                </a>
+                            </span>
+                            <span class="term-label">wax biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9640463
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96K12" data-a="GO:0010025" data-r="Reactome:R-HSA-9640463" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable annotation placing FAR2 in wax biosynthesis, where it reduces fatty acids to fatty alcohols in the peroxisome for downstream wax ester formation. Correct core process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reactome&#39;s Wax biosynthesis pathway explicitly assigns FAR1/FAR2 the fatty-acid-to-fatty-alcohol reduction step upstream of AWAT wax ester synthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-9640463
+
+                                </span>
+
+                                <div class="support-text">FAR1 and FAR2 catalyze the reduction of fatty acids to fatty alcohols in the peroxisome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-390438
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q96K12" data-a="GO:0016491" data-r="Reactome:R-HSA-390438" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but overly general. FAR2 is an oxidoreductase, but the specific alcohol-forming fatty acyl-CoA reductase terms (GO:0080019, GO:0102965) capture its function precisely. Flagged as over-annotation, not removed.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0016491 is a high-level parent of the specific reductase activities already annotated; it adds no functional specificity beyond the child terms.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FAR2/FAR2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">a long-chain primary fatty alcohol + 2 NADP(+) + CoA</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005778" target="_blank" class="term-link">
+                                    GO:0005778
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisomal membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-390438
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96K12" data-a="GO:0005778" data-r="Reactome:R-HSA-390438" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable annotation of peroxisomal membrane localization, consistent with the experimental IDA and UniProt curation. Correct core localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> FAR2 is a single-pass peroxisomal membrane protein; the Reactome localization matches the experimental and UniProt evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FAR2/FAR2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Peroxisome membrane {ECO:0000269|PubMed:15220348,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005778" target="_blank" class="term-link">
+                                    GO:0005778
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisomal membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24108123" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24108123
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Topogenesis and homeostasis of fatty acyl-CoA reductase 1.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96K12" data-a="GO:0005778" data-r="PMID:24108123" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental localization to the peroxisomal membrane. Although this paper&#39;s title foregrounds FAR1 topogenesis, the full text assays both FAR1 and FAR2, and FAR2 is confirmed as a peroxisomal membrane protein. Core localization; retained.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental (IDA) annotation from a paper (full text available) that characterizes FAR1 and FAR2 as peroxisomal membrane (tail-anchored) proteins; consistent with UniProt topology (single-pass, C-terminal anchor).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24108123" target="_blank" class="term-link">
+                                        PMID:24108123
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Far1, but not Far2, was preferentially degraded in response to the cellular level of plasmalogens</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FAR2/FAR2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Peroxisome membrane {ECO:0000269|PubMed:15220348,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035336" target="_blank" class="term-link">
+                                    GO:0035336
+                                </a>
+                            </span>
+                            <span class="term-label">long-chain fatty-acyl-CoA metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15220348" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15220348
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mammalian wax biosynthesis. I. Identification of two fatty a...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96K12" data-a="GO:0035336" data-r="PMID:15220348" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence that FAR2 metabolizes long-chain (C16/C18) fatty acyl-CoA substrates. Correct process annotation reflecting its enzymatic role. Retained.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> FAR2 was shown to reduce fatty acyl-CoA esters, preferring saturated C16/C18 substrates; consuming long-chain fatty acyl-CoA is the process it participates in.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15220348" target="_blank" class="term-link">
+                                        PMID:15220348
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FAR2 preferred saturated fatty acids of 16 or 18 carbons</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0080019" target="_blank" class="term-link">
+                                    GO:0080019
+                                </a>
+                            </span>
+                            <span class="term-label">alcohol-forming very long-chain fatty acyl-CoA reductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15220348" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15220348
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mammalian wax biosynthesis. I. Identification of two fatty a...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96K12" data-a="GO:0080019" data-r="PMID:15220348" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence that FAR2 is an alcohol-forming fatty acyl-CoA reductase (reduces fatty acyl-CoA to fatty alcohol, NADPH-dependent). Core molecular function; retained.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Expression studies showed FAR2 cDNA encodes an isozyme that reduces fatty acids to fatty alcohols using fatty acyl-CoA as substrate; the alcohol-forming reductase activity is the defining function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15220348" target="_blank" class="term-link">
+                                        PMID:15220348
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FAR1 and FAR2 cDNAs encoded isozymes that reduced fatty acids to fatty alcohols</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005777" target="_blank" class="term-link">
+                                    GO:0005777
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96K12" data-a="GO:0005777" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Peroxisome localization inferred by sequence similarity to the mouse ortholog (Q7TNT2). Consistent with the experimental evidence in human; correct compartment-level annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ISS transfer from the mouse ortholog agrees with the direct human evidence that FAR2 is peroxisomal.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15220348" target="_blank" class="term-link">
+                                        PMID:15220348
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FAR1 and FAR2 were localized in the peroxisome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Alcohol-forming fatty acyl-CoA reductase: FAR2 reduces long-chain (C16/C18) fatty acyl-CoA to the corresponding primary fatty alcohol using NADPH, releasing CoA (EC 1.2.1.84). It preferentially acts on saturated substrates.</h3>
+                <span class="vote-buttons" data-g="Q96K12" data-a="FUNCTION: Alcohol-forming fatty acyl-CoA reductase: FAR2 red..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0102965" target="_blank" class="term-link">
+                            alcohol-forming long-chain fatty acyl-CoA reductase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010025" target="_blank" class="term-link">
+                                wax biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005778" target="_blank" class="term-link">
+                                peroxisomal membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/FAR2/FAR2-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">a long-chain primary fatty alcohol + 2 NADP(+) + CoA</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15220348" target="_blank" class="term-link">
+                                PMID:15220348
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">FAR1 and FAR2 cDNAs encoded isozymes that reduced fatty acids to fatty alcohols</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Alcohol-forming very-long-chain fatty acyl-CoA reductase: in addition to long-chain substrates, FAR2 reduces very-long-chain and ultra-long-chain fatty acyl-CoA (straight or branched) to primary fatty alcohols in the peroxisome.</h3>
+                <span class="vote-buttons" data-g="Q96K12" data-a="FUNCTION: Alcohol-forming very-long-chain fatty acyl-CoA red..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0080019" target="_blank" class="term-link">
+                            alcohol-forming very long-chain fatty acyl-CoA reductase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005778" target="_blank" class="term-link">
+                                peroxisomal membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/FAR2/FAR2-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Can produce very long-chain and ultra long-chain</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15220348" target="_blank" class="term-link">
+                            PMID:15220348
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mammalian wax biosynthesis. I. Identification of two fatty acyl-Coenzyme A reductases with different substrate specificities and tissue distributions.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">FAR2 was identified as a fatty acyl-CoA reductase that reduces fatty acids to fatty alcohols, preferring saturated C16/C18 fatty acids, and localizes to the peroxisome.</div>
+
+                        <div class="finding-text">"FAR1 and FAR2 cDNAs encoded isozymes that reduced fatty acids to fatty alcohols. Fatty acyl-CoA esters were the substrate of FAR1, and the enzyme required NADPH as a cofactor."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">FAR2 mRNA is restricted, most abundant in the eyelid (wax-laden Meibomian glands), and is present in brain.</div>
+
+                        <div class="finding-text">"The FAR2 mRNA was more restricted in distribution and most abundant in the eyelid, which contains wax-laden meibomian glands."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24108123" target="_blank" class="term-link">
+                            PMID:24108123
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Topogenesis and homeostasis of fatty acyl-CoA reductase 1.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">FAR1 and FAR2 are peroxisomal proteins; the study characterizes FAR1 as a tail-anchored peroxisomal membrane protein and uses FAR2 as a comparator, supporting FAR2 peroxisomal membrane localization.</div>
+
+                        <div class="finding-text">"Far1, but not Far2, was preferentially degraded in response to the cellular level of plasmalogens."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-390438
+
+                    </span>
+                </div>
+
+                <div class="reference-title">FAR2 reduces PalmCoA to HXOL</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">FAR2 catalyzes reduction of palmitoyl-CoA plus NADPH to hexadecanol, CoASH, and NADP+ in the peroxisome.</div>
+
+                        <div class="finding-text">"Peroxisomal fatty acyl-CoA reductase 2 (FAR2) catalyzes the reaction of palmitoyl-CoA (PalmCoA) and 2 NADPH + 2 H+ to form hexadecanol (HXOL), CoASH, and 2 NADP+."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9640463
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Wax biosynthesis</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">FAR1 and FAR2 reduce fatty acids to fatty alcohols in the peroxisome upstream of AWAT-catalyzed wax ester formation in the cytosol.</div>
+
+                        <div class="finding-text">"FAR1 and FAR2 catalyze the reduction of fatty acids to fatty alcohols in the peroxisome and AWAT1 and AWAT2 catalyze the reaction of fatty alcohols and acyl-CoA in the cytosol to form wax esters."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the relative in vivo contribution of FAR2 versus FAR1 to Meibomian gland (meibum) fatty alcohol pools, and does FAR2 loss produce a distinct Meibomian/ocular-surface phenotype?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q96K12" data-a="Q: What is the relative in vivo contribution of FAR2 ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does human FAR2 physiologically produce very-long-chain and ultra-long-chain fatty alcohols in tissues, or is this activity mainly observed under overexpression conditions?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q96K12" data-a="Q: Does human FAR2 physiologically produce very-long-..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Quantify chain-length and saturation preferences of purified human FAR2 across a panel of acyl-CoA substrates (C16-C30, saturated/unsaturated, branched) with NADPH, to firmly establish the in vitro substrate spectrum underlying the long-chain vs very-long-chain reductase annotations.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q96K12" data-a="EXPERIMENT: Quantify chain-length and saturation preferences o..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Tissue-specific FAR2 knockout (e.g. Meibomian gland) with lipidomic profiling of fatty alcohols, wax monoesters, and ether lipids/plasmalogens to define the non-redundant biological role of FAR2 relative to FAR1.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q96K12" data-a="EXPERIMENT: Tissue-specific FAR2 knockout (e.g. Meibomian glan..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(FAR2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q96K12" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="far2-fatty-acyl-coa-reductase-2-review-notes">FAR2 (Fatty acyl-CoA reductase 2) — review notes</h1>
+<p>UniProt: Q96K12 (FACR2_HUMAN); gene FAR2 (HGNC:25531; synonym MLSTD1, "Male sterility<br />
+domain-containing protein 1"); human chromosome 12; 515 aa; EC 1.2.1.84.</p>
+<h2 id="core-biology-grounded-in-uniprot-q96k12-and-cited-literature">Core biology (grounded in UniProt Q96K12 and cited literature)</h2>
+<p>FAR2 is the paralog of FAR1. Both are peroxisomal, NADPH-dependent, alcohol-forming fatty<br />
+acyl-CoA reductases that reduce a fatty acyl-CoA to the corresponding primary fatty alcohol<br />
+with release of CoA:</p>
+<ul>
+<li>UniProt CATALYTIC ACTIVITY (RHEA:52716): "a long-chain fatty acyl-CoA + 2 NADPH + 2 H(+)<br />
+  = a long-chain primary fatty alcohol + 2 NADP(+) + CoA ... EC=1.2.1.84"<br />
+  [file:human/FAR2/FAR2-uniprot.txt]. Additional VLC and ULC chain-length reactions<br />
+  (RHEA:81751, RHEA:81755) are also listed.</li>
+</ul>
+<p>Substrate preference (distinguishes FAR2 from FAR1): FAR2 prefers <strong>saturated</strong> C16/C18<br />
+acyl-CoA, whereas FAR1 accepts both saturated and unsaturated C16/C18.</p>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/15220348" title="FAR1 preferred saturated and unsaturated fatty acids of 16 or 18 carbons   as substrates, whereas FAR2 preferred saturated fatty acids of 16 or 18 carbons.">PMID:15220348</a></li>
+<li>UniProt FUNCTION: "Catalyzes the reduction of saturated but not unsaturated C16 or C18<br />
+  fatty acyl-CoA to fatty alcohols" and "A lower activity can be observed with shorter fatty<br />
+  acyl-CoA substrates" [file:human/FAR2/FAR2-uniprot.txt].</li>
+<li>Later work (Otsuka et al. 2022) shows FAR2 can also produce very-long-chain and<br />
+  ultra-long-chain fatty alcohols, straight or branched: UniProt FUNCTION "Can produce very<br />
+  long-chain and ultra long-chain FAls, regardless of whether they have a straight or<br />
+  branched chain (PubMed:35238077)" [file:human/FAR2/FAR2-uniprot.txt]. This is the basis of<br />
+  the "very long-chain" MF term (GO:0080019) and the additional VLC/ULC RHEA reactions in<br />
+  UniProt. Note: PMID:35238077 full text is not cached locally; claims here are taken from<br />
+  the UniProt curated summary, which cites it.</li>
+</ul>
+<h2 id="productpathway-roles">Product/pathway roles</h2>
+<p>Fatty alcohols made by FAR2 feed wax monoester and ether-lipid (plasmalogen) biosynthesis.</p>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/15220348" title="The conversion of fatty acids to fatty alcohols is required for the   synthesis of wax monoesters and ether lipids.">PMID:15220348</a></li>
+<li>UniProt FUNCTION: "Involved in the production of ether lipids/plasmalogens and wax<br />
+  monoesters whose synthesis requires FAls as substrates" [file:human/FAR2/FAR2-uniprot.txt].</li>
+<li>Reactome R-HSA-9640463 (Wax biosynthesis): "FAR1 and FAR2 catalyze the reduction of fatty<br />
+  acids to fatty alcohols in the peroxisome and AWAT1 and AWAT2 catalyze the reaction of<br />
+  fatty alcohols and acyl-CoA in the cytosol to form wax esters" [reactome/R-HSA-9640463.md].</li>
+</ul>
+<h2 id="localization-topology">Localization / topology</h2>
+<p>Peroxisomal membrane, single-pass (tail-anchored), with a large cytoplasmic N-terminal<br />
+catalytic region and a short peroxisomal-lumen C-terminal tail.</p>
+<ul>
+<li>UniProt SUBCELLULAR LOCATION: "Peroxisome membrane ...; Single-pass membrane protein"<br />
+  [file:human/FAR2/FAR2-uniprot.txt].</li>
+<li>UniProt topology: TOPO_DOM 1..464 Cytoplasmic; TRANSMEM 465..484; TOPO_DOM 485..515<br />
+  Peroxisomal [file:human/FAR2/FAR2-uniprot.txt].</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/15220348" title="Confocal light microscopy indicated that FAR1 and FAR2 were localized in   the peroxisome.">PMID:15220348</a></li>
+<li>PMID:24108123 primarily characterizes FAR1 topogenesis (peroxisomal tail-anchored protein,<br />
+  Pex19p-dependent targeting). FAR2 appears mainly as a comparator ("Far1, but not Far2, was<br />
+  preferentially degraded in response to the cellular level of plasmalogens"); the curator's<br />
+  IDA to peroxisomal membrane for FAR2 is retained on the basis that the full text (available)<br />
+  assays both proteins. Not a plasmalogen-degradation contrast that changes FAR2's location.</li>
+</ul>
+<h2 id="tissue-expression">Tissue expression</h2>
+<p>FAR2 mRNA is restricted; most abundant in eyelid (meibomian glands) and present in brain.</p>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/15220348" title="The FAR2 mRNA was more restricted in distribution and most abundant in the   eyelid, which contains wax-laden meibomian glands. Both FAR mRNAs were present in the   brain, a tissue rich in ether lipids.">PMID:15220348</a></li>
+<li>Meibum relevance (dry eye) is developed in PMID:35238077 (title: "Formation of fatty<br />
+  alcohols-components of meibum lipids-by the fatty acyl-CoA reductase FAR2 is essential for<br />
+  dry eye prevention"), not cached locally.</li>
+</ul>
+<h2 id="go-term-id-verification-via-ols">GO term id verification (via OLS)</h2>
+<ul>
+<li>GO:0080019 alcohol-forming very long-chain fatty acyl-CoA reductase activity — MF, current.</li>
+<li>GO:0102965 alcohol-forming long-chain fatty acyl-CoA reductase activity — MF, current;<br />
+  matches EC 1.2.1.84 and the C16/C18 (palmitoyl/stearoyl-CoA) activity that is FAR2's<br />
+  best-characterized reaction.</li>
+<li>GO:1903175 fatty alcohol biosynthetic process — BP, current (candidate; not currently in GOA).</li>
+<li>GO:0008611 ether lipid biosynthetic process — BP, current (candidate).</li>
+<li>GO:0010025 wax biosynthetic process — BP, current.</li>
+<li>GO:0035336 long-chain fatty-acyl-CoA metabolic process — BP, current (substrate metabolism).</li>
+<li>GO:0005778 peroxisomal membrane; GO:0005777 peroxisome — CC, current.</li>
+</ul>
+<h2 id="evidence-base-caveat">Evidence-base caveat</h2>
+<p>Direct human experimental evidence for FAR2 is thinner than for FAR1. The two anchoring<br />
+primary papers are PMID:15220348 (abstract only in cache; identifies FAR2 and its substrate<br />
+preference/localization/tissue distribution) and PMID:35238077 (not cached; meibum/dry-eye<br />
+and expanded chain-length range). PMID:24108123 is chiefly a FAR1 topogenesis study.</p>
+<h2 id="curation-decisions-summary">Curation decisions summary</h2>
+<ul>
+<li>MF (GO:0080019, GO:0102965): ACCEPT — alcohol-forming fatty acyl-CoA reductase is FAR2's<br />
+  core catalytic function; both chain-length-specific children are supported.</li>
+<li>CC (GO:0005778 peroxisomal membrane; GO:0005777 peroxisome): ACCEPT — core localization,<br />
+  experimentally supported.</li>
+<li>BP (GO:0010025 wax biosynthetic process; GO:0035336 long-chain fatty-acyl-CoA metabolic<br />
+  process): ACCEPT — downstream/substrate processes consistent with the enzymatic role.</li>
+<li>GO:0016491 oxidoreductase activity (TAS Reactome): MARK_AS_OVER_ANNOTATED — correct but a<br />
+  high-level parent of the specific reductase MF; the specific alcohol-forming reductase<br />
+  terms are preferred.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q96K12
+gene_symbol: FAR2
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  FAR2 (fatty acyl-CoA reductase 2) is a peroxisomal, NADPH-dependent,
+  alcohol-forming fatty acyl-CoA reductase (EC 1.2.1.84) and a paralog of FAR1.
+  It reduces a fatty acyl-CoA to the corresponding primary fatty alcohol with
+  release of CoA. FAR2 has a more saturation-restricted substrate preference
+  than FAR1, favoring saturated C16/C18 acyl-CoA (with lower activity on shorter
+  chains), and can also generate very-long-chain and ultra-long-chain fatty
+  alcohols, including branched-chain species. The fatty alcohols it produces are
+  substrates for wax monoester synthesis and for ether lipid (plasmalogen)
+  biosynthesis. FAR2 is a single-pass, tail-anchored peroxisomal membrane protein
+  with a large cytoplasmic N-terminal catalytic region and a short C-terminal tail
+  in the peroxisomal lumen. Its mRNA has a restricted tissue distribution, being
+  most abundant in the eyelid, where wax-laden Meibomian glands produce meibum
+  lipids, and is also present in brain, a tissue rich in ether lipids.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q96K12-1
+- name: &#39;2&#39;
+  id: Q96K12-2
+  sequence_note: VSP_055648
+existing_annotations:
+- term:
+    id: GO:0005778
+    label: peroxisomal membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      FAR2 is a peroxisomal membrane protein; the phylogenetic (IBA) inference to
+      peroxisomal membrane is consistent with direct experimental evidence and
+      UniProt annotation, and represents a core localization for this gene.
+    action: ACCEPT
+    reason: &gt;-
+      FAR2 is experimentally localized to the peroxisome (PMID:15220348) and
+      annotated by UniProt as a single-pass peroxisomal membrane protein. The IBA
+      transfer across the fatty acyl-CoA reductase family is well founded.
+    supported_by:
+    - reference_id: file:human/FAR2/FAR2-uniprot.txt
+      supporting_text: &#34;Peroxisome membrane {ECO:0000269|PubMed:15220348,&#34;
+- term:
+    id: GO:0080019
+    label: alcohol-forming very long-chain fatty acyl-CoA reductase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function. FAR2 is an alcohol-forming fatty acyl-CoA reductase
+      that can also produce very-long-chain fatty alcohols; the phylogenetic
+      inference across the FAR family is supported by direct experimental evidence.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt records that FAR2 can produce very long-chain and ultra long-chain
+      fatty alcohols; this term captures the family-conserved catalytic activity.
+    supported_by:
+    - reference_id: file:human/FAR2/FAR2-uniprot.txt
+      supporting_text: &gt;-
+        Can produce very long-chain and ultra long-chain
+- term:
+    id: GO:0035336
+    label: long-chain fatty-acyl-CoA metabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      FAR2 acts on long-chain fatty acyl-CoA substrates (C16/C18), so involvement
+      in long-chain fatty-acyl-CoA metabolism is a reasonable process-level
+      annotation consistent with its enzymatic role.
+    action: ACCEPT
+    reason: &gt;-
+      Long-chain fatty acyl-CoAs (e.g. palmitoyl-CoA, stearoyl-CoA) are the
+      preferred substrates that FAR2 consumes; the IBA process annotation follows
+      directly from the catalytic activity.
+    supported_by:
+    - reference_id: PMID:15220348
+      supporting_text: &gt;-
+        FAR2 preferred saturated fatty acids of 16 or 18 carbons
+- term:
+    id: GO:0005777
+    label: peroxisome
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Peroxisome localization is correct for FAR2 and is supported experimentally;
+      this ARBA electronic annotation is a correct parent of the more specific
+      peroxisomal membrane localization.
+    action: ACCEPT
+    reason: &gt;-
+      FAR2 was localized to the peroxisome by confocal microscopy and is a
+      peroxisomal membrane protein; the compartment-level term is correct.
+    supported_by:
+    - reference_id: PMID:15220348
+      supporting_text: &gt;-
+        FAR1 and FAR2 were localized in the peroxisome
+- term:
+    id: GO:0005778
+    label: peroxisomal membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Correct core localization derived from the UniProt Subcellular Location
+      &#34;Peroxisome membrane&#34; mapping. Redundant with the experimental IDA but
+      correct; retained as ACCEPT.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt curates FAR2 as a single-pass peroxisomal membrane protein; the
+      SubCell mapping to peroxisomal membrane is accurate.
+    supported_by:
+    - reference_id: file:human/FAR2/FAR2-uniprot.txt
+      supporting_text: &#34;Peroxisome membrane {ECO:0000269|PubMed:15220348,&#34;
+- term:
+    id: GO:0010025
+    label: wax biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      FAR2 supplies fatty alcohols for wax monoester synthesis; involvement in
+      wax biosynthesis is a correct core process annotation for this gene.
+    action: ACCEPT
+    reason: &gt;-
+      The fatty alcohols produced by FAR2 are required substrates for wax
+      monoester biosynthesis; FAR2 is expressed at high levels in the eyelid,
+      which contains wax-laden Meibomian glands.
+    supported_by:
+    - reference_id: PMID:15220348
+      supporting_text: &gt;-
+        conversion of fatty acids to fatty alcohols is required for the synthesis
+        of wax monoesters and ether lipids
+- term:
+    id: GO:0080019
+    label: alcohol-forming very long-chain fatty acyl-CoA reductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Redundant electronic annotation of the core alcohol-forming reductase
+      activity (very-long-chain form). Correct and supported; retained as ACCEPT
+      rather than flagged as over-annotation because it is FAR2&#39;s own core MF.
+    action: ACCEPT
+    reason: &gt;-
+      Matches the IBA and IDA annotations of the same term; UniProt records
+      very-long-chain and ultra-long-chain fatty alcohol production by FAR2.
+    supported_by:
+    - reference_id: file:human/FAR2/FAR2-uniprot.txt
+      supporting_text: &gt;-
+        Can produce very long-chain and ultra long-chain
+- term:
+    id: GO:0102965
+    label: alcohol-forming long-chain fatty acyl-CoA reductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function corresponding to EC 1.2.1.84 acting on long-chain
+      (C16/C18) fatty acyl-CoA. This is FAR2&#39;s best-characterized reaction
+      (palmitoyl-CoA to hexadecanol) and is strongly supported.
+    action: ACCEPT
+    reason: &gt;-
+      FAR2 reduces long-chain fatty acyl-CoA (e.g. palmitoyl-CoA) to the
+      corresponding primary fatty alcohol using NADPH; UniProt assigns EC 1.2.1.84
+      and a long-chain fatty acyl-CoA reductase reaction (RHEA:52716).
+    supported_by:
+    - reference_id: file:human/FAR2/FAR2-uniprot.txt
+      supporting_text: &gt;-
+        a long-chain primary fatty alcohol + 2 NADP(+) + CoA
+- term:
+    id: GO:0010025
+    label: wax biosynthetic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9640463
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome traceable annotation placing FAR2 in wax biosynthesis, where it
+      reduces fatty acids to fatty alcohols in the peroxisome for downstream wax
+      ester formation. Correct core process.
+    action: ACCEPT
+    reason: &gt;-
+      Reactome&#39;s Wax biosynthesis pathway explicitly assigns FAR1/FAR2 the
+      fatty-acid-to-fatty-alcohol reduction step upstream of AWAT wax ester
+      synthesis.
+    supported_by:
+    - reference_id: Reactome:R-HSA-9640463
+      supporting_text: &gt;-
+        FAR1 and FAR2 catalyze the reduction of fatty acids to fatty alcohols in
+        the peroxisome
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-390438
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct but overly general. FAR2 is an oxidoreductase, but the specific
+      alcohol-forming fatty acyl-CoA reductase terms (GO:0080019, GO:0102965)
+      capture its function precisely. Flagged as over-annotation, not removed.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0016491 is a high-level parent of the specific reductase activities
+      already annotated; it adds no functional specificity beyond the child terms.
+    supported_by:
+    - reference_id: file:human/FAR2/FAR2-uniprot.txt
+      supporting_text: &gt;-
+        a long-chain primary fatty alcohol + 2 NADP(+) + CoA
+- term:
+    id: GO:0005778
+    label: peroxisomal membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-390438
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable annotation of peroxisomal membrane localization,
+      consistent with the experimental IDA and UniProt curation. Correct core
+      localization.
+    action: ACCEPT
+    reason: &gt;-
+      FAR2 is a single-pass peroxisomal membrane protein; the Reactome localization
+      matches the experimental and UniProt evidence.
+    supported_by:
+    - reference_id: file:human/FAR2/FAR2-uniprot.txt
+      supporting_text: &#34;Peroxisome membrane {ECO:0000269|PubMed:15220348,&#34;
+- term:
+    id: GO:0005778
+    label: peroxisomal membrane
+  evidence_type: IDA
+  original_reference_id: PMID:24108123
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct experimental localization to the peroxisomal membrane. Although this
+      paper&#39;s title foregrounds FAR1 topogenesis, the full text assays both FAR1
+      and FAR2, and FAR2 is confirmed as a peroxisomal membrane protein. Core
+      localization; retained.
+    action: ACCEPT
+    reason: &gt;-
+      Experimental (IDA) annotation from a paper (full text available) that
+      characterizes FAR1 and FAR2 as peroxisomal membrane (tail-anchored)
+      proteins; consistent with UniProt topology (single-pass, C-terminal anchor).
+    supported_by:
+    - reference_id: PMID:24108123
+      supporting_text: &gt;-
+        Far1, but not Far2, was preferentially degraded in response to the
+        cellular level of plasmalogens
+    - reference_id: file:human/FAR2/FAR2-uniprot.txt
+      supporting_text: &#34;Peroxisome membrane {ECO:0000269|PubMed:15220348,&#34;
+- term:
+    id: GO:0035336
+    label: long-chain fatty-acyl-CoA metabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:15220348
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct experimental evidence that FAR2 metabolizes long-chain (C16/C18)
+      fatty acyl-CoA substrates. Correct process annotation reflecting its
+      enzymatic role. Retained.
+    action: ACCEPT
+    reason: &gt;-
+      FAR2 was shown to reduce fatty acyl-CoA esters, preferring saturated C16/C18
+      substrates; consuming long-chain fatty acyl-CoA is the process it participates in.
+    supported_by:
+    - reference_id: PMID:15220348
+      supporting_text: &gt;-
+        FAR2 preferred saturated fatty acids of 16 or 18 carbons
+- term:
+    id: GO:0080019
+    label: alcohol-forming very long-chain fatty acyl-CoA reductase activity
+  evidence_type: IDA
+  original_reference_id: PMID:15220348
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental evidence that FAR2 is an alcohol-forming fatty acyl-CoA
+      reductase (reduces fatty acyl-CoA to fatty alcohol, NADPH-dependent). Core
+      molecular function; retained.
+    action: ACCEPT
+    reason: &gt;-
+      Expression studies showed FAR2 cDNA encodes an isozyme that reduces fatty
+      acids to fatty alcohols using fatty acyl-CoA as substrate; the alcohol-forming
+      reductase activity is the defining function.
+    supported_by:
+    - reference_id: PMID:15220348
+      supporting_text: &gt;-
+        FAR1 and FAR2 cDNAs encoded isozymes that reduced fatty acids to fatty
+        alcohols
+- term:
+    id: GO:0005777
+    label: peroxisome
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Peroxisome localization inferred by sequence similarity to the mouse ortholog
+      (Q7TNT2). Consistent with the experimental evidence in human; correct
+      compartment-level annotation.
+    action: ACCEPT
+    reason: &gt;-
+      ISS transfer from the mouse ortholog agrees with the direct human evidence
+      that FAR2 is peroxisomal.
+    supported_by:
+    - reference_id: PMID:15220348
+      supporting_text: &gt;-
+        FAR1 and FAR2 were localized in the peroxisome
+core_functions:
+- description: &gt;-
+    Alcohol-forming fatty acyl-CoA reductase: FAR2 reduces long-chain (C16/C18)
+    fatty acyl-CoA to the corresponding primary fatty alcohol using NADPH,
+    releasing CoA (EC 1.2.1.84). It preferentially acts on saturated substrates.
+  molecular_function:
+    id: GO:0102965
+    label: alcohol-forming long-chain fatty acyl-CoA reductase activity
+  directly_involved_in:
+  - id: GO:0010025
+    label: wax biosynthetic process
+  locations:
+  - id: GO:0005778
+    label: peroxisomal membrane
+  supported_by:
+  - reference_id: file:human/FAR2/FAR2-uniprot.txt
+    supporting_text: &gt;-
+      a long-chain primary fatty alcohol + 2 NADP(+) + CoA
+  - reference_id: PMID:15220348
+    supporting_text: &gt;-
+      FAR1 and FAR2 cDNAs encoded isozymes that reduced fatty acids to fatty
+      alcohols
+- description: &gt;-
+    Alcohol-forming very-long-chain fatty acyl-CoA reductase: in addition to
+    long-chain substrates, FAR2 reduces very-long-chain and ultra-long-chain fatty
+    acyl-CoA (straight or branched) to primary fatty alcohols in the peroxisome.
+  molecular_function:
+    id: GO:0080019
+    label: alcohol-forming very long-chain fatty acyl-CoA reductase activity
+  locations:
+  - id: GO:0005778
+    label: peroxisomal membrane
+  supported_by:
+  - reference_id: file:human/FAR2/FAR2-uniprot.txt
+    supporting_text: &gt;-
+      Can produce very long-chain and ultra long-chain
+proposed_new_terms:
+- proposed_name: fatty alcohol biosynthetic process
+  proposed_definition: &gt;-
+    The chemical reactions and pathways resulting in the formation of fatty
+    alcohol. (Existing term GO:1903175; proposed here as a more direct
+    product-level process annotation for FAR2, which is not currently in GOA.)
+  justification: &gt;-
+    FAR2 directly produces primary fatty alcohols from fatty acyl-CoA. GOA currently
+    annotates the substrate side (GO:0035336 long-chain fatty-acyl-CoA metabolic
+    process) and downstream products (GO:0010025 wax biosynthetic process) but not
+    the fatty alcohol biosynthetic process itself (GO:1903175), which is the most
+    direct product-level process term for this enzyme.
+  supported_by:
+  - reference_id: PMID:15220348
+    supporting_text: &gt;-
+      FAR1 and FAR2 cDNAs encoded isozymes that reduced fatty acids to fatty
+      alcohols
+- proposed_name: ether lipid biosynthetic process
+  proposed_definition: &gt;-
+    The chemical reactions and pathways resulting in the formation of ether lipids.
+    (Existing term GO:0008611; proposed here to capture FAR2&#39;s documented role in
+    supplying fatty alcohols for ether lipid/plasmalogen synthesis, not currently
+    in GOA.)
+  justification: &gt;-
+    UniProt states FAR2 is involved in the production of ether lipids/plasmalogens,
+    whose synthesis requires fatty alcohols as substrates. An ether lipid
+    biosynthetic process annotation (GO:0008611) would capture this documented role,
+    which is not currently represented in GOA.
+  supported_by:
+  - reference_id: file:human/FAR2/FAR2-uniprot.txt
+    supporting_text: &gt;-
+      Involved in the production of ether
+suggested_questions:
+- question: &gt;-
+    What is the relative in vivo contribution of FAR2 versus FAR1 to Meibomian
+    gland (meibum) fatty alcohol pools, and does FAR2 loss produce a distinct
+    Meibomian/ocular-surface phenotype?
+- question: &gt;-
+    Does human FAR2 physiologically produce very-long-chain and ultra-long-chain
+    fatty alcohols in tissues, or is this activity mainly observed under
+    overexpression conditions?
+suggested_experiments:
+- description: &gt;-
+    Quantify chain-length and saturation preferences of purified human FAR2 across
+    a panel of acyl-CoA substrates (C16-C30, saturated/unsaturated, branched) with
+    NADPH, to firmly establish the in vitro substrate spectrum underlying the
+    long-chain vs very-long-chain reductase annotations.
+- description: &gt;-
+    Tissue-specific FAR2 knockout (e.g. Meibomian gland) with lipidomic profiling
+    of fatty alcohols, wax monoesters, and ether lipids/plasmalogens to define the
+    non-redundant biological role of FAR2 relative to FAR1.
+references:
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:15220348
+  title: Mammalian wax biosynthesis. I. Identification of two fatty acyl-Coenzyme
+    A reductases with different substrate specificities and tissue distributions.
+  findings:
+  - statement: &gt;-
+      FAR2 was identified as a fatty acyl-CoA reductase that reduces fatty acids to
+      fatty alcohols, preferring saturated C16/C18 fatty acids, and localizes to the
+      peroxisome.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      FAR1 and FAR2 cDNAs encoded isozymes that reduced fatty acids to fatty
+      alcohols. Fatty acyl-CoA esters were the substrate of FAR1, and the enzyme
+      required NADPH as a cofactor.
+  - statement: &gt;-
+      FAR2 mRNA is restricted, most abundant in the eyelid (wax-laden Meibomian
+      glands), and is present in brain.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      The FAR2 mRNA was more restricted in distribution and most abundant in the
+      eyelid, which contains wax-laden meibomian glands.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified primary paper that first identified FAR2, established its
+      alcohol-forming reductase activity, saturated C16/C18 substrate preference,
+      peroxisomal localization, and Meibomian/brain tissue distribution. Cache is
+      abstract-only but the abstract directly supports the FAR2 annotations.
+- id: PMID:24108123
+  title: Topogenesis and homeostasis of fatty acyl-CoA reductase 1.
+  findings:
+  - statement: &gt;-
+      FAR1 and FAR2 are peroxisomal proteins; the study characterizes FAR1 as a
+      tail-anchored peroxisomal membrane protein and uses FAR2 as a comparator,
+      supporting FAR2 peroxisomal membrane localization.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      Far1, but not Far2, was preferentially degraded in response to the cellular
+      level of plasmalogens.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text available. Primarily a FAR1 topogenesis/homeostasis study; FAR2
+      appears as a comparator (e.g. not preferentially degraded with plasmalogen
+      level). Supports peroxisomal membrane localization of FAR2 but is not a
+      FAR2-centric functional characterization.
+- id: Reactome:R-HSA-390438
+  title: FAR2 reduces PalmCoA to HXOL
+  findings:
+  - statement: &gt;-
+      FAR2 catalyzes reduction of palmitoyl-CoA plus NADPH to hexadecanol, CoASH,
+      and NADP+ in the peroxisome.
+    reference_section_type: OTHER
+    supporting_text: &gt;-
+      Peroxisomal fatty acyl-CoA reductase 2 (FAR2) catalyzes the reaction of
+      palmitoyl-CoA (PalmCoA) and 2 NADPH + 2 H+ to form hexadecanol (HXOL), CoASH,
+      and 2 NADP+.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction capturing FAR2&#39;s specific C16 (palmitoyl-CoA to hexadecanol)
+      alcohol-forming reductase activity in the peroxisome.
+- id: Reactome:R-HSA-9640463
+  title: Wax biosynthesis
+  findings:
+  - statement: &gt;-
+      FAR1 and FAR2 reduce fatty acids to fatty alcohols in the peroxisome upstream
+      of AWAT-catalyzed wax ester formation in the cytosol.
+    reference_section_type: OTHER
+    supporting_text: &gt;-
+      FAR1 and FAR2 catalyze the reduction of fatty acids to fatty alcohols in the
+      peroxisome and AWAT1 and AWAT2 catalyze the reaction of fatty alcohols and
+      acyl-CoA in the cytosol to form wax esters.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome pathway placing FAR2 at the fatty-alcohol-generating step of wax
+      biosynthesis.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

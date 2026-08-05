@@ -2,7 +2,16 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from typing import Any
+
+
+DATA_JS_ASSIGNMENT_PREFIX = "window.searchData = "
+DATA_JS_READY_EVENT = "window.dispatchEvent(new Event('searchDataReady'));"
+COLUMNAR_DATA_JS_PREFIX = "(()=>{const c="
+GITHUB_FILE_SIZE_LIMIT_BYTES = 100 * 1024 * 1024
+BROWSER_DATA_WARNING_BYTES = 80 * 1024 * 1024
 
 
 GO_REF_CODENAMES = {
@@ -87,3 +96,99 @@ def compact_browser_rows(data: object) -> object:
         compact_browser_row(row) if isinstance(row, dict) else row
         for row in data
     ]
+
+
+def columnar_browser_rows(data: object) -> tuple[list[str], list[list[Any]]]:
+    """Encode compact browser objects as a shared column list and value arrays."""
+    compact = compact_browser_rows(data)
+    if not isinstance(compact, list) or any(
+        not isinstance(row, dict) for row in compact
+    ):
+        raise TypeError("Browser data must be a list of objects")
+
+    columns = list(
+        dict.fromkeys(
+            key
+            for row in compact
+            for key in row
+        )
+    )
+    rows: list[list[Any]] = []
+    for row in compact:
+        values = [row.get(column) for column in columns]
+        while values and values[-1] is None:
+            values.pop()
+        rows.append(values)
+
+    return columns, rows
+
+
+def encode_browser_data_js(data: object) -> str:
+    """Serialize browser data compactly while preserving its runtime object contract."""
+    compact = compact_browser_rows(data)
+    if not isinstance(compact, list) or any(
+        not isinstance(row, dict) for row in compact
+    ):
+        compact_json = json.dumps(
+            compact,
+            separators=(",", ":"),
+            ensure_ascii=False,
+            default=str,
+        )
+        return (
+            f"{DATA_JS_ASSIGNMENT_PREFIX}{compact_json};\n"
+            f"{DATA_JS_READY_EVENT}\n"
+        )
+
+    columns, rows = columnar_browser_rows(compact)
+    columns_json = json.dumps(
+        columns,
+        separators=(",", ":"),
+        ensure_ascii=False,
+        default=str,
+    )
+    rows_json = json.dumps(
+        rows,
+        separators=(",", ":"),
+        ensure_ascii=False,
+        default=str,
+    )
+    return (
+        f"{COLUMNAR_DATA_JS_PREFIX}{columns_json},r={rows_json};"
+        "window.searchData=r.map(a=>{const o={};"
+        "for(let i=0;i<a.length;i++){if(a[i]!==null){const k=c[i];"
+        'if(k==="__proto__")Object.defineProperty(o,k,{value:a[i],'
+        "enumerable:true,writable:true,configurable:true});else o[k]=a[i]}}"
+        "return o});"
+        f"{DATA_JS_READY_EVENT}"
+        "})();\n"
+    )
+
+
+def validate_browser_data_js_size(
+    size: int,
+    *,
+    max_bytes: int = GITHUB_FILE_SIZE_LIMIT_BYTES,
+) -> None:
+    """Reject a generated browser payload that GitHub cannot store."""
+    if size >= max_bytes:
+        raise ValueError(
+            "Encoded browser data is "
+            f"{size:,} bytes ({size / 1024 / 1024:.2f} MiB); "
+            f"the configured limit is {max_bytes:,} bytes "
+            f"({max_bytes / 1024 / 1024:.2f} MiB)"
+        )
+
+
+def write_browser_data_js(
+    data: object,
+    path: Path,
+    *,
+    max_bytes: int = GITHUB_FILE_SIZE_LIMIT_BYTES,
+) -> int:
+    """Encode and write browser data after checking the final byte size."""
+    encoded = encode_browser_data_js(data)
+    size = len(encoded.encode("utf-8"))
+    validate_browser_data_js_size(size, max_bytes=max_bytes)
+    path.write_text(encoded, encoding="utf-8")
+    return size

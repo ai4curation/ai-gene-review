@@ -1,0 +1,2242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>murC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>murC</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88N75" target="_blank" class="term-link">
+                        Q88N75
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "murC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88N75" data-a="DESCRIPTION: MurC is the cytoplasmic UDP-N-acetylmuramate-L-ala..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>MurC is the cytoplasmic UDP-N-acetylmuramate-L-alanine ligase of Pseudomonas putida KT2440. It uses ATP to add L-alanine to UDP-MurNAc, initiating assembly of the peptidoglycan stem peptide.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N75" data-a="GO:0005524" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct cofactor/substrate-binding property ancillary to ligation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> MurC consumes ATP, but its substrate-specific ligase activity is the core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/murC/murC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=UDP-N-acetyl-alpha-D-muramate + L-alanine + ATP = UDP-N-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N75" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct localization for soluble stem-peptide precursor synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt explicitly assigns Q88N75 to the cytoplasm.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/murC/murC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008763" target="_blank" class="term-link">
+                                    GO:0008763
+                                </a>
+                            </span>
+                            <span class="term-label">UDP-N-acetylmuramate-L-alanine ligase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N75" data-a="GO:0008763" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct and specific core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns EC 6.3.2.8 and the ATP-dependent addition of L-alanine to UDP-N-acetylmuramate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/murC/murC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=UDP-N-acetyl-alpha-D-muramate + L-alanine + ATP = UDP-N-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009252" target="_blank" class="term-link">
+                                    GO:0009252
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N75" data-a="GO:0009252" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt places Q88N75 in peptidoglycan biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/murC/murC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Cell wall biogenesis; peptidoglycan biosynthesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016881" target="_blank" class="term-link">
+                                    GO:0016881
+                                </a>
+                            </span>
+                            <span class="term-label">acid-amino acid ligase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N75" data-a="GO:0016881" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad catalytic parent of the substrate-specific MurC activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0008763 identifies both the nucleotide-sugar substrate and the amino acid added, avoiding a redundant generic ligase annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/murC/murC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=UDP-N-acetylmuramate--L-alanine ligase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Uses ATP to add L-alanine to UDP-N-acetylmuramate during cytoplasmic assembly of the peptidoglycan stem peptide.</h3>
+                <span class="vote-buttons" data-g="Q88N75" data-a="FUNCTION: Uses ATP to add L-alanine to UDP-N-acetylmuramate ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008763" target="_blank" class="term-link">
+                            UDP-N-acetylmuramate-L-alanine ligase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009252" target="_blank" class="term-link">
+                                peptidoglycan biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/murC/murC-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=UDP-N-acetyl-alpha-D-muramate + L-alanine + ATP = UDP-N-</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/murC/murC-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">**MurC (UniProt Q88N75; gene *murC*; ordered locus PP_1338) of *Pseudomonas putida* KT2440 is a cytoplasmic, ATP- and Mg²⁺-dependent amide-bond ligase (EC 6.3.2.8) that catalyzes the first amino-acid-adding step of bacterial peptidoglycan biosynthesis.**</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/murC/murC-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88N75 for Pseudomonas putida KT2440 murC</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt assigns the ATP-dependent MurC ligase reaction.</div>
+
+                        <div class="finding-text">"Reaction=UDP-N-acetyl-alpha-D-muramate + L-alanine + ATP = UDP-N-"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt places MurC in peptidoglycan synthesis.</div>
+
+                        <div class="finding-text">"PATHWAY: Cell wall biogenesis; peptidoglycan biosynthesis."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/murC/murC-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep-research report for PSEPK murC</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report identifies Q88N75 as the cytoplasmic ATP-dependent MurC ligase that initiates peptidoglycan stem-peptide assembly.</div>
+
+                        <div class="finding-text">"**MurC (UniProt Q88N75; gene *murC*; ordered locus PP_1338) of *Pseudomonas putida* KT2440 is a cytoplasmic, ATP- and Mg²⁺-dependent amide-bond ligase (EC 6.3.2.8) that catalyzes the first amino-acid-adding step of bacterial peptidoglycan biosynthesis.**"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Target-specific kinetics and substrate promiscuity remain untested.</div>
+
+                        <div class="finding-text">"No direct study of the *P. putida* KT2440 protein itself was found"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How selective is KT2440 MurC for L-alanine over alternative amino acids?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88N75" data-a="Q: How selective is KT2440 MurC for L-alanine over al..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify Q88N75 and compare ligation kinetics across L-alanine and plausible alternative amino-acid substrates.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88N75" data-a="EXPERIMENT: Purify Q88N75 and compare ligation kinetics across..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(murC-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88N75" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: MurC (Q88N75, PP_1338) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">9 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-23T14:08:52.672035</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="murC-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="murC-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-murc-q88n75-pp_1338-in-pseudomonas-putida-kt2440">Functional Annotation Report: MurC (Q88N75, PP_1338) in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>UniProt:</strong> Q88N75 · <strong>Gene:</strong> <em>murC</em> · <strong>Locus:</strong> PP_1338 · <strong>EC:</strong> 6.3.2.8<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / KT2440) — PSEPK<br />
+<strong>Family:</strong> MurCDEF (Mur ligase) family; ADP-forming amide-bond ligase</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p><strong>MurC (UniProt Q88N75; gene <em>murC</em>; ordered locus PP_1338) of <em>Pseudomonas putida</em> KT2440 is a cytoplasmic, ATP- and Mg²⁺-dependent amide-bond ligase (EC 6.3.2.8) that catalyzes the first amino-acid-adding step of bacterial peptidoglycan biosynthesis.</strong> It ligates <strong>L-alanine</strong> to the D-lactoyl carboxylate of <strong>UDP-<em>N</em>-acetylmuramate (UDP-MurNAc)</strong>, producing <strong>UDP-MurNAc-L-Ala + ADP + inorganic phosphate</strong>. This reaction is the committed entry point into assembly of the peptidoglycan "peptide stem" — the short cross-linking peptide that gives the murein sacculus its mechanical strength.</p>
+<p>The gene/protein identity is unambiguous. The UniProt HAMAP-rule annotation (MF_00046), the EC number (6.3.2.8), the gene name (<em>murC</em>/PP_1338), MurCDEF family membership, and the diagnostic three-domain Mur-ligase architecture (InterPro Mur_ligase_N IPR000713, Mur_ligase_cen IPR013221, Mur_ligase_C IPR004101; Mur-like catalytic superfamily IPR036565) all converge on a single, well-characterized enzyme class. The catalyzed reaction is directly demonstrated in vitro for MurC orthologs across diverse bacteria, most relevantly the <strong>same genus</strong> (<em>Pseudomonas aeruginosa</em>; <a href="https://pubmed.ncbi.nlm.nih.gov/12615853/">PMID: 12615853</a>), and high-resolution crystal structures from <em>Haemophilus influenzae</em> and <em>Mycobacterium bovis</em> define its mechanism at atomic resolution (<a href="https://pubmed.ncbi.nlm.nih.gov/12837790/">PMID: 12837790</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/33950018/">PMID: 33950018</a>).</p>
+<p>Functionally, MurC operates in the <strong>cytosol</strong> as the first of four ATP-dependent Mur ligases (MurC → MurD → MurE → MurF) that sequentially append amino acids to UDP-MurNAc to build UDP-MurNAc-pentapeptide (Park's nucleotide), which the membrane translocase MraY then transfers to the lipid carrier. Because this pathway is essential, absent in humans, and rate-limiting for cell-wall integrity, MurC is a validated Gram-negative antibacterial drug target actively pursued in <em>P. aeruginosa</em>. No direct study of the <em>P. putida</em> KT2440 protein itself was found; the functional assignment rests on unambiguous sequence/family/domain identity plus rich experimental characterization of close orthologs — a robust inference for a universally conserved, HAMAP-annotated housekeeping enzyme.</p>
+<hr />
+<h2 id="gene-protein-identity-verification">Gene / Protein Identity Verification</h2>
+<p>The mandatory identity checks were performed and <strong>all passed</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Verification criterion</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene symbol "murC" matches protein description</td>
+<td>✅ UDP-<em>N</em>-acetylmuramate–L-alanine ligase (MurC synthetase)</td>
+</tr>
+<tr>
+<td>Organism correct</td>
+<td>✅ <em>Pseudomonas putida</em> KT2440 (PP_1338)</td>
+</tr>
+<tr>
+<td>Protein family / domain alignment with literature</td>
+<td>✅ MurCDEF family; three-domain Mur-ligase fold (IPR000713 / IPR013221 / IPR004101)</td>
+</tr>
+<tr>
+<td>Risk of same-symbol confusion</td>
+<td>✅ Low — "murC" is highly specific to this ligase across bacteria</td>
+</tr>
+</tbody>
+</table>
+<p>The symbol <em>murC</em> is <strong>not ambiguous</strong>. It refers consistently to the UDP-MurNAc:L-alanine ligase across the bacterial domain, and every paper retrieved describes exactly this enzyme class (in Pseudomonas, Haemophilus, Mycobacterium, Chlamydia, Salmonella, Verrucomicrobium, and Anabaena). Research therefore proceeded on the correct enzyme, using orthologs to inform mechanism where no <em>P. putida</em>-specific study exists.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-murc-catalyzes-atp-dependent-ligation-of-l-alanine-to-udp-n-acetylmuramate-ec-6328">Finding 1 — MurC catalyzes ATP-dependent ligation of L-alanine to UDP-<em>N</em>-acetylmuramate (EC 6.3.2.8)</h3>
+<p>The primary function of MurC is to catalyze the amide-bond-forming reaction:</p>
+<blockquote>
+<p>UDP-<em>N</em>-acetyl-α-D-muramate + L-alanine + ATP → UDP-<em>N</em>-acetyl-α-D-muramoyl-L-alanine + ADP + phosphate  (Mg²⁺-dependent)</p>
+</blockquote>
+<p>This is the first amino-acid-adding step of the cytoplasmic phase of peptidoglycan biosynthesis. MurC forms an amide (peptide) bond between the α-amino group of L-alanine and the D-lactoyl carboxylate on the muramic acid moiety of the nucleotide-activated sugar UDP-MurNAc.</p>
+<p>The identity supporting this assignment is unambiguous: UniProt Q88N75 is annotated under HAMAP rule MF_00046 as UDP-<em>N</em>-acetylmuramate–L-alanine ligase, EC 6.3.2.8, gene <em>murC</em>/PP_1338, MurCDEF family, with the diagnostic three-domain fold. The reaction has been <strong>directly demonstrated in vitro</strong> for MurC from multiple bacteria. Most relevantly, recombinant His-tagged MurC from the close relative <em>P. aeruginosa</em> was purified and assayed with its substrates UDP-<em>N</em>-acetylmuramate, ATP, and L-alanine, and is described as <em>"an essential enzyme involved in the early steps of biosynthesis of peptidoglycan monomer"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/12615853/">PMID: 12615853</a>). Its substrate UDP-MurNAc is itself generated by the upstream enzymes MurA (enolpyruvyl transfer to UDP-GlcNAc) and MurB (reduction). Independently, MurC from <em>C. trachomatis</em> was shown to display <em>"in vitro ATP-dependent UDP-MurNAc:L-alanine ligase activity, with a pH optimum of 8.0 and dependence upon magnesium ions"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/14594822/">PMID: 14594822</a>), establishing the conserved cofactor requirements (ATP, Mg²⁺) and pH behavior of the family.</p>
+<p><strong>Substrate specificity.</strong> UDP-MurNAc is the specific nucleotide-sugar acceptor. L-alanine is the physiological amino-acid substrate that defines the first residue of the peptide stem. In vitro, some orthologs display relaxed amino-acid specificity: the <em>C. trachomatis</em> enzyme was tested with <em>"three amino acids (L-alanine, L-serine, and glycine); comparable Vmax/Km values were obtained"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/14594822/">PMID: 14594822</a>). Nonetheless, in Gram-negative bacteria such as <em>E. coli</em> and <em>Pseudomonas</em> the physiological product carries L-Ala at position 1, indicating high in vivo selectivity for L-alanine.</p>
+<h3 id="finding-2-conserved-three-domain-architecture-assembles-the-active-site-at-domain-interfaces-catalysis-proceeds-via-an-acyl-phosphate-intermediate">Finding 2 — Conserved three-domain architecture assembles the active site at domain interfaces; catalysis proceeds via an acyl-phosphate intermediate</h3>
+<p>MurC belongs to the Mur ligase family, whose members share a characteristic <strong>three-domain fold</strong>. High-resolution crystal structures of <em>H. influenzae</em> MurC captured fully assembled catalytic states: a 1.85 Å substrate complex (UDP-MurNAc + Mg²⁺) and a 1.7 Å product complex (UDP-MurNAc-L-Ala + the non-hydrolyzable ATP analog AMPPNP + Mn²⁺). These <em>"reveal a conserved, three-domain architecture with the binding sites for UNAM and ATP formed at the domain interfaces: the N-terminal domain binds the UDP portion of UNAM, and the central and C-terminal domains form the ATP-binding site, while the C-terminal domain also positions the alanine"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/12837790/">PMID: 12837790</a>). This matches exactly the IPR domain complement annotated for Q88N75 (Mur_ligase_N / _cen / _C).</p>
+<p>The productive active site is assembled only when all three substrates bind and the three domains close around them — an induced-fit mechanism. The structures also reveal the metal chemistry: <em>"the gamma-phosphate of AMPPNP is positioned between two bound metal ions, one of which also binds the reactive UNAM carboxylate"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/12837790/">PMID: 12837790</a>), the geometry required for in-line phosphoryl transfer from ATP to the substrate carboxylate. Two conserved arginine residues orient the incoming alanine.</p>
+<p>The <strong>catalytic mechanism</strong> shared by the Mur ligases (MurC–MurF) is an ordered, ATP-dependent condensation: ATP first phosphorylates the substrate carboxylate to a high-energy <strong>acyl-phosphate intermediate</strong>; the incoming amino group then attacks this activated carbonyl to form a <strong>tetrahedral intermediate</strong>, which collapses to release inorganic phosphate and form the amide bond. This chemistry is documented for the paralogous ligase MurD, which <em>"is responsible for the ATP-dependent addition of d-glutamic acid to UDP-MurNAc-l-Ala, a reaction which involves acyl-phosphate and tetrahedral intermediates"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/25436755/">PMID: 25436755</a>) — the same mechanism applies to MurC's addition of L-alanine.</p>
+<p>Independent structures of <em>M. bovis</em> MurC reproduce the fold: they <em>"[exhibit] a three-domain architecture for the binding of UNAM, ATP and an amino acid as substrates, with a nickel ion at the domain interface"</em> and show a UDP-<em>N</em>-acetylglucosamine substrate mimic engaging the UDP-binding domain (<a href="https://pubmed.ncbi.nlm.nih.gov/33950018/">PMID: 33950018</a>). Convergence of <em>H. influenzae</em> and <em>M. bovis</em> structures on the identical architecture and metal-at-interface geometry gives high confidence that <em>P. putida</em> MurC operates the same way.</p>
+<h3 id="finding-3-murc-acts-in-the-cytoplasm-as-the-committed-first-step-of-the-murcdef-pathway-it-is-essential-and-a-validated-antibacterial-target">Finding 3 — MurC acts in the cytoplasm as the committed first step of the MurCDEF pathway; it is essential and a validated antibacterial target</h3>
+<p>MurC functions in the <strong>cytosol</strong>. It is the first of four cytoplasmic ATP-dependent Mur ligases that sequentially build the peptidoglycan peptide stem on UDP-MurNAc. A review of the cytoplasmic steps confirms that MurB and MurC <em>"are involved in the cytoplasmic steps of peptidoglycan biosynthesis"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/27047475/">PMID: 27047475</a>), establishing both MurC's subcellular localization (cytoplasm) and its pathway position — immediately downstream of the MurA/MurB steps that produce UDP-MurNAc and immediately upstream of MurD. All of MurC's substrates and its product are soluble cytoplasmic nucleotide intermediates; only later does the membrane enzyme MraY transfer the completed precursor to the lipid carrier at the inner-membrane face.</p>
+<p><strong>Essentiality and drug-target status.</strong> MurC is essential for viability because peptidoglycan maintains cell shape and osmotic integrity. It is explicitly described as <em>"an essential enzyme"</em> in <em>P. aeruginosa</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/12615853/">PMID: 12615853</a>) and as <em>"an excellent target for the design of new classes of antimicrobial inhibitors in gram-negative bacteria"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/31333120/">PMID: 31333120</a>). Genetic evidence comes from the cyanobacterium <em>Anabaena</em>, where reduced <em>murC</em> expression caused <em>decreased filament integrity</em> and blocked heterocyst differentiation, directly linking MurC-mediated peptidoglycan synthesis to cell-envelope integrity (<a href="https://pubmed.ncbi.nlm.nih.gov/26811320/">PMID: 26811320</a>).</p>
+<p>Because the pathway is absent from humans, MurC is actively pursued as an antibacterial target, including directly in <em>P. aeruginosa</em>, where structure-based virtual screening plus an in vitro inhibition assay identified a benzodiazole sulfonamide inhibitor (<a href="https://pubmed.ncbi.nlm.nih.gov/31333120/">PMID: 31333120</a>). Similar computational lead-discovery efforts target MurC in multidrug-resistant <em>Salmonella</em> Typhi, where a curcumin derivative was predicted to competitively inhibit ATP binding at the MurC catalytic domain (<a href="https://pubmed.ncbi.nlm.nih.gov/35985453/">PMID: 35985453</a>).</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="position-in-the-peptidoglycan-biosynthetic-pathway">Position in the peptidoglycan biosynthetic pathway</h3>
+<div class="codehilite"><pre><span></span><code>   Cytoplasm
+   =========
+   UDP-GlcNAc
+       │  MurA (enolpyruvyl transfer)
+       ▼
+   UDP-GlcNAc-enolpyruvate
+       │  MurB (reduction)
+       ▼
+   UDP-MurNAc  ─────────────────┐
+       │                         │  + L-Ala + ATP
+       ▼   ★ MurC (Q88N75) ★     │  → UDP-MurNAc-L-Ala + ADP + Pi
+   UDP-MurNAc-L-Ala              │
+       │  MurD  (+ D-Glu)
+       ▼
+   UDP-MurNAc-L-Ala-D-Glu
+       │  MurE  (+ meso-DAP)     [position-3 residue in Pseudomonas / Gram-negatives]
+       ▼
+   UDP-MurNAc-tripeptide
+       │  MurF  (+ D-Ala-D-Ala)
+       ▼
+   UDP-MurNAc-pentapeptide  (Park&#39;s nucleotide)
+       │
+   ----│-----------------------------------  inner membrane
+       ▼  MraY (→ Lipid I) → MurG (→ Lipid II) → flippase → transglycosylation / transpeptidation
+   Peptidoglycan sacculus
+</code></pre></div>
+
+<p>MurC is the <strong>committed first amino-acid-adding step</strong> — the transition from an activated sugar (UDP-MurNAc) to a nascent peptide-bearing precursor, committing carbon and nitrogen to the peptide stem.</p>
+<h3 id="catalytic-cycle-single-turnover-schematic">Catalytic cycle (single-turnover schematic)</h3>
+<div class="codehilite"><pre><span></span><code>  (1) Substrate binding &amp; domain closure
+      UDP-MurNAc  →  N-terminal domain
+      ATP·Mg²⁺    →  central + C-terminal domains
+      L-Ala       →  C-terminal domain pocket (oriented by two conserved Arg)
+
+  (2) Phosphoryl transfer  (two metal ions bridge ATP γ-P and substrate carboxylate)
+      UDP-MurNAc-COO⁻ + ATP  →  UDP-MurNAc-CO-O-PO3²⁻ (acyl-phosphate) + ADP
+
+  (3) Nucleophilic attack
+      L-Ala α-NH2 attacks acyl-phosphate carbonyl → tetrahedral intermediate
+
+  (4) Collapse &amp; product release
+      → UDP-MurNAc-L-Ala (amide bond) + Pi ; domains reopen
+</code></pre></div>
+
+<p>This model integrates the structural data (three-domain assembly, two-metal geometry, Arg-mediated amino-acid positioning; <a href="https://pubmed.ncbi.nlm.nih.gov/12837790/">PMID: 12837790</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/33950018/">PMID: 33950018</a>) with the acyl-phosphate/tetrahedral-intermediate chemistry established for the Mur ligase family (<a href="https://pubmed.ncbi.nlm.nih.gov/25436755/">PMID: 25436755</a>) and the biochemical requirements (ATP, Mg²⁺, pH ~8) demonstrated for MurC orthologs (<a href="https://pubmed.ncbi.nlm.nih.gov/14594822/">PMID: 14594822</a>).</p>
+<h3 id="localization">Localization</h3>
+<p>MurC is a soluble <strong>cytoplasmic</strong> enzyme (no signal peptide, no transmembrane segments in the Mur ligase fold), consistent with the cytoplasmic location of its nucleotide-sugar substrate and of the entire Mur ligase cascade (<a href="https://pubmed.ncbi.nlm.nih.gov/27047475/">PMID: 27047475</a>). It likely acts near the divisome/elongasome machinery that coordinates precursor supply with cell-wall growth.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Organism / topic</th>
+<th>How it supports this report</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12615853/">12615853</a></td>
+<td><em>P. aeruginosa</em> MurC (same genus)</td>
+<td>Recombinant MurC purified and assayed with UDP-MurNAc, ATP, L-Ala; described as an essential early peptidoglycan enzyme — most transferable evidence for the target genus (Findings 1, 3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/14594822/">14594822</a></td>
+<td><em>C. trachomatis</em> MurC</td>
+<td>Direct in vitro demonstration of ATP- and Mg²⁺-dependent UDP-MurNAc:L-alanine ligase activity, pH optimum 8.0; amino-acid specificity profile (Findings 1, 3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12837790/">12837790</a></td>
+<td><em>H. influenzae</em> MurC crystal structures</td>
+<td>Substrate- and product-bound structures defining three-domain architecture, domain-interface active site, two-metal ATP geometry, Arg-mediated alanine positioning (Finding 2)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/33950018/">33950018</a></td>
+<td><em>M. bovis</em> MurC crystal structures</td>
+<td>Independent confirmation of three-domain fold and metal-at-interface; UNAG substrate-mimic binding (Finding 2)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25436755/">25436755</a></td>
+<td>Mur ligase (MurD) mechanism</td>
+<td>Documents the shared acyl-phosphate/tetrahedral-intermediate mechanism of the family (Finding 2)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27047475/">27047475</a></td>
+<td><em>Verrucomicrobium</em> MurB/C fusion</td>
+<td>States MurC operates in the cytoplasmic steps of peptidoglycan biosynthesis — localization and pathway position (Finding 3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31333120/">31333120</a></td>
+<td><em>P. aeruginosa</em> MurC inhibitor discovery</td>
+<td>Confirms essentiality and validated Gram-negative drug-target status in the target genus (Finding 3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26811320/">26811320</a></td>
+<td><em>Anabaena</em> murC/murB genetics</td>
+<td>In vivo depletion of murC decreases filament integrity — genetic link to cell-envelope integrity (Finding 3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/35985453/">35985453</a></td>
+<td><em>Salmonella</em> Typhi MurC docking</td>
+<td>Reinforces MurC as an antibacterial target and ATP-competitive inhibition at the catalytic domain</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23786712/">23786712</a></td>
+<td>MurF inhibitors</td>
+<td>Illustrates the Mur ligase family as validated antibacterial targets with no human counterpart (pathway context)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Strength of inference.</strong> No study has characterized the <em>P. putida</em> KT2440 MurC protein directly. However, the assignment rests on (i) unambiguous, rule-based sequence identity (HAMAP MF_00046) with the universally conserved MurC class; (ii) direct biochemistry of the same enzyme in the sister species <em>P. aeruginosa</em> and diverse bacteria; and (iii) multiple independent crystal structures converging on a single conserved mechanism. For an essential, universally distributed housekeeping enzyme, this ortholog-based inference is robust.</p>
+<hr />
+<h2 id="supported-vs-refuted-hypotheses">Supported vs. Refuted Hypotheses</h2>
+<ul>
+<li><strong>Supported:</strong> (i) Q88N75 is UDP-MurNAc:L-alanine ligase (EC 6.3.2.8); (ii) it adds L-Ala to UDP-MurNAc using ATP and a divalent metal; (iii) it is cytoplasmic; (iv) it is the first Mur-ligase step of peptidoglycan precursor synthesis; (v) it uses a conserved three-domain fold and an acyl-phosphate mechanism; (vi) it is essential and a validated antibacterial target.</li>
+<li><strong>Refuted / not supported:</strong> No evidence that this protein acts extracytoplasmically, transports substrates, or has a non-catalytic structural role. The gene-symbol ambiguity concern raised in the prompt did not materialize — all literature converges on the same enzyme.</li>
+</ul>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li><strong>No target-specific biochemistry.</strong> No published assay, kinetic parameters (Km, kcat), or structure exists for <em>P. putida</em> KT2440 MurC (PP_1338) itself. All mechanistic and kinetic detail is inferred from orthologs. Conservation is high, but species-specific values and precise pocket dimensions remain unmeasured.</li>
+<li><strong>Substrate-specificity extrapolation.</strong> The relaxed amino-acid tolerance (L-Ala/L-Ser/Gly) was measured in <em>C. trachomatis</em>, not <em>Pseudomonas</em>; whether <em>P. putida</em> MurC similarly accepts L-serine or glycine in vitro is unknown, though L-alanine is confidently the physiological substrate.</li>
+<li><strong>No experimental localization for this protein.</strong> Cytoplasmic localization is inferred from the pathway and the soluble Mur ligase fold, not from a <em>P. putida</em>-specific experiment (though the inference is very strong).</li>
+<li><strong>Regulation and interaction partners unexplored.</strong> Expression regulation of <em>murC</em> in <em>P. putida</em>, and physical association with divisome/elongasome components or with MurB/MurD, is not addressed by the available literature.</li>
+<li><strong>Essentiality assumed, not demonstrated in <em>P. putida</em>.</strong> Essentiality is well established for <em>P. aeruginosa</em> and generalizable, but a KT2440-specific essentiality experiment for PP_1338 was not located.</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li><strong>Heterologous expression and enzyme assay.</strong> Overexpress and purify recombinant His-MurC (PP_1338) and measure steady-state kinetics (Km for UDP-MurNAc, L-Ala, ATP; kcat; Mg²⁺ dependence; pH optimum) via an ADP/Pi-release or coupled spectrophotometric assay, directly validating the ortholog-based assignment.</li>
+<li><strong>Substrate-specificity screen.</strong> Test L-Ala, L-Ser, Gly (and controls) with purified <em>P. putida</em> MurC to determine whether the relaxed specificity seen in <em>C. trachomatis</em> holds, confirming L-alanine as the preferred substrate.</li>
+<li><strong>Complementation test.</strong> Complement an <em>E. coli murC</em>(ts) or conditional mutant with PP_1338 — the strategy used to validate <em>Anabaena</em> MurC (<a href="https://pubmed.ncbi.nlm.nih.gov/26811320/">PMID: 26811320</a>).</li>
+<li><strong>Essentiality/depletion in <em>P. putida</em>.</strong> Build a conditional (inducible / CRISPRi) <em>murC</em> knockdown in KT2440 and assess viability, morphology, and envelope integrity.</li>
+<li><strong>Structural determination.</strong> Solve the crystal/cryo-EM structure (or validate a high-confidence AlphaFold model) of <em>P. putida</em> MurC in substrate/product complexes to confirm the three-domain assembly and two-metal geometry and to enable <em>Pseudomonas</em>-tailored inhibitor design.</li>
+<li><strong>Inhibitor cross-testing.</strong> Test whether the <em>P. aeruginosa</em> MurC benzodiazole sulfonamide (<a href="https://pubmed.ncbi.nlm.nih.gov/31333120/">PMID: 31333120</a>) and related Mur ligase inhibitors also inhibit <em>P. putida</em> MurC, informing broad-spectrum anti-Pseudomonas strategies.</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>MurC (Q88N75 / PP_1338) of <em>Pseudomonas putida</em> KT2440 is confidently assigned as the cytoplasmic, ATP- and Mg²⁺-dependent UDP-<em>N</em>-acetylmuramate–L-alanine ligase (EC 6.3.2.8). It catalyzes the committed first amino-acid-adding step of peptidoglycan biosynthesis — ligating L-alanine to UDP-MurNAc to form UDP-MurNAc-L-Ala — via a two-metal, acyl-phosphate/tetrahedral-intermediate mechanism within a conserved three-domain Mur-ligase fold. It initiates the MurC→MurD→MurE→MurF cytosolic cascade that produces Park's nucleotide, is essential for cell-wall integrity, and is a validated Gram-negative antibacterial target. The assignment is unambiguous by sequence, family, and domain identity and is strongly supported by direct biochemical and structural characterization of close orthologs, although no study has yet examined the <em>P. putida</em> protein directly.</p>
+<hr />
+<p><em>Report generated from primary literature (PubMed) and curated UniProt/HAMAP annotation.</em></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="murC-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="murC-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:12615853</li>
+<li>PMID:12837790</li>
+<li>PMID:33950018</li>
+<li>PMID:14594822</li>
+<li>PMID:25436755</li>
+<li>PMID:27047475</li>
+<li>PMID:31333120</li>
+<li>PMID:26811320</li>
+<li>PMID:35985453</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(murC-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88N75" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="murc-curation-notes">murC curation notes</h1>
+<p>Q88N75/PP_1338 is the ATP-dependent UDP-N-acetylmuramate-L-alanine ligase in<br />
+peptidoglycan stem-peptide assembly<br />
+[UniProtKB:Q88N75, "Reaction=UDP-N-acetyl-alpha-D-muramate + L-alanine + ATP =<br />
+UDP-N-"; "PATHWAY: Cell wall biogenesis; peptidoglycan biosynthesis."].</p>
+<p>ATP binding is retained as ancillary, while generic acid-amino-acid ligase<br />
+activity is replaced by the substrate-specific MurC molecular function.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88N75
+gene_symbol: murC
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  MurC is the cytoplasmic UDP-N-acetylmuramate-L-alanine ligase of
+  Pseudomonas putida KT2440. It uses ATP to add L-alanine to UDP-MurNAc,
+  initiating assembly of the peptidoglycan stem peptide.
+existing_annotations:
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct cofactor/substrate-binding property ancillary to ligation.
+    action: KEEP_AS_NON_CORE
+    reason: MurC consumes ATP, but its substrate-specific ligase activity is the core function.
+    supported_by:
+    - reference_id: file:PSEPK/murC/murC-uniprot.txt
+      supporting_text: &#39;Reaction=UDP-N-acetyl-alpha-D-muramate + L-alanine + ATP = UDP-N-&#39;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Correct localization for soluble stem-peptide precursor synthesis.
+    action: ACCEPT
+    reason: UniProt explicitly assigns Q88N75 to the cytoplasm.
+    supported_by:
+    - reference_id: file:PSEPK/murC/murC-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0008763
+    label: UDP-N-acetylmuramate-L-alanine ligase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct and specific core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt assigns EC 6.3.2.8 and the ATP-dependent addition of L-alanine to
+      UDP-N-acetylmuramate.
+    supported_by:
+    - reference_id: file:PSEPK/murC/murC-uniprot.txt
+      supporting_text: &#39;Reaction=UDP-N-acetyl-alpha-D-muramate + L-alanine + ATP = UDP-N-&#39;
+- term:
+    id: GO:0009252
+    label: peptidoglycan biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Correct core biological process.
+    action: ACCEPT
+    reason: UniProt places Q88N75 in peptidoglycan biosynthesis.
+    supported_by:
+    - reference_id: file:PSEPK/murC/murC-uniprot.txt
+      supporting_text: &#39;PATHWAY: Cell wall biogenesis; peptidoglycan biosynthesis.&#39;
+- term:
+    id: GO:0016881
+    label: acid-amino acid ligase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Broad catalytic parent of the substrate-specific MurC activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0008763 identifies both the nucleotide-sugar substrate and the amino
+      acid added, avoiding a redundant generic ligase annotation.
+    supported_by:
+    - reference_id: file:PSEPK/murC/murC-uniprot.txt
+      supporting_text: &#39;RecName: Full=UDP-N-acetylmuramate--L-alanine ligase&#39;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/murC/murC-uniprot.txt
+  title: UniProtKB entry Q88N75 for Pseudomonas putida KT2440 murC
+  findings:
+  - statement: UniProt assigns the ATP-dependent MurC ligase reaction.
+    supporting_text: &#39;Reaction=UDP-N-acetyl-alpha-D-muramate + L-alanine + ATP = UDP-N-&#39;
+    reference_section_type: RESULTS
+  - statement: UniProt places MurC in peptidoglycan synthesis.
+    supporting_text: &#39;PATHWAY: Cell wall biogenesis; peptidoglycan biosynthesis.&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Exact target accession with a specific HAMAP MurC assignment and
+      internally consistent reaction, location, and pathway.
+- id: file:PSEPK/murC/murC-deep-research-openscientist.md
+  title: OpenScientist deep-research report for PSEPK murC
+  findings:
+  - statement: The report identifies Q88N75 as the cytoplasmic ATP-dependent MurC ligase that initiates peptidoglycan stem-peptide assembly.
+    supporting_text: &#39;**MurC (UniProt Q88N75; gene *murC*; ordered locus PP_1338) of *Pseudomonas putida* KT2440 is a cytoplasmic, ATP- and Mg²⁺-dependent amide-bond ligase (EC 6.3.2.8) that catalyzes the first amino-acid-adding step of bacterial peptidoglycan biosynthesis.**&#39;
+    reference_section_type: RESULTS
+  - statement: Target-specific kinetics and substrate promiscuity remain untested.
+    supporting_text: &#39;No direct study of the *P. putida* KT2440 protein itself was found&#39;
+    reference_section_type: DISCUSSION
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      Provider-generated gene report. The exact accession, MurC family,
+      reaction, location, and pathway agree with the local UniProt record;
+      mechanistic and substrate-range details derive from orthologs.
+core_functions:
+- description: &gt;-
+    Uses ATP to add L-alanine to UDP-N-acetylmuramate during cytoplasmic
+    assembly of the peptidoglycan stem peptide.
+  molecular_function:
+    id: GO:0008763
+    label: UDP-N-acetylmuramate-L-alanine ligase activity
+  directly_involved_in:
+  - id: GO:0009252
+    label: peptidoglycan biosynthetic process
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: file:PSEPK/murC/murC-uniprot.txt
+    supporting_text: &#39;Reaction=UDP-N-acetyl-alpha-D-muramate + L-alanine + ATP = UDP-N-&#39;
+  - reference_id: file:PSEPK/murC/murC-deep-research-openscientist.md
+    supporting_text: &#39;**MurC (UniProt Q88N75; gene *murC*; ordered locus PP_1338) of *Pseudomonas putida* KT2440 is a cytoplasmic, ATP- and Mg²⁺-dependent amide-bond ligase (EC 6.3.2.8) that catalyzes the first amino-acid-adding step of bacterial peptidoglycan biosynthesis.**&#39;
+suggested_questions:
+- question: How selective is KT2440 MurC for L-alanine over alternative amino acids?
+suggested_experiments:
+- description: &gt;-
+    Purify Q88N75 and compare ligation kinetics across L-alanine and plausible
+    alternative amino-acid substrates.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

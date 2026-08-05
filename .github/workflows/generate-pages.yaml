@@ -33,15 +33,18 @@ concurrency:
 jobs:
   generate-pages:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     permissions:
-      contents: write
-      pull-requests: write
+      # Scopes the default GITHUB_TOKEN only; the branch push and the PR are made
+      # with the ai4c-agent App token below.
+      contents: read
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       # NOTE: The previous "Close stale regeneration PRs" step closed the
       # regeneration PR if it was older than one hour. Because the PR is created
@@ -58,7 +61,7 @@ jobs:
           enable-cache: true
 
       - name: Set up Python
-        uses: actions/setup-python@v6.2.0
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -155,14 +158,35 @@ jobs:
             echo "module_count=$MODULE_COUNT"
           } >> "$GITHUB_OUTPUT"
 
+      # Minted HERE, not at job start. An App installation token lives 60
+      # minutes and does not refresh, and this is the longest job in the repo —
+      # the last completed run took 58 minutes rendering ~1200 gene pages plus
+      # projects, modules and the browser app. A token minted at job start would
+      # expire during the render and 401 on the push below, discarding all of it.
+      # `timeout-minutes: 55` (what the agent workflows use) would be worse still:
+      # it would kill a run that legitimately needs the time. The render needs no
+      # credentials, so the token is minted immediately before the only step that
+      # does.
+      - name: Generate ai4c-agent token
+        id: ai4c-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.AI4C_AGENT_APP_ID }}
+          private-key: ${{ secrets.AI4C_AGENT_PRIVATE_KEY }}
+
       - name: Create or update regeneration PR
         if: steps.check-changes.outputs.has_changes == 'true'
         env:
-          GH_TOKEN: ${{ secrets.PAT_FOR_PR != '' && secrets.PAT_FOR_PR || github.token }}
+          GH_TOKEN: ${{ steps.ai4c-token.outputs.token }}
+          APP_SLUG: ${{ steps.ai4c-token.outputs.app-slug }}
         shell: bash
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Commit as the ai4c-agent App bot and serve the short-lived token to git
+          # through the gh credential helper, instead of persisting it in .git/config.
+          APP_USER_ID="$(gh api "/users/${APP_SLUG}[bot]" --jq .id)"
+          git config user.name "${APP_SLUG}[bot]"
+          git config user.email "${APP_USER_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
+          gh auth setup-git
 
           BRANCH_NAME="${{ steps.pr-metadata.outputs.branch }}"
           git fetch origin "$BRANCH_NAME:refs/remotes/origin/$BRANCH_NAME" || true

@@ -1,0 +1,4907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pdsA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>pdsA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P12019" target="_blank" class="term-link">
+                        P12019
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Dictyostelium discoideum</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "pdsA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P12019" data-a="DESCRIPTION: pdsA (PdsA, DdPDE1, PDE1) is the major extracellul..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>pdsA (PdsA, DdPDE1, PDE1) is the major extracellular and cell-surface cyclic nucleotide phosphodiesterase of Dictyostelium discoideum. It is a secreted glycoprotein of the class II cyclic nucleotide phosphodiesterase family that is synthesized with a cleaved signal peptide and can either be released into the medium or remain attached to the cell surface. The enzyme hydrolyzes extracellular 3&#39;,5&#39;-cyclic AMP to 5&#39;-AMP with a preference for cAMP over cGMP, but has dual specificity and also hydrolyzes 3&#39;,5&#39;-cyclic GMP. By degrading the extracellular cAMP chemoattractant, PdsA sharpens the spatial cAMP gradient and terminates and resets the propagating cAMP waves that guide chemotaxis and streaming during starvation-induced aggregation; cells lacking PdsA fail to aggregate. Its activity is negatively modulated by a secreted heat-stable glycoprotein inhibitor (PdiA), and this inhibition is relieved by reducing agents such as dithiothreitol. PdsA expression is developmentally controlled through multiple promoters, including a prestalk-specific promoter whose activity is required for later morphogenesis (slug formation and culmination).</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0110034" target="_blank" class="term-link">
+                                    GO:0110034
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of adenylate cyclase-activating glucose-activated G protein-coupled receptor signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:0110034" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference to a glucose-activated G-protein-coupled receptor signaling term. Dictyostelium PdsA modulates cAMP-receptor (cAR) GPCR signaling by degrading extracellular cAMP, not a glucose-sensing GPCR pathway. The glucose-activated context does not apply to this organism or gene.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is an over-propagated phylogenetic inference to a glucose-sensing GPCR signaling branch that is not relevant to Dictyostelium. PdsA has no known role in glucose-activated receptor signaling; its genuine signaling role is the extracellular degradation of the cAMP chemoattractant that terminates cAR GPCR signaling. That role is better captured by the extracellular regulation of signal transduction annotation.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">CONTEXT OR TISSUE MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN002001416</span>
+
+                                    &middot; PANTHER node for cyclic-nucleotide phosphodiesterases
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">The negative-regulation term traces to a fungal glucose-sensing cAMP-GPCR pathway that does not correspond to PdsA&#39;s role in extracellular cAMP turnover</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PomBase:SPCC285.09c</span>
+
+                                    &middot; S. pombe glucose-sensing cAMP phosphodiesterase
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Source enzyme acts in a yeast glucose and cAMP-sensing context absent in Dictyostelium</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17040207" target="_blank" class="term-link">
+                                        PMID:17040207
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DdPDE1 is the main PDE that degrades extracellular cAMP during cell aggregation and is thereby essential for shaping cAMP waves</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0141162" target="_blank" class="term-link">
+                                    GO:0141162
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of cAMP/PKA signal transduction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:0141162" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA inference of negative regulation of cAMP/PKA signaling. PdsA acts on the extracellular cAMP pool that stimulates cell-surface cAMP receptors, not directly on the intracellular cAMP/PKA axis (which in Dictyostelium is controlled by the intracellular PDE RegA/DdPDE2). The effect on PKA signaling is therefore indirect.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PdsA degrades extracellular cAMP that activates cAR GPCRs; it does not degrade the intracellular cAMP that drives PKA. Attributing negative regulation of cAMP/PKA signal transduction to PdsA over-states its role by conflating the extracellular and intracellular cAMP pools, which are handled by distinct phosphodiesterases in this organism.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">ROLE CONFLATION</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN002001416</span>
+
+                                    &middot; PANTHER node for cyclic-nucleotide phosphodiesterases
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">PdsA degrades extracellular cAMP acting on cAR GPCRs; casting it as a negative regulator of cAMP/PKA signaling conflates an enzymatic effector with a pathway regulator</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">CGD:CAL0000177603</span>
+
+                                    &middot; Candida albicans phosphodiesterase ortholog
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Source PDE participates in cAMP/PKA regulation in fungi; the indirect regulatory framing over-reaches for PdsA</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17040207" target="_blank" class="term-link">
+                                        PMID:17040207
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The enzyme can be secreted in the medium, or exposed on the cell surface.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047555" target="_blank" class="term-link">
+                                    GO:0047555
+                                </a>
+                            </span>
+                            <span class="term-label">3&#39;,5&#39;-cyclic-GMP phosphodiesterase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:0047555" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PdsA is a dual-specificity phosphodiesterase that hydrolyzes both cAMP and cGMP, so cGMP phosphodiesterase activity is a genuine molecular function, although cAMP is the preferred substrate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct biochemical characterization shows PdsA (DdPDE1) has dual cAMP/cGMP specificity, consistent with the assigned EC 3.1.4.35 (cGMP) activity. The IBA inference is corroborated by experimental evidence for this gene.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17040207" target="_blank" class="term-link">
+                                        PMID:17040207
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both DdPDE1 and DdPDE7 are PDEs with dual cAMP/cGMP specificity, and are strongly inhibited by DTT and insensitive to IBMX.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004115" target="_blank" class="term-link">
+                                    GO:0004115
+                                </a>
+                            </span>
+                            <span class="term-label">3&#39;,5&#39;-cyclic-AMP phosphodiesterase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:0004115" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cAMP phosphodiesterase activity is the core, well-established molecular function of PdsA and is strongly supported by direct biochemical evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PdsA is the principal enzyme degrading extracellular cAMP in Dictyostelium; the IBA inference matches the experimentally determined activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17040207" target="_blank" class="term-link">
+                                        PMID:17040207
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Extracellular cAMP is degraded predominantly by the class II high-affinity enzyme DdPDE1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004115" target="_blank" class="term-link">
+                                    GO:0004115
+                                </a>
+                            </span>
+                            <span class="term-label">3&#39;,5&#39;-cyclic-AMP phosphodiesterase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:0004115" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation of the core cAMP phosphodiesterase activity, consistent with direct experimental evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the central catalytic activity of PdsA and is experimentally confirmed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17040207" target="_blank" class="term-link">
+                                        PMID:17040207
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Extracellular cAMP is degraded predominantly by the class II high-affinity enzyme DdPDE1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:0005576" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PdsA is a secreted enzyme released into the extracellular medium, so extracellular region localization is correct.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The protein carries a cleaved signal peptide and is secreted; extracellular localization is directly demonstrated by purification of active enzyme from culture supernatant.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17040207" target="_blank" class="term-link">
+                                        PMID:17040207
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">both DdPDE1 and DdPDE7 are secreted into the medium and are attached to the cell surface</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006198" target="_blank" class="term-link">
+                                    GO:0006198
+                                </a>
+                            </span>
+                            <span class="term-label">cAMP catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:0006198" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Degradation of cAMP to AMP is the core biological process enabled by PdsA&#39;s phosphodiesterase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PdsA is the main enzyme catabolizing extracellular cAMP in Dictyostelium, making this process annotation directly appropriate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17040207" target="_blank" class="term-link">
+                                        PMID:17040207
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DdPDE1 is the main PDE that degrades extracellular cAMP during cell aggregation and is thereby essential for shaping cAMP waves</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008081" target="_blank" class="term-link">
+                                    GO:0008081
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoric diester hydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:0008081" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a correct but overly general parent term for the specific cyclic-nucleotide phosphodiesterase activity of PdsA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Phosphoric diester hydrolase activity is a high-level parent. The experimentally established activity is more precisely 3&#39;,5&#39;-cyclic-nucleotide phosphodiesterase activity (dual cAMP/cGMP), so a more specific term is preferred.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004114" target="_blank" class="term-link">
+                                    3&#39;,5&#39;-cyclic-nucleotide phosphodiesterase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17040207" target="_blank" class="term-link">
+                                        PMID:17040207
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both DdPDE1 and DdPDE7 are PDEs with dual cAMP/cGMP specificity, and are strongly inhibited by DTT and insensitive to IBMX.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009986" target="_blank" class="term-link">
+                                    GO:0009986
+                                </a>
+                            </span>
+                            <span class="term-label">cell surface</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:0009986" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> In addition to being secreted, PdsA is also exposed on the cell surface, so cell surface localization is correct.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Enzyme activity measurements show PdsA is attached to the cell surface as well as secreted into the medium.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17040207" target="_blank" class="term-link">
+                                        PMID:17040207
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">both DdPDE1 and DdPDE7 are secreted into the medium and are attached to the cell surface</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047555" target="_blank" class="term-link">
+                                    GO:0047555
+                                </a>
+                            </span>
+                            <span class="term-label">3&#39;,5&#39;-cyclic-GMP phosphodiesterase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:0047555" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation of cGMP phosphodiesterase activity, consistent with the enzyme&#39;s demonstrated dual specificity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PdsA hydrolyzes cGMP in addition to cAMP, as shown biochemically.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17040207" target="_blank" class="term-link">
+                                        PMID:17040207
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both DdPDE1 and DdPDE7 are PDEs with dual cAMP/cGMP specificity, and are strongly inhibited by DTT and insensitive to IBMX.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047555" target="_blank" class="term-link">
+                                    GO:0047555
+                                </a>
+                            </span>
+                            <span class="term-label">3&#39;,5&#39;-cyclic-GMP phosphodiesterase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17040207" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17040207
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Seven Dictyostelium discoideum phosphodiesterases degrade th...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:0047555" data-r="PMID:17040207" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Genetic interaction evidence supporting cGMP phosphodiesterase activity; the paper characterizes the contribution of PdsA (DdPDE1) to the degradation of cyclic nucleotide pools including cGMP.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The Bader et al. analysis confirms PdsA as a dual-specificity enzyme contributing to cGMP as well as cAMP degradation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17040207" target="_blank" class="term-link">
+                                        PMID:17040207
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both DdPDE1 and DdPDE7 are PDEs with dual cAMP/cGMP specificity, and are strongly inhibited by DTT and insensitive to IBMX.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004114" target="_blank" class="term-link">
+                                    GO:0004114
+                                </a>
+                            </span>
+                            <span class="term-label">3&#39;,5&#39;-cyclic-nucleotide phosphodiesterase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/6302095" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:6302095
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Purification and characterization of the extracellular cycli...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:0004114" data-r="PMID:6302095" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct biochemical purification and characterization of the extracellular cyclic nucleotide phosphodiesterase demonstrates this activity for PdsA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The enzyme was purified from aggregation-phase culture supernatant and characterized as a cyclic nucleotide phosphodiesterase, directly supporting this molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/6302095" target="_blank" class="term-link">
+                                        PMID:6302095
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Extracellular phosphodiesterase for adenosine 3&#39;:5&#39;-monophosphate [EC 3.1.4.17] was purified from the supernatant of aggregation phase culture of Dictyostelium discoideum</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/6265455" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:6265455
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The extracellular cyclic nucleotide phosphodiesterase of Dic...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:0005576" data-r="PMID:6265455" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The active extracellular phosphodiesterase was purified from culture medium, directly demonstrating that PdsA is active in the extracellular region.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Purification of the active secreted enzyme directly supports extracellular localization and activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/6265455" target="_blank" class="term-link">
+                                        PMID:6265455
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Two forms of the extracellular cyclic nucleotide phosphodiesterase (EC 3.1.4.17) of Dictyostelium discoideum have been purified.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19477920" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19477920
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The group migration of Dictyostelium cells is regulated by e...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:0005783" data-r="PMID:19477920" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Endoplasmic reticulum localization from Garcia et al. 2009, whose cached full text directly reports that the intracellular pool of PdsA is in the ER, proposed as a storage/secretion compartment for this secreted phosphodiesterase. Verified against the cached publication.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The full text of PMID:19477920 is cached and explicitly localizes the intracellular pool of PdsA to the endoplasmic reticulum, consistent with ER transit of a signal-peptide-bearing secreted protein. This is a genuine (non-core) intracellular localization of an otherwise extracellular enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19477920" target="_blank" class="term-link">
+                                        PMID:19477920
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the intracellular pool of PdsA is localized to the endoplasmic reticulum, which may provide a compartment for storage and secretion of PdsA</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007193" target="_blank" class="term-link">
+                                    GO:0007193
+                                </a>
+                            </span>
+                            <span class="term-label">adenylate cyclase-inhibiting G protein-coupled receptor signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17040207" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17040207
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Seven Dictyostelium discoideum phosphodiesterases degrade th...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:0007193" data-r="PMID:17040207" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> By removing the extracellular cAMP ligand of cAR receptors, PdsA modulates receptor-coupled adenylate cyclase signaling. This is a downstream signaling consequence of the enzyme&#39;s catalytic activity rather than its core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The role of PdsA in cAR/adenylate-cyclase signaling arises indirectly from degrading the extracellular cAMP chemoattractant. It is a legitimate developmental/signaling context but not the core evolved molecular function, which is cyclic nucleotide hydrolysis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17040207" target="_blank" class="term-link">
+                                        PMID:17040207
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DdPDE1 is the main PDE that degrades extracellular cAMP during cell aggregation and is thereby essential for shaping cAMP waves</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1900115" target="_blank" class="term-link">
+                                    GO:1900115
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular regulation of signal transduction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17040207" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17040207
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Seven Dictyostelium discoideum phosphodiesterases degrade th...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:1900115" data-r="PMID:17040207" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PdsA degrades extracellular cAMP, the diffusible chemotactic signal, thereby regulating signal transduction in the extracellular space. This term accurately captures the biological purpose of the enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Extracellular cAMP degradation by PdsA shapes and resets the cAMP waves that coordinate chemotaxis, which is precisely extracellular regulation of signal transduction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17040207" target="_blank" class="term-link">
+                                        PMID:17040207
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DdPDE1 is the main PDE that degrades extracellular cAMP during cell aggregation and is thereby essential for shaping cAMP waves</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/230476" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:230476
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Binding of inhibitor alters kinetic and physical properties ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:0005515" data-r="PMID:230476" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IPI reflects the physical interaction between PdsA and its secreted heat-stable glycoprotein inhibitor (PdiA), which forms an enzyme-inhibitor complex. Bare protein binding is uninformative; the relevant, more informative relationship is binding by/to the PDE inhibitor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The interaction is real and functionally important for regulating PdsA activity, but the generic protein binding term conveys little. It should be retained as non-core; a more specific descriptor of the inhibitor interaction would be preferable.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/230476" target="_blank" class="term-link">
+                                        PMID:230476
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The second form is the result of a complex formed with a heat-stable inhibitor and has a Km in the millimolar range.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031153" target="_blank" class="term-link">
+                                    GO:0031153
+                                </a>
+                            </span>
+                            <span class="term-label">slug development involved in sorocarp development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7851634" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7851634
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The phosphodiesterase secreted by prestalk cells is necessar...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:0031153" data-r="PMID:7851634" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Prestalk-specific PDE expression is required for morphogenesis; blocking PDE activity in prestalk cells (via targeted inhibitor overexpression) blocks slug formation and culmination. This supports a role of PdsA in slug/sorocarp development, downstream of its enzymatic function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PdsA activity is required for the slug and later morphogenetic stages, but this is a developmental consequence of extracellular cAMP regulation rather than the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7851634" target="_blank" class="term-link">
+                                        PMID:7851634
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">followed by a block in slug formation and an inability to culminate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0072720" target="_blank" class="term-link">
+                                    GO:0072720
+                                </a>
+                            </span>
+                            <span class="term-label">response to dithiothreitol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/230476" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:230476
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Binding of inhibitor alters kinetic and physical properties ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:0072720" data-r="PMID:230476" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Dithiothreitol strongly stimulates extracellular PDE activity by inactivating the heat-stable inhibitor bound to PdsA. This is an experimentally observed response but a peripheral property, not a core biological function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The response to DTT reflects relief of inhibitor-mediated suppression of the enzyme rather than a physiological signaling role; keep as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/230476" target="_blank" class="term-link">
+                                        PMID:230476
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Treating the enzyme-inhibitor complex with dithiothreitol stimulated enzyme activity 20- to 100-fold</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051591" target="_blank" class="term-link">
+                                    GO:0051591
+                                </a>
+                            </span>
+                            <span class="term-label">response to cAMP</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2162056" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2162056
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Conditions that alter intracellular cAMP levels affect expre...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:0051591" data-r="PMID:2162056" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Expression of the PDE gene is regulated by intracellular cAMP levels, so PdsA responds to cAMP at the level of gene expression. This is a regulatory response rather than a core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The response-to-cAMP annotation captures developmental/transcriptional regulation of the gene by cAMP, which is contextual rather than the enzyme&#39;s core evolved function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2162056" target="_blank" class="term-link">
+                                        PMID:2162056
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the magnitude of PDE gene expression is negatively regulated by intracellular cAMP levels</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903013" target="_blank" class="term-link">
+                                    GO:1903013
+                                </a>
+                            </span>
+                            <span class="term-label">response to differentiation-inducing factor 1</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2049870" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2049870
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cyclic nucleotide phosphodiesterase of Dictyostelium discoid...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:1903013" data-r="PMID:2049870" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The prestalk-specific (2.2 kb) PDE transcript is induced by differentiation-inducing factor (DIF), so PdsA expression responds to DIF-1. This is a transcriptional/developmental response.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> DIF-1 induction of the prestalk PDE transcript is a developmental regulatory context, not the core molecular function of the enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2049870" target="_blank" class="term-link">
+                                        PMID:2049870
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">is induced by differentiation-inducing factor</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004115" target="_blank" class="term-link">
+                                    GO:0004115
+                                </a>
+                            </span>
+                            <span class="term-label">3&#39;,5&#39;-cyclic-AMP phosphodiesterase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/6265455" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:6265455
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The extracellular cyclic nucleotide phosphodiesterase of Dic...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:0004115" data-r="PMID:6265455" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct purification and characterization of the extracellular cyclic nucleotide phosphodiesterase supports cAMP phosphodiesterase activity, the core molecular function of PdsA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The purified secreted enzyme hydrolyzes cAMP, directly supporting this activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/6265455" target="_blank" class="term-link">
+                                        PMID:6265455
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Two forms of the extracellular cyclic nucleotide phosphodiesterase (EC 3.1.4.17) of Dictyostelium discoideum have been purified.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030552" target="_blank" class="term-link">
+                                    GO:0030552
+                                </a>
+                            </span>
+                            <span class="term-label">cAMP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2722797" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2722797
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The cyclic nucleotide specificity of eight cAMP-binding prot...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:0030552" data-r="PMID:2722797" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The phosphodiesterase binds cAMP, as analyzed by cyclic nucleotide specificity studies. For PdsA this binding is substrate engagement that is part of catalysis rather than a distinct regulatory cAMP-binding function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> cAMP binding by PdsA reflects substrate recognition by the catalytic site and is largely subsumed by its phosphodiesterase activity; retain as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2722797" target="_blank" class="term-link">
+                                        PMID:2722797
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">binding of cAMP to phosphodiesterase involves only O3&#39; and exocyclic oxygen</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+                        <span class="not-badge" title="This is a NOT annotation - gene does NOT have this function">NOT</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19477920" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19477920
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The group migration of Dictyostelium cells is regulated by e...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:0005886" data-r="PMID:19477920" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A negated (NOT) plasma membrane annotation from Garcia et al. 2009. The cached full text localizes the intracellular pool of PdsA to the ER (consistent with a non-plasma-membrane intracellular form), but another IDA annotation (PMID:9168471) positively places the cell-surface PDE in plasma membrane microdomains. The two likely reflect distinct pools (secreted/ER versus surface-associated) rather than a clean negation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> With the Garcia et al. full text now verified, the negation reflects that the intracellular pool is ER rather than plasma membrane; however a positive plasma-membrane annotation (PMID:9168471) for the cell-surface form stands, so the blanket NOT-plasma-membrane call remains genuinely unresolved (distinct pools) rather than being accepted or removed outright.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031152" target="_blank" class="term-link">
+                                    GO:0031152
+                                </a>
+                            </span>
+                            <span class="term-label">aggregation involved in sorocarp development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19477920" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19477920
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The group migration of Dictyostelium cells is regulated by e...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:0031152" data-r="PMID:19477920" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PdsA is required for starvation-induced aggregation; cells lacking PdsA fail to aggregate because extracellular cAMP waves cannot be properly shaped. This aggregation role is robustly documented for the gene.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Although the cited publication is not cached, the aggregation phenotype of pdsA-null cells is independently and directly established in the available literature, making this a well-supported developmental role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17040207" target="_blank" class="term-link">
+                                        PMID:17040207
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">UK7 cells fail to aggregate, but can be rescued by adding exogenous PDE activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031152" target="_blank" class="term-link">
+                                    GO:0031152
+                                </a>
+                            </span>
+                            <span class="term-label">aggregation involved in sorocarp development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25887420" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25887420
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Leaps and lulls in the developmental transcriptome of Dictyo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:0031152" data-r="PMID:25887420" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Developmental expression-pattern (IEP) evidence associating PdsA with the aggregation stage. Consistent with the enzyme&#39;s established role in aggregation, though expression correlation is weaker evidence than the loss-of-function phenotype.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The aggregation role of PdsA is genuine, but this IEP transcriptome annotation provides only correlative expression support and is not the core molecular function; retain as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17040207" target="_blank" class="term-link">
+                                        PMID:17040207
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">UK7 cells fail to aggregate, but can be rescued by adding exogenous PDE activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9168471" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9168471
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of detergent-resistant plasma membrane microd...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:0005886" data-r="PMID:9168471" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The cell-surface phosphodiesterase was localized to detergent-resistant plasma membrane microdomains together with cAR1 and adenylate cyclase (ACA), supporting plasma membrane / cell-surface localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Immunoelectron microscopy and cell-surface biotinylation confirmed the plasma membrane origin of the fraction enriched in the cell-surface PDE, consistent with PdsA being membrane-attached at the cell surface.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9168471" target="_blank" class="term-link">
+                                        PMID:9168471
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The cell surface phosphodiesterase (PDE) and a downstream effector of cAR1, adenylate cyclase (ACA), were specifically localized in these structures</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9168471" target="_blank" class="term-link">
+                                        PMID:9168471
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">both confirmed the plasma membrane origin of this preparation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902168" target="_blank" class="term-link">
+                                    GO:1902168
+                                </a>
+                            </span>
+                            <span class="term-label">response to catechin</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23516620" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23516620
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The green tea catechin epigallocatechin gallate (EGCG) block...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:1902168" data-r="PMID:23516620" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The green tea catechin EGCG blocks Dictyostelium aggregation, streaming and cAMP-wave-dependent development. This is a peripheral pharmacological response context rather than a core function of PdsA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The response-to-catechin annotation reflects a small-molecule perturbation of the cAMP-signaling/development program in which PdsA participates; it is contextual and non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23516620" target="_blank" class="term-link">
+                                        PMID:23516620
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In the presence of EGCG aggregation is delayed, cells do not stream and development is typically stalled at the loose aggregate stage.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004115" target="_blank" class="term-link">
+                                    GO:0004115
+                                </a>
+                            </span>
+                            <span class="term-label">3&#39;,5&#39;-cyclic-AMP phosphodiesterase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17040207" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17040207
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Seven Dictyostelium discoideum phosphodiesterases degrade th...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P12019" data-a="GO:0004115" data-r="PMID:17040207" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Loss-of-function (pdsA-null, strain UK7) evidence confirms that PdsA is the main cAMP phosphodiesterase degrading extracellular cAMP. This is the core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The pdsA-null phenotype (loss of extracellular cAMP degradation, failure to aggregate) directly supports cAMP phosphodiesterase activity as the central function of the gene.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17040207" target="_blank" class="term-link">
+                                        PMID:17040207
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DdPDE1 is the main PDE that degrades extracellular cAMP during cell aggregation and is thereby essential for shaping cAMP waves</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Secreted and cell-surface class II cyclic nucleotide phosphodiesterase that hydrolyzes extracellular 3&#39;,5&#39;-cyclic AMP to 5&#39;-AMP. By degrading the extracellular cAMP chemoattractant, PdsA shapes and resets the propagating cAMP waves that drive chemotactic streaming and aggregation during starvation-induced development.</h3>
+                <span class="vote-buttons" data-g="P12019" data-a="FUNCTION: Secreted and cell-surface class II cyclic nucleoti..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004115" target="_blank" class="term-link">
+                            3&#39;,5&#39;-cyclic-AMP phosphodiesterase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006198" target="_blank" class="term-link">
+                                cAMP catabolic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1900115" target="_blank" class="term-link">
+                                extracellular regulation of signal transduction
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009986" target="_blank" class="term-link">
+                                cell surface
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17040207" target="_blank" class="term-link">
+                                PMID:17040207
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">DdPDE1 is the main PDE that degrades extracellular cAMP during cell aggregation and is thereby essential for shaping cAMP waves</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17040207" target="_blank" class="term-link">
+                                PMID:17040207
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">both DdPDE1 and DdPDE7 are secreted into the medium and are attached to the cell surface</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Dual-specificity phosphodiesterase activity; in addition to its preferred cAMP substrate, PdsA also hydrolyzes 3&#39;,5&#39;-cyclic GMP.</h3>
+                <span class="vote-buttons" data-g="P12019" data-a="FUNCTION: Dual-specificity phosphodiesterase activity; in ad..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047555" target="_blank" class="term-link">
+                            3&#39;,5&#39;-cyclic-GMP phosphodiesterase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006198" target="_blank" class="term-link">
+                                cAMP catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17040207" target="_blank" class="term-link">
+                                PMID:17040207
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Both DdPDE1 and DdPDE7 are PDEs with dual cAMP/cGMP specificity, and are strongly inhibited by DTT and insensitive to IBMX.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17040207" target="_blank" class="term-link">
+                            PMID:17040207
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Seven Dictyostelium discoideum phosphodiesterases degrade three pools of cAMP and cGMP.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">DdPDE1 (PdsA) is a class II dual-specificity phosphodiesterase that degrades extracellular cAMP and cGMP and can be secreted or displayed on the cell surface.</div>
+
+                        <div class="finding-text">"DdPDE1 (PdsA) is a class II dual-specificity PDE that degrades extracellular cAMP and cGMP. The enzyme can be secreted in the medium, or exposed on the cell surface."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PdsA is the main enzyme degrading extracellular cAMP during aggregation and is essential for shaping cAMP waves; pdsA-null (UK7) cells fail to aggregate.</div>
+
+                        <div class="finding-text">"DdPDE1 is the main PDE that degrades extracellular cAMP during cell aggregation and is thereby essential for shaping cAMP waves"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PdsA and its homologue DdPDE7 have dual cAMP/cGMP specificity and are strongly inhibited by DTT and insensitive to IBMX.</div>
+
+                        <div class="finding-text">"Both DdPDE1 and DdPDE7 are PDEs with dual cAMP/cGMP specificity, and are strongly inhibited by DTT and insensitive to IBMX."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19477920" target="_blank" class="term-link">
+                            PMID:19477920
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The group migration of Dictyostelium cells is regulated by extracellular chemoattractant degradation.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The intracellular pool of PdsA is localized to the endoplasmic reticulum, proposed as a storage/secretion compartment.</div>
+
+                        <div class="finding-text">"the intracellular pool of PdsA is localized to the endoplasmic reticulum, which may provide a compartment for storage and secretion of PdsA"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/2049870" target="_blank" class="term-link">
+                            PMID:2049870
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cyclic nucleotide phosphodiesterase of Dictyostelium discoideum and its glycoprotein inhibitor: structure and expression of their genes.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The prestalk-specific 2.2 kb PDE transcript is induced by differentiation-inducing factor.</div>
+
+                        <div class="finding-text">"is induced by differentiation-inducing factor"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/2162056" target="_blank" class="term-link">
+                            PMID:2162056
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Conditions that alter intracellular cAMP levels affect expression of the cAMP phosphodiesterase gene in Dictyostelium.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PDE gene expression is negatively regulated by intracellular cAMP levels.</div>
+
+                        <div class="finding-text">"the magnitude of PDE gene expression is negatively regulated by intracellular cAMP levels"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/230476" target="_blank" class="term-link">
+                            PMID:230476
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Binding of inhibitor alters kinetic and physical properties of extracellular cyclic AMP phosphodiesterase from Dictyostelium discoideum.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PdsA forms a complex with a heat-stable glycoprotein inhibitor that raises its Km; dithiothreitol relieves inhibition by inactivating the inhibitor.</div>
+
+                        <div class="finding-text">"Treating the enzyme-inhibitor complex with dithiothreitol stimulated enzyme activity 20- to 100-fold"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23516620" target="_blank" class="term-link">
+                            PMID:23516620
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The green tea catechin epigallocatechin gallate (EGCG) blocks cell motility, chemotaxis and development in Dictyostelium discoideum.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">EGCG delays aggregation and stalls development at the loose aggregate stage.</div>
+
+                        <div class="finding-text">"In the presence of EGCG aggregation is delayed, cells do not stream and development is typically stalled at the loose aggregate stage."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25887420" target="_blank" class="term-link">
+                            PMID:25887420
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Leaps and lulls in the developmental transcriptome of Dictyostelium discoideum.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/2722797" target="_blank" class="term-link">
+                            PMID:2722797
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The cyclic nucleotide specificity of eight cAMP-binding proteins in Dictyostelium discoideum is correlated into three groups.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">cAMP binding to the phosphodiesterase involves only the O3&#39; and exocyclic oxygen positions.</div>
+
+                        <div class="finding-text">"binding of cAMP to phosphodiesterase involves only O3&#39; and exocyclic oxygen"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/6265455" target="_blank" class="term-link">
+                            PMID:6265455
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The extracellular cyclic nucleotide phosphodiesterase of Dictyostelium discoideum. Purification and characterization.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Two forms of the secreted extracellular cyclic nucleotide phosphodiesterase were purified from Dictyostelium.</div>
+
+                        <div class="finding-text">"Two forms of the extracellular cyclic nucleotide phosphodiesterase (EC 3.1.4.17) of Dictyostelium discoideum have been purified."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/6302095" target="_blank" class="term-link">
+                            PMID:6302095
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Purification and characterization of the extracellular cyclic AMP phosphodiesterase of Dictyostelium discoideum.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The extracellular cAMP phosphodiesterase was purified from aggregation-phase culture supernatant.</div>
+
+                        <div class="finding-text">"Extracellular phosphodiesterase for adenosine 3&#39;:5&#39;-monophosphate [EC 3.1.4.17] was purified from the supernatant of aggregation phase culture of Dictyostelium discoideum"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7851634" target="_blank" class="term-link">
+                            PMID:7851634
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The phosphodiesterase secreted by prestalk cells is necessary for Dictyostelium morphogenesis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Blocking phosphodiesterase activity in prestalk cells blocks slug formation and culmination.</div>
+
+                        <div class="finding-text">"followed by a block in slug formation and an inability to culminate"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9168471" target="_blank" class="term-link">
+                            PMID:9168471
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification of detergent-resistant plasma membrane microdomains in dictyostelium: enrichment of signal transduction proteins.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The cell-surface phosphodiesterase localizes to plasma membrane microdomains together with cAR1 and adenylate cyclase.</div>
+
+                        <div class="finding-text">"The cell surface phosphodiesterase (PDE) and a downstream effector of cAR1, adenylate cyclase (ACA), were specifically localized in these structures"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P12019
+gene_symbol: pdsA
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:44689
+  label: Dictyostelium discoideum
+description: pdsA (PdsA, DdPDE1, PDE1) is the major extracellular and cell-surface
+  cyclic nucleotide phosphodiesterase of Dictyostelium discoideum. It is a secreted
+  glycoprotein of the class II cyclic nucleotide phosphodiesterase family that is
+  synthesized with a cleaved signal peptide and can either be released into the medium
+  or remain attached to the cell surface. The enzyme hydrolyzes extracellular 3&#39;,5&#39;-cyclic
+  AMP to 5&#39;-AMP with a preference for cAMP over cGMP, but has dual specificity and
+  also hydrolyzes 3&#39;,5&#39;-cyclic GMP. By degrading the extracellular cAMP chemoattractant,
+  PdsA sharpens the spatial cAMP gradient and terminates and resets the propagating
+  cAMP waves that guide chemotaxis and streaming during starvation-induced aggregation;
+  cells lacking PdsA fail to aggregate. Its activity is negatively modulated by a
+  secreted heat-stable glycoprotein inhibitor (PdiA), and this inhibition is relieved
+  by reducing agents such as dithiothreitol. PdsA expression is developmentally
+  controlled through multiple promoters, including a prestalk-specific promoter whose
+  activity is required for later morphogenesis (slug formation and culmination).
+existing_annotations:
+- term:
+    id: GO:0110034
+    label: negative regulation of adenylate cyclase-activating glucose-activated G
+      protein-coupled receptor signaling pathway
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Phylogenetic (IBA) inference to a glucose-activated G-protein-coupled
+      receptor signaling term. Dictyostelium PdsA modulates cAMP-receptor (cAR) GPCR
+      signaling by degrading extracellular cAMP, not a glucose-sensing GPCR pathway.
+      The glucose-activated context does not apply to this organism or gene.
+    action: REMOVE
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - CONTEXT_OR_TISSUE_MISMATCH
+      source_entities:
+      - source_id: PANTHER:PTN002001416
+        source_label: &#34;PANTHER node for cyclic-nucleotide phosphodiesterases&#34;
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &#34;The negative-regulation term traces to a fungal glucose-sensing cAMP-GPCR pathway that does not correspond to PdsA&#39;s role in extracellular cAMP turnover&#34;
+      - source_id: PomBase:SPCC285.09c
+        source_label: &#34;S. pombe glucose-sensing cAMP phosphodiesterase&#34;
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &#34;Source enzyme acts in a yeast glucose and cAMP-sensing context absent in Dictyostelium&#34;
+    reason: This is an over-propagated phylogenetic inference to a glucose-sensing
+      GPCR signaling branch that is not relevant to Dictyostelium. PdsA has no known
+      role in glucose-activated receptor signaling; its genuine signaling role is
+      the extracellular degradation of the cAMP chemoattractant that terminates cAR
+      GPCR signaling. That role is better captured by the extracellular regulation
+      of signal transduction annotation.
+    supported_by:
+    - reference_id: PMID:17040207
+      supporting_text: DdPDE1 is the main PDE that degrades extracellular cAMP during
+        cell aggregation and is thereby essential for shaping cAMP waves
+- term:
+    id: GO:0141162
+    label: negative regulation of cAMP/PKA signal transduction
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: IBA inference of negative regulation of cAMP/PKA signaling. PdsA acts
+      on the extracellular cAMP pool that stimulates cell-surface cAMP receptors,
+      not directly on the intracellular cAMP/PKA axis (which in Dictyostelium is
+      controlled by the intracellular PDE RegA/DdPDE2). The effect on PKA signaling
+      is therefore indirect.
+    action: MARK_AS_OVER_ANNOTATED
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - ROLE_CONFLATION
+      source_entities:
+      - source_id: PANTHER:PTN002001416
+        source_label: &#34;PANTHER node for cyclic-nucleotide phosphodiesterases&#34;
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &#34;PdsA degrades extracellular cAMP acting on cAR GPCRs; casting it as a negative regulator of cAMP/PKA signaling conflates an enzymatic effector with a pathway regulator&#34;
+      - source_id: CGD:CAL0000177603
+        source_label: &#34;Candida albicans phosphodiesterase ortholog&#34;
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &#34;Source PDE participates in cAMP/PKA regulation in fungi; the indirect regulatory framing over-reaches for PdsA&#34;
+    reason: PdsA degrades extracellular cAMP that activates cAR GPCRs; it does not
+      degrade the intracellular cAMP that drives PKA. Attributing negative regulation
+      of cAMP/PKA signal transduction to PdsA over-states its role by conflating the
+      extracellular and intracellular cAMP pools, which are handled by distinct
+      phosphodiesterases in this organism.
+    supported_by:
+    - reference_id: PMID:17040207
+      supporting_text: The enzyme can be secreted in the medium, or exposed on the
+        cell surface.
+- term:
+    id: GO:0047555
+    label: 3&#39;,5&#39;-cyclic-GMP phosphodiesterase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: PdsA is a dual-specificity phosphodiesterase that hydrolyzes both cAMP
+      and cGMP, so cGMP phosphodiesterase activity is a genuine molecular function,
+      although cAMP is the preferred substrate.
+    action: ACCEPT
+    reason: Direct biochemical characterization shows PdsA (DdPDE1) has dual cAMP/cGMP
+      specificity, consistent with the assigned EC 3.1.4.35 (cGMP) activity. The
+      IBA inference is corroborated by experimental evidence for this gene.
+    supported_by:
+    - reference_id: PMID:17040207
+      supporting_text: Both DdPDE1 and DdPDE7 are PDEs with dual cAMP/cGMP specificity,
+        and are strongly inhibited by DTT and insensitive to IBMX.
+- term:
+    id: GO:0004115
+    label: 3&#39;,5&#39;-cyclic-AMP phosphodiesterase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: cAMP phosphodiesterase activity is the core, well-established molecular
+      function of PdsA and is strongly supported by direct biochemical evidence.
+    action: ACCEPT
+    reason: PdsA is the principal enzyme degrading extracellular cAMP in Dictyostelium;
+      the IBA inference matches the experimentally determined activity.
+    supported_by:
+    - reference_id: PMID:17040207
+      supporting_text: Extracellular cAMP is degraded predominantly by the class II
+        high-affinity enzyme DdPDE1
+- term:
+    id: GO:0004115
+    label: 3&#39;,5&#39;-cyclic-AMP phosphodiesterase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Electronic annotation of the core cAMP phosphodiesterase activity,
+      consistent with direct experimental evidence.
+    action: ACCEPT
+    reason: This is the central catalytic activity of PdsA and is experimentally
+      confirmed.
+    supported_by:
+    - reference_id: PMID:17040207
+      supporting_text: Extracellular cAMP is degraded predominantly by the class II
+        high-affinity enzyme DdPDE1
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: PdsA is a secreted enzyme released into the extracellular medium, so
+      extracellular region localization is correct.
+    action: ACCEPT
+    reason: The protein carries a cleaved signal peptide and is secreted; extracellular
+      localization is directly demonstrated by purification of active enzyme from
+      culture supernatant.
+    supported_by:
+    - reference_id: PMID:17040207
+      supporting_text: both DdPDE1 and DdPDE7 are secreted into the medium and are
+        attached to the cell surface
+- term:
+    id: GO:0006198
+    label: cAMP catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Degradation of cAMP to AMP is the core biological process enabled by
+      PdsA&#39;s phosphodiesterase activity.
+    action: ACCEPT
+    reason: PdsA is the main enzyme catabolizing extracellular cAMP in Dictyostelium,
+      making this process annotation directly appropriate.
+    supported_by:
+    - reference_id: PMID:17040207
+      supporting_text: DdPDE1 is the main PDE that degrades extracellular cAMP during
+        cell aggregation and is thereby essential for shaping cAMP waves
+- term:
+    id: GO:0008081
+    label: phosphoric diester hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: This is a correct but overly general parent term for the specific
+      cyclic-nucleotide phosphodiesterase activity of PdsA.
+    action: MODIFY
+    reason: Phosphoric diester hydrolase activity is a high-level parent. The
+      experimentally established activity is more precisely 3&#39;,5&#39;-cyclic-nucleotide
+      phosphodiesterase activity (dual cAMP/cGMP), so a more specific term is
+      preferred.
+    proposed_replacement_terms:
+    - id: GO:0004114
+      label: 3&#39;,5&#39;-cyclic-nucleotide phosphodiesterase activity
+    supported_by:
+    - reference_id: PMID:17040207
+      supporting_text: Both DdPDE1 and DdPDE7 are PDEs with dual cAMP/cGMP specificity,
+        and are strongly inhibited by DTT and insensitive to IBMX.
+- term:
+    id: GO:0009986
+    label: cell surface
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: In addition to being secreted, PdsA is also exposed on the cell surface,
+      so cell surface localization is correct.
+    action: ACCEPT
+    reason: Enzyme activity measurements show PdsA is attached to the cell surface
+      as well as secreted into the medium.
+    supported_by:
+    - reference_id: PMID:17040207
+      supporting_text: both DdPDE1 and DdPDE7 are secreted into the medium and are
+        attached to the cell surface
+- term:
+    id: GO:0047555
+    label: 3&#39;,5&#39;-cyclic-GMP phosphodiesterase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Electronic annotation of cGMP phosphodiesterase activity, consistent
+      with the enzyme&#39;s demonstrated dual specificity.
+    action: ACCEPT
+    reason: PdsA hydrolyzes cGMP in addition to cAMP, as shown biochemically.
+    supported_by:
+    - reference_id: PMID:17040207
+      supporting_text: Both DdPDE1 and DdPDE7 are PDEs with dual cAMP/cGMP specificity,
+        and are strongly inhibited by DTT and insensitive to IBMX.
+- term:
+    id: GO:0047555
+    label: 3&#39;,5&#39;-cyclic-GMP phosphodiesterase activity
+  evidence_type: IGI
+  original_reference_id: PMID:17040207
+  qualifier: enables
+  review:
+    summary: Genetic interaction evidence supporting cGMP phosphodiesterase activity;
+      the paper characterizes the contribution of PdsA (DdPDE1) to the degradation
+      of cyclic nucleotide pools including cGMP.
+    action: ACCEPT
+    reason: The Bader et al. analysis confirms PdsA as a dual-specificity enzyme
+      contributing to cGMP as well as cAMP degradation.
+    supported_by:
+    - reference_id: PMID:17040207
+      supporting_text: Both DdPDE1 and DdPDE7 are PDEs with dual cAMP/cGMP specificity,
+        and are strongly inhibited by DTT and insensitive to IBMX.
+- term:
+    id: GO:0004114
+    label: 3&#39;,5&#39;-cyclic-nucleotide phosphodiesterase activity
+  evidence_type: IDA
+  original_reference_id: PMID:6302095
+  qualifier: enables
+  review:
+    summary: Direct biochemical purification and characterization of the extracellular
+      cyclic nucleotide phosphodiesterase demonstrates this activity for PdsA.
+    action: ACCEPT
+    reason: The enzyme was purified from aggregation-phase culture supernatant and
+      characterized as a cyclic nucleotide phosphodiesterase, directly supporting
+      this molecular function.
+    supported_by:
+    - reference_id: PMID:6302095
+      supporting_text: Extracellular phosphodiesterase for adenosine 3&#39;:5&#39;-monophosphate
+        [EC 3.1.4.17] was purified from the supernatant of aggregation phase culture
+        of Dictyostelium discoideum
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IDA
+  original_reference_id: PMID:6265455
+  qualifier: is_active_in
+  review:
+    summary: The active extracellular phosphodiesterase was purified from culture
+      medium, directly demonstrating that PdsA is active in the extracellular region.
+    action: ACCEPT
+    reason: Purification of the active secreted enzyme directly supports extracellular
+      localization and activity.
+    supported_by:
+    - reference_id: PMID:6265455
+      supporting_text: Two forms of the extracellular cyclic nucleotide phosphodiesterase
+        (EC 3.1.4.17) of Dictyostelium discoideum have been purified.
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IDA
+  original_reference_id: PMID:19477920
+  qualifier: located_in
+  review:
+    summary: Endoplasmic reticulum localization from Garcia et al. 2009, whose
+      cached full text directly reports that the intracellular pool of PdsA is in
+      the ER, proposed as a storage/secretion compartment for this secreted
+      phosphodiesterase. Verified against the cached publication.
+    action: ACCEPT
+    reason: The full text of PMID:19477920 is cached and explicitly localizes the
+      intracellular pool of PdsA to the endoplasmic reticulum, consistent with ER
+      transit of a signal-peptide-bearing secreted protein. This is a genuine
+      (non-core) intracellular localization of an otherwise extracellular enzyme.
+    supported_by:
+    - reference_id: PMID:19477920
+      supporting_text: the intracellular pool of PdsA is localized to the endoplasmic
+        reticulum, which may provide a compartment for storage and secretion of PdsA
+- term:
+    id: GO:0007193
+    label: adenylate cyclase-inhibiting G protein-coupled receptor signaling pathway
+  evidence_type: IMP
+  original_reference_id: PMID:17040207
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: By removing the extracellular cAMP ligand of cAR receptors, PdsA
+      modulates receptor-coupled adenylate cyclase signaling. This is a downstream
+      signaling consequence of the enzyme&#39;s catalytic activity rather than its core
+      molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: The role of PdsA in cAR/adenylate-cyclase signaling arises indirectly
+      from degrading the extracellular cAMP chemoattractant. It is a legitimate
+      developmental/signaling context but not the core evolved molecular function,
+      which is cyclic nucleotide hydrolysis.
+    supported_by:
+    - reference_id: PMID:17040207
+      supporting_text: DdPDE1 is the main PDE that degrades extracellular cAMP during
+        cell aggregation and is thereby essential for shaping cAMP waves
+- term:
+    id: GO:1900115
+    label: extracellular regulation of signal transduction
+  evidence_type: IMP
+  original_reference_id: PMID:17040207
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: PdsA degrades extracellular cAMP, the diffusible chemotactic signal,
+      thereby regulating signal transduction in the extracellular space. This term
+      accurately captures the biological purpose of the enzyme.
+    action: ACCEPT
+    reason: Extracellular cAMP degradation by PdsA shapes and resets the cAMP waves
+      that coordinate chemotaxis, which is precisely extracellular regulation of
+      signal transduction.
+    supported_by:
+    - reference_id: PMID:17040207
+      supporting_text: DdPDE1 is the main PDE that degrades extracellular cAMP during
+        cell aggregation and is thereby essential for shaping cAMP waves
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:230476
+  qualifier: enables
+  review:
+    summary: This IPI reflects the physical interaction between PdsA and its secreted
+      heat-stable glycoprotein inhibitor (PdiA), which forms an enzyme-inhibitor
+      complex. Bare protein binding is uninformative; the relevant, more informative
+      relationship is binding by/to the PDE inhibitor.
+    action: KEEP_AS_NON_CORE
+    reason: The interaction is real and functionally important for regulating PdsA
+      activity, but the generic protein binding term conveys little. It should be
+      retained as non-core; a more specific descriptor of the inhibitor interaction
+      would be preferable.
+    supported_by:
+    - reference_id: PMID:230476
+      supporting_text: The second form is the result of a complex formed with a
+        heat-stable inhibitor and has a Km in the millimolar range.
+- term:
+    id: GO:0031153
+    label: slug development involved in sorocarp development
+  evidence_type: IMP
+  original_reference_id: PMID:7851634
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: Prestalk-specific PDE expression is required for morphogenesis; blocking
+      PDE activity in prestalk cells (via targeted inhibitor overexpression) blocks
+      slug formation and culmination. This supports a role of PdsA in slug/sorocarp
+      development, downstream of its enzymatic function.
+    action: KEEP_AS_NON_CORE
+    reason: PdsA activity is required for the slug and later morphogenetic stages,
+      but this is a developmental consequence of extracellular cAMP regulation rather
+      than the core molecular function.
+    supported_by:
+    - reference_id: PMID:7851634
+      supporting_text: followed by a block in slug formation and an inability to
+        culminate
+- term:
+    id: GO:0072720
+    label: response to dithiothreitol
+  evidence_type: IDA
+  original_reference_id: PMID:230476
+  qualifier: involved_in
+  review:
+    summary: Dithiothreitol strongly stimulates extracellular PDE activity by
+      inactivating the heat-stable inhibitor bound to PdsA. This is an experimentally
+      observed response but a peripheral property, not a core biological function.
+    action: KEEP_AS_NON_CORE
+    reason: The response to DTT reflects relief of inhibitor-mediated suppression
+      of the enzyme rather than a physiological signaling role; keep as non-core.
+    supported_by:
+    - reference_id: PMID:230476
+      supporting_text: Treating the enzyme-inhibitor complex with dithiothreitol
+        stimulated enzyme activity 20- to 100-fold
+- term:
+    id: GO:0051591
+    label: response to cAMP
+  evidence_type: IDA
+  original_reference_id: PMID:2162056
+  qualifier: involved_in
+  review:
+    summary: Expression of the PDE gene is regulated by intracellular cAMP levels,
+      so PdsA responds to cAMP at the level of gene expression. This is a regulatory
+      response rather than a core molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: The response-to-cAMP annotation captures developmental/transcriptional
+      regulation of the gene by cAMP, which is contextual rather than the enzyme&#39;s
+      core evolved function.
+    supported_by:
+    - reference_id: PMID:2162056
+      supporting_text: the magnitude of PDE gene expression is negatively regulated
+        by intracellular cAMP levels
+- term:
+    id: GO:1903013
+    label: response to differentiation-inducing factor 1
+  evidence_type: IDA
+  original_reference_id: PMID:2049870
+  qualifier: involved_in
+  review:
+    summary: The prestalk-specific (2.2 kb) PDE transcript is induced by
+      differentiation-inducing factor (DIF), so PdsA expression responds to DIF-1.
+      This is a transcriptional/developmental response.
+    action: KEEP_AS_NON_CORE
+    reason: DIF-1 induction of the prestalk PDE transcript is a developmental
+      regulatory context, not the core molecular function of the enzyme.
+    supported_by:
+    - reference_id: PMID:2049870
+      supporting_text: is induced by differentiation-inducing factor
+- term:
+    id: GO:0004115
+    label: 3&#39;,5&#39;-cyclic-AMP phosphodiesterase activity
+  evidence_type: IDA
+  original_reference_id: PMID:6265455
+  qualifier: enables
+  review:
+    summary: Direct purification and characterization of the extracellular cyclic
+      nucleotide phosphodiesterase supports cAMP phosphodiesterase activity, the
+      core molecular function of PdsA.
+    action: ACCEPT
+    reason: The purified secreted enzyme hydrolyzes cAMP, directly supporting this
+      activity.
+    supported_by:
+    - reference_id: PMID:6265455
+      supporting_text: Two forms of the extracellular cyclic nucleotide phosphodiesterase
+        (EC 3.1.4.17) of Dictyostelium discoideum have been purified.
+- term:
+    id: GO:0030552
+    label: cAMP binding
+  evidence_type: IDA
+  original_reference_id: PMID:2722797
+  qualifier: enables
+  review:
+    summary: The phosphodiesterase binds cAMP, as analyzed by cyclic nucleotide
+      specificity studies. For PdsA this binding is substrate engagement that is
+      part of catalysis rather than a distinct regulatory cAMP-binding function.
+    action: KEEP_AS_NON_CORE
+    reason: cAMP binding by PdsA reflects substrate recognition by the catalytic
+      site and is largely subsumed by its phosphodiesterase activity; retain as
+      non-core.
+    supported_by:
+    - reference_id: PMID:2722797
+      supporting_text: binding of cAMP to phosphodiesterase involves only O3&#39; and
+        exocyclic oxygen
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: PMID:19477920
+  qualifier: located_in
+  negated: true
+  review:
+    summary: A negated (NOT) plasma membrane annotation from Garcia et al. 2009.
+      The cached full text localizes the intracellular pool of PdsA to the ER
+      (consistent with a non-plasma-membrane intracellular form), but another IDA
+      annotation (PMID:9168471) positively places the cell-surface PDE in plasma
+      membrane microdomains. The two likely reflect distinct pools (secreted/ER
+      versus surface-associated) rather than a clean negation.
+    action: UNDECIDED
+    reason: With the Garcia et al. full text now verified, the negation reflects
+      that the intracellular pool is ER rather than plasma membrane; however a
+      positive plasma-membrane annotation (PMID:9168471) for the cell-surface form
+      stands, so the blanket NOT-plasma-membrane call remains genuinely unresolved
+      (distinct pools) rather than being accepted or removed outright.
+- term:
+    id: GO:0031152
+    label: aggregation involved in sorocarp development
+  evidence_type: IMP
+  original_reference_id: PMID:19477920
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: PdsA is required for starvation-induced aggregation; cells lacking PdsA
+      fail to aggregate because extracellular cAMP waves cannot be properly shaped.
+      This aggregation role is robustly documented for the gene.
+    action: ACCEPT
+    reason: Although the cited publication is not cached, the aggregation phenotype
+      of pdsA-null cells is independently and directly established in the available
+      literature, making this a well-supported developmental role.
+    supported_by:
+    - reference_id: PMID:17040207
+      supporting_text: UK7 cells fail to aggregate, but can be rescued by adding
+        exogenous PDE activity
+- term:
+    id: GO:0031152
+    label: aggregation involved in sorocarp development
+  evidence_type: IEP
+  original_reference_id: PMID:25887420
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: Developmental expression-pattern (IEP) evidence associating PdsA with
+      the aggregation stage. Consistent with the enzyme&#39;s established role in
+      aggregation, though expression correlation is weaker evidence than the
+      loss-of-function phenotype.
+    action: KEEP_AS_NON_CORE
+    reason: The aggregation role of PdsA is genuine, but this IEP transcriptome
+      annotation provides only correlative expression support and is not the core
+      molecular function; retain as non-core.
+    supported_by:
+    - reference_id: PMID:17040207
+      supporting_text: UK7 cells fail to aggregate, but can be rescued by adding
+        exogenous PDE activity
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: PMID:9168471
+  qualifier: located_in
+  review:
+    summary: The cell-surface phosphodiesterase was localized to detergent-resistant
+      plasma membrane microdomains together with cAR1 and adenylate cyclase (ACA),
+      supporting plasma membrane / cell-surface localization.
+    action: ACCEPT
+    reason: Immunoelectron microscopy and cell-surface biotinylation confirmed the
+      plasma membrane origin of the fraction enriched in the cell-surface PDE,
+      consistent with PdsA being membrane-attached at the cell surface.
+    supported_by:
+    - reference_id: PMID:9168471
+      supporting_text: The cell surface phosphodiesterase (PDE) and a downstream
+        effector of cAR1, adenylate cyclase (ACA), were specifically localized in
+        these structures
+    - reference_id: PMID:9168471
+      supporting_text: both confirmed the plasma membrane origin of this preparation
+- term:
+    id: GO:1902168
+    label: response to catechin
+  evidence_type: IDA
+  original_reference_id: PMID:23516620
+  qualifier: involved_in
+  review:
+    summary: The green tea catechin EGCG blocks Dictyostelium aggregation, streaming
+      and cAMP-wave-dependent development. This is a peripheral pharmacological
+      response context rather than a core function of PdsA.
+    action: KEEP_AS_NON_CORE
+    reason: The response-to-catechin annotation reflects a small-molecule perturbation
+      of the cAMP-signaling/development program in which PdsA participates; it is
+      contextual and non-core.
+    supported_by:
+    - reference_id: PMID:23516620
+      supporting_text: In the presence of EGCG aggregation is delayed, cells do not
+        stream and development is typically stalled at the loose aggregate stage.
+- term:
+    id: GO:0004115
+    label: 3&#39;,5&#39;-cyclic-AMP phosphodiesterase activity
+  evidence_type: IMP
+  original_reference_id: PMID:17040207
+  qualifier: enables
+  review:
+    summary: Loss-of-function (pdsA-null, strain UK7) evidence confirms that PdsA
+      is the main cAMP phosphodiesterase degrading extracellular cAMP. This is the
+      core molecular function.
+    action: ACCEPT
+    reason: The pdsA-null phenotype (loss of extracellular cAMP degradation, failure
+      to aggregate) directly supports cAMP phosphodiesterase activity as the central
+      function of the gene.
+    supported_by:
+    - reference_id: PMID:17040207
+      supporting_text: DdPDE1 is the main PDE that degrades extracellular cAMP during
+        cell aggregation and is thereby essential for shaping cAMP waves
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:17040207
+  title: Seven Dictyostelium discoideum phosphodiesterases degrade three pools of
+    cAMP and cGMP.
+  findings:
+  - statement: DdPDE1 (PdsA) is a class II dual-specificity phosphodiesterase that
+      degrades extracellular cAMP and cGMP and can be secreted or displayed on the
+      cell surface.
+    supporting_text: DdPDE1 (PdsA) is a class II dual-specificity PDE that degrades
+      extracellular cAMP and cGMP. The enzyme can be secreted in the medium, or
+      exposed on the cell surface.
+  - statement: PdsA is the main enzyme degrading extracellular cAMP during aggregation
+      and is essential for shaping cAMP waves; pdsA-null (UK7) cells fail to aggregate.
+    supporting_text: DdPDE1 is the main PDE that degrades extracellular cAMP during
+      cell aggregation and is thereby essential for shaping cAMP waves
+  - statement: PdsA and its homologue DdPDE7 have dual cAMP/cGMP specificity and are
+      strongly inhibited by DTT and insensitive to IBMX.
+    supporting_text: Both DdPDE1 and DdPDE7 are PDEs with dual cAMP/cGMP specificity,
+      and are strongly inhibited by DTT and insensitive to IBMX.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PMC full text available and read; directly characterizes PdsA
+      (DdPDE1) function, localization, dual specificity, and the pdsA-null aggregation
+      phenotype.
+- id: PMID:19477920
+  title: The group migration of Dictyostelium cells is regulated by extracellular
+    chemoattractant degradation.
+  findings:
+  - statement: The intracellular pool of PdsA is localized to the endoplasmic reticulum,
+      proposed as a storage/secretion compartment.
+    supporting_text: the intracellular pool of PdsA is localized to the endoplasmic
+      reticulum, which may provide a compartment for storage and secretion of PdsA
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Garcia et al. 2009 (Mol Biol Cell). Full text IS cached
+      (content_type full_text_html) and directly localizes the intracellular pool
+      of PdsA to the ER; the ER annotation is now ACCEPTed with a verbatim quote.
+      The negated plasma-membrane call is kept UNDECIDED because a positive
+      plasma-membrane annotation (PMID:9168471) for the cell-surface form
+      coexists, i.e. distinct pools.
+- id: PMID:2049870
+  title: &#39;Cyclic nucleotide phosphodiesterase of Dictyostelium discoideum and its
+    glycoprotein inhibitor: structure and expression of their genes.&#39;
+  findings:
+  - statement: The prestalk-specific 2.2 kb PDE transcript is induced by
+      differentiation-inducing factor.
+    supporting_text: is induced by differentiation-inducing factor
+- id: PMID:2162056
+  title: Conditions that alter intracellular cAMP levels affect expression of the
+    cAMP phosphodiesterase gene in Dictyostelium.
+  findings:
+  - statement: PDE gene expression is negatively regulated by intracellular cAMP levels.
+    supporting_text: the magnitude of PDE gene expression is negatively regulated
+      by intracellular cAMP levels
+- id: PMID:230476
+  title: Binding of inhibitor alters kinetic and physical properties of extracellular
+    cyclic AMP phosphodiesterase from Dictyostelium discoideum.
+  findings:
+  - statement: PdsA forms a complex with a heat-stable glycoprotein inhibitor that
+      raises its Km; dithiothreitol relieves inhibition by inactivating the inhibitor.
+    supporting_text: Treating the enzyme-inhibitor complex with dithiothreitol
+      stimulated enzyme activity 20- to 100-fold
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Establishes the PdsA-inhibitor (PdiA) interaction and DTT-mediated
+      relief of inhibition; supports the protein-binding and response-to-DTT
+      annotations.
+- id: PMID:23516620
+  title: The green tea catechin epigallocatechin gallate (EGCG) blocks cell motility,
+    chemotaxis and development in Dictyostelium discoideum.
+  findings:
+  - statement: EGCG delays aggregation and stalls development at the loose aggregate
+      stage.
+    supporting_text: In the presence of EGCG aggregation is delayed, cells do not
+      stream and development is typically stalled at the loose aggregate stage.
+- id: PMID:25887420
+  title: Leaps and lulls in the developmental transcriptome of Dictyostelium discoideum.
+  findings: []
+- id: PMID:2722797
+  title: The cyclic nucleotide specificity of eight cAMP-binding proteins in Dictyostelium
+    discoideum is correlated into three groups.
+  findings:
+  - statement: cAMP binding to the phosphodiesterase involves only the O3&#39; and
+      exocyclic oxygen positions.
+    supporting_text: binding of cAMP to phosphodiesterase involves only O3&#39; and
+      exocyclic oxygen
+- id: PMID:6265455
+  title: The extracellular cyclic nucleotide phosphodiesterase of Dictyostelium discoideum.
+    Purification and characterization.
+  findings:
+  - statement: Two forms of the secreted extracellular cyclic nucleotide
+      phosphodiesterase were purified from Dictyostelium.
+    supporting_text: Two forms of the extracellular cyclic nucleotide phosphodiesterase
+      (EC 3.1.4.17) of Dictyostelium discoideum have been purified.
+- id: PMID:6302095
+  title: Purification and characterization of the extracellular cyclic AMP phosphodiesterase
+    of Dictyostelium discoideum.
+  findings:
+  - statement: The extracellular cAMP phosphodiesterase was purified from
+      aggregation-phase culture supernatant.
+    supporting_text: Extracellular phosphodiesterase for adenosine 3&#39;:5&#39;-monophosphate
+      [EC 3.1.4.17] was purified from the supernatant of aggregation phase culture
+      of Dictyostelium discoideum
+- id: PMID:7851634
+  title: The phosphodiesterase secreted by prestalk cells is necessary for Dictyostelium
+    morphogenesis.
+  findings:
+  - statement: Blocking phosphodiesterase activity in prestalk cells blocks slug
+      formation and culmination.
+    supporting_text: followed by a block in slug formation and an inability to
+      culminate
+- id: PMID:9168471
+  title: &#39;Identification of detergent-resistant plasma membrane microdomains in
+    dictyostelium: enrichment of signal transduction proteins.&#39;
+  findings:
+  - statement: The cell-surface phosphodiesterase localizes to plasma membrane
+      microdomains together with cAR1 and adenylate cyclase.
+    supporting_text: The cell surface phosphodiesterase (PDE) and a downstream
+      effector of cAR1, adenylate cyclase (ACA), were specifically localized in
+      these structures
+core_functions:
+- description: Secreted and cell-surface class II cyclic nucleotide phosphodiesterase
+    that hydrolyzes extracellular 3&#39;,5&#39;-cyclic AMP to 5&#39;-AMP. By degrading the
+    extracellular cAMP chemoattractant, PdsA shapes and resets the propagating cAMP
+    waves that drive chemotactic streaming and aggregation during starvation-induced
+    development.
+  molecular_function:
+    id: GO:0004115
+    label: 3&#39;,5&#39;-cyclic-AMP phosphodiesterase activity
+  directly_involved_in:
+  - id: GO:0006198
+    label: cAMP catabolic process
+  - id: GO:1900115
+    label: extracellular regulation of signal transduction
+  locations:
+  - id: GO:0005576
+    label: extracellular region
+  - id: GO:0009986
+    label: cell surface
+  supported_by:
+  - reference_id: PMID:17040207
+    supporting_text: DdPDE1 is the main PDE that degrades extracellular cAMP during
+      cell aggregation and is thereby essential for shaping cAMP waves
+  - reference_id: PMID:17040207
+    supporting_text: both DdPDE1 and DdPDE7 are secreted into the medium and are
+      attached to the cell surface
+- description: Dual-specificity phosphodiesterase activity; in addition to its
+    preferred cAMP substrate, PdsA also hydrolyzes 3&#39;,5&#39;-cyclic GMP.
+  molecular_function:
+    id: GO:0047555
+    label: 3&#39;,5&#39;-cyclic-GMP phosphodiesterase activity
+  directly_involved_in:
+  - id: GO:0006198
+    label: cAMP catabolic process
+  supported_by:
+  - reference_id: PMID:17040207
+    supporting_text: Both DdPDE1 and DdPDE7 are PDEs with dual cAMP/cGMP specificity,
+      and are strongly inhibited by DTT and insensitive to IBMX.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

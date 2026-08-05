@@ -24,12 +24,13 @@ autolink_gene_symbols: false
 - [x] Run OpenScientist deep research for selected genes.
 - [x] Curate each selected gene review.
 - [x] Validate gene review; standalone module retired/deferred.
-- [ ] Open one PR for this module/pathway.
+- [x] Fold this step into the combined bacterial lipoprotein maturation module.
+- [ ] Open one PR for the combined bacterial lipoprotein maturation module.
 - [ ] Shepherd PR through review, CI, and merge readiness.
 
 ## Candidate Genes
 
-| Done | Gene | Locus | UniProt | Primary bucket | Existing review | Curation | Asta research | Protein |
+| Done | Gene | Locus | UniProt | Primary bucket | Existing review | Curation | OpenScientist research | Protein |
 |---|---|---|---|---|---|---|---|---|
 | [x] | `lnt` | PP_4790 | Q88DN4 | unipathway:UPA00666 | PRESENT | CURATED | PRESENT | Apolipoprotein N-acyltransferase (ALP N-acyltransferase) (EC 2.3.1.269) |
 
@@ -41,3 +42,7 @@ Generated UTC: 2026-07-11T21:36:02.996296+00:00
   UPA00666 is a single Lnt N-acylation step and should not be represented as a
   standalone one-part module. Reintroduce it only inside a broader multi-part
   bacterial lipoprotein maturation module.
+- Follow-up, 2026-07-14: UPA00666 is now used as the Lnt substep provenance in
+  `modules/bacterial_lipoprotein_maturation.yaml` and
+  `projects/P_PUTIDA/batches/bacterial_lipoprotein_maturation.md`, rather than
+  as a standalone one-part module.

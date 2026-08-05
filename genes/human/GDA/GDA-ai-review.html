@@ -1,0 +1,2994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GDA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>GDA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9Y2T3" target="_blank" class="term-link">
+                        Q9Y2T3
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "GDA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9Y2T3" data-a="DESCRIPTION: GDA (guanine deaminase; guanase; guanine aminohydr..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>GDA (guanine deaminase; guanase; guanine aminohydrolase; also known as cypin and p51-nedasin) is a cytosolic, zinc-dependent amidohydrolase of the metallo-dependent hydrolase (ATZ/TRZ) superfamily. Its conserved enzymatic function is the hydrolytic deamination of the purine base guanine to xanthine plus ammonia (EC 3.5.4.3), the committed step of purine base catabolism that feeds xanthine into oxidation to urate by xanthine oxidoreductase; the majority of xanthine produced in mammals arises via this guanine-deamination reaction. The active enzyme is a homodimer with one catalytic Zn2+ per subunit and a KM for guanine in the low-micromolar range. GDA is highly expressed in liver, brain, kidney and intestine. Beyond catabolism, the neuronal protein cypin/nedasin is the same gene product: through a C-terminal PDZ-binding motif it binds PSD-95/DLG-family and other PDZ scaffolds and regulates dendrite branching and microtubule dynamics, and it can modulate synaptic scaffolding by interfering with the association between the MAGUK NE-dlg/SAP102 (DLG3) and the NMDA receptor.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006147" target="_blank" class="term-link">
+                                    GO:0006147
+                                </a>
+                            </span>
+                            <span class="term-label">guanine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2T3" data-a="GO:0006147" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process. GDA is guanine deaminase, whose reaction is the single, committed step of guanine degradation (xanthine from guanine). The phylogenetic (IBA) inference is consistent with direct biochemical and structural evidence for the human enzyme and with the UniProt pathway assignment.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GDA/GDA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Purine metabolism; guanine degradation; xanthine from guanine:</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22662200" target="_blank" class="term-link">
+                                        PMID:22662200
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GDA catalyzes the irreversible deamination of guanine to xanthine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008892" target="_blank" class="term-link">
+                                    GO:0008892
+                                </a>
+                            </span>
+                            <span class="term-label">guanine deaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2T3" data-a="GO:0008892" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. The phylogenetic inference matches direct experimental characterization of the purified recombinant human enzyme and its crystal structures.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GDA/GDA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the hydrolytic deamination of guanine, producing</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2T3" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core cellular location. GDA is a soluble cytosolic enzyme (no signal peptide or transmembrane region); consistent with Reactome and proteomic identification of the human protein.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-74255
+
+                                </span>
+
+                                <div class="support-text">form xanthine and ammonia</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2T3" data-a="GO:0008270" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. GDA is a Zn2+-dependent amidohydrolase binding one catalytic zinc per subunit (confirmed by crystal structures and metal analysis). This is a supporting cofactor-binding function that underlies catalysis rather than a standalone headline function; retained as accurate.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GDA/GDA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=Zn(2+); Xref=ChEBI:CHEBI:29105</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10075721" target="_blank" class="term-link">
+                                        PMID:10075721
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">found to contain approximately 1 atom of zinc per 51-kDa monomer</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006147" target="_blank" class="term-link">
+                                    GO:0006147
+                                </a>
+                            </span>
+                            <span class="term-label">guanine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2T3" data-a="GO:0006147" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Redundant electronic (UniPathway/InterPro) support for the gene&#39;s own correct core BP; consistent with the IBA and experimental evidence. Accepted rather than flagged as over-annotation because it is the correct core process.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2T3" data-a="GO:0008270" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Redundant InterPro-based electronic support for the catalytic zinc cofactor; correct. Same supporting cofactor role as the IBA/TAS zinc-binding annotations.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008892" target="_blank" class="term-link">
+                                    GO:0008892
+                                </a>
+                            </span>
+                            <span class="term-label">guanine deaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2T3" data-a="GO:0008892" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Redundant electronic (InterPro/RHEA/EC 3.5.4.3) support for the gene&#39;s own correct core MF; consistent with experimental and phylogenetic evidence.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2T3" data-a="GO:0016787" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but far too general: a high-level parent of the specific guanine deaminase activity (GO:0008892), which is independently annotated with experimental evidence. Over-annotation superseded by the specific MF.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016810" target="_blank" class="term-link">
+                                    GO:0016810
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity, acting on carbon-nitrogen (but not peptide) bonds</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2T3" data-a="GO:0016810" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but a general parent of guanine deaminase activity (GO:0008892). Deamination of guanine hydrolyzes a C-N bond, so this term is accurate but is subsumed by the specific enzymatic MF that is independently annotated. Over-annotation superseded by the specific MF.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36115835" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36115835
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative fragmentomics allow affinity mapping of interac...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2T3" data-a="GO:0005515" data-r="PMID:36115835" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IPI) but uninformative bare &#34;protein binding&#34;. The interactors captured here (e.g. DLG4/PSD-95, DLG1/DLG3, MAGI1/2, GRIP1/2, PDZK1, SCRIB, TJP1) reflect the cypin/nedasin moonlighting role in which GDA&#39;s C-terminal PDZ-binding motif engages PDZ-domain scaffolds; it is not the catabolic core function. Kept (experimental, not removed) but marked as over-annotated because the bare term conveys no specific function. A more informative descriptor would be PDZ-domain-mediated scaffold binding.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GDA/GDA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Q9Y2T3; P78352: DLG4; NbExp=2; IntAct=EBI-7125239, EBI-80389;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008892" target="_blank" class="term-link">
+                                    GO:0008892
+                                </a>
+                            </span>
+                            <span class="term-label">guanine deaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22662200" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22662200
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Pan-pathway based interaction profiling of FDA-approved nucl...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2T3" data-a="GO:0008892" data-r="PMID:22662200" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function with direct experimental support. Egeblad et al. characterized human GDA biochemically (thermal-shift ligand profiling) and solved its structure with a substrate analog bound in the active site, confirming guanine deaminase activity.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22662200" target="_blank" class="term-link">
+                                        PMID:22662200
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GDA catalyzes the irreversible deamination of guanine to xanthine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-74255
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2T3" data-a="GO:0005829" data-r="Reactome:R-HSA-74255" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core location, curated by Reactome for the human guanine-deamination reaction. Consistent with the IBA cytosol annotation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-74255
+
+                                </span>
+
+                                <div class="support-text">form xanthine and ammonia</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006139" target="_blank" class="term-link">
+                                    GO:0006139
+                                </a>
+                            </span>
+                            <span class="term-label">nucleobase-containing compound metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10075721" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10075721
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and characterization of human guanine deaminase. Pur...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2T3" data-a="GO:0006139" data-r="PMID:10075721" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but overly general: this is a broad ancestor of the specific guanine catabolic process (GO:0006147) that GDA carries out. The cloning/characterization paper establishes the specific guanine-deaminase reaction, so the metabolic role is better represented by the specific catabolic term.
+                        </div>
+
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006147" target="_blank" class="term-link">
+                                    guanine catabolic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10075721" target="_blank" class="term-link">
+                                        PMID:10075721
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">characterized as having guanine deaminase activity with a Km for guanine of 9.5</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007399" target="_blank" class="term-link">
+                                    GO:0007399
+                                </a>
+                            </span>
+                            <span class="term-label">nervous system development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10542258" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10542258
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A novel NE-dlg/SAP102-associated protein, p51-nedasin, relat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2T3" data-a="GO:0007399" data-r="PMID:10542258" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Genuine but non-core moonlighting role. This gene product (as p51-nedasin/cypin) acts in neurons: the S-form binds the neuronal MAGUK NE-dlg/SAP102 (DLG3) and modulates its association with the NMDA receptor, with expression rising during synaptogenesis; cypin also regulates dendrite branching. This developmental/neuronal function is distinct from, and secondary to, the conserved guanine-catabolic enzymatic role. Retained as non-core (experimental TAS, not removed).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10542258" target="_blank" class="term-link">
+                                        PMID:10542258
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">nedasin interferes with the association between NE-dlg/SAP102 and NMDA receptor</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22662200" target="_blank" class="term-link">
+                                        PMID:22662200
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GDA is also involved in the regulation of dendrite development as a positive regulator by modulating guanine concentrations</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10075721" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10075721
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and characterization of human guanine deaminase. Pur...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2T3" data-a="GO:0008270" data-r="PMID:10075721" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. The purified recombinant human enzyme contains ~1 zinc atom per monomer; zinc is the catalytic cofactor. Supporting cofactor-binding function underlying catalysis.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10075721" target="_blank" class="term-link">
+                                        PMID:10075721
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">found to contain approximately 1 atom of zinc per 51-kDa monomer</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008892" target="_blank" class="term-link">
+                                    GO:0008892
+                                </a>
+                            </span>
+                            <span class="term-label">guanine deaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10075721" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10075721
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and characterization of human guanine deaminase. Pur...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2T3" data-a="GO:0008892" data-r="PMID:10075721" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function, curator-asserted from the full cloning and biochemical characterization of the human enzyme (KM ~9.5 uM for guanine).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10075721" target="_blank" class="term-link">
+                                        PMID:10075721
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">characterized as having guanine deaminase activity with a Km for guanine of 9.5</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Zinc-dependent guanine deaminase catalyzing the hydrolytic deamination of guanine to xanthine and ammonia (EC 3.5.4.3), the committed step of purine base catabolism in the cytosol.</h3>
+                <span class="vote-buttons" data-g="Q9Y2T3" data-a="FUNCTION: Zinc-dependent guanine deaminase catalyzing the hy..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008892" target="_blank" class="term-link">
+                            guanine deaminase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006147" target="_blank" class="term-link">
+                                guanine catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/GDA/GDA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Catalyzes the hydrolytic deamination of guanine, producing</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/GDA/GDA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=guanine + H2O + H(+) = xanthine + NH4(+)</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22662200" target="_blank" class="term-link">
+                                PMID:22662200
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">GDA catalyzes the irreversible deamination of guanine to xanthine</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10075721" target="_blank" class="term-link">
+                            PMID:10075721
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cloning and characterization of human guanine deaminase. Purification and partial amino acid sequence of the mouse protein.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10542258" target="_blank" class="term-link">
+                            PMID:10542258
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A novel NE-dlg/SAP102-associated protein, p51-nedasin, related to the amidohydrolase superfamily, interferes with the association between NE-dlg/SAP102 and N-methyl-D-aspartate receptor.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22662200" target="_blank" class="term-link">
+                            PMID:22662200
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Pan-pathway based interaction profiling of FDA-approved nucleoside and nucleobase analogs with enzymes of the human nucleotide metabolism.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36115835" target="_blank" class="term-link">
+                            PMID:36115835
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative fragmentomics allow affinity mapping of interactomes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-74255
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Guanine + H2O =&gt; Xanthine + NH4+</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(GDA-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9Y2T3" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="gda-guanine-deaminase-guanase-cypin-p51-nedasin-review-notes">GDA (guanine deaminase / guanase / cypin / p51-nedasin) — review notes</h1>
+<p>UniProt: Q9Y2T3 (GUAD_HUMAN), 454 aa, gene GDA (HGNC:4212), chromosome 9.<br />
+EC 3.5.4.3.</p>
+<h2 id="core-enzymatic-function-conserved-primary">Core enzymatic function (conserved, primary)</h2>
+<p>GDA is a cytosolic, Zn2+-dependent amidohydrolase that catalyzes the hydrolytic<br />
+deamination of guanine to xanthine + ammonia — the committed step of purine base<br />
+catabolism upstream of xanthine oxidation to urate.</p>
+<ul>
+<li>Reaction / catalytic activity, from UniProt:<br />
+  [file:human/GDA/GDA-uniprot.txt "Catalyzes the hydrolytic deamination of guanine, producing"] (continues "xanthine and ammonia").<br />
+  [file:human/GDA/GDA-uniprot.txt "Reaction=guanine + H2O + H(+) = xanthine + NH4(+)"], EC=3.5.4.3, Rhea:RHEA:14665.</li>
+<li>Pathway (UniProt): [file:human/GDA/GDA-uniprot.txt "Purine metabolism; guanine degradation; xanthine from guanine:"] (step 1/1), UniPathway UPA00603/UER00660.</li>
+<li>Independent literature confirmation of the reaction and its quantitative importance:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/22662200" title="GDA catalyzes the irreversible deamination of guanine to xanthine">PMID:22662200</a> and<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/22662200" title="About 80% of xanthine produced in mammals occurs via guanine deamination.">PMID:22662200</a>.</li>
+<li>Reactome reaction R-HSA-74255: [Reactome:R-HSA-74255 "Cytosolic guanine deaminase (GDA) catalyzes the reaction of guanine and water to form xanthine and ammonia"]; the active enzyme is a homodimer.</li>
+</ul>
+<h3 id="biochemical-characterization-primary">Biochemical characterization (primary)</h3>
+<ul>
+<li>Human enzyme cloned, expressed, purified; guanine deaminase activity with KM ~9.5 µM for guanine; ~1 zinc atom per 51-kDa monomer; dimeric native enzyme [PMID:10075721 abstract, "characterized as having guanine deaminase activity with a Km for guanine of 9.5"; "approximately 1 atom of zinc per 51-kDa monomer"]. Abstract-only cache; the curator's TAS annotations (PINC) are from the full paper.</li>
+<li>Structural: X-ray structures in complex with Zn and xanthine (PDB 2UZ9) and with substrate-analog valaciclovir (PDB 4AQL); homodimer [UniProt SUBUNIT: Homodimer]. Zn2+ cofactor binding residues His82, His84, Asp/…240, …330 (UniProt BINDING features). Metallo-dependent hydrolase superfamily, ATZ/TRZ family; CDD GDEase; PANTHER PTHR11271 GUANINE DEAMINASE; TIGR guan_deamin; InterPro IPR014311 Guanine_deaminase.</li>
+</ul>
+<h2 id="zinc-cofactor">Zinc cofactor</h2>
+<ul>
+<li>Zn2+ is a catalytic cofactor: [file:human/GDA/GDA-uniprot.txt "Name=Zn(2+); Xref=ChEBI:CHEBI:29105"], note "Binds 1 zinc ion per subunit."</li>
+<li>The GO "zinc ion binding" (GO:0008270) annotations (IBA, IEA-InterPro, TAS) capture this cofactor requirement. Treated as a supporting/cofactor MF (contributes_to catalysis), not the standalone core MF (which is the deaminase activity itself).</li>
+</ul>
+<h2 id="moonlighting-non-core-neuronal-role-cypin-p51-nedasin-nedasin">Moonlighting / non-core neuronal role ("cypin", "p51-nedasin", "nedasin")</h2>
+<ul>
+<li>Isoform / splice variant identified as p51-nedasin, a NE-dlg/SAP102 (SAP102 = DLG3)-associated protein of the amidohydrolase superfamily; the neuronal S form binds NE-dlg/SAP102 and interferes with the NE-dlg/SAP102–NMDA receptor 2B association; expression rises with synaptogenesis [PMID:10542258 abstract, "shows identical sequences to a recently identified protein that has guanine aminohydrolase activity"; "nedasin interferes with the association between NE-dlg/SAP102 and NMDA receptor 2B in vitro"]. This underlies the TAS GO:0007399 nervous system development annotation (PINC).</li>
+<li>GDA is the same protein as "cypin", the major cytosolic PSD-95 (DLG4)-binding protein that regulates dendrite branching / microtubule dynamics in neurons (Akum et al. 2004; not in local cache). Independent corroboration that GDA regulates dendrite development: <a href="https://pubmed.ncbi.nlm.nih.gov/22662200" title="GDA is also involved in the regulation of dendrite development as a positive regulator by modulating guanine concentrations">PMID:22662200</a>.</li>
+<li>The IntAct/IPI protein-binding annotations (GO:0005515, PMID:36115835 quantitative fragmentomics) are PDZ-domain interactome mappings: GDA has a C-terminal PDZ-binding motif that binds many PDZ proteins (DLG1/DLG3/DLG4, MAGI1/2, GRIP1/2, PDZK1, SCRIB, TJP1, etc.; see UniProt INTERACTION block). These are real experimental interactions but are the moonlighting scaffold role, not the catabolic core.</li>
+</ul>
+<p>Curation stance: keep the enzymatic MF/BP/CC as core (ACCEPT the well-supported ones);<br />
+keep zinc-binding as supporting cofactor MF; keep cypin/nedasin neuronal and PDZ-binding<br />
+annotations as NON-CORE (KEEP_AS_NON_CORE), never remove experimental annotations.<br />
+The PMID:36115835 abstract does not verbatim name GDA, so no verbatim quote is used for<br />
+that IPI; it is anchored to the UniProt INTERACTION data and kept as non-core.</p>
+<h2 id="annotation-by-annotation-summary">Annotation-by-annotation summary</h2>
+<ul>
+<li>GO:0008892 guanine deaminase activity — core MF. Support: EXP PMID:22662200, TAS PMID:10075721, IBA, IEA. ACCEPT (EXP/TAS/IBA), ACCEPT redundant IEA (own correct core MF).</li>
+<li>GO:0006147 guanine catabolic process — core BP. IBA + IEA(UniPathway). ACCEPT.</li>
+<li>GO:0005829 cytosol — core CC location. IBA + TAS(Reactome). ACCEPT.</li>
+<li>GO:0008270 zinc ion binding — supporting cofactor MF (catalytic Zn). IBA, IEA(InterPro), TAS. ACCEPT (correct, but supporting rather than the headline MF).</li>
+<li>GO:0016787 hydrolase activity / GO:0016810 hydrolase acting on C-N bonds — correct but general parents of GO:0008892. MARK_AS_OVER_ANNOTATED (IEA-InterPro; superseded by the specific deaminase MF).</li>
+<li>GO:0005515 protein binding (IPI, PMID:36115835) — bare, uninformative; experimental. MARK_AS_OVER_ANNOTATED (do not remove); reflects the cypin/PDZ scaffold moonlighting role.</li>
+<li>GO:0006139 nucleobase-containing compound metabolic process (TAS PMID:10075721) — correct but very general parent of the specific guanine catabolic process. MARK_AS_OVER_ANNOTATED / MODIFY toward GO:0006147.</li>
+<li>GO:0007399 nervous system development (TAS PMID:10542258) — real moonlighting neuronal (nedasin/cypin) role. KEEP_AS_NON_CORE.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9Y2T3
+gene_symbol: GDA
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  GDA (guanine deaminase; guanase; guanine aminohydrolase; also known as cypin
+  and p51-nedasin) is a cytosolic, zinc-dependent amidohydrolase of the
+  metallo-dependent hydrolase (ATZ/TRZ) superfamily. Its conserved enzymatic
+  function is the hydrolytic deamination of the purine base guanine to xanthine
+  plus ammonia (EC 3.5.4.3), the committed step of purine base catabolism that
+  feeds xanthine into oxidation to urate by xanthine oxidoreductase; the
+  majority of xanthine produced in mammals arises via this guanine-deamination
+  reaction. The active enzyme is a homodimer with one catalytic Zn2+ per subunit
+  and a KM for guanine in the low-micromolar range. GDA is highly expressed in
+  liver, brain, kidney and intestine. Beyond catabolism, the neuronal protein
+  cypin/nedasin is the same gene product: through a C-terminal PDZ-binding motif
+  it binds PSD-95/DLG-family and other PDZ scaffolds and regulates dendrite
+  branching and microtubule dynamics, and it can modulate synaptic scaffolding
+  by interfering with the association between the MAGUK NE-dlg/SAP102 (DLG3) and
+  the NMDA receptor.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q9Y2T3-1
+- name: 2 (c)
+  id: Q9Y2T3-2
+  sequence_note: VSP_042075
+- name: 3 (a)
+  id: Q9Y2T3-3
+  sequence_note: VSP_042076
+existing_annotations:
+- term:
+    id: GO:0006147
+    label: guanine catabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process. GDA is guanine deaminase, whose reaction is the
+      single, committed step of guanine degradation (xanthine from guanine).
+      The phylogenetic (IBA) inference is consistent with direct biochemical and
+      structural evidence for the human enzyme and with the UniProt pathway
+      assignment.
+    action: ACCEPT
+    supported_by:
+      - reference_id: file:human/GDA/GDA-uniprot.txt
+        supporting_text: &#39;Purine metabolism; guanine degradation; xanthine from guanine:&#39;
+      - reference_id: PMID:22662200
+        supporting_text: &#39;GDA catalyzes the irreversible deamination of guanine to xanthine&#39;
+- term:
+    id: GO:0008892
+    label: guanine deaminase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function. The phylogenetic inference matches direct
+      experimental characterization of the purified recombinant human enzyme
+      and its crystal structures.
+    action: ACCEPT
+    supported_by:
+      - reference_id: file:human/GDA/GDA-uniprot.txt
+        supporting_text: &#39;Catalyzes the hydrolytic deamination of guanine, producing&#39;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Correct core cellular location. GDA is a soluble cytosolic enzyme
+      (no signal peptide or transmembrane region); consistent with Reactome and
+      proteomic identification of the human protein.
+    action: ACCEPT
+    supported_by:
+      - reference_id: Reactome:R-HSA-74255
+        supporting_text: &#39;form xanthine and ammonia&#39;
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct. GDA is a Zn2+-dependent amidohydrolase binding one catalytic zinc
+      per subunit (confirmed by crystal structures and metal analysis). This is a
+      supporting cofactor-binding function that underlies catalysis rather than a
+      standalone headline function; retained as accurate.
+    action: ACCEPT
+    supported_by:
+      - reference_id: file:human/GDA/GDA-uniprot.txt
+        supporting_text: &#39;Name=Zn(2+); Xref=ChEBI:CHEBI:29105&#39;
+      - reference_id: PMID:10075721
+        supporting_text: &#39;found to contain approximately 1 atom of zinc per 51-kDa monomer&#39;
+- term:
+    id: GO:0006147
+    label: guanine catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Redundant electronic (UniPathway/InterPro) support for the gene&#39;s own
+      correct core BP; consistent with the IBA and experimental evidence.
+      Accepted rather than flagged as over-annotation because it is the correct
+      core process.
+    action: ACCEPT
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Redundant InterPro-based electronic support for the catalytic zinc cofactor;
+      correct. Same supporting cofactor role as the IBA/TAS zinc-binding annotations.
+    action: ACCEPT
+- term:
+    id: GO:0008892
+    label: guanine deaminase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Redundant electronic (InterPro/RHEA/EC 3.5.4.3) support for the gene&#39;s own
+      correct core MF; consistent with experimental and phylogenetic evidence.
+    action: ACCEPT
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct but far too general: a high-level parent of the specific guanine
+      deaminase activity (GO:0008892), which is independently annotated with
+      experimental evidence. Over-annotation superseded by the specific MF.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0016810
+    label: hydrolase activity, acting on carbon-nitrogen (but not peptide) bonds
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct but a general parent of guanine deaminase activity (GO:0008892).
+      Deamination of guanine hydrolyzes a C-N bond, so this term is accurate but
+      is subsumed by the specific enzymatic MF that is independently annotated.
+      Over-annotation superseded by the specific MF.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:36115835
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (IPI) but uninformative bare &#34;protein binding&#34;. The
+      interactors captured here (e.g. DLG4/PSD-95, DLG1/DLG3, MAGI1/2, GRIP1/2,
+      PDZK1, SCRIB, TJP1) reflect the cypin/nedasin moonlighting role in which
+      GDA&#39;s C-terminal PDZ-binding motif engages PDZ-domain scaffolds; it is not
+      the catabolic core function. Kept (experimental, not removed) but marked as
+      over-annotated because the bare term conveys no specific function. A more
+      informative descriptor would be PDZ-domain-mediated scaffold binding.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+      - reference_id: file:human/GDA/GDA-uniprot.txt
+        supporting_text: &#39;Q9Y2T3; P78352: DLG4; NbExp=2; IntAct=EBI-7125239, EBI-80389;&#39;
+- term:
+    id: GO:0008892
+    label: guanine deaminase activity
+  evidence_type: EXP
+  original_reference_id: PMID:22662200
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function with direct experimental support. Egeblad et al.
+      characterized human GDA biochemically (thermal-shift ligand profiling) and
+      solved its structure with a substrate analog bound in the active site,
+      confirming guanine deaminase activity.
+    action: ACCEPT
+    supported_by:
+      - reference_id: PMID:22662200
+        supporting_text: &#39;GDA catalyzes the irreversible deamination of guanine to xanthine&#39;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-74255
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Correct core location, curated by Reactome for the human guanine-deamination
+      reaction. Consistent with the IBA cytosol annotation.
+    action: ACCEPT
+    supported_by:
+      - reference_id: Reactome:R-HSA-74255
+        supporting_text: &#39;form xanthine and ammonia&#39;
+- term:
+    id: GO:0006139
+    label: nucleobase-containing compound metabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:10075721
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Correct but overly general: this is a broad ancestor of the specific
+      guanine catabolic process (GO:0006147) that GDA carries out. The
+      cloning/characterization paper establishes the specific guanine-deaminase
+      reaction, so the metabolic role is better represented by the specific
+      catabolic term.
+    action: MODIFY
+    proposed_replacement_terms:
+      - id: GO:0006147
+        label: guanine catabolic process
+    supported_by:
+      - reference_id: PMID:10075721
+        supporting_text: &#39;characterized as having guanine deaminase activity with a Km for guanine of 9.5&#39;
+- term:
+    id: GO:0007399
+    label: nervous system development
+  evidence_type: TAS
+  original_reference_id: PMID:10542258
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Genuine but non-core moonlighting role. This gene product (as
+      p51-nedasin/cypin) acts in neurons: the S-form binds the neuronal MAGUK
+      NE-dlg/SAP102 (DLG3) and modulates its association with the NMDA receptor,
+      with expression rising during synaptogenesis; cypin also regulates dendrite
+      branching. This developmental/neuronal function is distinct from, and
+      secondary to, the conserved guanine-catabolic enzymatic role. Retained as
+      non-core (experimental TAS, not removed).
+    action: KEEP_AS_NON_CORE
+    supported_by:
+      - reference_id: PMID:10542258
+        supporting_text: &#39;nedasin interferes with the association between NE-dlg/SAP102 and NMDA receptor&#39;
+      - reference_id: PMID:22662200
+        supporting_text: &#39;GDA is also involved in the regulation of dendrite development as a positive regulator by modulating guanine concentrations&#39;
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: TAS
+  original_reference_id: PMID:10075721
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct. The purified recombinant human enzyme contains ~1 zinc atom per
+      monomer; zinc is the catalytic cofactor. Supporting cofactor-binding
+      function underlying catalysis.
+    action: ACCEPT
+    supported_by:
+      - reference_id: PMID:10075721
+        supporting_text: &#39;found to contain approximately 1 atom of zinc per 51-kDa monomer&#39;
+- term:
+    id: GO:0008892
+    label: guanine deaminase activity
+  evidence_type: TAS
+  original_reference_id: PMID:10075721
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function, curator-asserted from the full cloning and
+      biochemical characterization of the human enzyme (KM ~9.5 uM for guanine).
+    action: ACCEPT
+    supported_by:
+      - reference_id: PMID:10075721
+        supporting_text: &#39;characterized as having guanine deaminase activity with a Km for guanine of 9.5&#39;
+core_functions:
+  - description: &gt;-
+      Zinc-dependent guanine deaminase catalyzing the hydrolytic deamination of
+      guanine to xanthine and ammonia (EC 3.5.4.3), the committed step of purine
+      base catabolism in the cytosol.
+    molecular_function:
+      id: GO:0008892
+      label: guanine deaminase activity
+    supported_by:
+      - reference_id: file:human/GDA/GDA-uniprot.txt
+        supporting_text: &#39;Catalyzes the hydrolytic deamination of guanine, producing&#39;
+      - reference_id: file:human/GDA/GDA-uniprot.txt
+        supporting_text: &#39;Reaction=guanine + H2O + H(+) = xanthine + NH4(+)&#39;
+      - reference_id: PMID:22662200
+        supporting_text: &#39;GDA catalyzes the irreversible deamination of guanine to xanthine&#39;
+    contributes_to_molecular_function:
+      id: GO:0008270
+      label: zinc ion binding
+    directly_involved_in:
+      - id: GO:0006147
+        label: guanine catabolic process
+    locations:
+      - id: GO:0005829
+        label: cytosol
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      InterPro2GO electronic mappings; supports the zinc-binding and hydrolase
+      MFs. The specific deaminase mapping is correct; the generic hydrolase
+      mappings are accurate but over-general.
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PAN-GO / GO_Central phylogenetic inferences for guanine deaminase activity,
+      guanine catabolic process, cytosol and zinc binding; consistent with the
+      experimental human data.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      UniProt combined-IEA (UniPathway/InterPro/RHEA/EC) support for the core
+      deaminase MF and guanine catabolic process.
+- id: PMID:10075721
+  title: Cloning and characterization of human guanine deaminase. Purification and
+    partial amino acid sequence of the mouse protein.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Primary paper cloning and biochemically characterizing the human enzyme
+      (guanine deaminase activity, KM ~9.5 uM for guanine, ~1 Zn per monomer,
+      dimeric). Cache is abstract-only; the TAS annotations derive from the full
+      text. Underpins the core MF and zinc cofactor.
+- id: PMID:10542258
+  title: A novel NE-dlg/SAP102-associated protein, p51-nedasin, related to the amidohydrolase
+    superfamily, interferes with the association between NE-dlg/SAP102 and N-methyl-D-aspartate
+    receptor.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Identifies p51-nedasin (a GDA splice product with guanine aminohydrolase
+      activity) as a neuronal MAGUK (NE-dlg/SAP102 = DLG3) partner that modulates
+      NMDA-receptor scaffolding during synaptogenesis. Supports the non-core
+      nervous-system-development role; abstract-only cache.
+- id: PMID:22662200
+  title: Pan-pathway based interaction profiling of FDA-approved nucleoside and nucleobase
+    analogs with enzymes of the human nucleotide metabolism.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full-text available. Biochemical (thermal-shift) and structural study of
+      human GDA (crystal structure with valaciclovir in the active site);
+      explicitly states GDA catalyzes deamination of guanine to xanthine, that
+      ~80% of mammalian xanthine arises via guanine deamination, and that GDA
+      also positively regulates dendrite development. Supports the EXP core MF and
+      corroborates the non-core dendrite role.
+- id: PMID:36115835
+  title: Quantitative fragmentomics allow affinity mapping of interactomes.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale PDZ-domain interactome (quantitative fragmentomics) underlying
+      the IntAct IPI protein-binding annotations. The paper does not discuss GDA
+      by name; interactions (e.g. with DLG4/PSD-95 and other PDZ scaffolds) map
+      the cypin/nedasin moonlighting role rather than the catabolic function, so
+      the resulting bare &#34;protein binding&#34; is over-annotated.
+- id: Reactome:R-HSA-74255
+  title: Guanine + H2O =&gt; Xanthine + NH4+
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction for cytosolic GDA (guanine + water -&gt; xanthine + ammonia;
+      homodimer). Supports the core MF/BP and the cytosol location.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

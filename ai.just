@@ -38,7 +38,6 @@ gh-add-secrets:
   }
 
   # Set each secret if the corresponding env var exists
-  set_secret_if_exists "PAT_FOR_PR"
   set_secret_if_exists "ANTHROPIC_API_KEY"
   set_secret_if_exists "OPENAI_API_KEY"
   set_secret_if_exists "CBORG_API_KEY"
@@ -47,6 +46,4 @@ gh-add-secrets:
   set_secret_if_exists "FUTUREHOUSE_API_KEY"
   set_secret_if_exists "EDISON_API_KEY"
 
-gh-invite-dragon-ai:
-  gh api repos/:owner/:repo/collaborators/dragon-ai-agent --method PUT --field permission=write > /dev/null
 

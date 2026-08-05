@@ -1,0 +1,65 @@
+---
+provider: affinage
+model: Affinage (Claude Sonnet reading pass + Opus synthesis pass)
+source_url: https://affinage.wi.mit.edu/api/gene/ADGRA3
+affinage_run_date: 2026-06-09T22:02:41
+uniprot_accession: Q8IWK6
+self_evaluation_pairwise: win
+faith_pct: 100.0
+n_discoveries: 12
+citation_count: 12
+gates_passed: True
+note: >-
+  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
+  precomputed research to be treated as a preliminary source, NOT a curated
+  annotation. Affinage is human-only and LLM-generated; verify claims against
+  the cited PMIDs before use.
+---
+
+# Affinage mechanistic annotation for ADGRA3 (human)
+
+## Current model (mechanistic narrative)
+
+ADGRA3 (GPR125) is an adhesion G protein-coupled receptor that couples cell-surface adhesion to polarity and signaling programs across diverse tissues [PMID:36089063, PMID:40127866]. It undergoes cis-autoproteolysis at an atypical GPS site within its GAIN domain during biosynthesis, generating N- and C-terminal fragments that remain associated [PMID:36089063]. The receptor signals at low levels through classical Gi and Gs pathways via a tethered stachel agonist at the N-terminus of its C-terminal fragment, and removal of the first three CTF residues abolishes this G protein coupling [PMID:40127866]. Receptor surface levels are controlled by constitutive, β-arrestin-independent but clathrin-dependent endocytosis [PMID:31659746]. ADGRA3 organizes cell polarity in two contexts: it recruits Dishevelled to discrete membrane subdomains to modulate Wnt/PCP signaling during zebrafish gastrulation convergence-extension [PMID:23821037], and in polarized epithelia it is targeted to the basolateral membrane through a C-terminal PDZ-binding motif interaction with Dlg1, where it controls apicobasal polarity and mitotic spindle orientation [PMID:36089063]; its G protein signaling is independent of DVL [PMID:40127866]. ADGRA3 also functions as a constitutively active Gs-PKA-CREB receptor that drives beige adipocyte thermogenesis [PMID:39718208], promotes osteoclast differentiation upstream of MAPK and AKT-NF-κB signaling [PMID:35414778], and supports osteoblast osteogenesis through a Gper1-PI3K/AKT-β-catenin axis [PMID:42210228]. Knockout studies establish essential roles in male and female reproductive tract development, where its loss causes obstructive azoospermia and imperforate vagina linked to altered sex-hormone receptor expression [PMID:36688818, PMID:38589878].
+
+## Affinage mechanism profile (its own GO/Reactome grounding)
+
+_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+
+- **molecular_activity:** GO:0060089 molecular transducer activity, GO:0140096 catalytic activity, acting on a protein, GO:0060090 molecular adaptor activity
+- **localization:** GO:0005886 plasma membrane, GO:0005768 endosome
+- **pathway (Reactome):** R-HSA-162582 Signal Transduction, R-HSA-1266738 Developmental Biology
+- **partners:** DVL, DLG1, GPER1
+- **complexes:** *(none)*
+
+## Dated findings (citation-anchored)
+
+| Year | Confidence | Finding | PMIDs | Journal |
+|------|-----------|---------|-------|---------|
+| 2013 | High | Gpr125 recruits Dishevelled (Dvl) to the cell membrane, a prerequisite for Wnt/PCP activation; the Gpr125 intracellular domain directly interacts with Dvl in pull-down assays; Gpr125 and Dvl mutually cluster one another into discrete membrane subdomains and recruit a subset of PCP components, modulating Wnt/PCP signaling during zebrafish gastrulation convergence and extension movements. | PMID:23821037 | Development (Cambridge, England) |
+| 2022 | High | Human GPR125 undergoes cis-autoproteolysis (self-cleavage) at an atypical GPS site within the GAIN domain during early receptor biosynthesis; the resulting N-terminal and C-terminal fragments remain associated. In polarized MDCK cells, GPR125 is exclusively recruited to the basolateral plasma membrane domain via its C-terminal PDZ-binding motif interaction with the cell polarity protein Dlg1. Knockdown of GPR125 or Dlg1 causes aberrant cysts with multiple lumens in Matrigel 3D culture, and GPR125-KO cells show incorrectly oriented mitotic spindles during cystogenesis, establishing a role for GPR125 in epithelial apicobasal polarity. | PMID:36089063 | The Journal of biological chemistry |
+| 2019 | Medium | GPR125 undergoes constitutive endocytosis in a β-arrestin-independent but clathrin-dependent manner; it colocalizes with transferrin receptor 1 (an early endosome marker), indicating internalization via the clathrin pathway. This constitutive internalization controls receptor surface expression. | PMID:31659746 | Annals of the New York Academy of Sciences |
+| 2025 | High | ADGRA3 signals through classical G protein pathways (Gi and Gs) at low levels; its C-terminal fragment (CTF) generated by GPS cleavage activates Gi and Gs slightly more strongly. Removing the first three amino acids of the CTF (the stachel/tethered agonist peptide) abrogates G protein-mediated signaling. G protein signaling by ADGRA3 is sustained in the absence of DVL1-3, indicating it is DVL-independent. No β-catenin transcriptional activation was detected downstream of ADGRA3. | PMID:40127866 | The Journal of biological chemistry |
+| 2024 | Medium | ADGRA3 acts as a constitutively active GPCR in adipocytes. Adgra3 knockdown in mice reduces thermogenic marker expression and worsens obesity; Adgra3 overexpression activates the adipose thermogenic program without exogenous ligand. ADGRA3 signals through the Gs-PKA-CREB axis to induce beige adipocyte biogenesis. Hesperetin was identified as a potential ADGRA3 agonist that induces adipocyte browning and ameliorates insulin resistance in mice. | PMID:39718208 | eLife |
+| 2013 | Medium | Upregulation of Gpr125 by cooperating MLL/AF10(OM-LZ) and KRASG12C increased cell adhesion; shRNA knockdown of Gpr125 reduced cell aggregation and diminished myeloid sarcoma formation in transplanted mice, establishing Gpr125 as a mediator of cell adhesion downstream of these oncogenic signals. | PMID:23564351 | International journal of cancer |
+| 2022 | Medium | GPR125 (Gpr125) positively regulates osteoclast differentiation and bone resorption: lentiviral knockdown dramatically reduced osteoclast differentiation and bone resorption, while overexpression increased NFATC1 expression and enhanced differentiation. Following RANKL stimulation, GPR125 knockdown decreased phosphorylated ERK, p38 (MAPK pathway) and phosphorylated AKT and p-IKBα (NF-κB pathway), placing GPR125 upstream of MAPK and AKT-NF-κB signaling in osteoclasts. | PMID:35414778 | International journal of biological sciences |
+| 2023 | Medium | Loss of Adgra3 in male mice causes obstructive azoospermia (blockage between ejaculatory duct and urethra) associated with decreased estrogen receptor alpha expression, transient epididymal dilation, and increased estradiol production, indicating ADGRA3 functions in male reproductive tract development and hormonal/fluid balance required for sperm maturation. | PMID:36688818 | FASEB journal |
+| 2024 | Medium | Loss of Adgra3 in female mice causes imperforate vagina (44% penetrance) refractory to 17β-estradiol treatment, with reduced vaginal and ovarian progesterone receptor expression and upregulation of apoptotic regulators Bcl2, Bid, and Bmf, indicating ADGRA3 regulates distal vaginal tissue remodeling through sex hormone responsiveness and apoptotic balance. | PMID:38589878 | BMC biology |
+| 2018 | Low | GPR125 overexpression in HCT116 colorectal cancer cells inhibited β-catenin transcriptional activity and downregulated Wnt downstream proteins Axin2, c-Myc, cyclin D1, and LEF-1, establishing GPR125 as a negative regulator of the Wnt/β-catenin signaling pathway in this cellular context. | PMID:30231258 | Medical science monitor |
+| 2025 | Medium | ZC3H13-mediated m6A modification of ADGRA3 mRNA enhances its stability; ZC3H13 knockdown destabilizes ADGRA3 mRNA, reversing ADGRA3-mediated suppression of PI3K/Akt/mTOR signaling and tumor-suppressive effects in papillary thyroid cancer cells. | PMID:40890321 | Discover oncology |
+| 2026 | Medium | In osteoblasts, Gpr125 upregulates Gper1 (G protein-coupled estrogen receptor 1), which activates PI3K/AKT signaling leading to β-catenin stabilization and osteogenic transcription. Gper1 overexpression fully rescued the osteogenic defect caused by Gpr125 loss; PI3K inhibition blocked Gpr125-induced β-catenin activation. Osteoblast-specific Gpr125 overexpression in vivo ameliorated bone loss in ovariectomized and aged mouse models. | PMID:42210228 | Journal of translational medicine |
+
+## Citations
+
+- PMID:23564351
+- PMID:23821037
+- PMID:30231258
+- PMID:31659746
+- PMID:35414778
+- PMID:36089063
+- PMID:36688818
+- PMID:38589878
+- PMID:39718208
+- PMID:40127866
+- PMID:40890321
+- PMID:42210228

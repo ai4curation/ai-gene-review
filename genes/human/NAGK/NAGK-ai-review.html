@@ -1,0 +1,4182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAGK - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>NAGK</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9UJ70" target="_blank" class="term-link">
+                        Q9UJ70
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "NAGK";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9UJ70" data-a="DESCRIPTION: N-acetyl-D-glucosamine kinase (NAGK; GlcNAc kinase..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>N-acetyl-D-glucosamine kinase (NAGK; GlcNAc kinase, EC 2.7.1.59) is a cytosolic sugar kinase of the amino-sugar salvage pathway. It catalyzes the ATP-dependent phosphorylation of free N-acetyl-D-glucosamine (GlcNAc) to N-acetyl-D-glucosamine 6-phosphate (plus ADP and H+), recycling GlcNAc released from the turnover of glycoconjugates (lysosomal degradation, O-GlcNAc removal) or obtained from the diet back into the hexosamine/UDP-GlcNAc pool at the GlcNAc-6-phosphate node. The enzyme is a homodimer of the sugar-kinase/Hsp70/actin (ASKHA) superfamily and is broadly expressed. It additionally phosphorylates N-acetyl-D-mannosamine (ManNAc; EC 2.7.1.60) and acts in the degradation of the dietary non-human sialic acid N-glycolylneuraminic acid (Neu5Gc). In innate immunity, NAGK phosphorylates the C6 hydroxyl of the N-acetylmuramic acid moiety of bacterial muramyl dipeptide (MDP) to generate 6-O-phospho-MDP, the species that activates the cytosolic pattern-recognition receptor NOD2. NAGK has also been reported to have a kinase-independent, structural moonlighting role in neurons, promoting dynein-mediated microtubule transport and axodendritic branching through interactions with SNRPN and the dynein light chain DYNLRB1.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045127" target="_blank" class="term-link">
+                                    GO:0045127
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylglucosamine kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJ70" data-a="GO:0045127" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (PAN-GO) inference of the core molecular function. This is the well-established, experimentally confirmed catalytic activity of NAGK (GlcNAc + ATP -&gt; GlcNAc-6-phosphate, EC 2.7.1.59) and is correct.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NAGK/NAGK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">N-acetyl-D-glucosamine + ATP = N-acetyl-D-glucosamine 6-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006044" target="_blank" class="term-link">
+                                    GO:0006044
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylglucosamine metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJ70" data-a="GO:0006044" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA electronic annotation to the general amino-sugar metabolic process. This is correct and captures the core biological role (GlcNAc salvage into the hexosamine pathway), though it is a broad grouping term; the more specific catabolic/UDP-GlcNAc biosynthetic children are also annotated (IMP, PMID 34844667).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NAGK/NAGK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Converts endogenous N-acetylglucosamine (GlcNAc), a major</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009384" target="_blank" class="term-link">
+                                    GO:0009384
+                                </a>
+                            </span>
+                            <span class="term-label">N-acylmannosamine kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJ70" data-a="GO:0009384" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (EC 2.7.1.60 / Rhea) mapping of the N-acetylmannosamine (ManNAc) kinase side activity, which is real (reported biochemically for the recombinant enzyme in PMID 10824116 and captured as a By-similarity catalytic activity in UniProt). ManNAc kinase is a secondary/salvage activity of NAGK rather than its principal in vivo role (canonical ManNAc phosphorylation is via GNE/MNK), so it is not part of the core function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NAGK/NAGK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Also has N-acetylmannosamine (ManNAc) kinase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045127" target="_blank" class="term-link">
+                                    GO:0045127
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylglucosamine kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJ70" data-a="GO:0045127" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (EC 2.7.1.59 / Rhea / InterPro) mapping of the core GlcNAc kinase activity. Redundant with the experimental (IDA/IMP) and IBA annotations to the same term but correct.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NAGK/NAGK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">N-acetyl-D-glucosamine + ATP = N-acetyl-D-glucosamine 6-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16189514" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16189514
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Towards a proteome-scale map of the human protein-protein in...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJ70" data-a="GO:0005515" data-r="PMID:16189514" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a large-scale human interactome mapping study (CCSB). Uninformative for molecular function and does not identify a specific binding partner role; not core. Per policy, IPI protein-binding is retained but marked over-annotated rather than removed.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21516116" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21516116
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Next-generation sequencing to generate interactome datasets.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJ70" data-a="GO:0005515" data-r="PMID:21516116" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a high-throughput NGS-based interactome dataset. Uninformative; not core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJ70" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from the HI-II-14 proteome-scale human interactome map. Uninformative; not core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29892012" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29892012
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An interactome perturbation framework prioritizes damaging m...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJ70" data-a="GO:0005515" data-r="PMID:29892012" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from an interactome-perturbation framework study. Uninformative; not core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31515488
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Extensive disruption of protein interactions by genetic vari...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJ70" data-a="GO:0005515" data-r="PMID:31515488" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a variant-interaction disruption screen. Uninformative; not core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/37511433" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:37511433
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    N-Acetylglucosamine Kinase-Small Nuclear Ribonucleoprotein P...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJ70" data-a="GO:0005515" data-r="PMID:37511433" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; (interaction with SNRPN, UniProtKB Q9UJ70/P63164) supporting the kinase-independent, neuron-specific structural role of NAGK in dynein-mediated dendrite branching. The interaction is real and directly demonstrated (His/GST pull-down, Co-IP), but the term is uninformative bare protein binding and the role is a non-core moonlighting function. Retained but marked over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070434" target="_blank" class="term-link">
+                                    GO:0070434
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of nucleotide-binding oligomerization domain containing 2 signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJ70" data-a="GO:0070434" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA, projected from mouse Q9QZ08) annotation of the NAGK-dependent activation of NOD2 signaling. This is a genuine, experimentally supported role (see the IDA to the same term from PMID 36002575) but is a context-specific innate-immunity moonlight, not the core metabolic function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NAGK/NAGK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">detection of bacterial peptidoglycan by NOD2: acts by catalyzing</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160047" target="_blank" class="term-link">
+                                    GO:0160047
+                                </a>
+                            </span>
+                            <span class="term-label">muramyl dipeptide kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJ70" data-a="GO:0160047" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA / Rhea, projected from mouse) mapping of the muramyl dipeptide kinase activity. This is experimentally established (IDA from PMID 36002575, recombinant human NAGK phosphorylates MDP/MurNAc in vitro). Same catalytic chemistry as GlcNAc phosphorylation applied to the MurNAc sugar of MDP; correct.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NAGK/NAGK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">phosphorylation of muramyl dipeptide (MDP), a fragment of bacterial</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019262" target="_blank" class="term-link">
+                                    GO:0019262
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylneuraminate catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJ70" data-a="GO:0019262" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA / UniPathway UPA00629) annotation to the N-acetylneuraminate (sialic acid) degradation pathway. NAGK contributes to the degradation of the dietary non-human sialic acid Neu5Gc by phosphorylating GlcNAc/GlcNGc (Reactome R-HSA-6803771; PMID 22692205). This is a narrow, context-specific catabolic role, not the core function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NAGK/NAGK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Amino-sugar metabolism; N-acetylneuraminate degradation.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006046" target="_blank" class="term-link">
+                                    GO:0006046
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylglucosamine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34844667" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34844667
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Glutamine deprivation triggers NAGK-dependent hexosamine sal...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJ70" data-a="GO:0006046" data-r="PMID:34844667" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IMP) annotation from the eLife hexosamine-salvage study. NAGK deletion impairs the salvage of free GlcNAc into downstream metabolites, supporting a role in GlcNAc catabolism/utilization. Part of the core amino-sugar salvage function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34844667" target="_blank" class="term-link">
+                                        PMID:34844667
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GlcNAc salvage via</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34844667" target="_blank" class="term-link">
+                                        PMID:34844667
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">NAGK deletion from PDA cells impairs</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006048" target="_blank" class="term-link">
+                                    GO:0006048
+                                </a>
+                            </span>
+                            <span class="term-label">UDP-N-acetylglucosamine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34844667" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34844667
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Glutamine deprivation triggers NAGK-dependent hexosamine sal...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJ70" data-a="GO:0006048" data-r="PMID:34844667" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IMP) annotation. Under glutamine limitation, NAGK-mediated GlcNAc salvage feeds the UDP-GlcNAc pool; NAGK deletion reduces salvage-derived UDP-GlcNAc and impairs tumor growth. This is the salvage arm of UDP-GlcNAc biosynthesis and is part of the core biological role.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34844667" target="_blank" class="term-link">
+                                        PMID:34844667
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">N-acetylglucosamine kinase (NAGK) is engaged to feed UDP-GlcNAc pools</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34844667" target="_blank" class="term-link">
+                                        PMID:34844667
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GlcNAc salvage feeds UDP-GlcNAc pools</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045127" target="_blank" class="term-link">
+                                    GO:0045127
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylglucosamine kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34844667" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34844667
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Glutamine deprivation triggers NAGK-dependent hexosamine sal...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJ70" data-a="GO:0045127" data-r="PMID:34844667" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IMP) support for the core GlcNAc kinase activity from loss-of-function (NAGK deletion) in the hexosamine-salvage study. Correct core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34844667" target="_blank" class="term-link">
+                                        PMID:34844667
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GlcNAc salvage via</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032495" target="_blank" class="term-link">
+                                    GO:0032495
+                                </a>
+                            </span>
+                            <span class="term-label">response to muramyl dipeptide</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36002575" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36002575
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phosphorylation of muramyl peptides by NAGK is required for ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJ70" data-a="GO:0032495" data-r="PMID:36002575" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental annotation. NAGK is essential for the cellular response to MDP; NAGK-deficient cells and macrophages fail to respond to MDP. Genuine innate-immunity role but non-core relative to the metabolic kinase function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36002575" target="_blank" class="term-link">
+                                        PMID:36002575
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">completely deficient in MDP sensing</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042742" target="_blank" class="term-link">
+                                    GO:0042742
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to bacterium</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36002575" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36002575
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phosphorylation of muramyl peptides by NAGK is required for ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJ70" data-a="GO:0042742" data-r="PMID:36002575" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental annotation. By generating the NOD2 agonist 6-O-phospho-MDP, NAGK is required for detection of bacterial peptidoglycan and the ensuing pro-inflammatory defense response (loss of response to purified S. aureus and E. coli PGN in NAGK-knockout cells). Genuine but non-core (immunity moonlight).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36002575" target="_blank" class="term-link">
+                                        PMID:36002575
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">constitutes an agonist for NOD2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070434" target="_blank" class="term-link">
+                                    GO:0070434
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of nucleotide-binding oligomerization domain containing 2 signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36002575" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36002575
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phosphorylation of muramyl peptides by NAGK is required for ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJ70" data-a="GO:0070434" data-r="PMID:36002575" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental annotation. NAGK functions upstream of NOD2, and its kinase activity (catalytic-dead D107V fails to rescue) is required for NOD2 activation by MDP. Genuine positive regulation of NOD2 signaling; non-core innate-immunity role.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36002575" target="_blank" class="term-link">
+                                        PMID:36002575
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">did not rescue NOD2 signalling in NAGK-deficient cells</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160047" target="_blank" class="term-link">
+                                    GO:0160047
+                                </a>
+                            </span>
+                            <span class="term-label">muramyl dipeptide kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36002575" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36002575
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phosphorylation of muramyl peptides by NAGK is required for ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJ70" data-a="GO:0160047" data-r="PMID:36002575" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental demonstration that recombinant human NAGK phosphorylates muramyl dipeptide (and MurNAc) in vitro, at the MurNAc C6 hydroxyl, yielding 6-O-phospho-MDP. This is a distinct, well-supported catalytic activity mechanistically identical to GlcNAc-6-OH phosphorylation. Correct.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36002575" target="_blank" class="term-link">
+                                        PMID:36002575
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">NAGK readily phosphorylated MDP and the related molecule N-acetylmuramic acid</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36002575" target="_blank" class="term-link">
+                                        PMID:36002575
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">in an in vitro kinase assay with various substrates</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6803771
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJ70" data-a="GO:0005829" data-r="Reactome:R-HSA-6803771" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAGK is a soluble cytosolic enzyme (Reactome, consistent with its role in cytosolic amino-sugar salvage and with cytosolic activity in the Neu5Gc study). Correct core localization.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19056867
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Large-scale proteomics and phosphoproteomics of urinary exos...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJ70" data-a="GO:0070062" data-r="PMID:19056867" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mass-spectrometric detection of NAGK in urinary exosomes. Abundant cytosolic enzymes are commonly detected in exosome/secretome proteomics; this does not reflect a functional extracellular localization and is not core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                                        PMID:19056867
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">urinary exosomes</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019262" target="_blank" class="term-link">
+                                    GO:0019262
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylneuraminate catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22692205" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22692205
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Metabolism of vertebrate amino sugars with N-glycolyl groups...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJ70" data-a="GO:0019262" data-r="PMID:22692205" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-asserted (TAS) role in the degradation of the dietary non-human sialic acid Neu5Gc, where NAGK phosphorylates GlcNAc/GlcNGc to their 6-phosphates. A narrow, context-specific catabolic role; genuine but non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NAGK/NAGK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Amino-sugar metabolism; N-acetylneuraminate degradation.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045127" target="_blank" class="term-link">
+                                    GO:0045127
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylglucosamine kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22692205" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22692205
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Metabolism of vertebrate amino sugars with N-glycolyl groups...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJ70" data-a="GO:0045127" data-r="PMID:22692205" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental demonstration of GlcNAc kinase activity by recombinant human NAGK (also the basis for the UniProt EC 2.7.1.59 experimental assignment, ECO 0000269 / PubMed 22692205). Core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NAGK/NAGK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">N-acetyl-D-glucosamine + ATP = N-acetyl-D-glucosamine 6-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006044" target="_blank" class="term-link">
+                                    GO:0006044
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylglucosamine metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10824116" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10824116
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning and characterization of murine and human N...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJ70" data-a="GO:0006044" data-r="PMID:10824116" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-asserted role from the original cloning/characterization paper, which established that GlcNAc enters amino-sugar metabolism through the action of NAGK. Correct core biological process (broad grouping term).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10824116" target="_blank" class="term-link">
+                                        PMID:10824116
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">pathways of aminosugar metabolism by the action of N-acetylglucosamine kinase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006051" target="_blank" class="term-link">
+                                    GO:0006051
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylmannosamine metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10824116" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10824116
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning and characterization of murine and human N...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UJ70" data-a="GO:0006051" data-r="PMID:10824116" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-asserted BP reflecting the ManNAc kinase side activity reported for the recombinant enzyme in the same paper. A secondary/salvage activity (canonical ManNAc phosphorylation is via GNE/MNK), so non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10824116" target="_blank" class="term-link">
+                                        PMID:10824116
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">N-acetylglucosamine kinase activity as well as N-acetylmannosamine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP-dependent phosphorylation of free N-acetyl-D-glucosamine (GlcNAc) to GlcNAc 6-phosphate, the salvage entry point of amino-sugar/hexosamine metabolism that recycles GlcNAc into the UDP-GlcNAc pool.</h3>
+                <span class="vote-buttons" data-g="Q9UJ70" data-a="FUNCTION: ATP-dependent phosphorylation of free N-acetyl-D-g..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045127" target="_blank" class="term-link">
+                            N-acetylglucosamine kinase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006044" target="_blank" class="term-link">
+                                N-acetylglucosamine metabolic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006048" target="_blank" class="term-link">
+                                UDP-N-acetylglucosamine biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/NAGK/NAGK-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">N-acetyl-D-glucosamine + ATP = N-acetyl-D-glucosamine 6-</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34844667" target="_blank" class="term-link">
+                                PMID:34844667
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">GlcNAc salvage via</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Uses ATP as phosphate donor for its sugar-kinase reactions.</h3>
+                <span class="vote-buttons" data-g="Q9UJ70" data-a="FUNCTION: Uses ATP as phosphate donor for its sugar-kinase r..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                            ATP binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/NAGK/NAGK-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">N-acetyl-D-glucosamine + ATP = N-acetyl-D-glucosamine 6-</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Phosphorylation of the N-acetylmuramic acid C6 hydroxyl of bacterial muramyl dipeptide (MDP) to generate 6-O-phospho-MDP, the agonist that activates NOD2 in innate immune sensing of peptidoglycan.</h3>
+                <span class="vote-buttons" data-g="Q9UJ70" data-a="FUNCTION: Phosphorylation of the N-acetylmuramic acid C6 hyd..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160047" target="_blank" class="term-link">
+                            muramyl dipeptide kinase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032495" target="_blank" class="term-link">
+                                response to muramyl dipeptide
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042742" target="_blank" class="term-link">
+                                defense response to bacterium
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36002575" target="_blank" class="term-link">
+                                PMID:36002575
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">NAGK readily phosphorylated MDP and the related molecule N-acetylmuramic acid</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36002575" target="_blank" class="term-link">
+                                PMID:36002575
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">constitutes an agonist for NOD2</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10824116" target="_blank" class="term-link">
+                            PMID:10824116
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Molecular cloning and characterization of murine and human N-acetylglucosamine kinase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16189514" target="_blank" class="term-link">
+                            PMID:16189514
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Towards a proteome-scale map of the human protein-protein interaction network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                            PMID:19056867
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Large-scale proteomics and phosphoproteomics of urinary exosomes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21516116" target="_blank" class="term-link">
+                            PMID:21516116
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Next-generation sequencing to generate interactome datasets.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22692205" target="_blank" class="term-link">
+                            PMID:22692205
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Metabolism of vertebrate amino sugars with N-glycolyl groups: elucidating the intracellular fate of the non-human sialic acid N-glycolylneuraminic acid.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29892012" target="_blank" class="term-link">
+                            PMID:29892012
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">An interactome perturbation framework prioritizes damaging missense mutations for developmental disorders.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link">
+                            PMID:31515488
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Extensive disruption of protein interactions by genetic variants across the allele frequency spectrum in human populations.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34844667" target="_blank" class="term-link">
+                            PMID:34844667
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Glutamine deprivation triggers NAGK-dependent hexosamine salvage.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36002575" target="_blank" class="term-link">
+                            PMID:36002575
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Phosphorylation of muramyl peptides by NAGK is required for NOD2 activation.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37511433" target="_blank" class="term-link">
+                            PMID:37511433
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">N-Acetylglucosamine Kinase-Small Nuclear Ribonucleoprotein Polypeptide N Interaction Promotes Axodendritic Branching in Neurons via Dynein-Mediated Microtubule Transport.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6803771
+
+                    </span>
+                </div>
+
+                <div class="reference-title">NAGK dimer phosphorylates GlcNAc, GlcNGc to GlcNAc-6-P, GlcNGc-6-P</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(NAGK-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9UJ70" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="nagk-q9uj70-review-notes">NAGK (Q9UJ70) — review notes</h1>
+<p>Human N-acetyl-D-glucosamine kinase (GlcNAc kinase), HGNC:17174, gene ID 55577, chromosome 2.<br />
+344 aa; homodimer; sugar kinase / Hsp70 / actin (ASKHA) superfamily,<br />
+"eukaryotic-type N-acetylglucosamine kinase family"<br />
+[file:human/NAGK/NAGK-uniprot.txt "Belongs to the eukaryotic-type N-acetylglucosamine kinase"].</p>
+<h2 id="core-molecular-function-n-acetylglucosamine-kinase-ec-27159">Core molecular function: N-acetylglucosamine kinase (EC 2.7.1.59)</h2>
+<p>NAGK phosphorylates free N-acetyl-D-glucosamine (GlcNAc) using ATP to make<br />
+GlcNAc 6-phosphate + ADP + H+ (Rhea:RHEA:17417; EC 2.7.1.59). This is the salvage<br />
+entry point of amino-sugar metabolism: GlcNAc released by endogenous glycoconjugate<br />
+turnover (lysosomal degradation, O-GlcNAc removal) or from diet is recycled back into<br />
+the hexosamine / UDP-GlcNAc pool.</p>
+<ul>
+<li>UniProt FUNCTION: "Converts endogenous N-acetylglucosamine (GlcNAc), a major<br />
+  component of complex carbohydrates, from lysosomal degradation or nutritional sources<br />
+  into GlcNAc 6-phosphate" [file:human/NAGK/NAGK-uniprot.txt].</li>
+<li>Catalytic activity (verbatim): "N-acetyl-D-glucosamine + ATP = N-acetyl-D-glucosamine 6-phosphate + ADP + H(+)"; EC=2.7.1.59; Evidence ECO:0000269|PubMed:22692205 [file:human/NAGK/NAGK-uniprot.txt].</li>
+<li>First cloning/characterization: "N-Acetylglucosamine is produced by the endogenous degradation of glycoconjugates and by the degradation of dietary glycoconjugates by glycosidases. It enters the pathways of aminosugar metabolism by the action of N-acetylglucosamine kinase." <a href="https://pubmed.ncbi.nlm.nih.gov/10824116" title="It enters the \npathways of aminosugar metabolism by the action of N-acetylglucosamine kinase">PMID:10824116</a>. Recombinant enzyme "displays N-acetylglucosamine kinase activity as well as N-acetylmannosamine kinase activity" and is ubiquitously expressed <a href="https://pubmed.ncbi.nlm.nih.gov/10824116">PMID:10824116</a>.</li>
+<li>Direct IDA of GlcNAc kinase activity by recombinant human enzyme in the Neu5Gc study <a href="https://pubmed.ncbi.nlm.nih.gov/22692205">PMID:22692205</a>; also assigns EC 2.7.1.59 (ECO:0000269).</li>
+<li>Structure: X-ray structures (PDB 2CH5/2CH6) of human NAGK with GlcNAc and ADP/glucose; homodimer; substrate-binding and ATP-binding residues mapped (Weihofen et al. 2006, PMID:17010375). SUBUNIT "Homodimer." [file:human/NAGK/NAGK-uniprot.txt].</li>
+</ul>
+<h2 id="mannac-kinase-side-activity-ec-27160">ManNAc kinase side activity (EC 2.7.1.60)</h2>
+<p>NAGK also phosphorylates N-acetyl-D-mannosamine (ManNAc). In UniProt the ManNAc<br />
+kinase reaction is By-similarity (ECO:0000250|UniProtKB:Q9QZ08 mouse), but the<br />
+original murine/human cloning paper reported both activities biochemically<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/10824116" title="N-acetylglucosamine kinase activity as well as N-acetylmannosamine \nkinase activity">PMID:10824116</a>. GO:0009384 "N-acylmannosamine kinase activity" is a reasonable<br />
+(if imprecise) MF; N-acetylmannosamine metabolic process GO:0006051 is the BP.<br />
+Note: ManNAc-6-P from GNE/MNK is the canonical route to sialic acid biosynthesis;<br />
+NAGK's ManNAc activity is a secondary/salvage capacity.</p>
+<h2 id="amino-sugar-hexosamine-salvage-bp">Amino-sugar / hexosamine salvage BP</h2>
+<p>Campbell et al. (eLife 2021) show glutamine deprivation in pancreatic cancer cells<br />
+raises free GlcNAc and engages NAGK to salvage it into the UDP-GlcNAc pool:<br />
+"GlcNAc salvage via N-acetylglucosamine kinase (NAGK) is engaged to feed UDP-GlcNAc pools"<br />
+and "NAGK deletion from PDA cells impairs tumor growth in mice" <a href="https://pubmed.ncbi.nlm.nih.gov/34844667">PMID:34844667</a>.<br />
+"GlcNAc salvage feeds UDP-GlcNAc pools" <a href="https://pubmed.ncbi.nlm.nih.gov/34844667">PMID:34844667</a>. The paper is annotated by<br />
+FlyBase as IMP for GO:0006046 (GlcNAc catabolic), GO:0006048 (UDP-GlcNAc biosynthetic)<br />
+and GO:0045127 (kinase activity). NAGK-6-P is the product feeding the hexosamine<br />
+biosynthesis pathway at the GlcNAc-6-P node (downstream of / parallel to GNPNAT1).<br />
+The paper itself notes salvage "has been little studied, and the proportion of<br />
+UDP-GlcNAc generated via the NAGK-dependent salvage pathway is unknown" <a href="https://pubmed.ncbi.nlm.nih.gov/34844667">PMID:34844667</a>.</p>
+<h2 id="neu5gc-n-acetylneuraminate-degradation-reactome">Neu5Gc / N-acetylneuraminate degradation (Reactome)</h2>
+<p>Reactome R-HSA-6803771: "dimeric GlcNAc kinase (NAGK) to phosphorylate<br />
+N-acetylglucosamine (GlcNAc) to GlcNAc-6-phosphate and N-glycolylglucosamine (GlcNGc)<br />
+to GlcNGc-6-P". Humans lack Neu5Gc synthesis (inactive CMAHP) but ingest it and must<br />
+degrade it; NAGK acts in this degradation branch [reactome R-HSA-6803771;<br />
+PMID:22692205 abstract]. This is why GO:0019262 "N-acetylneuraminate catabolic process"<br />
+is annotated (TAS to PMID:22692205). This is a real but relatively narrow, context-specific<br />
+role — the direct catalytic step is GlcNAc/GlcNGc phosphorylation.</p>
+<h2 id="moonlighting-innate-immunity-role-mdp-phosphorylation-nod2-ec-271-">Moonlighting innate-immunity role: MDP phosphorylation → NOD2 (EC 2.7.1.-)</h2>
+<p>Stafford et al. (Nature 2022) identified NAGK in a forward genetic screen as essential<br />
+for MDP sensing. NAGK directly phosphorylates the muramyl dipeptide (MDP) MurNAc C6<br />
+hydroxyl to make 6-O-phospho-MDP, which is the actual NOD2 agonist:<br />
+- "NAGK functions upstream of NOD2 by directly" ... phosphorylating MurNAc of MDP <a href="https://pubmed.ncbi.nlm.nih.gov/36002575">PMID:36002575</a>.<br />
+- "constitutes an agonist for NOD2" (NAGK-phosphorylated, not unmodified, MDP) <a href="https://pubmed.ncbi.nlm.nih.gov/36002575">PMID:36002575</a>.<br />
+- In vitro: "we expressed recombinant human NAGK in E. coli and used it in an in vitro kinase assay with various substrates"; "NAGK readily phosphorylated MDP and the related molecule N-acetylmuramic acid" <a href="https://pubmed.ncbi.nlm.nih.gov/36002575">PMID:36002575</a>.<br />
+- Catalytic dependence: "a mutant NAGK(D107V) construct, which is predicted to disrupt enzyme activity13, did not rescue NOD2 signalling in NAGK-deficient cells" <a href="https://pubmed.ncbi.nlm.nih.gov/36002575">PMID:36002575</a>; matches UniProt MUTAGEN D107V "Abolished ability to phosphorylate muramyl dipeptide."<br />
+- Knockout: "completely deficient in MDP sensing" <a href="https://pubmed.ncbi.nlm.nih.gov/36002575">PMID:36002575</a>.<br />
+This supports GO:0160047 muramyl dipeptide kinase activity (IDA), GO:0032495 response to<br />
+muramyl dipeptide (IDA), GO:0042742 defense response to bacterium (IDA), and<br />
+GO:0070434 positive regulation of NOD2 signaling pathway (IDA). UniProt captures this as<br />
+EC 2.7.1.- and additional AltName "Muramyl dipeptide kinase". This is a genuine, distinct<br />
+biological role but is a moonlighting/immunity function; the enzymatic step (sugar-6-OH<br />
+phosphorylation) is mechanistically the same kinase chemistry.</p>
+<h2 id="kinase-independent-moonlighting-dynein-mediated-dendriteaxon-branching">Kinase-independent moonlighting: dynein-mediated dendrite/axon branching</h2>
+<p>Timalsina et al. (2023) report NAGK acts as a non-canonical structural/anchor protein<br />
+that, via interaction with SNRPN and the dynein light chain DYNLRB1, promotes<br />
+axodendritic branching through dynein-mediated microtubule transport<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/37511433" title="N-acetylglucosamine kinase (NAGK) has been identified as an anchor protein that \nfacilitates neurodevelopment with its non-canonical structural role">PMID:37511433</a>. This is the basis<br />
+for the SNRPN (P63164) IntAct annotation. This role is developmental / neuron-specific and<br />
+non-core; the associated GO:0005515 IPI is a bare protein-binding capture.</p>
+<h2 id="localization">Localization</h2>
+<p>Cytosolic (TAS Reactome, GO:0005829). Also detected in urinary extracellular exosomes by<br />
+mass spec <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" title="urinary exosomes">PMID:19056867</a> — an HDA proteomics capture (GO:0070062),<br />
+non-core; exosome/secretome MS commonly detects abundant cytosolic enzymes.</p>
+<h2 id="protein-binding-ipi-annotations">Protein-binding (IPI) annotations</h2>
+<p>GO:0005515 (protein binding) annotations come from large interactome / Y2H / MS screens:<br />
+PMID:16189514 (CCSB HI-1), PMID:21516116 (NGS interactome), PMID:25416956 (HI-II-14),<br />
+PMID:29892012, PMID:31515488, PMID:37511433 (SNRPN). These are uninformative bare<br />
+"protein binding" captures. Per policy, IPI protein-binding is not REMOVEd; mark as<br />
+over-annotated (KEEP context in notes). None of these interactors define NAGK's core<br />
+molecular function.</p>
+<h2 id="summary-of-core-vs-non-core">Summary of core vs non-core</h2>
+<ul>
+<li>CORE MF: N-acetylglucosamine kinase activity (GO:0045127); ATP binding (GO:0005524).</li>
+<li>CORE BP: N-acetylglucosamine metabolic process (GO:0006044) / GlcNAc catabolic<br />
+  (GO:0006046) / UDP-GlcNAc biosynthetic salvage (GO:0006048) — the hexosamine salvage role.</li>
+<li>CORE-ish MF: muramyl dipeptide kinase activity (GO:0160047) — same chemistry, immunity context.</li>
+<li>Non-core / context-specific: NOD2 signaling &amp; bacterial defense (immunity moonlight);<br />
+  Neu5Gc degradation (narrow); ManNAc kinase (secondary); dynein/dendrite (kinase-independent);<br />
+  exosome localization (proteomics); all protein-binding IPI (uninformative).</li>
+</ul>
+<h2 id="isoforms">Isoforms</h2>
+<p>Two isoforms: Q9UJ70-1 (canonical, MANE) and Q9UJ70-2 (VSP_044586, N-terminal extension<br />
+from alternative splicing). No isoform-specific function established; annotations are on the<br />
+gene/canonical enzyme.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9UJ70
+gene_symbol: NAGK
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: N-acetyl-D-glucosamine kinase (NAGK; GlcNAc kinase, EC 2.7.1.59) is a
+  cytosolic sugar kinase of the amino-sugar salvage pathway. It catalyzes the ATP-dependent
+  phosphorylation of free N-acetyl-D-glucosamine (GlcNAc) to N-acetyl-D-glucosamine
+  6-phosphate (plus ADP and H+), recycling GlcNAc released from the turnover of glycoconjugates
+  (lysosomal degradation, O-GlcNAc removal) or obtained from the diet back into the
+  hexosamine/UDP-GlcNAc pool at the GlcNAc-6-phosphate node. The enzyme is a homodimer
+  of the sugar-kinase/Hsp70/actin (ASKHA) superfamily and is broadly expressed. It
+  additionally phosphorylates N-acetyl-D-mannosamine (ManNAc; EC 2.7.1.60) and acts
+  in the degradation of the dietary non-human sialic acid N-glycolylneuraminic acid
+  (Neu5Gc). In innate immunity, NAGK phosphorylates the C6 hydroxyl of the N-acetylmuramic
+  acid moiety of bacterial muramyl dipeptide (MDP) to generate 6-O-phospho-MDP, the
+  species that activates the cytosolic pattern-recognition receptor NOD2. NAGK has
+  also been reported to have a kinase-independent, structural moonlighting role in
+  neurons, promoting dynein-mediated microtubule transport and axodendritic branching
+  through interactions with SNRPN and the dynein light chain DYNLRB1.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q9UJ70-1
+- name: &#39;2&#39;
+  id: Q9UJ70-2
+  sequence_note: VSP_044586
+existing_annotations:
+- term:
+    id: GO:0045127
+    label: N-acetylglucosamine kinase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: Phylogenetic (PAN-GO) inference of the core molecular function. This
+      is the well-established, experimentally confirmed catalytic activity of NAGK
+      (GlcNAc + ATP -&gt; GlcNAc-6-phosphate, EC 2.7.1.59) and is correct.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/NAGK/NAGK-uniprot.txt
+      supporting_text: &#34;N-acetyl-D-glucosamine + ATP = N-acetyl-D-glucosamine 6-&#34;
+- term:
+    id: GO:0006044
+    label: N-acetylglucosamine metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: ARBA electronic annotation to the general amino-sugar metabolic process.
+      This is correct and captures the core biological role (GlcNAc salvage into the
+      hexosamine pathway), though it is a broad grouping term; the more specific catabolic/UDP-GlcNAc
+      biosynthetic children are also annotated (IMP, PMID 34844667).
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/NAGK/NAGK-uniprot.txt
+      supporting_text: &#34;Converts endogenous N-acetylglucosamine (GlcNAc), a major&#34;
+- term:
+    id: GO:0009384
+    label: N-acylmannosamine kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Electronic (EC 2.7.1.60 / Rhea) mapping of the N-acetylmannosamine (ManNAc)
+      kinase side activity, which is real (reported biochemically for the recombinant
+      enzyme in PMID 10824116 and captured as a By-similarity catalytic activity in
+      UniProt). ManNAc kinase is a secondary/salvage activity of NAGK rather than its
+      principal in vivo role (canonical ManNAc phosphorylation is via GNE/MNK), so
+      it is not part of the core function.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/NAGK/NAGK-uniprot.txt
+      supporting_text: &#34;Also has N-acetylmannosamine (ManNAc) kinase&#34;
+- term:
+    id: GO:0045127
+    label: N-acetylglucosamine kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Electronic (EC 2.7.1.59 / Rhea / InterPro) mapping of the core GlcNAc
+      kinase activity. Redundant with the experimental (IDA/IMP) and IBA annotations
+      to the same term but correct.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/NAGK/NAGK-uniprot.txt
+      supporting_text: &#34;N-acetyl-D-glucosamine + ATP = N-acetyl-D-glucosamine 6-&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16189514
+  qualifier: enables
+  review:
+    summary: Bare &#34;protein binding&#34; from a large-scale human interactome mapping study
+      (CCSB). Uninformative for molecular function and does not identify a specific
+      binding partner role; not core. Per policy, IPI protein-binding is retained but
+      marked over-annotated rather than removed.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:21516116
+  qualifier: enables
+  review:
+    summary: Bare &#34;protein binding&#34; from a high-throughput NGS-based interactome dataset.
+      Uninformative; not core.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: Bare &#34;protein binding&#34; from the HI-II-14 proteome-scale human interactome
+      map. Uninformative; not core.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:29892012
+  qualifier: enables
+  review:
+    summary: Bare &#34;protein binding&#34; from an interactome-perturbation framework study.
+      Uninformative; not core.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:31515488
+  qualifier: enables
+  review:
+    summary: Bare &#34;protein binding&#34; from a variant-interaction disruption screen. Uninformative;
+      not core.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:37511433
+  qualifier: enables
+  review:
+    summary: Bare &#34;protein binding&#34; (interaction with SNRPN, UniProtKB Q9UJ70/P63164)
+      supporting the kinase-independent, neuron-specific structural role of NAGK in
+      dynein-mediated dendrite branching. The interaction is real and directly demonstrated
+      (His/GST pull-down, Co-IP), but the term is uninformative bare protein binding
+      and the role is a non-core moonlighting function. Retained but marked over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0070434
+    label: positive regulation of nucleotide-binding oligomerization domain containing
+      2 signaling pathway
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Electronic (ARBA, projected from mouse Q9QZ08) annotation of the NAGK-dependent
+      activation of NOD2 signaling. This is a genuine, experimentally supported role
+      (see the IDA to the same term from PMID 36002575) but is a context-specific innate-immunity
+      moonlight, not the core metabolic function.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/NAGK/NAGK-uniprot.txt
+      supporting_text: &#34;detection of bacterial peptidoglycan by NOD2: acts by catalyzing&#34;
+- term:
+    id: GO:0160047
+    label: muramyl dipeptide kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Electronic (ARBA / Rhea, projected from mouse) mapping of the muramyl
+      dipeptide kinase activity. This is experimentally established (IDA from PMID
+      36002575, recombinant human NAGK phosphorylates MDP/MurNAc in vitro). Same catalytic
+      chemistry as GlcNAc phosphorylation applied to the MurNAc sugar of MDP; correct.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/NAGK/NAGK-uniprot.txt
+      supporting_text: &#34;phosphorylation of muramyl dipeptide (MDP), a fragment of bacterial&#34;
+- term:
+    id: GO:0019262
+    label: N-acetylneuraminate catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Electronic (ARBA / UniPathway UPA00629) annotation to the N-acetylneuraminate
+      (sialic acid) degradation pathway. NAGK contributes to the degradation of the
+      dietary non-human sialic acid Neu5Gc by phosphorylating GlcNAc/GlcNGc (Reactome
+      R-HSA-6803771; PMID 22692205). This is a narrow, context-specific catabolic role,
+      not the core function.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/NAGK/NAGK-uniprot.txt
+      supporting_text: &#34;Amino-sugar metabolism; N-acetylneuraminate degradation.&#34;
+- term:
+    id: GO:0006046
+    label: N-acetylglucosamine catabolic process
+  evidence_type: IMP
+  original_reference_id: PMID:34844667
+  qualifier: involved_in
+  review:
+    summary: Experimental (IMP) annotation from the eLife hexosamine-salvage study.
+      NAGK deletion impairs the salvage of free GlcNAc into downstream metabolites,
+      supporting a role in GlcNAc catabolism/utilization. Part of the core amino-sugar
+      salvage function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:34844667
+      supporting_text: &#34;GlcNAc salvage via&#34;
+    - reference_id: PMID:34844667
+      supporting_text: &#34;NAGK deletion from PDA cells impairs&#34;
+- term:
+    id: GO:0006048
+    label: UDP-N-acetylglucosamine biosynthetic process
+  evidence_type: IMP
+  original_reference_id: PMID:34844667
+  qualifier: involved_in
+  review:
+    summary: Experimental (IMP) annotation. Under glutamine limitation, NAGK-mediated
+      GlcNAc salvage feeds the UDP-GlcNAc pool; NAGK deletion reduces salvage-derived
+      UDP-GlcNAc and impairs tumor growth. This is the salvage arm of UDP-GlcNAc biosynthesis
+      and is part of the core biological role.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:34844667
+      supporting_text: &#34;N-acetylglucosamine kinase (NAGK) is engaged to feed UDP-GlcNAc pools&#34;
+    - reference_id: PMID:34844667
+      supporting_text: &#34;GlcNAc salvage feeds UDP-GlcNAc pools&#34;
+- term:
+    id: GO:0045127
+    label: N-acetylglucosamine kinase activity
+  evidence_type: IMP
+  original_reference_id: PMID:34844667
+  qualifier: enables
+  review:
+    summary: Experimental (IMP) support for the core GlcNAc kinase activity from loss-of-function
+      (NAGK deletion) in the hexosamine-salvage study. Correct core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:34844667
+      supporting_text: &#34;GlcNAc salvage via&#34;
+- term:
+    id: GO:0032495
+    label: response to muramyl dipeptide
+  evidence_type: IDA
+  original_reference_id: PMID:36002575
+  qualifier: involved_in
+  review:
+    summary: Direct experimental annotation. NAGK is essential for the cellular response
+      to MDP; NAGK-deficient cells and macrophages fail to respond to MDP. Genuine
+      innate-immunity role but non-core relative to the metabolic kinase function.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:36002575
+      supporting_text: &#34;completely deficient in MDP sensing&#34;
+- term:
+    id: GO:0042742
+    label: defense response to bacterium
+  evidence_type: IDA
+  original_reference_id: PMID:36002575
+  qualifier: involved_in
+  review:
+    summary: Direct experimental annotation. By generating the NOD2 agonist 6-O-phospho-MDP,
+      NAGK is required for detection of bacterial peptidoglycan and the ensuing pro-inflammatory
+      defense response (loss of response to purified S. aureus and E. coli PGN in NAGK-knockout
+      cells). Genuine but non-core (immunity moonlight).
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:36002575
+      supporting_text: &#34;constitutes an agonist for NOD2&#34;
+- term:
+    id: GO:0070434
+    label: positive regulation of nucleotide-binding oligomerization domain containing
+      2 signaling pathway
+  evidence_type: IDA
+  original_reference_id: PMID:36002575
+  qualifier: involved_in
+  review:
+    summary: Direct experimental annotation. NAGK functions upstream of NOD2, and its
+      kinase activity (catalytic-dead D107V fails to rescue) is required for NOD2 activation
+      by MDP. Genuine positive regulation of NOD2 signaling; non-core innate-immunity
+      role.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:36002575
+      supporting_text: &#34;did not rescue NOD2 signalling in NAGK-deficient cells&#34;
+- term:
+    id: GO:0160047
+    label: muramyl dipeptide kinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:36002575
+  qualifier: enables
+  review:
+    summary: Direct experimental demonstration that recombinant human NAGK phosphorylates
+      muramyl dipeptide (and MurNAc) in vitro, at the MurNAc C6 hydroxyl, yielding
+      6-O-phospho-MDP. This is a distinct, well-supported catalytic activity mechanistically
+      identical to GlcNAc-6-OH phosphorylation. Correct.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:36002575
+      supporting_text: &#34;NAGK readily phosphorylated MDP and the related molecule N-acetylmuramic acid&#34;
+    - reference_id: PMID:36002575
+      supporting_text: &#34;in an in vitro kinase assay with various substrates&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6803771
+  qualifier: located_in
+  review:
+    summary: NAGK is a soluble cytosolic enzyme (Reactome, consistent with its role
+      in cytosolic amino-sugar salvage and with cytosolic activity in the Neu5Gc study).
+      Correct core localization.
+    action: ACCEPT
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:19056867
+  qualifier: located_in
+  review:
+    summary: High-throughput mass-spectrometric detection of NAGK in urinary exosomes.
+      Abundant cytosolic enzymes are commonly detected in exosome/secretome proteomics;
+      this does not reflect a functional extracellular localization and is not core.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:19056867
+      supporting_text: &#34;urinary exosomes&#34;
+- term:
+    id: GO:0019262
+    label: N-acetylneuraminate catabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:22692205
+  qualifier: involved_in
+  review:
+    summary: Author-asserted (TAS) role in the degradation of the dietary non-human
+      sialic acid Neu5Gc, where NAGK phosphorylates GlcNAc/GlcNGc to their 6-phosphates.
+      A narrow, context-specific catabolic role; genuine but non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/NAGK/NAGK-uniprot.txt
+      supporting_text: &#34;Amino-sugar metabolism; N-acetylneuraminate degradation.&#34;
+- term:
+    id: GO:0045127
+    label: N-acetylglucosamine kinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:22692205
+  qualifier: enables
+  review:
+    summary: Direct experimental demonstration of GlcNAc kinase activity by recombinant
+      human NAGK (also the basis for the UniProt EC 2.7.1.59 experimental assignment,
+      ECO 0000269 / PubMed 22692205). Core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/NAGK/NAGK-uniprot.txt
+      supporting_text: &#34;N-acetyl-D-glucosamine + ATP = N-acetyl-D-glucosamine 6-&#34;
+- term:
+    id: GO:0006044
+    label: N-acetylglucosamine metabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:10824116
+  qualifier: involved_in
+  review:
+    summary: Author-asserted role from the original cloning/characterization paper,
+      which established that GlcNAc enters amino-sugar metabolism through the action
+      of NAGK. Correct core biological process (broad grouping term).
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:10824116
+      supporting_text: &#34;pathways of aminosugar metabolism by the action of N-acetylglucosamine kinase&#34;
+- term:
+    id: GO:0006051
+    label: N-acetylmannosamine metabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:10824116
+  qualifier: involved_in
+  review:
+    summary: Author-asserted BP reflecting the ManNAc kinase side activity reported
+      for the recombinant enzyme in the same paper. A secondary/salvage activity (canonical
+      ManNAc phosphorylation is via GNE/MNK), so non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:10824116
+      supporting_text: &#34;N-acetylglucosamine kinase activity as well as N-acetylmannosamine&#34;
+core_functions:
+- description: ATP-dependent phosphorylation of free N-acetyl-D-glucosamine (GlcNAc)
+    to GlcNAc 6-phosphate, the salvage entry point of amino-sugar/hexosamine metabolism
+    that recycles GlcNAc into the UDP-GlcNAc pool.
+  molecular_function:
+    id: GO:0045127
+    label: N-acetylglucosamine kinase activity
+  supported_by:
+  - reference_id: file:human/NAGK/NAGK-uniprot.txt
+    supporting_text: &#34;N-acetyl-D-glucosamine + ATP = N-acetyl-D-glucosamine 6-&#34;
+  - reference_id: PMID:34844667
+    supporting_text: &#34;GlcNAc salvage via&#34;
+  directly_involved_in:
+  - id: GO:0006044
+    label: N-acetylglucosamine metabolic process
+  - id: GO:0006048
+    label: UDP-N-acetylglucosamine biosynthetic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+- description: Uses ATP as phosphate donor for its sugar-kinase reactions.
+  molecular_function:
+    id: GO:0005524
+    label: ATP binding
+  supported_by:
+  - reference_id: file:human/NAGK/NAGK-uniprot.txt
+    supporting_text: &#34;N-acetyl-D-glucosamine + ATP = N-acetyl-D-glucosamine 6-&#34;
+- description: Phosphorylation of the N-acetylmuramic acid C6 hydroxyl of bacterial
+    muramyl dipeptide (MDP) to generate 6-O-phospho-MDP, the agonist that activates
+    NOD2 in innate immune sensing of peptidoglycan.
+  molecular_function:
+    id: GO:0160047
+    label: muramyl dipeptide kinase activity
+  supported_by:
+  - reference_id: PMID:36002575
+    supporting_text: &#34;NAGK readily phosphorylated MDP and the related molecule N-acetylmuramic acid&#34;
+  - reference_id: PMID:36002575
+    supporting_text: &#34;constitutes an agonist for NOD2&#34;
+  directly_involved_in:
+  - id: GO:0032495
+    label: response to muramyl dipeptide
+  - id: GO:0042742
+    label: defense response to bacterium
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10824116
+  title: Molecular cloning and characterization of murine and human N-acetylglucosamine
+    kinase.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified original cloning/characterization (abstract-only cache);
+      establishes the core GlcNAc kinase activity and the ManNAc side activity.
+- id: PMID:16189514
+  title: Towards a proteome-scale map of the human protein-protein interaction network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Large-scale interactome map; supports only a bare protein-binding
+      annotation, uninformative for NAGK function.
+- id: PMID:19056867
+  title: Large-scale proteomics and phosphoproteomics of urinary exosomes.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: HDA proteomics; abundant cytosolic enzyme detected in exosomes, not
+      a functional extracellular localization.
+- id: PMID:21516116
+  title: Next-generation sequencing to generate interactome datasets.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: High-throughput interactome dataset; supports only bare protein binding.
+- id: PMID:22692205
+  title: &#39;Metabolism of vertebrate amino sugars with N-glycolyl groups: elucidating
+    the intracellular fate of the non-human sialic acid N-glycolylneuraminic acid.&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified (abstract-only cache) but consistent with UniProt&#39;s
+      ECO 0000269 experimental EC 2.7.1.59 assignment and Reactome R-HSA-6803771.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: HI-II-14 interactome map; supports only bare protein-binding annotations.
+- id: PMID:29892012
+  title: An interactome perturbation framework prioritizes damaging missense mutations
+    for developmental disorders.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Interactome-perturbation study; supports only bare protein binding.
+- id: PMID:31515488
+  title: Extensive disruption of protein interactions by genetic variants across the
+    allele frequency spectrum in human populations.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Variant interaction-disruption screen; supports only bare protein binding.
+- id: PMID:34844667
+  title: Glutamine deprivation triggers NAGK-dependent hexosamine salvage.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full text available; experimental (IMP) support for GlcNAc catabolic,
+      UDP-GlcNAc biosynthetic salvage, and kinase activity.
+- id: PMID:36002575
+  title: Phosphorylation of muramyl peptides by NAGK is required for NOD2 activation.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full text available; direct (IDA) support for muramyl dipeptide kinase
+      activity and the NOD2/innate-immunity biological roles.
+- id: PMID:37511433
+  title: N-Acetylglucosamine Kinase-Small Nuclear Ribonucleoprotein Polypeptide N
+    Interaction Promotes Axodendritic Branching in Neurons via Dynein-Mediated Microtubule
+    Transport.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Full text available; supports the SNRPN protein-binding annotation
+      and a kinase-independent neuronal moonlighting function (non-core).
+- id: Reactome:R-HSA-6803771
+  title: NAGK dimer phosphorylates GlcNAc, GlcNGc to GlcNAc-6-P, GlcNGc-6-P
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Reactome curated reaction; source of the cytosol (TAS) localization.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

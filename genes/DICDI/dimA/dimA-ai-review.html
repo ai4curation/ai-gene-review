@@ -1,0 +1,3620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dimA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>dimA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q54XG7" target="_blank" class="term-link">
+                        Q54XG7
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Dictyostelium discoideum</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "dimA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q54XG7" data-a="DESCRIPTION: DimA (Basic-leucine zipper transcription factor A;..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DimA (Basic-leucine zipper transcription factor A; DIF insensitive mutant A) is a bZIP/bRLZ transcription factor of the social amoeba Dictyostelium discoideum that is required for cellular responses to the chlorinated signalling molecule DIF-1. Acting in the nucleus, DimA binds DNA as a dimer through its basic region-leucine zipper and both activates prestalk (pstO) gene expression and represses prespore gene expression downstream of DIF-1. It forms homodimers and heterodimerizes with the related bZIP factor DimB, and in response to DIF-1 it accumulates rapidly in the nucleus, a relocalization that depends on DimB. Through this transcriptional control DimA integrates DIF-1 signalling with cell-type differentiation and patterning during multicellular development, being required for stalk-cell differentiation and for repression of the spore fate; loss of dimA produces long thin slugs, cell-autonomous differentiation defects, and exclusion of mutant cells from the spore mass.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54XG7" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nuclear localization is correct and is directly supported for DimA, which accumulates in the nucleus in response to DIF-1 where it acts as a transcription factor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> As a bZIP transcription factor DimA acts in the nucleus, consistent with direct evidence of DIF-1-induced nuclear accumulation. The phylogenetic inference agrees with the experimental data for this gene product.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16410410" target="_blank" class="term-link">
+                                        PMID:16410410
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">upon DIF-1 stimulation, DimA and DimB rapidly accumulate in the nucleus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010468" target="_blank" class="term-link">
+                                    GO:0010468
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of gene expression</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q54XG7" data-a="GO:0010468" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DimA regulates the expression of prestalk and prespore genes in response to DIF-1, so regulation of gene expression is correct, though it is a broad grouping term relative to the more specific transcriptional-regulation annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The term is accurate but general; the more specific regulation of DNA-templated transcription (GO:0006355) better captures the core activity. Retained as a valid but non-core grouping annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16410410" target="_blank" class="term-link">
+                                        PMID:16410410
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DimA functions as both an activator of prestalk gene expression and repressor of prespore gene expression</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043565" target="_blank" class="term-link">
+                                    GO:0043565
+                                </a>
+                            </span>
+                            <span class="term-label">sequence-specific DNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54XG7" data-a="GO:0043565" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> As a bZIP/bRLZ factor DimA binds DNA sequence-specifically through its basic region. This is a core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> DimA is a basic-region leucine-zipper transcription factor; sequence-specific DNA binding is intrinsic to this class and is consistent with its role as a direct transcriptional regulator of DIF-1 target genes.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14729573" target="_blank" class="term-link">
+                                        PMID:14729573
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">encodes a bZIP/bRLZ transcription factor, which is</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54XG7" data-a="GO:0003700" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DimA is a bZIP DNA-binding transcription factor that activates prestalk and represses prespore genes; this is a core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The InterPro bZIP-based inference matches the experimentally established role of DimA as a direct transcriptional regulator of DIF-1 responsive genes.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16410410" target="_blank" class="term-link">
+                                        PMID:16410410
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DimA functions as both an activator of prestalk gene expression and repressor of prespore gene expression</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54XG7" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nuclear localization based on UniProt subcellular location mapping; correct and supported by direct evidence of DIF-1-induced nuclear accumulation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The nucleus is the site of DimA action as a transcription factor, and DimA accumulates there in response to DIF-1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16410410" target="_blank" class="term-link">
+                                        PMID:16410410
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">upon DIF-1 stimulation, DimA and DimB rapidly accumulate in the nucleus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54XG7" data-a="GO:0006355" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DimA directly regulates transcription of DIF-1 target genes, activating prestalk and repressing prespore markers. This is a core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the experimentally established role of DimA as a direct transcriptional regulator downstream of DIF-1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16410410" target="_blank" class="term-link">
+                                        PMID:16410410
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DimA functions as both an activator of prestalk gene expression and repressor of prespore gene expression</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16410410" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16410410
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    bZIP transcription factor interactions regulate DIF response...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54XG7" data-a="GO:0005634" data-r="PMID:16410410" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence that DimA:GFP accumulates in the nucleus upon DIF-1 stimulation, where it acts as a transcription factor. Core localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GFP-fusion imaging directly demonstrated rapid, DIF-1-dependent nuclear accumulation of DimA, confirming the nucleus as its site of action.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16410410" target="_blank" class="term-link">
+                                        PMID:16410410
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">both DimA:GFP and DimB:GFP exhibited nuclear accumulation</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16410410" target="_blank" class="term-link">
+                                        PMID:16410410
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">nuclear accumulation of DimA in response to DIF-1 is dependent on DimB</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031287" target="_blank" class="term-link">
+                                    GO:0031287
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of sorocarp stalk cell differentiation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16410410" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16410410
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    bZIP transcription factor interactions regulate DIF response...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54XG7" data-a="GO:0031287" data-r="PMID:16410410" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DimA is required for DIF-1-induced prestalk gene induction and stalk-cell differentiation; dimA mutant cells fail to induce prestalk markers and do not form stalk cells in response to DIF-1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> DimA acts as an activator of prestalk gene expression and is required for stalk-cell differentiation, a central part of its developmental role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16410410" target="_blank" class="term-link">
+                                        PMID:16410410
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DimA functions as both an activator of prestalk gene expression and repressor of prespore gene expression</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16410410" target="_blank" class="term-link">
+                                        PMID:16410410
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">prestalk markers are not induced and prespore markers are not repressed</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043944" target="_blank" class="term-link">
+                                    GO:0043944
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of asexual sporulation resulting in formation of a cellular spore</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16410410" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16410410
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    bZIP transcription factor interactions regulate DIF response...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54XG7" data-a="GO:0043944" data-r="PMID:16410410" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DimA represses the prespore/spore fate in response to DIF-1; spore cell formation is repressed by DimA, and dimA mutants fail to repress prespore markers.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Repression of prespore gene expression and spore formation is a core, experimentally established function of DimA downstream of DIF-1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16410410" target="_blank" class="term-link">
+                                        PMID:16410410
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">spore cell formation is repressed by DimA</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16410410" target="_blank" class="term-link">
+                                        PMID:16410410
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">prestalk markers are not induced and prespore markers are not repressed</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16410410" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16410410
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    bZIP transcription factor interactions regulate DIF response...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q54XG7" data-a="GO:0005737" data-r="PMID:16410410" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> In the absence of DIF-1, DimA:GFP is fairly uniformly distributed throughout the cell (including the cytoplasm), redistributing to the nucleus upon DIF-1 stimulation. Cytoplasmic localization is thus the resting-state distribution rather than the functional site of action.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The cytoplasmic localization is directly observed but represents the unstimulated distribution; the functional site of DimA is the nucleus, so this is retained as a non-core annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16410410" target="_blank" class="term-link">
+                                        PMID:16410410
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In the absence of DIF-1, GFP was fairly uniformly distributed throughout the cells</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16410410" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16410410
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    bZIP transcription factor interactions regulate DIF response...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q54XG7" data-a="GO:0005515" data-r="PMID:16410410" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IPI annotation reflects the direct interaction between DimA and the related bZIP factor DimB, demonstrated by in vitro pull-down assays. The bare protein binding term is uninformative; the more specific dimerization activity (with DimB) captures the actual function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Protein binding (GO:0005515) is too general to convey function. The underlying DimA-DimB heterodimerization is better represented by protein dimerization activity, captured in core_functions. Retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16410410" target="_blank" class="term-link">
+                                        PMID:16410410
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DimA and DimB can form homodimeric and heterodimeric complexes in vitro</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045595" target="_blank" class="term-link">
+                                    GO:0045595
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of cell differentiation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14729573" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14729573
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A bZIP/bRLZ transcription factor required for DIF signaling ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q54XG7" data-a="GO:0045595" data-r="PMID:14729573" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DimA is required to integrate DIF-1 signalling and cell-type differentiation; dimA mutants show cell-autonomous defects in cell type differentiation. This broad term is correct but subsumed by the more specific prestalk/prespore differentiation annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate but general; the specific roles in stalk-cell differentiation and prespore repression are captured by more precise terms. Retained as a non-core grouping annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14729573" target="_blank" class="term-link">
+                                        PMID:14729573
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the dimA(-) mutant exhibits cell autonomous</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903013" target="_blank" class="term-link">
+                                    GO:1903013
+                                </a>
+                            </span>
+                            <span class="term-label">response to differentiation-inducing factor 1</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14729573" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14729573
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A bZIP/bRLZ transcription factor required for DIF signaling ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54XG7" data-a="GO:1903013" data-r="PMID:14729573" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DimA is required for every DIF-1 response investigated; the dimA mutant produces DIF-1 but cannot respond to it. This is the defining, core function of DimA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The response to DIF-1 is the central, experimentally defined role of DimA, established by mutant phenotype and by DIF-1-induced nuclear accumulation. A core biological process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14729573" target="_blank" class="term-link">
+                                        PMID:14729573
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the dimA(-) mutant produces DIF-1 but</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16410410" target="_blank" class="term-link">
+                                        PMID:16410410
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">direct regulators of cellular responses to DIF-1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16410410" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16410410
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    bZIP transcription factor interactions regulate DIF response...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54XG7" data-a="GO:0042802" data-r="PMID:16410410" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DimA forms homodimeric complexes in vitro, consistent with bZIP factors binding DNA as dimers. Identical protein binding (homodimerization) is a relevant molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Homodimerization of DimA was directly demonstrated by pull-down assays and is functionally important, as bZIP transcription factors bind DNA as dimers.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16410410" target="_blank" class="term-link">
+                                        PMID:16410410
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DimA and DimB can form homodimeric and heterodimeric complexes in vitro</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043565" target="_blank" class="term-link">
+                                    GO:0043565
+                                </a>
+                            </span>
+                            <span class="term-label">sequence-specific DNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14729573" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14729573
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A bZIP/bRLZ transcription factor required for DIF signaling ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54XG7" data-a="GO:0043565" data-r="PMID:14729573" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct-evidence annotation for sequence-specific DNA binding by the bZIP/bRLZ factor DimA. Core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> DimA is a basic-region leucine-zipper DNA-binding transcription factor; sequence-specific DNA binding is intrinsic to its function as a direct regulator of DIF-1 target genes.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14729573" target="_blank" class="term-link">
+                                        PMID:14729573
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">encodes a bZIP/bRLZ transcription factor, which is</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0012501" target="_blank" class="term-link">
+                                    GO:0012501
+                                </a>
+                            </span>
+                            <span class="term-label">programmed cell death</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16410410" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16410410
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    bZIP transcription factor interactions regulate DIF response...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q54XG7" data-a="GO:0012501" data-r="PMID:16410410" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> In the 8-Br-cAMP monolayer assay DimA is proposed to trigger non-vacuolar cell death (NVCD) as the first step toward stalk-cell formation, linking DimA to a programmed cell death pathway. This is a downstream developmental consequence rather than a core molecular activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> DimA acts upstream of an NVCD/programmed cell death step during stalk-cell differentiation, but this is a peripheral developmental role of the transcription factor rather than its core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16410410" target="_blank" class="term-link">
+                                        PMID:16410410
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The first step would require DimA to trigger NVCD, whereas subsequent vacuolisation requires DimB</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030587" target="_blank" class="term-link">
+                                    GO:0030587
+                                </a>
+                            </span>
+                            <span class="term-label">sorocarp development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14729573" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14729573
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A bZIP/bRLZ transcription factor required for DIF signaling ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q54XG7" data-a="GO:0030587" data-r="PMID:14729573" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> dimA mutants show hallmark developmental morphological defects (long, thin slugs and aberrant culmination) and cell-type differentiation defects, placing DimA within sorocarp (fruiting body) development. A broad developmental grouping term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> DimA affects multicellular development through its role in DIF-1 response and cell-type patterning; sorocarp development is a correct but broad developmental context term, retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14729573" target="_blank" class="term-link">
+                                        PMID:14729573
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the dimA(-) mutant exhibits cell autonomous</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006935" target="_blank" class="term-link">
+                                    GO:0006935
+                                </a>
+                            </span>
+                            <span class="term-label">chemotaxis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16234315" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16234315
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Microarray phenotyping in Dictyostelium reveals a regulon of...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q54XG7" data-a="GO:0006935" data-r="PMID:16234315" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation derives from a large-scale microarray phenotyping study that identified a co-regulated regulon of chemotaxis genes and tested mutants for chemotaxis defects. The cached record is abstract-only and does not describe dimA specifically, but the dictyBase IMP annotation implies a measured chemotaxis phenotype. Chemotaxis is peripheral to DimA&#39;s role as a DIF-1-responsive transcription factor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A chemotaxis phenotype for dimA was inferred from a co-expression/mutant phenotyping screen and is a pleiotropic, non-core role relative to DimA&#39;s central function in DIF-1 signalling and cell-type differentiation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16234315" target="_blank" class="term-link">
+                                        PMID:16234315
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Six mutants exhibited chemotaxis defects</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030435" target="_blank" class="term-link">
+                                    GO:0030435
+                                </a>
+                            </span>
+                            <span class="term-label">sporulation resulting in formation of a cellular spore</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15470429" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15470429
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Pleiotropy as a mechanism to stabilize cooperation.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q54XG7" data-a="GO:0030435" data-r="PMID:15470429" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> In chimaeras, loss of dimA results in exclusion of mutant cells from the spore mass, reflecting the pleiotropic linkage between DimA-dependent prestalk differentiation and spore formation. DimA thus acts upstream of spore formation, but this is a developmental/ecological consequence rather than a core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The connection to sporulation is through DimA&#39;s role in DIF-1 response and cell-fate choice (pleiotropy stabilizing cooperation), not a direct core function of the transcription factor. Retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15470429" target="_blank" class="term-link">
+                                        PMID:15470429
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">lack of the dimA gene results in exclusion from spores</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>DimA is a nuclear bZIP/bRLZ DNA-binding transcription factor that directly regulates transcription of DIF-1 target genes, activating prestalk (pstO) gene expression and repressing prespore gene expression as part of the cellular response to the DIF-1 signal.</h3>
+                <span class="vote-buttons" data-g="Q54XG7" data-a="FUNCTION: DimA is a nuclear bZIP/bRLZ DNA-binding transcript..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                            DNA-binding transcription factor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903013" target="_blank" class="term-link">
+                                response to differentiation-inducing factor 1
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                regulation of DNA-templated transcription
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16410410" target="_blank" class="term-link">
+                                PMID:16410410
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">DimA functions as both an activator of prestalk gene expression and repressor of prespore gene expression</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14729573" target="_blank" class="term-link">
+                                PMID:14729573
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">encodes a bZIP/bRLZ transcription factor, which is</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>DimA binds DNA sequence-specifically as a dimer through its basic region-leucine zipper, forming homodimers and heterodimers with the related bZIP factor DimB; this combinatorial dimerization expands the range of DIF-1 responses it can regulate.</h3>
+                <span class="vote-buttons" data-g="Q54XG7" data-a="FUNCTION: DimA binds DNA sequence-specifically as a dimer th..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046983" target="_blank" class="term-link">
+                            protein dimerization activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16410410" target="_blank" class="term-link">
+                                PMID:16410410
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">DimA and DimB can form homodimeric and heterodimeric complexes in vitro</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14729573" target="_blank" class="term-link">
+                            PMID:14729573
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A bZIP/bRLZ transcription factor required for DIF signaling in Dictyostelium.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">dimA encodes a bZIP/bRLZ transcription factor required for every DIF-1 response investigated.</div>
+
+                        <div class="finding-text">"encodes a bZIP/bRLZ transcription factor, which is"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The dimA mutant produces DIF-1 but cannot respond to it, and shows cell-autonomous cell-type differentiation defects.</div>
+
+                        <div class="finding-text">"the dimA(-) mutant produces DIF-1 but"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">DimA is the key transcriptional regulator integrating DIF-1 signalling and patterning.</div>
+
+                        <div class="finding-text">"the key transcriptional regulator required to integrate DIF-1 signaling"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15470429" target="_blank" class="term-link">
+                            PMID:15470429
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Pleiotropy as a mechanism to stabilize cooperation.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">dimA is required to receive the DIF-1 signal driving prestalk differentiation, and loss of dimA excludes cells from the spore mass.</div>
+
+                        <div class="finding-text">"lack of the dimA gene results in exclusion from spores"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16234315" target="_blank" class="term-link">
+                            PMID:16234315
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Microarray phenotyping in Dictyostelium reveals a regulon of chemotaxis genes.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A co-regulated regulon of chemotaxis genes was identified and mutants tested for chemotaxis defects.</div>
+
+                        <div class="finding-text">"Six mutants exhibited chemotaxis defects"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16410410" target="_blank" class="term-link">
+                            PMID:16410410
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">bZIP transcription factor interactions regulate DIF responses in Dictyostelium.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">DimA and DimB are direct regulators of cellular responses to DIF-1.</div>
+
+                        <div class="finding-text">"direct regulators of cellular responses to DIF-1"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">DimA functions as both an activator of prestalk gene expression and a repressor of prespore gene expression.</div>
+
+                        <div class="finding-text">"DimA functions as both an activator of prestalk gene expression and repressor of prespore gene expression"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">DimA and DimB form homodimeric and heterodimeric complexes in vitro.</div>
+
+                        <div class="finding-text">"DimA and DimB can form homodimeric and heterodimeric complexes in vitro"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Both DimA and DimB rapidly accumulate in the nucleus upon DIF-1 stimulation.</div>
+
+                        <div class="finding-text">"upon DIF-1 stimulation, DimA and DimB rapidly accumulate in the nucleus"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Nuclear accumulation of DimA in response to DIF-1 depends on DimB.</div>
+
+                        <div class="finding-text">"nuclear accumulation of DimA in response to DIF-1 is dependent on DimB"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Spore cell formation is repressed by DimA.</div>
+
+                        <div class="finding-text">"spore cell formation is repressed by DimA"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q54XG7
+gene_symbol: dimA
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:44689
+  label: Dictyostelium discoideum
+description: DimA (Basic-leucine zipper transcription factor A; DIF insensitive
+  mutant A) is a bZIP/bRLZ transcription factor of the social amoeba Dictyostelium
+  discoideum that is required for cellular responses to the chlorinated signalling
+  molecule DIF-1. Acting in the nucleus, DimA binds DNA as a dimer through its basic
+  region-leucine zipper and both activates prestalk (pstO) gene expression and
+  represses prespore gene expression downstream of DIF-1. It forms homodimers and
+  heterodimerizes with the related bZIP factor DimB, and in response to DIF-1 it
+  accumulates rapidly in the nucleus, a relocalization that depends on DimB. Through
+  this transcriptional control DimA integrates DIF-1 signalling with cell-type
+  differentiation and patterning during multicellular development, being required
+  for stalk-cell differentiation and for repression of the spore fate; loss of dimA
+  produces long thin slugs, cell-autonomous differentiation defects, and exclusion
+  of mutant cells from the spore mass.
+existing_annotations:
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Nuclear localization is correct and is directly supported for DimA,
+      which accumulates in the nucleus in response to DIF-1 where it acts as a
+      transcription factor.
+    action: ACCEPT
+    reason: As a bZIP transcription factor DimA acts in the nucleus, consistent with
+      direct evidence of DIF-1-induced nuclear accumulation. The phylogenetic
+      inference agrees with the experimental data for this gene product.
+    supported_by:
+    - reference_id: PMID:16410410
+      supporting_text: upon DIF-1 stimulation, DimA and DimB rapidly accumulate in
+        the nucleus
+- term:
+    id: GO:0010468
+    label: regulation of gene expression
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: DimA regulates the expression of prestalk and prespore genes in
+      response to DIF-1, so regulation of gene expression is correct, though it is
+      a broad grouping term relative to the more specific transcriptional-regulation
+      annotations.
+    action: KEEP_AS_NON_CORE
+    reason: The term is accurate but general; the more specific regulation of
+      DNA-templated transcription (GO:0006355) better captures the core activity.
+      Retained as a valid but non-core grouping annotation.
+    supported_by:
+    - reference_id: PMID:16410410
+      supporting_text: DimA functions as both an activator of prestalk gene
+        expression and repressor of prespore gene expression
+- term:
+    id: GO:0043565
+    label: sequence-specific DNA binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: As a bZIP/bRLZ factor DimA binds DNA sequence-specifically through its
+      basic region. This is a core molecular function.
+    action: ACCEPT
+    reason: DimA is a basic-region leucine-zipper transcription factor; sequence-specific
+      DNA binding is intrinsic to this class and is consistent with its role as a
+      direct transcriptional regulator of DIF-1 target genes.
+    supported_by:
+    - reference_id: PMID:14729573
+      supporting_text: encodes a bZIP/bRLZ transcription factor, which is
+- term:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: DimA is a bZIP DNA-binding transcription factor that activates prestalk
+      and represses prespore genes; this is a core molecular function.
+    action: ACCEPT
+    reason: The InterPro bZIP-based inference matches the experimentally established
+      role of DimA as a direct transcriptional regulator of DIF-1 responsive genes.
+    supported_by:
+    - reference_id: PMID:16410410
+      supporting_text: DimA functions as both an activator of prestalk gene
+        expression and repressor of prespore gene expression
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Nuclear localization based on UniProt subcellular location mapping;
+      correct and supported by direct evidence of DIF-1-induced nuclear accumulation.
+    action: ACCEPT
+    reason: The nucleus is the site of DimA action as a transcription factor, and
+      DimA accumulates there in response to DIF-1.
+    supported_by:
+    - reference_id: PMID:16410410
+      supporting_text: upon DIF-1 stimulation, DimA and DimB rapidly accumulate in
+        the nucleus
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: DimA directly regulates transcription of DIF-1 target genes, activating
+      prestalk and repressing prespore markers. This is a core biological process.
+    action: ACCEPT
+    reason: Consistent with the experimentally established role of DimA as a direct
+      transcriptional regulator downstream of DIF-1.
+    supported_by:
+    - reference_id: PMID:16410410
+      supporting_text: DimA functions as both an activator of prestalk gene
+        expression and repressor of prespore gene expression
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IDA
+  original_reference_id: PMID:16410410
+  qualifier: is_active_in
+  review:
+    summary: Direct evidence that DimA:GFP accumulates in the nucleus upon DIF-1
+      stimulation, where it acts as a transcription factor. Core localization.
+    action: ACCEPT
+    reason: GFP-fusion imaging directly demonstrated rapid, DIF-1-dependent nuclear
+      accumulation of DimA, confirming the nucleus as its site of action.
+    supported_by:
+    - reference_id: PMID:16410410
+      supporting_text: both DimA:GFP and DimB:GFP exhibited nuclear accumulation
+    - reference_id: PMID:16410410
+      supporting_text: nuclear accumulation of DimA in response to DIF-1 is dependent
+        on DimB
+- term:
+    id: GO:0031287
+    label: positive regulation of sorocarp stalk cell differentiation
+  evidence_type: IMP
+  original_reference_id: PMID:16410410
+  qualifier: involved_in
+  review:
+    summary: DimA is required for DIF-1-induced prestalk gene induction and stalk-cell
+      differentiation; dimA mutant cells fail to induce prestalk markers and do not
+      form stalk cells in response to DIF-1.
+    action: ACCEPT
+    reason: DimA acts as an activator of prestalk gene expression and is required
+      for stalk-cell differentiation, a central part of its developmental role.
+    supported_by:
+    - reference_id: PMID:16410410
+      supporting_text: DimA functions as both an activator of prestalk gene
+        expression and repressor of prespore gene expression
+    - reference_id: PMID:16410410
+      supporting_text: prestalk markers are not induced and prespore markers are
+        not repressed
+- term:
+    id: GO:0043944
+    label: negative regulation of asexual sporulation resulting in formation of a
+      cellular spore
+  evidence_type: IMP
+  original_reference_id: PMID:16410410
+  qualifier: involved_in
+  review:
+    summary: DimA represses the prespore/spore fate in response to DIF-1; spore cell
+      formation is repressed by DimA, and dimA mutants fail to repress prespore
+      markers.
+    action: ACCEPT
+    reason: Repression of prespore gene expression and spore formation is a core,
+      experimentally established function of DimA downstream of DIF-1.
+    supported_by:
+    - reference_id: PMID:16410410
+      supporting_text: spore cell formation is repressed by DimA
+    - reference_id: PMID:16410410
+      supporting_text: prestalk markers are not induced and prespore markers are
+        not repressed
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:16410410
+  qualifier: located_in
+  review:
+    summary: In the absence of DIF-1, DimA:GFP is fairly uniformly distributed
+      throughout the cell (including the cytoplasm), redistributing to the nucleus
+      upon DIF-1 stimulation. Cytoplasmic localization is thus the resting-state
+      distribution rather than the functional site of action.
+    action: KEEP_AS_NON_CORE
+    reason: The cytoplasmic localization is directly observed but represents the
+      unstimulated distribution; the functional site of DimA is the nucleus, so this
+      is retained as a non-core annotation.
+    supported_by:
+    - reference_id: PMID:16410410
+      supporting_text: In the absence of DIF-1, GFP was fairly uniformly distributed
+        throughout the cells
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16410410
+  qualifier: enables
+  review:
+    summary: This IPI annotation reflects the direct interaction between DimA and
+      the related bZIP factor DimB, demonstrated by in vitro pull-down assays. The
+      bare protein binding term is uninformative; the more specific dimerization
+      activity (with DimB) captures the actual function.
+    action: KEEP_AS_NON_CORE
+    reason: Protein binding (GO:0005515) is too general to convey function. The
+      underlying DimA-DimB heterodimerization is better represented by protein
+      dimerization activity, captured in core_functions. Retained as non-core.
+    supported_by:
+    - reference_id: PMID:16410410
+      supporting_text: DimA and DimB can form homodimeric and heterodimeric
+        complexes in vitro
+- term:
+    id: GO:0045595
+    label: regulation of cell differentiation
+  evidence_type: IMP
+  original_reference_id: PMID:14729573
+  qualifier: involved_in
+  review:
+    summary: DimA is required to integrate DIF-1 signalling and cell-type
+      differentiation; dimA mutants show cell-autonomous defects in cell type
+      differentiation. This broad term is correct but subsumed by the more specific
+      prestalk/prespore differentiation annotations.
+    action: KEEP_AS_NON_CORE
+    reason: Accurate but general; the specific roles in stalk-cell differentiation
+      and prespore repression are captured by more precise terms. Retained as a
+      non-core grouping annotation.
+    supported_by:
+    - reference_id: PMID:14729573
+      supporting_text: the dimA(-) mutant exhibits cell autonomous
+- term:
+    id: GO:1903013
+    label: response to differentiation-inducing factor 1
+  evidence_type: IMP
+  original_reference_id: PMID:14729573
+  qualifier: involved_in
+  review:
+    summary: DimA is required for every DIF-1 response investigated; the dimA mutant
+      produces DIF-1 but cannot respond to it. This is the defining, core function
+      of DimA.
+    action: ACCEPT
+    reason: The response to DIF-1 is the central, experimentally defined role of
+      DimA, established by mutant phenotype and by DIF-1-induced nuclear
+      accumulation. A core biological process.
+    supported_by:
+    - reference_id: PMID:14729573
+      supporting_text: the dimA(-) mutant produces DIF-1 but
+    - reference_id: PMID:16410410
+      supporting_text: direct regulators of cellular responses to DIF-1
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16410410
+  qualifier: enables
+  review:
+    summary: DimA forms homodimeric complexes in vitro, consistent with bZIP factors
+      binding DNA as dimers. Identical protein binding (homodimerization) is a
+      relevant molecular function.
+    action: ACCEPT
+    reason: Homodimerization of DimA was directly demonstrated by pull-down assays
+      and is functionally important, as bZIP transcription factors bind DNA as
+      dimers.
+    supported_by:
+    - reference_id: PMID:16410410
+      supporting_text: DimA and DimB can form homodimeric and heterodimeric
+        complexes in vitro
+- term:
+    id: GO:0043565
+    label: sequence-specific DNA binding
+  evidence_type: IDA
+  original_reference_id: PMID:14729573
+  qualifier: enables
+  review:
+    summary: Direct-evidence annotation for sequence-specific DNA binding by the
+      bZIP/bRLZ factor DimA. Core molecular function.
+    action: ACCEPT
+    reason: DimA is a basic-region leucine-zipper DNA-binding transcription factor;
+      sequence-specific DNA binding is intrinsic to its function as a direct
+      regulator of DIF-1 target genes.
+    supported_by:
+    - reference_id: PMID:14729573
+      supporting_text: encodes a bZIP/bRLZ transcription factor, which is
+- term:
+    id: GO:0012501
+    label: programmed cell death
+  evidence_type: IMP
+  original_reference_id: PMID:16410410
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: In the 8-Br-cAMP monolayer assay DimA is proposed to trigger
+      non-vacuolar cell death (NVCD) as the first step toward stalk-cell formation,
+      linking DimA to a programmed cell death pathway. This is a downstream
+      developmental consequence rather than a core molecular activity.
+    action: KEEP_AS_NON_CORE
+    reason: DimA acts upstream of an NVCD/programmed cell death step during
+      stalk-cell differentiation, but this is a peripheral developmental role of the
+      transcription factor rather than its core function.
+    supported_by:
+    - reference_id: PMID:16410410
+      supporting_text: The first step would require DimA to trigger NVCD, whereas
+        subsequent vacuolisation requires DimB
+- term:
+    id: GO:0030587
+    label: sorocarp development
+  evidence_type: IMP
+  original_reference_id: PMID:14729573
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: dimA mutants show hallmark developmental morphological defects (long,
+      thin slugs and aberrant culmination) and cell-type differentiation defects,
+      placing DimA within sorocarp (fruiting body) development. A broad developmental
+      grouping term.
+    action: KEEP_AS_NON_CORE
+    reason: DimA affects multicellular development through its role in DIF-1 response
+      and cell-type patterning; sorocarp development is a correct but broad
+      developmental context term, retained as non-core.
+    supported_by:
+    - reference_id: PMID:14729573
+      supporting_text: the dimA(-) mutant exhibits cell autonomous
+- term:
+    id: GO:0006935
+    label: chemotaxis
+  evidence_type: IMP
+  original_reference_id: PMID:16234315
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: This annotation derives from a large-scale microarray phenotyping study
+      that identified a co-regulated regulon of chemotaxis genes and tested mutants
+      for chemotaxis defects. The cached record is abstract-only and does not
+      describe dimA specifically, but the dictyBase IMP annotation implies a
+      measured chemotaxis phenotype. Chemotaxis is peripheral to DimA&#39;s role as a
+      DIF-1-responsive transcription factor.
+    action: KEEP_AS_NON_CORE
+    reason: A chemotaxis phenotype for dimA was inferred from a co-expression/mutant
+      phenotyping screen and is a pleiotropic, non-core role relative to DimA&#39;s
+      central function in DIF-1 signalling and cell-type differentiation.
+    supported_by:
+    - reference_id: PMID:16234315
+      supporting_text: Six mutants exhibited chemotaxis defects
+- term:
+    id: GO:0030435
+    label: sporulation resulting in formation of a cellular spore
+  evidence_type: IMP
+  original_reference_id: PMID:15470429
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: In chimaeras, loss of dimA results in exclusion of mutant cells from
+      the spore mass, reflecting the pleiotropic linkage between DimA-dependent
+      prestalk differentiation and spore formation. DimA thus acts upstream of
+      spore formation, but this is a developmental/ecological consequence rather
+      than a core molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: The connection to sporulation is through DimA&#39;s role in DIF-1 response
+      and cell-fate choice (pleiotropy stabilizing cooperation), not a direct core
+      function of the transcription factor. Retained as non-core.
+    supported_by:
+    - reference_id: PMID:15470429
+      supporting_text: lack of the dimA gene results in exclusion from spores
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: PMID:14729573
+  title: A bZIP/bRLZ transcription factor required for DIF signaling in Dictyostelium.
+  findings:
+  - statement: dimA encodes a bZIP/bRLZ transcription factor required for every DIF-1
+      response investigated.
+    supporting_text: encodes a bZIP/bRLZ transcription factor, which is
+  - statement: The dimA mutant produces DIF-1 but cannot respond to it, and shows
+      cell-autonomous cell-type differentiation defects.
+    supporting_text: the dimA(-) mutant produces DIF-1 but
+  - statement: DimA is the key transcriptional regulator integrating DIF-1 signalling
+      and patterning.
+    supporting_text: the key transcriptional regulator required to integrate DIF-1
+      signaling
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Primary identification of dimA; abstract-only in cache but the
+      abstract directly establishes the bZIP transcription factor identity and the
+      DIF-1 response requirement. Experimental (IMP/IDA) annotations rest on the
+      full text read by the curator.
+- id: PMID:15470429
+  title: Pleiotropy as a mechanism to stabilize cooperation.
+  findings:
+  - statement: dimA is required to receive the DIF-1 signal driving prestalk
+      differentiation, and loss of dimA excludes cells from the spore mass.
+    supporting_text: lack of the dimA gene results in exclusion from spores
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Establishes the pleiotropic link between DimA-dependent prestalk
+      differentiation and spore formation; supports the acts_upstream_of_or_within
+      sporulation annotation as a non-core, developmental role.
+- id: PMID:16234315
+  title: Microarray phenotyping in Dictyostelium reveals a regulon of chemotaxis genes.
+  findings:
+  - statement: A co-regulated regulon of chemotaxis genes was identified and mutants
+      tested for chemotaxis defects.
+    supporting_text: Six mutants exhibited chemotaxis defects
+  reference_review:
+    relevance: LOW
+    correctness: UNVERIFIED
+    review_notes: Abstract-only; the abstract does not name dimA. The dictyBase IMP
+      chemotaxis annotation implies dimA was among the tested mutants, but the
+      specific phenotype cannot be verified from the cached record. Treated as a
+      peripheral, non-core role.
+- id: PMID:16410410
+  title: bZIP transcription factor interactions regulate DIF responses in Dictyostelium.
+  findings:
+  - statement: DimA and DimB are direct regulators of cellular responses to DIF-1.
+    supporting_text: direct regulators of cellular responses to DIF-1
+  - statement: DimA functions as both an activator of prestalk gene expression and a
+      repressor of prespore gene expression.
+    supporting_text: DimA functions as both an activator of prestalk gene expression
+      and repressor of prespore gene expression
+  - statement: DimA and DimB form homodimeric and heterodimeric complexes in vitro.
+    supporting_text: DimA and DimB can form homodimeric and heterodimeric complexes
+      in vitro
+  - statement: Both DimA and DimB rapidly accumulate in the nucleus upon DIF-1
+      stimulation.
+    supporting_text: upon DIF-1 stimulation, DimA and DimB rapidly accumulate in the
+      nucleus
+  - statement: Nuclear accumulation of DimA in response to DIF-1 depends on DimB.
+    supporting_text: nuclear accumulation of DimA in response to DIF-1 is dependent
+      on DimB
+  - statement: Spore cell formation is repressed by DimA.
+    supporting_text: spore cell formation is repressed by DimA
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full-text available and PubMed-verified. Directly supports DimA&#39;s
+      nuclear localization, DIF-1-induced nuclear accumulation (DimB-dependent),
+      homo/heterodimerization with DimB, and activator/repressor roles in prestalk
+      vs prespore gene expression.
+core_functions:
+- description: DimA is a nuclear bZIP/bRLZ DNA-binding transcription factor that
+    directly regulates transcription of DIF-1 target genes, activating prestalk
+    (pstO) gene expression and repressing prespore gene expression as part of the
+    cellular response to the DIF-1 signal.
+  molecular_function:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  directly_involved_in:
+  - id: GO:1903013
+    label: response to differentiation-inducing factor 1
+  - id: GO:0006355
+    label: regulation of DNA-templated transcription
+  supported_by:
+  - reference_id: PMID:16410410
+    supporting_text: DimA functions as both an activator of prestalk gene expression
+      and repressor of prespore gene expression
+  - reference_id: PMID:14729573
+    supporting_text: encodes a bZIP/bRLZ transcription factor, which is
+- description: DimA binds DNA sequence-specifically as a dimer through its basic
+    region-leucine zipper, forming homodimers and heterodimers with the related bZIP
+    factor DimB; this combinatorial dimerization expands the range of DIF-1 responses
+    it can regulate.
+  molecular_function:
+    id: GO:0046983
+    label: protein dimerization activity
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: PMID:16410410
+    supporting_text: DimA and DimB can form homodimeric and heterodimeric complexes
+      in vitro
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

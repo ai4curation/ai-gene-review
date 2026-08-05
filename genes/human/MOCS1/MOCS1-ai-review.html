@@ -1,0 +1,4567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOCS1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MOCS1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9NZB8" target="_blank" class="term-link">
+                        Q9NZB8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "MOCS1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9NZB8" data-a="DESCRIPTION: MOCS1 encodes the bifunctional enzyme system that ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>MOCS1 encodes the bifunctional enzyme system that catalyses the first, committed step of molybdenum cofactor (Moco) biosynthesis: the conversion of GTP to cyclic pyranopterin monophosphate (cPMP, &#34;precursor Z&#34;). The single MOCS1 gene is bicistronic and extensively alternatively spliced, producing two functionally distinct protein products, MOCS1A and MOCS1B. MOCS1A (N-terminal region) is a radical S-adenosyl-L-methionine (SAM) enzyme that binds two [4Fe-4S] clusters and acts as a GTP 3&#39;,8-cyclase (EC 4.1.99.22), generating the intermediate (8S)-3&#39;,8-cyclo-7,8-dihydroguanosine 5&#39;-triphosphate. MOCS1B (C-terminal region, a MoaC-family enzyme) is cyclic pyranopterin monophosphate synthase (EC 4.6.1.17), which converts that intermediate to cPMP. The mature catalytic proteins act primarily in the mitochondrial matrix, reached via alternative-splicing-dependent targeting and, for MOCS1AB fusion products, proteolytic maturation after mitochondrial import; some N-terminal splice variants remain cytosolic. cPMP is subsequently processed by MOCS2, MOCS3 and gephyrin to the mature molybdenum cofactor required by sulfite oxidase, xanthine dehydrogenase and aldehyde oxidase. Loss-of-function variants in MOCS1 cause molybdenum cofactor deficiency type A, a severe autosomal-recessive neonatal encephalopathy with intractable seizures, resembling isolated sulfite oxidase deficiency; early cPMP (fosdenopterin) replacement can be therapeutic.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061798" target="_blank" class="term-link">
+                                    GO:0061798
+                                </a>
+                            </span>
+                            <span class="term-label">GTP 3&#39;,8&#39;-cyclase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0061798" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of the MOCS1A activity (GTP 3&#39;,8-cyclase, EC 4.1.99.22). This is a core molecular function of MOCS1 and is directly supported by experimental annotations (EXP, PMID:31996372) and by UniProt catalytic-activity records.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/MOCS1/MOCS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">MOCS1A catalyzes the cyclization of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061799" target="_blank" class="term-link">
+                                    GO:0061799
+                                </a>
+                            </span>
+                            <span class="term-label">cyclic pyranopterin monophosphate synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0061799" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of the MOCS1B activity (cyclic pyranopterin monophosphate synthase, EC 4.6.1.17). Core molecular function, directly supported by experimental annotations (EXP PMID:23627491; IGI/IMP).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/MOCS1/MOCS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">MOCS1B</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006777" target="_blank" class="term-link">
+                                    GO:0006777
+                                </a>
+                            </span>
+                            <span class="term-label">Mo-molybdopterin cofactor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0006777" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of the pathway MOCS1 initiates. This is the core biological process and is strongly supported by experimental and patient-mutation (IMP/IDA) annotations.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root-level &#34;catalytic activity&#34; from InterPro2GO. MOCS1 is an enzyme, so this is not wrong, but it is an uninformative parent that is fully subsumed by the specific GTP 3&#39;,8-cyclase (GO:0061798) and cyclic pyranopterin monophosphate synthase (GO:0061799) annotations. Over-annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasm from UniProt subcellular-location mapping. Consistent with the cytosolic N-terminal splice variants (e.g. isoform 2/3) and the pre-import pool, but the core catalytic site is the mitochondrial matrix. General term; kept as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/MOCS1/MOCS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: [Isoform 2]: Cytoplasm, cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0005759" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mitochondrial matrix from UniProt subcellular-location mapping. This is the core site of MOCS1A/MOCS1B catalysis and is experimentally supported (IDA, PMID:31996372). Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/MOCS1/MOCS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: [Isoform MOCS1A]: Mitochondrion matrix</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0005829" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol from UniProt subcellular-location mapping. Reflects the cytosolic splice variants (isoform 2 = cytosol); the mature catalytic proteins act in the mitochondrial matrix. Kept as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/MOCS1/MOCS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: [Isoform 2]: Cytoplasm, cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006777" target="_blank" class="term-link">
+                                    GO:0006777
+                                </a>
+                            </span>
+                            <span class="term-label">Mo-molybdopterin cofactor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0006777" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO inference of the core Moco biosynthetic process. Redundant with the experimental/IBA annotations to the same term. Accept as core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032324" target="_blank" class="term-link">
+                                    GO:0032324
+                                </a>
+                            </span>
+                            <span class="term-label">molybdopterin cofactor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0032324" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA (machine-learning) inference to a broader/legacy sibling of GO:0006777. Not wrong, but redundant with the more specific Mo-molybdopterin cofactor biosynthetic process (GO:0006777). Kept as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0046872" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic &#34;metal ion binding&#34; from InterPro2GO. MOCS1A binds iron via its [4Fe-4S] clusters, so this is not wrong, but it is an uninformative parent of the specific 4Fe-4S cluster binding (GO:0051539). Kept as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051536" target="_blank" class="term-link">
+                                    GO:0051536
+                                </a>
+                            </span>
+                            <span class="term-label">iron-sulfur cluster binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0051536" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Iron-sulfur cluster binding from InterPro2GO. Correct but a direct parent of the more specific 4 iron, 4 sulfur cluster binding (GO:0051539), which is experimentally characterized. Kept as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051539" target="_blank" class="term-link">
+                                    GO:0051539
+                                </a>
+                            </span>
+                            <span class="term-label">4 iron, 4 sulfur cluster binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0051539" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> 4Fe-4S cluster binding from InterPro2GO. MOCS1A is a radical-SAM enzyme that binds two [4Fe-4S] clusters; this is experimentally characterized (PMID:15180982). Core supporting molecular function. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/MOCS1/MOCS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Binds 2 [4Fe-4S] clusters.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15180982" target="_blank" class="term-link">
+                                        PMID:15180982
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">yield a form containing</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061798" target="_blank" class="term-link">
+                                    GO:0061798
+                                </a>
+                            </span>
+                            <span class="term-label">GTP 3&#39;,8&#39;-cyclase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0061798" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated (EC/Rhea-based) inference of the MOCS1A GTP 3&#39;,8-cyclase activity. Consistent with the experimental EXP annotation to the same term. Accept as core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061799" target="_blank" class="term-link">
+                                    GO:0061799
+                                </a>
+                            </span>
+                            <span class="term-label">cyclic pyranopterin monophosphate synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0061799" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated (EC/Rhea-based) inference of the MOCS1B cPMP synthase activity. Consistent with the experimental EXP annotation to the same term. Accept as core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0005829" data-r="GO_REF:0000052" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HPA immunofluorescence localizing MOCS1 to the cytosol. Consistent with the cytosolic splice variants and pre-import pool; the mature catalytic proteins act in the mitochondrial matrix. Experimental localization retained as non-core relative to the matrix site of catalysis.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31996372" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31996372
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Alternative splicing of the bicistronic gene molybdenum cofa...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0005737" data-r="PMID:31996372" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (fluorescence microscopy/cell fractionation) localization. PMID:31996372 showed that some N-terminal (exon 1b) MOCS1A splice variants remain cytosolic while others (exon 1a) go to the mitochondrial matrix. Cytoplasm is correct for the cytosolic variants but the core catalytic pool is the mitochondrial matrix; kept as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31996372" target="_blank" class="term-link">
+                                        PMID:31996372
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">either localize</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061798" target="_blank" class="term-link">
+                                    GO:0061798
+                                </a>
+                            </span>
+                            <span class="term-label">GTP 3&#39;,8&#39;-cyclase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31996372" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31996372
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Alternative splicing of the bicistronic gene molybdenum cofa...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0061798" data-r="PMID:31996372" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental support for the MOCS1A GTP 3&#39;,8-cyclase activity (EC 4.1.99.22). PMID:31996372 assayed catalytic activity of MOCS1A splice isoforms; UniProt cites this paper for the EC 4.1.99.22 reaction. Core molecular function. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/MOCS1/MOCS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=4.1.99.22 {ECO:0000269|PubMed:31996372}</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061799" target="_blank" class="term-link">
+                                    GO:0061799
+                                </a>
+                            </span>
+                            <span class="term-label">cyclic pyranopterin monophosphate synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23627491" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23627491
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of a cyclic nucleotide as a cryptic intermedi...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0061799" data-r="PMID:23627491" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental support for the MOCS1B cyclic pyranopterin monophosphate synthase activity (EC 4.6.1.17). PMID:23627491 directly assayed the human homolog MOCS1B, showing it converts 3&#39;,8-cH2GTP to cPMP (Km 0.79 uM). Core molecular function. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23627491" target="_blank" class="term-link">
+                                        PMID:23627491
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">its human homologue, MOCS1B, with</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31996372" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31996372
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Alternative splicing of the bicistronic gene molybdenum cofa...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0005759" data-r="PMID:31996372" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental localization of the mature MOCS1A/MOCS1B proteins to the mitochondrial matrix (is_active_in). PMID:31996372 showed MOCS1AB is proteolytically cleaved within mitochondria to give matrix-localized MOCS1B. This is the core site of cPMP biosynthesis. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31996372" target="_blank" class="term-link">
+                                        PMID:31996372
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">mitochondrial matrix localization of the MOCS1B domain.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006777" target="_blank" class="term-link">
+                                    GO:0006777
+                                </a>
+                            </span>
+                            <span class="term-label">Mo-molybdopterin cofactor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15180982" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15180982
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of MOCS1A, an oxygen-sensitive iron-sulfur ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0006777" data-r="PMID:15180982" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental support for MOCS1 involvement in Moco biosynthesis. PMID:15180982 characterized MOCS1A as the oxygen-sensitive Fe-S radical-SAM enzyme catalyzing the first step; the conserved cysteines are essential for precursor-Z synthesis in vivo. Core biological process. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15180982" target="_blank" class="term-link">
+                                        PMID:15180982
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">essential for synthesis of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061799" target="_blank" class="term-link">
+                                    GO:0061799
+                                </a>
+                            </span>
+                            <span class="term-label">cyclic pyranopterin monophosphate synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15180982" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15180982
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of MOCS1A, an oxygen-sensitive iron-sulfur ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0061799" data-r="PMID:15180982" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutational (IMP) support that MOCS1 activity generating precursor Z depends on the conserved MOCS1A cysteines; associated in GOA with the cPMP synthase (MOCS1B) step of the same GTP-to-cPMP conversion. Core molecular function of MOCS1. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15180982" target="_blank" class="term-link">
+                                        PMID:15180982
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">essential for synthesis of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006777" target="_blank" class="term-link">
+                                    GO:0006777
+                                </a>
+                            </span>
+                            <span class="term-label">Mo-molybdopterin cofactor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29368224" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29368224
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A mild case of molybdenum cofactor deficiency defines an alt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0006777" data-r="PMID:29368224" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutational (IMP) support from a mild MoCD patient (c.1338delG). PMID:29368224 showed the truncation removes MOCS1B, and residual MOCS1B from translation re-initiation partially rescues Moco synthesis. Core biological process. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29368224" target="_blank" class="term-link">
+                                        PMID:29368224
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">confirmed activity of MOCS1B, but not of the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061799" target="_blank" class="term-link">
+                                    GO:0061799
+                                </a>
+                            </span>
+                            <span class="term-label">cyclic pyranopterin monophosphate synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29368224" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29368224
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A mild case of molybdenum cofactor deficiency defines an alt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0061799" data-r="PMID:29368224" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Genetic-interaction (IGI, with E. coli MoaC UniProtKB:P0A738) support for the MOCS1B cPMP synthase activity. PMID:29368224 functionally confirmed activity of the residual MOCS1B protein. Core molecular function. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29368224" target="_blank" class="term-link">
+                                        PMID:29368224
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">confirmed activity of MOCS1B, but not of the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0005739" data-r="PMID:34800366" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mitochondrial-proteome detection (PMID:34800366) placing MOCS1 in the mitochondrion. Consistent with the experimentally established mitochondrial matrix localization but a general term from a proteome-wide screen. Kept as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-947535
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0005829" data-r="Reactome:R-HSA-947535" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) places the GTP-to-precursor-Z reaction in the cytosol. This predates the demonstration (PMID:31996372) that the mature catalytic MOCS1A/MOCS1B proteins act in the mitochondrial matrix; consistent with the cytosolic splice variants. Kept as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006777" target="_blank" class="term-link">
+                                    GO:0006777
+                                </a>
+                            </span>
+                            <span class="term-label">Mo-molybdopterin cofactor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12754701" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12754701
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in the molybdenum cofactor biosynthetic genes MOCS...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0006777" data-r="PMID:12754701" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable author statement (review, PMID:12754701) that MOCS1 encodes the first enzymes of Moco biosynthesis. Core biological process. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12754701" target="_blank" class="term-link">
+                                        PMID:12754701
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">results primarily from the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006777" target="_blank" class="term-link">
+                                    GO:0006777
+                                </a>
+                            </span>
+                            <span class="term-label">Mo-molybdopterin cofactor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16021469" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16021469
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ten novel mutations in the molybdenum cofactor genes MOCS1 a...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0006777" data-r="PMID:16021469" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutational (IMP) support from disease-mutation analysis (PMID:16021469) confirming MOCS1 involvement in Moco biosynthesis. Core biological process. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16021469" target="_blank" class="term-link">
+                                        PMID:16021469
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">result in a lethal</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006777" target="_blank" class="term-link">
+                                    GO:0006777
+                                </a>
+                            </span>
+                            <span class="term-label">Mo-molybdopterin cofactor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9731530" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9731530
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in a polycistronic nuclear gene associated with mo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0006777" data-r="PMID:9731530" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutational (IMP) support from the original disease-gene identification (PMID:9731530): mutations in both MOCS1 ORFs (moaA/moaC homologs) confirm their functional role in Moco synthesis. Core biological process. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9731530" target="_blank" class="term-link">
+                                        PMID:9731530
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">confirm the functional role of both ORFs</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006777" target="_blank" class="term-link">
+                                    GO:0006777
+                                </a>
+                            </span>
+                            <span class="term-label">Mo-molybdopterin cofactor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9921896" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9921896
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genomic structure and mutational spectrum of the bicistronic...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:0006777" data-r="PMID:9921896" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutational (IMP) support from genomic/mutational-spectrum analysis (PMID:9921896) confirming MOCS1 as the molybdenum cofactor deficiency type A gene. Core biological process. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9921896" target="_blank" class="term-link">
+                                        PMID:9921896
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the first two enzymes</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1904047" target="_blank" class="term-link">
+                                    GO:1904047
+                                </a>
+                            </span>
+                            <span class="term-label">S-adenosyl-L-methionine binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000003
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZB8" data-a="GO:1904047" data-r="GO_REF:0000003" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MOCS1A is a radical-SAM enzyme that uses S-adenosyl-L-methionine as the radical-generating cosubstrate (UniProt BINDING residues 86 and 127; Ensembl-projected IEA in the UniProt DR block, not present in this GOA snapshot). Included here as a NEW supporting molecular function of MOCS1A.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/MOCS1/MOCS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">/ligand=&#34;S-adenosyl-L-methionine&#34;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15180982" target="_blank" class="term-link">
+                                        PMID:15180982
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">S-adenosylmethionine (AdoMet)-dependent radical enzymes</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>MOCS1A (N-terminal region) is a radical S-adenosyl-L-methionine enzyme that catalyses the first sub-step of molybdenum cofactor biosynthesis, converting GTP to (8S)-3&#39;,8-cyclo-7,8-dihydroguanosine 5&#39;-triphosphate (GTP 3&#39;,8-cyclase, EC 4.1.99.22), using two [4Fe-4S] clusters and SAM.</h3>
+                <span class="vote-buttons" data-g="Q9NZB8" data-a="FUNCTION: MOCS1A (N-terminal region) is a radical S-adenosyl..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061798" target="_blank" class="term-link">
+                            GTP 3&#39;,8&#39;-cyclase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006777" target="_blank" class="term-link">
+                                Mo-molybdopterin cofactor biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/MOCS1/MOCS1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">EC=4.1.99.22 {ECO:0000269|PubMed:31996372}</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15180982" target="_blank" class="term-link">
+                                PMID:15180982
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">essential for synthesis of</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>MOCS1A binds two [4Fe-4S] clusters (one 4Fe-4S-S-AdoMet cluster and one binding the GTP-derived substrate), which are required for the radical-SAM GTP 3&#39;,8-cyclase reaction.</h3>
+                <span class="vote-buttons" data-g="Q9NZB8" data-a="FUNCTION: MOCS1A binds two [4Fe-4S] clusters (one 4Fe-4S-S-A..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051539" target="_blank" class="term-link">
+                            4 iron, 4 sulfur cluster binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/MOCS1/MOCS1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Binds 2 [4Fe-4S] clusters.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15180982" target="_blank" class="term-link">
+                                PMID:15180982
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">yield a form containing</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>MOCS1A uses S-adenosyl-L-methionine as the radical-generating cosubstrate: the [4Fe-4S] cluster reductively cleaves SAM to a 5&#39;-deoxyadenosyl radical that initiates the C-C bond formation converting GTP to the cyclic intermediate.</h3>
+                <span class="vote-buttons" data-g="Q9NZB8" data-a="FUNCTION: MOCS1A uses S-adenosyl-L-methionine as the radical..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1904047" target="_blank" class="term-link">
+                            S-adenosyl-L-methionine binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/MOCS1/MOCS1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">/ligand=&#34;S-adenosyl-L-methionine&#34;</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15180982" target="_blank" class="term-link">
+                                PMID:15180982
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">S-adenosylmethionine (AdoMet)-dependent radical enzymes</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>MOCS1B (C-terminal region, a MoaC-family enzyme) is cyclic pyranopterin monophosphate synthase (EC 4.6.1.17), converting (8S)-3&#39;,8-cyclo-7,8-dihydroguanosine 5&#39;-triphosphate to cyclic pyranopterin monophosphate (cPMP, precursor Z), completing the first step of Moco biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q9NZB8" data-a="FUNCTION: MOCS1B (C-terminal region, a MoaC-family enzyme) i..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061799" target="_blank" class="term-link">
+                            cyclic pyranopterin monophosphate synthase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006777" target="_blank" class="term-link">
+                                Mo-molybdopterin cofactor biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/MOCS1/MOCS1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">belongs to the MoaC family.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23627491" target="_blank" class="term-link">
+                                PMID:23627491
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">its human homologue, MOCS1B, with</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on Ensembl Compara projection</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12754701" target="_blank" class="term-link">
+                            PMID:12754701
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mutations in the molybdenum cofactor biosynthetic genes MOCS1, MOCS2, and GEPH.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15180982" target="_blank" class="term-link">
+                            PMID:15180982
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Characterization of MOCS1A, an oxygen-sensitive iron-sulfur protein involved in human molybdenum cofactor biosynthesis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16021469" target="_blank" class="term-link">
+                            PMID:16021469
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Ten novel mutations in the molybdenum cofactor genes MOCS1 and MOCS2 and in vitro characterization of a MOCS2 mutation that abolishes the binding ability of molybdopterin synthase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23627491" target="_blank" class="term-link">
+                            PMID:23627491
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification of a cyclic nucleotide as a cryptic intermediate in molybdenum cofactor biosynthesis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29368224" target="_blank" class="term-link">
+                            PMID:29368224
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A mild case of molybdenum cofactor deficiency defines an alternative route of MOCS1 protein maturation.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31996372" target="_blank" class="term-link">
+                            PMID:31996372
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Alternative splicing of the bicistronic gene molybdenum cofactor synthesis 1 (MOCS1) uncovers a novel mitochondrial protein maturation mechanism.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9731530" target="_blank" class="term-link">
+                            PMID:9731530
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mutations in a polycistronic nuclear gene associated with molybdenum cofactor deficiency.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9921896" target="_blank" class="term-link">
+                            PMID:9921896
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genomic structure and mutational spectrum of the bicistronic MOCS1 gene defective in molybdenum cofactor deficiency type A.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-947535
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cyclisation of GTP to precursor Z</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(MOCS1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9NZB8" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="mocs1-human-review-notes">MOCS1 (human) review notes</h1>
+<p>UniProt: Q9NZB8 (MOCS1_HUMAN). HGNC:7190. Gene on chr 6. All quotes below are grounded in<br />
+the local files <code>genes/human/MOCS1/MOCS1-uniprot.txt</code>, <code>genes/human/MOCS1/MOCS1-goa.tsv</code>, and<br />
+cached <code>publications/PMID_*.md</code>.</p>
+<h2 id="summary-of-biology">Summary of biology</h2>
+<p>MOCS1 encodes the enzyme(s) that catalyse the <strong>first step of molybdenum cofactor (Moco)<br />
+biosynthesis</strong>: conversion of GTP to cyclic pyranopterin monophosphate (cPMP, "precursor Z").<br />
+It is a <strong>bicistronic / alternatively-spliced gene</strong> producing two functionally distinct<br />
+products, MOCS1A and MOCS1B, that together carry out this two-part reaction<br />
+[file:human/MOCS1/MOCS1-uniprot.txt "Isoform MOCS1A and isoform MOCS1B probably form a complex<br />
+that catalyzes the conversion of 5'-GTP to cyclic pyranopterin"].</p>
+<ul>
+<li><strong>MOCS1A</strong> (N-terminal region, aa 1–383) = <strong>GTP 3',8-cyclase</strong>, EC 4.1.99.22 /<br />
+  GO:0061798. It is a <strong>radical-SAM enzyme</strong> binding <strong>two [4Fe-4S] clusters</strong> (one 4Fe-4S–<br />
+  S-AdoMet cluster, one binding the GTP-derived substrate). It makes<br />
+  (8S)-3',8-cyclo-7,8-dihydroguanosine 5'-triphosphate.<br />
+  [file:human/MOCS1/MOCS1-uniprot.txt "MOCS1A catalyzes the cyclization of\nGTP to (8S)-3',8-cyclo-7,8-dihydroguanosine 5'-triphosphate"]<br />
+  [file:human/MOCS1/MOCS1-uniprot.txt "Binds 2 [4Fe-4S] clusters."]</li>
+<li><strong>MOCS1B</strong> (C-terminal region, aa 414–636) = <strong>cyclic pyranopterin monophosphate synthase</strong>,<br />
+  EC 4.6.1.17 / GO:0061799. It converts (8S)-3',8-cyclo-7,8-dihydroguanosine 5'-triphosphate<br />
+  to cPMP. Belongs to the MoaC family.<br />
+  [file:human/MOCS1/MOCS1-uniprot.txt "MOCS1B\ncatalyzes the subsequent conversion of (8S)-3',8-cyclo-7,8-\ndihydroguanosine 5'-triphosphate to cPMP"]</li>
+</ul>
+<p>Domain architecture (UniProt FT): TRANSIT 1..21 Mitochondrion; REGION 1..383 = MOCS1A;<br />
+DOMAIN 64..277 Radical SAM core; REGION 414..636 = MOCS1B; ACT_SITE 606 "For MOCS1B activity".<br />
+[file:human/MOCS1/MOCS1-uniprot.txt "In the N-terminal section; belongs to the radical SAM\nsuperfamily. MoaA family."]<br />
+[file:human/MOCS1/MOCS1-uniprot.txt "In the C-terminal section; belongs to the MoaC family."]</p>
+<h2 id="subcellular-localization">Subcellular localization</h2>
+<p>UniProt subcellular location: mitochondrial matrix for isoforms MOCS1A, MOCS1B, 9, 8; but<br />
+isoform 2 = cytosol and isoform 3 = cytoplasm (aggregates).<br />
+[file:human/MOCS1/MOCS1-uniprot.txt "SUBCELLULAR LOCATION: [Isoform MOCS1A]: Mitochondrion matrix"]<br />
+[file:human/MOCS1/MOCS1-uniprot.txt "SUBCELLULAR LOCATION: [Isoform 2]: Cytoplasm, cytosol"]</p>
+<ul>
+<li>PMID:31996372 (Mayr, Röper, Schwarz 2020, J Biol Chem) established that MOCS1A/MOCS1B<br />
+  proteins localize to the <strong>mitochondrial matrix</strong>, with a novel maturation mechanism: type<br />
+  I splice variants either go to the mitochondrial matrix (exon 1a) or stay cytosolic (exon<br />
+  1b); MOCS1AB variants are targeted to mitochondria independently of exon 1, and within<br />
+  mitochondria MOCS1AB is proteolytically cleaved to release matrix MOCS1B.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/31996372" title="type I splice variants (MOCS1A) either localize\nto the mitochondrial matrix (exon 1a) or remain cytosolic (exon 1b)">PMID:31996372</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/31996372" title="Within mitochondria, MOCS1AB underwent proteolytic cleavage resulting in\nmitochondrial matrix localization of the MOCS1B domain.">PMID:31996372</a></li>
+<li>The cytosol IDA (GO:0005829, HPA GO_REF:0000052) and IEA cytoplasm/cytosol annotations are<br />
+  consistent with the cytosolic isoforms (2/3) and with the pre-import/cytosolic pool, so they<br />
+  are retained as non-core relative to the matrix site of catalysis.</li>
+<li>Mitochondrion HTP (GO:0005739, PMID:34800366) is a high-throughput mitochondrial proteome<br />
+  study; consistent with the matrix localization but non-core (general term, HTP).</li>
+</ul>
+<h2 id="molecular-function-evidence">Molecular function evidence</h2>
+<ul>
+<li><strong>GTP 3',8'-cyclase (GO:0061798, MOCS1A)</strong> — EC 4.1.99.22, verified in vitro.<br />
+  UniProt CATALYTIC ACTIVITY [Isoform MOCS1A]: GTP + AH2 + SAM = (8S)-3',8-cyclo-7,8-<br />
+  dihydroguanosine 5'-triphosphate + 5'-deoxyadenosine + L-methionine + A + H(+),<br />
+  EC=4.1.99.22, Evidence ECO:0000269|PubMed:31996372.<br />
+  [file:human/MOCS1/MOCS1-uniprot.txt "EC=4.1.99.22 {ECO:0000269|PubMed:31996372}"]<br />
+  GOA has an EXP annotation to GO:0061798 with PMID:31996372.</li>
+<li><strong>cyclic pyranopterin monophosphate synthase (GO:0061799, MOCS1B)</strong> — EC 4.6.1.17.<br />
+  PMID:23627491 (Hover et al. 2013, J Am Chem Soc; full text available) directly assays the<br />
+<strong>human homolog MOCS1B</strong>, showing it converts 3',8-cH2GTP to cPMP with Km 0.79 µM.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/23627491" title="The isolated \n3',8-cH2GTP was converted to cPMP by MoaC or its human homologue, MOCS1B, with \nhigh specificities (Km &lt; 0.060 μM and 0.79 ± 0.24 μM for MoaC and MOCS1B, \nrespectively)">PMID:23627491</a><br />
+  GOA EXP GO:0061799 with PMID:23627491, plus IGI (PMID:29368224, with E. coli MoaC<br />
+  UniProtKB:P0A738) and IMP (PMID:15180982) support the same activity.</li>
+<li><strong>4Fe-4S cluster binding (GO:0051539)</strong> — PMID:15180982 (Hänzelmann et al. 2004) characterized<br />
+  MOCS1A as an oxygen-sensitive Fe-S protein binding two [4Fe-4S] clusters, each ligated by<br />
+  three cysteines; all conserved cysteines are essential for precursor-Z synthesis in vivo.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/15180982" title="MOCS1A could \nbe reconstituted in vitro under anaerobic conditions to yield a form containing \ntwo [4Fe-4S](2+) clusters.">PMID:15180982</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/15180982" title="A redox-active [4Fe-4S](2+,+) cluster is ligated by an N-terminal \nCX(3)CX(2)C motif as is the case with all other AdoMet-dependent radical enzymes">PMID:15180982</a><br />
+  UniProt COFACTOR [Isoform MOCS1A] Name=[4Fe-4S] cluster, Note "Binds 2 [4Fe-4S] clusters."<br />
+  GOA IEA GO:0051539 is well supported; GO:0051536 (parent) and GO:0046872 (metal ion binding)<br />
+  are broader/redundant parents.</li>
+<li><strong>S-adenosyl-L-methionine binding (GO:1904047)</strong> — not in the GOA snapshot's core rows but in<br />
+  the UniProt DR block (IEA:Ensembl). SAM is a cosubstrate of the radical-SAM MOCS1A reaction;<br />
+  UniProt has BINDING 86 and BINDING 127 to S-adenosyl-L-methionine. Included in core_functions<br />
+  as a supporting activity of MOCS1A.<br />
+  [file:human/MOCS1/MOCS1-uniprot.txt "/ligand=\"S-adenosyl-L-methionine\""]</li>
+</ul>
+<h2 id="biological-process-disease">Biological process / disease</h2>
+<ul>
+<li><strong>Mo-molybdopterin cofactor biosynthetic process (GO:0006777)</strong> — the pathway MOCS1 initiates.<br />
+  Strong experimental (IMP/IDA) and mutational support; this is the core BP.<br />
+  UniProt: PATHWAY "Cofactor biosynthesis; molybdopterin biosynthesis."<br />
+  [file:human/MOCS1/MOCS1-uniprot.txt "The first step, the conversion of GTP to cyclic pyranopterin"]<br />
+  IMP annotations to GO:0006777 rest on patient-mutation studies:</li>
+<li>PMID:9731530 (Reiss et al. 1998, Nat Genet) — first identification of MOCS1 as the<br />
+    disease gene; mutations in both ORFs (moaA/moaC homologs) in MoCo-deficient patients.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/9731530" title="Mutations can be found in the majority of \nMoCo-deficient patients that confirm the functional role of both ORFs">PMID:9731530</a></li>
+<li>PMID:9921896 (Reiss et al. 1998, Hum Genet) — genomic structure and mutational spectrum;<br />
+    MOCODA type A. <a href="https://pubmed.ncbi.nlm.nih.gov/9921896" title="the first two enzymes \nrequired in the MoCo biosynthesis pathway, MOCS1 A and MOCS1 B, in a single \ntranscript">PMID:9921896</a></li>
+<li>PMID:16021469 (Leimkühler et al. 2005) — ten novel MOCS1/MOCS2 mutations.</li>
+<li>PMID:29368224 (Mayr et al. 2018) — mild MoCD case; c.1338delG truncates MOCS1B; residual<br />
+    MOCS1B via translation re-initiation; functional confirmation of MOCS1B activity.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/29368224" title="Functional studies of both proteins confirmed activity of MOCS1B">PMID:29368224</a></li>
+<li>PMID:12754701 (Reiss &amp; Johnson 2003, Hum Mutat; review) — TAS for GO:0006777.</li>
+<li><strong>GO:0032324 molybdopterin cofactor biosynthetic process</strong> (ARBA IEA) — a valid but slightly<br />
+  broader/legacy sibling of GO:0006777; kept as non-core to avoid redundancy.</li>
+<li>Disease: <strong>Molybdenum cofactor deficiency type A (MOCODA, MIM:252150)</strong> — autosomal recessive,<br />
+  loss of all molybdoenzyme activities (sulfite oxidase, xanthine dehydrogenase, aldehyde<br />
+  oxidase); neonatal intractable seizures, severe neurodegeneration, early death. cPMP<br />
+  (fosdenopterin/DrugBank DB16628) replacement is a treatment.<br />
+  [file:human/MOCS1/MOCS1-uniprot.txt "Molybdenum cofactor deficiency, type A (MOCODA) [MIM:252150]"]</li>
+</ul>
+<h2 id="annotation-review-decisions-rationale">Annotation-review decisions (rationale)</h2>
+<ul>
+<li>Core MFs: GO:0061798 (MOCS1A) and GO:0061799 (MOCS1B) accepted (EXP/IMP/IGI/IBA). The<br />
+  bare "catalytic activity" (GO:0003824, IEA) is an uninformative parent → MARK_AS_OVER_ANNOTATED.</li>
+<li>Fe-S: GO:0051539 (4Fe-4S) accepted as core supporting MF; GO:0051536 (Fe-S cluster binding)<br />
+  and GO:0046872 (metal ion binding) are redundant parents → KEEP_AS_NON_CORE.</li>
+<li>Core BP: GO:0006777 accepted. GO:0032324 → KEEP_AS_NON_CORE (redundant broader).</li>
+<li>Localization: mitochondrial matrix (GO:0005759, IDA PMID:31996372) is the core catalytic<br />
+  site. cytosol/cytoplasm/mitochondrion (IEA/IDA/HTP/TAS) kept as non-core (isoform-specific<br />
+  cytosolic pool, or general/high-throughput terms).</li>
+<li>No experimental annotation is REMOVEd. IEA-only redundant-parent rows are kept as<br />
+  non-core or flagged as over-annotated rather than removed, per policy (they are not<br />
+  clearly wrong).<br />
+</content><br />
+</invoke></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9NZB8
+gene_symbol: MOCS1
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  MOCS1 encodes the bifunctional enzyme system that catalyses the first, committed step of
+  molybdenum cofactor (Moco) biosynthesis: the conversion of GTP to cyclic pyranopterin
+  monophosphate (cPMP, &#34;precursor Z&#34;). The single MOCS1 gene is bicistronic and extensively
+  alternatively spliced, producing two functionally distinct protein products, MOCS1A and
+  MOCS1B. MOCS1A (N-terminal region) is a radical S-adenosyl-L-methionine (SAM) enzyme that
+  binds two [4Fe-4S] clusters and acts as a GTP 3&#39;,8-cyclase (EC 4.1.99.22), generating the
+  intermediate (8S)-3&#39;,8-cyclo-7,8-dihydroguanosine 5&#39;-triphosphate. MOCS1B (C-terminal
+  region, a MoaC-family enzyme) is cyclic pyranopterin monophosphate synthase (EC 4.6.1.17),
+  which converts that intermediate to cPMP. The mature catalytic proteins act primarily in
+  the mitochondrial matrix, reached via alternative-splicing-dependent targeting and, for
+  MOCS1AB fusion products, proteolytic maturation after mitochondrial import; some N-terminal
+  splice variants remain cytosolic. cPMP is subsequently processed by MOCS2, MOCS3 and
+  gephyrin to the mature molybdenum cofactor required by sulfite oxidase, xanthine
+  dehydrogenase and aldehyde oxidase. Loss-of-function variants in MOCS1 cause molybdenum
+  cofactor deficiency type A, a severe autosomal-recessive neonatal encephalopathy with
+  intractable seizures, resembling isolated sulfite oxidase deficiency; early cPMP
+  (fosdenopterin) replacement can be therapeutic.
+alternative_products:
+- name: MOCS1B (MOCS1B Type-II)
+  id: Q9NZB8-1
+- name: MOCS1A (MOCS1A Type-Iad, Larin)
+  id: Q9NZB8-5
+  sequence_note: VSP_036826, VSP_036827
+- name: 2 (MOCS1A Type-Ibcd, Reiss)
+  id: Q9NZB8-6
+  sequence_note: VSP_036822, VSP_036826, VSP_036827
+- name: 3 (MOCS1A Type-Ibd, Gross-Hardt)
+  id: Q9NZB8-3
+  sequence_note: VSP_036823, VSP_036826, VSP_036827
+- name: &#39;4&#39;
+  id: Q9NZB8-4
+  sequence_note: VSP_036821, VSP_036824, VSP_036825
+- name: 6 (MOCS1B Type-III)
+  id: Q9NZB8-2
+  sequence_note: VSP_007439
+- name: &#39;7&#39;
+  id: Q9NZB8-7
+  sequence_note: VSP_036821, VSP_007439
+- name: 8 (MOCS1AB-bcd {ECO:0000303|PubMed:31996372})
+  id: Q9NZB8-8
+  sequence_note: VSP_036822
+- name: 9 (MOCS1A Type-Ia, Arenas {ECO:0000303|PubMed:19544009})
+  id: Q9NZB8-9
+  sequence_note: VSP_062611, VSP_036826, VSP_036827
+existing_annotations:
+- term:
+    id: GO:0061798
+    label: GTP 3&#39;,8&#39;-cyclase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference of the MOCS1A activity (GTP 3&#39;,8-cyclase, EC 4.1.99.22).
+      This is a core molecular function of MOCS1 and is directly supported by experimental
+      annotations (EXP, PMID:31996372) and by UniProt catalytic-activity records.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/MOCS1/MOCS1-uniprot.txt
+      supporting_text: MOCS1A catalyzes the cyclization of
+- term:
+    id: GO:0061799
+    label: cyclic pyranopterin monophosphate synthase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference of the MOCS1B activity (cyclic pyranopterin monophosphate
+      synthase, EC 4.6.1.17). Core molecular function, directly supported by experimental
+      annotations (EXP PMID:23627491; IGI/IMP).
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/MOCS1/MOCS1-uniprot.txt
+      supporting_text: MOCS1B
+- term:
+    id: GO:0006777
+    label: Mo-molybdopterin cofactor biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference of the pathway MOCS1 initiates. This is the core biological
+      process and is strongly supported by experimental and patient-mutation (IMP/IDA)
+      annotations.
+    action: ACCEPT
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Root-level &#34;catalytic activity&#34; from InterPro2GO. MOCS1 is an enzyme, so this is not
+      wrong, but it is an uninformative parent that is fully subsumed by the specific GTP
+      3&#39;,8-cyclase (GO:0061798) and cyclic pyranopterin monophosphate synthase (GO:0061799)
+      annotations. Over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytoplasm from UniProt subcellular-location mapping. Consistent with the cytosolic
+      N-terminal splice variants (e.g. isoform 2/3) and the pre-import pool, but the core
+      catalytic site is the mitochondrial matrix. General term; kept as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/MOCS1/MOCS1-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: [Isoform 2]: Cytoplasm, cytosol&#39;
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Mitochondrial matrix from UniProt subcellular-location mapping. This is the core site of
+      MOCS1A/MOCS1B catalysis and is experimentally supported (IDA, PMID:31996372). Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/MOCS1/MOCS1-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: [Isoform MOCS1A]: Mitochondrion matrix&#39;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytosol from UniProt subcellular-location mapping. Reflects the cytosolic splice
+      variants (isoform 2 = cytosol); the mature catalytic proteins act in the mitochondrial
+      matrix. Kept as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/MOCS1/MOCS1-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: [Isoform 2]: Cytoplasm, cytosol&#39;
+- term:
+    id: GO:0006777
+    label: Mo-molybdopterin cofactor biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro2GO inference of the core Moco biosynthetic process. Redundant with the
+      experimental/IBA annotations to the same term. Accept as core.
+    action: ACCEPT
+- term:
+    id: GO:0032324
+    label: molybdopterin cofactor biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ARBA (machine-learning) inference to a broader/legacy sibling of GO:0006777. Not wrong,
+      but redundant with the more specific Mo-molybdopterin cofactor biosynthetic process
+      (GO:0006777). Kept as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Generic &#34;metal ion binding&#34; from InterPro2GO. MOCS1A binds iron via its [4Fe-4S]
+      clusters, so this is not wrong, but it is an uninformative parent of the specific
+      4Fe-4S cluster binding (GO:0051539). Kept as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0051536
+    label: iron-sulfur cluster binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Iron-sulfur cluster binding from InterPro2GO. Correct but a direct parent of the more
+      specific 4 iron, 4 sulfur cluster binding (GO:0051539), which is experimentally
+      characterized. Kept as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0051539
+    label: 4 iron, 4 sulfur cluster binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      4Fe-4S cluster binding from InterPro2GO. MOCS1A is a radical-SAM enzyme that binds two
+      [4Fe-4S] clusters; this is experimentally characterized (PMID:15180982). Core supporting
+      molecular function. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/MOCS1/MOCS1-uniprot.txt
+      supporting_text: Binds 2 [4Fe-4S] clusters.
+    - reference_id: PMID:15180982
+      supporting_text: yield a form containing
+- term:
+    id: GO:0061798
+    label: GTP 3&#39;,8&#39;-cyclase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Automated (EC/Rhea-based) inference of the MOCS1A GTP 3&#39;,8-cyclase activity. Consistent
+      with the experimental EXP annotation to the same term. Accept as core.
+    action: ACCEPT
+- term:
+    id: GO:0061799
+    label: cyclic pyranopterin monophosphate synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Automated (EC/Rhea-based) inference of the MOCS1B cPMP synthase activity. Consistent
+      with the experimental EXP annotation to the same term. Accept as core.
+    action: ACCEPT
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      HPA immunofluorescence localizing MOCS1 to the cytosol. Consistent with the cytosolic
+      splice variants and pre-import pool; the mature catalytic proteins act in the
+      mitochondrial matrix. Experimental localization retained as non-core relative to the
+      matrix site of catalysis.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: EXP
+  original_reference_id: PMID:31996372
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Experimental (fluorescence microscopy/cell fractionation) localization. PMID:31996372
+      showed that some N-terminal (exon 1b) MOCS1A splice variants remain cytosolic while
+      others (exon 1a) go to the mitochondrial matrix. Cytoplasm is correct for the cytosolic
+      variants but the core catalytic pool is the mitochondrial matrix; kept as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:31996372
+      supporting_text: either localize
+- term:
+    id: GO:0061798
+    label: GTP 3&#39;,8&#39;-cyclase activity
+  evidence_type: EXP
+  original_reference_id: PMID:31996372
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental support for the MOCS1A GTP 3&#39;,8-cyclase activity (EC 4.1.99.22).
+      PMID:31996372 assayed catalytic activity of MOCS1A splice isoforms; UniProt cites this
+      paper for the EC 4.1.99.22 reaction. Core molecular function. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/MOCS1/MOCS1-uniprot.txt
+      supporting_text: EC=4.1.99.22 {ECO:0000269|PubMed:31996372}
+- term:
+    id: GO:0061799
+    label: cyclic pyranopterin monophosphate synthase activity
+  evidence_type: EXP
+  original_reference_id: PMID:23627491
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental support for the MOCS1B cyclic pyranopterin monophosphate synthase activity
+      (EC 4.6.1.17). PMID:23627491 directly assayed the human homolog MOCS1B, showing it
+      converts 3&#39;,8-cH2GTP to cPMP (Km 0.79 uM). Core molecular function. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:23627491
+      supporting_text: its human homologue, MOCS1B, with
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IDA
+  original_reference_id: PMID:31996372
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Direct experimental localization of the mature MOCS1A/MOCS1B proteins to the
+      mitochondrial matrix (is_active_in). PMID:31996372 showed MOCS1AB is proteolytically
+      cleaved within mitochondria to give matrix-localized MOCS1B. This is the core site of
+      cPMP biosynthesis. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:31996372
+      supporting_text: mitochondrial matrix localization of the MOCS1B domain.
+- term:
+    id: GO:0006777
+    label: Mo-molybdopterin cofactor biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:15180982
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct experimental support for MOCS1 involvement in Moco biosynthesis. PMID:15180982
+      characterized MOCS1A as the oxygen-sensitive Fe-S radical-SAM enzyme catalyzing the
+      first step; the conserved cysteines are essential for precursor-Z synthesis in vivo.
+      Core biological process. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:15180982
+      supporting_text: essential for synthesis of
+- term:
+    id: GO:0061799
+    label: cyclic pyranopterin monophosphate synthase activity
+  evidence_type: IMP
+  original_reference_id: PMID:15180982
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Mutational (IMP) support that MOCS1 activity generating precursor Z depends on the
+      conserved MOCS1A cysteines; associated in GOA with the cPMP synthase (MOCS1B) step of
+      the same GTP-to-cPMP conversion. Core molecular function of MOCS1. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:15180982
+      supporting_text: essential for synthesis of
+- term:
+    id: GO:0006777
+    label: Mo-molybdopterin cofactor biosynthetic process
+  evidence_type: IMP
+  original_reference_id: PMID:29368224
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Mutational (IMP) support from a mild MoCD patient (c.1338delG). PMID:29368224 showed the
+      truncation removes MOCS1B, and residual MOCS1B from translation re-initiation partially
+      rescues Moco synthesis. Core biological process. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:29368224
+      supporting_text: confirmed activity of MOCS1B, but not of the
+- term:
+    id: GO:0061799
+    label: cyclic pyranopterin monophosphate synthase activity
+  evidence_type: IGI
+  original_reference_id: PMID:29368224
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Genetic-interaction (IGI, with E. coli MoaC UniProtKB:P0A738) support for the MOCS1B
+      cPMP synthase activity. PMID:29368224 functionally confirmed activity of the residual
+      MOCS1B protein. Core molecular function. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:29368224
+      supporting_text: confirmed activity of MOCS1B, but not of the
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput mitochondrial-proteome detection (PMID:34800366) placing MOCS1 in the
+      mitochondrion. Consistent with the experimentally established mitochondrial matrix
+      localization but a general term from a proteome-wide screen. Kept as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-947535
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) places the GTP-to-precursor-Z reaction in the cytosol. This predates the
+      demonstration (PMID:31996372) that the mature catalytic MOCS1A/MOCS1B proteins act in
+      the mitochondrial matrix; consistent with the cytosolic splice variants. Kept as
+      non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0006777
+    label: Mo-molybdopterin cofactor biosynthetic process
+  evidence_type: TAS
+  original_reference_id: PMID:12754701
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Traceable author statement (review, PMID:12754701) that MOCS1 encodes the first enzymes
+      of Moco biosynthesis. Core biological process. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:12754701
+      supporting_text: results primarily from the
+- term:
+    id: GO:0006777
+    label: Mo-molybdopterin cofactor biosynthetic process
+  evidence_type: IMP
+  original_reference_id: PMID:16021469
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Mutational (IMP) support from disease-mutation analysis (PMID:16021469) confirming MOCS1
+      involvement in Moco biosynthesis. Core biological process. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:16021469
+      supporting_text: result in a lethal
+- term:
+    id: GO:0006777
+    label: Mo-molybdopterin cofactor biosynthetic process
+  evidence_type: IMP
+  original_reference_id: PMID:9731530
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Mutational (IMP) support from the original disease-gene identification (PMID:9731530):
+      mutations in both MOCS1 ORFs (moaA/moaC homologs) confirm their functional role in Moco
+      synthesis. Core biological process. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:9731530
+      supporting_text: confirm the functional role of both ORFs
+- term:
+    id: GO:0006777
+    label: Mo-molybdopterin cofactor biosynthetic process
+  evidence_type: IMP
+  original_reference_id: PMID:9921896
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Mutational (IMP) support from genomic/mutational-spectrum analysis (PMID:9921896)
+      confirming MOCS1 as the molybdenum cofactor deficiency type A gene. Core biological
+      process. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:9921896
+      supporting_text: the first two enzymes
+- term:
+    id: GO:1904047
+    label: S-adenosyl-L-methionine binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  qualifier: enables
+  review:
+    summary: &gt;-
+      MOCS1A is a radical-SAM enzyme that uses S-adenosyl-L-methionine as the
+      radical-generating cosubstrate (UniProt BINDING residues 86 and 127; Ensembl-projected
+      IEA in the UniProt DR block, not present in this GOA snapshot). Included here as a NEW
+      supporting molecular function of MOCS1A.
+    action: NEW
+    supported_by:
+    - reference_id: file:human/MOCS1/MOCS1-uniprot.txt
+      supporting_text: /ligand=&#34;S-adenosyl-L-methionine&#34;
+    - reference_id: PMID:15180982
+      supporting_text: S-adenosylmethionine (AdoMet)-dependent radical enzymes
+core_functions:
+- description: &gt;-
+    MOCS1A (N-terminal region) is a radical S-adenosyl-L-methionine enzyme that catalyses the
+    first sub-step of molybdenum cofactor biosynthesis, converting GTP to
+    (8S)-3&#39;,8-cyclo-7,8-dihydroguanosine 5&#39;-triphosphate (GTP 3&#39;,8-cyclase, EC 4.1.99.22),
+    using two [4Fe-4S] clusters and SAM.
+  molecular_function:
+    id: GO:0061798
+    label: GTP 3&#39;,8&#39;-cyclase activity
+  directly_involved_in:
+  - id: GO:0006777
+    label: Mo-molybdopterin cofactor biosynthetic process
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  supported_by:
+  - reference_id: file:human/MOCS1/MOCS1-uniprot.txt
+    supporting_text: EC=4.1.99.22 {ECO:0000269|PubMed:31996372}
+  - reference_id: PMID:15180982
+    supporting_text: essential for synthesis of
+- description: &gt;-
+    MOCS1A binds two [4Fe-4S] clusters (one 4Fe-4S-S-AdoMet cluster and one binding the
+    GTP-derived substrate), which are required for the radical-SAM GTP 3&#39;,8-cyclase reaction.
+  molecular_function:
+    id: GO:0051539
+    label: 4 iron, 4 sulfur cluster binding
+  supported_by:
+  - reference_id: file:human/MOCS1/MOCS1-uniprot.txt
+    supporting_text: Binds 2 [4Fe-4S] clusters.
+  - reference_id: PMID:15180982
+    supporting_text: yield a form containing
+- description: &gt;-
+    MOCS1A uses S-adenosyl-L-methionine as the radical-generating cosubstrate: the [4Fe-4S]
+    cluster reductively cleaves SAM to a 5&#39;-deoxyadenosyl radical that initiates the C-C bond
+    formation converting GTP to the cyclic intermediate.
+  molecular_function:
+    id: GO:1904047
+    label: S-adenosyl-L-methionine binding
+  supported_by:
+  - reference_id: file:human/MOCS1/MOCS1-uniprot.txt
+    supporting_text: /ligand=&#34;S-adenosyl-L-methionine&#34;
+  - reference_id: PMID:15180982
+    supporting_text: S-adenosylmethionine (AdoMet)-dependent radical enzymes
+- description: &gt;-
+    MOCS1B (C-terminal region, a MoaC-family enzyme) is cyclic pyranopterin monophosphate
+    synthase (EC 4.6.1.17), converting (8S)-3&#39;,8-cyclo-7,8-dihydroguanosine 5&#39;-triphosphate to
+    cyclic pyranopterin monophosphate (cPMP, precursor Z), completing the first step of Moco
+    biosynthesis.
+  molecular_function:
+    id: GO:0061799
+    label: cyclic pyranopterin monophosphate synthase activity
+  directly_involved_in:
+  - id: GO:0006777
+    label: Mo-molybdopterin cofactor biosynthetic process
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  supported_by:
+  - reference_id: file:human/MOCS1/MOCS1-uniprot.txt
+    supporting_text: belongs to the MoaC family.
+  - reference_id: PMID:23627491
+    supporting_text: its human homologue, MOCS1B, with
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Ensembl Compara projection
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12754701
+  title: Mutations in the molybdenum cofactor biosynthetic genes MOCS1, MOCS2, and
+    GEPH.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Review (abstract-only in cache) establishing MOCS1 encodes the first two enzymes of Moco
+      biosynthesis and the bicistronic architecture; supports the GO:0006777 TAS annotation.
+- id: PMID:15180982
+  title: Characterization of MOCS1A, an oxygen-sensitive iron-sulfur protein involved
+    in human molybdenum cofactor biosynthesis.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Biochemical characterization of human MOCS1A as an oxygen-sensitive radical-SAM protein
+      binding two [4Fe-4S] clusters; conserved cysteines essential for precursor-Z synthesis.
+      Directly supports the 4Fe-4S binding and Moco-biosynthesis annotations. Abstract-only in
+      cache.
+- id: PMID:16021469
+  title: Ten novel mutations in the molybdenum cofactor genes MOCS1 and MOCS2 and
+    in vitro characterization of a MOCS2 mutation that abolishes the binding ability
+    of molybdopterin synthase.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Disease-mutation study of MOCS1/MOCS2; supports MOCS1 involvement in Moco biosynthesis
+      (GO:0006777 IMP). Abstract-only in cache.
+- id: PMID:23627491
+  title: Identification of a cyclic nucleotide as a cryptic intermediate in molybdenum
+    cofactor biosynthesis.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text available. Isolates 3&#39;,8-cH2GTP as the MoaA product and shows the human
+      homolog MOCS1B converts it to cPMP (Km 0.79 uM); primary experimental support for the
+      MOCS1B cPMP synthase activity (GO:0061799, EC 4.6.1.17).
+- id: PMID:29368224
+  title: A mild case of molybdenum cofactor deficiency defines an alternative route
+    of MOCS1 protein maturation.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Mild MoCD case; functional studies confirm activity of a residual MOCS1B protein
+      produced by translation re-initiation. Supports GO:0061799 (IGI) and GO:0006777 (IMP).
+      Abstract-only in cache.
+- id: PMID:31996372
+  title: Alternative splicing of the bicistronic gene molybdenum cofactor synthesis
+    1 (MOCS1) uncovers a novel mitochondrial protein maturation mechanism.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Establishes mitochondrial-matrix localization of MOCS1A/MOCS1B (with cytosolic exon-1b
+      variants) and the proteolytic maturation of MOCS1AB; UniProt cites it for the EC
+      4.1.99.22 MOCS1A activity. Supports GO:0061798 (EXP), GO:0005759 and GO:0005737.
+      Abstract-only in cache.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput mitochondrial-proteome study; detects MOCS1 in mitochondria (HTP,
+      GO:0005739). Corroborates but does not by itself establish the specific matrix
+      localization.
+- id: PMID:9731530
+  title: Mutations in a polycistronic nuclear gene associated with molybdenum cofactor
+    deficiency.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Original identification of MOCS1 (bicistronic moaA/moaC homolog) as the molybdenum
+      cofactor deficiency gene; mutations in both ORFs confirm their functional role. Supports
+      GO:0006777 (IMP). Abstract-only in cache.
+- id: PMID:9921896
+  title: Genomic structure and mutational spectrum of the bicistronic MOCS1 gene defective
+    in molybdenum cofactor deficiency type A.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Genomic structure and mutational spectrum of MOCS1 in MoCD type A; MOCS1A and MOCS1B are
+      the first two enzymes of the pathway in a single transcript. Supports GO:0006777 (IMP).
+      Abstract-only in cache.
+- id: Reactome:R-HSA-947535
+  title: Cyclisation of GTP to precursor Z
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

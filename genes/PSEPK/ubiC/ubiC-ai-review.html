@@ -1,0 +1,2218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ubiC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ubiC</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88C66" target="_blank" class="term-link">
+                        Q88C66
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ubiC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88C66" data-a="DESCRIPTION: ubiC encodes chorismate pyruvate-lyase, which clea..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ubiC encodes chorismate pyruvate-lyase, which cleaves chorismate to 4-hydroxybenzoate and pyruvate. The 4-hydroxybenzoate product supplies the aromatic head group for ubiquinone biosynthesis in the cytosol.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C66" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasm is redundant with the more specific cytosol annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The broad parent location adds no information beyond GO:0005829 for this soluble enzyme.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C66" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UbiC is a soluble cytosolic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reviewed UniProt record assigns UbiC to the cytoplasm.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ubiC/ubiC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C66" data-a="GO:0006744" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ubiquinone biosynthesis is the core process for UbiC.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UbiC supplies the 4-hydroxybenzoate aromatic head group for this pathway.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ubiC/ubiC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">ubiquinone pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008813" target="_blank" class="term-link">
+                                    GO:0008813
+                                </a>
+                            </span>
+                            <span class="term-label">chorismate lyase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C66" data-a="GO:0008813" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Chorismate lyase activity is the core molecular function of UbiC.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns EC 4.1.3.40 and Rhea 16505 for chorismate cleavage.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ubiC/ubiC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">chorismate pyruvate-lyase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ubiC/ubiC-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">chorismate = 4-hydroxybenzoate + pyruvate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042866" target="_blank" class="term-link">
+                                    GO:0042866
+                                </a>
+                            </span>
+                            <span class="term-label">pyruvate biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C66" data-a="GO:0042866" data-r="GO_REF:0000104" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Pyruvate is a coproduct, not the biological purpose of the UbiC reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UbiC is selected to supply 4-hydroxybenzoate for ubiquinone biosynthesis; annotating it to general pyruvate biosynthesis overstates a side product.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Cytosolic cleavage of chorismate to 4-hydroxybenzoate and pyruvate, supplying the aromatic head group for ubiquinone biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88C66" data-a="FUNCTION: Cytosolic cleavage of chorismate to 4-hydroxybenzo..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008813" target="_blank" class="term-link">
+                            chorismate lyase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                ubiquinone biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/ubiC/ubiC-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">chorismate pyruvate-lyase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/ubiC/ubiC-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">chorismate = 4-hydroxybenzoate + pyruvate</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ubiC/ubiC-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry Q88C66 for ubiC</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The reviewed entry assigns cytosolic chorismate pyruvate-lyase activity that supplies 4-hydroxybenzoate to ubiquinone biosynthesis.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ubiC/ubiC-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for ubiC</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the five annotations reviewed here.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ubiC/ubiC-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist functional review of PSEPK ubiC</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report confirms the exact Rhea reaction, intact UbiC family identity, and a directly adjacent ubiC-ubiA pathway context in KT2440; no direct target-protein assay was assumed from host-level engineering studies.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ubiC-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88C66" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *ubiC* (Q88C66, PP_5317) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">9 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-18T18:16:34.498387</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="ubiC-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="ubiC-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-ubic-q88c66-pp_5317-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>ubiC</em> (Q88C66, PP_5317) in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Gene:</strong> <em>ubiC</em> | <strong>Ordered locus:</strong> PP_5317 | <strong>UniProt:</strong> Q88C66<br />
+<strong>Protein:</strong> Probable chorismate pyruvate-lyase (CL / CPL) | <strong>EC 4.1.3.40</strong><br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / NCIMB 11950 / KT2440)<br />
+<strong>Family:</strong> UbiC family (HAMAP MF_01632); Pfam PF04345 (Chor_lyase); InterPro IPR007440, IPR028978</p>
+<hr />
+<h2 id="identity-verification-mandatory">Identity Verification (Mandatory)</h2>
+<p>All primary identifiers are mutually consistent and unambiguous. The gene symbol <em>ubiC</em> matches the reviewed UniProt protein description, the organism, the family, and the domain architecture supplied in the research brief. <strong>No gene-symbol ambiguity was encountered</strong> — across bacteria, <em>ubiC</em> uniformly denotes chorismate pyruvate-lyase, and the most decisive functional evidence was generated in the exact target strain, <em>P. putida</em> KT2440. The research below concerns this specific enzyme.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Confirmed value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene</td>
+<td><em>ubiC</em> (ordered locus <strong>PP_5317</strong>)</td>
+</tr>
+<tr>
+<td>Protein</td>
+<td>Probable chorismate pyruvate-lyase (CL / CPL)</td>
+</tr>
+<tr>
+<td>EC number</td>
+<td><strong>4.1.3.40</strong></td>
+</tr>
+<tr>
+<td>Reaction</td>
+<td>chorismate = 4-hydroxybenzoate + pyruvate (RHEA:16505; CHEBI 15361 → 17879 + 29748)</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> KT2440</td>
+</tr>
+<tr>
+<td>Length</td>
+<td>185 aa (558 nt; GTG start); UbiC family</td>
+</tr>
+<tr>
+<td>Family / domains</td>
+<td>UbiC family; Pfam <strong>PF04345</strong>; InterPro <strong>IPR007440</strong>, <strong>IPR028978</strong></td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Cytoplasm</td>
+</tr>
+<tr>
+<td>Pathway</td>
+<td>Cofactor biosynthesis; <strong>ubiquinone (coenzyme Q) biosynthesis</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>The gene <em>ubiC</em> (PP_5317) of <em>Pseudomonas putida</em> KT2440 encodes <strong>chorismate pyruvate-lyase (UbiC; EC 4.1.3.40)</strong>, a small (~185 amino acid), cofactor-independent, soluble cytoplasmic enzyme that removes the enolpyruvyl side chain from <strong>chorismate</strong>, its specific substrate, with concomitant aromatization of the ring, yielding <strong>4-hydroxybenzoate (4HB) plus pyruvate</strong> (RHEA:16505). This is the <strong>first committed, rate-controlling step of ubiquinone (coenzyme Q) biosynthesis</strong>: by drawing chorismate — the terminal branch-point metabolite of the shikimate pathway — away from the aromatic amino-acid, folate, and menaquinone branches, UbiC commits carbon specifically to the respiratory quinone cofactor.</p>
+<p>UbiC acts in the <strong>cytoplasm</strong>. Its 4HB product is handed to the immediately adjacent, co-transcribed membrane prenyltransferase <strong>UbiA (PP_5318; 4-hydroxybenzoate octaprenyltransferase, EC 2.5.1.39)</strong>, which prenylates 4HB at the inner membrane and channels it through the remaining Ubi enzymes to produce <strong>ubiquinone</strong>, an essential lipophilic electron carrier of the aerobic respiratory chain. In KT2440 the two genes are physically contiguous — the <em>ubiC</em> stop coordinate coincides with the <em>ubiA</em> start coordinate — mirroring the classic <em>ubiCA</em> operon first defined in <em>Escherichia coli</em>. The identity of Q88C66 is corroborated by ~30% sequence identity to <em>E. coli</em> UbiC, conserved domain signatures, and the rule-based HAMAP assignment MF_01632.</p>
+<p>Two functionally important properties are established directly in the native host. First, UbiC is subject to <strong>product (4HB) feedback inhibition</strong> — a defining kinetic feature demonstrated and engineered around in <em>P. putida</em> KT2440. Second, UbiC's anabolic, cofactor-directed role is cleanly separable from <em>P. putida</em>'s catabolic 4HB node, the monooxygenase <strong>PobA (PP_3537, EC 1.14.13.2)</strong>, which degrades 4HB to protocatechuate for the β-ketoadipate pathway. UbiC makes 4HB for a cofactor; PobA consumes 4HB for carbon and energy. Together these findings define UbiC as a precise, cytoplasmic, cofactor-supplying branch-point enzyme of central metabolism.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="f001-ubic-catalyzes-chorismate-4-hydroxybenzoate-pyruvate-ec-41340">F001 — UbiC catalyzes chorismate → 4-hydroxybenzoate + pyruvate (EC 4.1.3.40)</h3>
+<p>The core molecular function of Q88C66/PP_5317 is that of a <strong>chorismate pyruvate-lyase</strong>. The reviewed UniProt record names the protein "Probable chorismate pyruvate-lyase" (CL/CPL) with EC 4.1.3.40 and annotates the catalytic activity as <strong>chorismate = 4-hydroxybenzoate + pyruvate</strong> (RHEA:16505; CHEBI:15361 → CHEBI:17879 + CHEBI:29748). The protein is 185 amino acids, encoded by <em>ubiC</em> (PP_5317), and assigned to the UbiC family by HAMAP-Rule MF_01632, with Pfam domain Chor_lyase (PF04345) and InterPro IPR007440. Mechanistically the reaction is an <strong>intramolecular lyase (pyruvyl-elimination) step</strong>: the enolpyruvyl ether side chain is cleaved from chorismate with concomitant aromatization of the previously non-aromatic cyclohexadiene ring, and the enzyme is <strong>cofactor-independent</strong> — it requires no metal ion or organic cofactor.</p>
+<p>This assignment rests on experimentally characterized orthologs, not merely computation. In <em>E. coli</em>, the committed step of ubiquinone biosynthesis is "the formation of 4-hydroxybenzoate from chorismate by the enzyme chorismate pyruvate-lyase encoded by the <em>ubiC</em> gene" (<a href="https://pubmed.ncbi.nlm.nih.gov/15902464/">PMID: 15902464</a>). Independent confirmation in another gammaproteobacterium comes from <em>Shigella sonnei</em>, where "UbiC (SSON_4219) … is a chorismate pyruvate-lyase that catalyzes the conversion of chorismate to 4-HBA" (<a href="https://pubmed.ncbi.nlm.nih.gov/37036340/">PMID: 37036340</a>). Critically, the full product stoichiometry was verified with an enzyme expressed in the target organism itself: a "heterologously expressed UbiC … converts chorismate into 4HB and pyruvate" in the <em>P. putida</em> KT2440 host (<a href="https://pubmed.ncbi.nlm.nih.gov/30861344/">PMID: 30861344</a>). The convergence of the curated annotation, the conserved family/domain signatures, and functional data from three related bacteria establishes the reaction and narrow substrate specificity with high confidence. Substrate specificity is narrow because chorismate is the last common intermediate of the shikimate pathway; UbiC commits it specifically to the 4HB/ubiquinone branch.</p>
+<h3 id="f002-ubic-is-the-first-committed-cytoplasmic-step-of-ubiquinone-coenzyme-q-biosynthesis">F002 — UbiC is the first committed, cytoplasmic step of ubiquinone (coenzyme Q) biosynthesis</h3>
+<p>UniProt places Q88C66 in the pathway "Cofactor biosynthesis; ubiquinone biosynthesis," assigns a subcellular location of <strong>Cytoplasm</strong>, and states the function: "Removes the pyruvyl group from chorismate, with concomitant aromatization of the ring, to provide 4-hydroxybenzoate (4HB) for the ubiquinone pathway." UbiC therefore sits at the <strong>entry point</strong> of coenzyme Q synthesis. Downstream, "the 4-hydroxybenzoate is prenylated by 4-hydroxybenzoate octaprenyltransferase encoded by the <em>ubiA</em> gene" (<a href="https://pubmed.ncbi.nlm.nih.gov/15902464/">PMID: 15902464</a>), which is the committed second step. The biological rationale is direct: "Ubiquinone (Coenzyme Q) is an essential component of bacterial respiratory chains" (<a href="https://pubmed.ncbi.nlm.nih.gov/15902464/">PMID: 15902464</a>); UbiC's product ultimately becomes the lipophilic electron carrier that shuttles electrons in aerobic respiration.</p>
+<p>Because the substrate chorismate feeds several essential branches (aromatic amino acids, folate, menaquinone, siderophores), UbiC's activity governs how much carbon is diverted specifically toward the quinone cofactor — which is precisely what makes it the "committed" step rather than a redundant downstream reaction. In <em>E. coli</em>, <em>ubiC</em> expression is <strong>carbon-source responsive</strong> (higher on oxidizable versus fermentable carbon), consistent with the greater ubiquinone demand of respiratory growth. As a soluble cytoplasmic enzyme, UbiC generates 4HB in the cytosol, from where the small polar product diffuses to the inner-membrane prenyltransferase UbiA — a common motif whereby a soluble upstream enzyme feeds a hydrophilic precursor into a membrane-anchored biosynthetic pathway.</p>
+<h3 id="f003-ubic-is-subject-to-product-4-hydroxybenzoate-feedback-inhibition-characterized-in-the-native-host">F003 — UbiC is subject to product (4-hydroxybenzoate) feedback inhibition, characterized in the native host</h3>
+<p>A defining kinetic property of UbiC is <strong>feedback inhibition by its own product, 4HB</strong>, demonstrated directly in the target strain. Jha et al. (2019) "engineered a highly specific, genetically encoded biosensor for 4-hydroxybenzoate (4HB) in an industrially relevant host, <em>Pseudomonas putida</em> KT2440" (<a href="https://pubmed.ncbi.nlm.nih.gov/30861344/">PMID: 30861344</a>) and used it to read out UbiC activity. They then "establish a high-throughput screening method to alleviate product inhibition in an industrially relevant enzyme, chorismate pyruvate-lyase (UbiC)" (<a href="https://pubmed.ncbi.nlm.nih.gov/30861344/">PMID: 30861344</a>). Using benzoate as a non-biosensor-activating surrogate that still inhibits the enzyme, they screened variants with relieved product inhibition; the improved UbiC gave <strong>&gt;2-fold yield improvement</strong> on a plasmid and <strong>~60% improvement</strong> when genomically integrated, in a glucose → <em>cis,cis</em>-muconate production strain.</p>
+<p>The significance for functional annotation is twofold. First, product inhibition marks UbiC as a <strong>rate-controlling, feedback-sensitive committed enzyme</strong>, exactly as expected for a metabolic branch-point step — feedback by 4HB tunes the rate at which chorismate is committed to the quinone branch. Second, because Q88C66 <em>is</em> the endogenous KT2440 UbiC (PP_5317), these observations describe the actual target protein's behavior in its native cellular context, not a heterologous stand-in. This kinetic feature also explains why UbiC is a recurrent engineering target for microbial production of 4HB-derived aromatics.</p>
+<h3 id="f004-bioinformatic-support-q88c66-is-a-bona-fide-ubic-family-ortholog-30-identity-to-e-coli-ubic">F004 — Bioinformatic support: Q88C66 is a bona fide UbiC-family ortholog (~30% identity to <em>E. coli</em> UbiC)</h3>
+<p>Sequence analysis independently corroborates the assignment. A global Needleman–Wunsch alignment of Q88C66 (185 aa) against <em>E. coli</em> UbiC (P26602, 165 aa) yields <strong>~30.3% identity</strong> (50/165 aligned columns) with conserved secondary-structure spacing — the signature of divergent orthologs of the same family rather than a chance match. The conserved fold is captured by Pfam PF04345 (Chor_lyase), InterPro IPR007440, and IPR028978 ("Chorismate_lyase_/UTRA_dom_sf"), the latter reflecting the helix-grip / START-like fold that forms the hydrophobic chorismate-binding cavity. This homology is the basis of the HAMAP MF_01632 rule that produces the "Probable" qualifier — modest but unambiguous identity, typical of divergent UbiC orthologs.</p>
+<p>Consistent with this, the surrounding literature repeatedly exploits the chorismate → 4HB branch that UbiC controls. Chorismate is described as one of the "aromatic intermediates such as dehydroshikimate or chorismate from which value-added aromatic compounds can be derived" (<a href="https://pubmed.ncbi.nlm.nih.gov/27871872/">PMID: 27871872</a>) — i.e., the UbiC substrate. And <em>P. putida</em> is explicitly a chassis for the product: "Engineered <em>Escherichia coli</em> and <em>Pseudomonas putida</em> strains are enabling the development of sustainable processes for the manufacture of 2-phenylethanol, p-hydroxycinnamic acid, p-hydroxystyrene, <strong>p-hydroxybenzoate</strong>, anthranilate" (<a href="https://pubmed.ncbi.nlm.nih.gov/19875279/">PMID: 19875279</a>). The p-hydroxybenzoate (4HB) named there is the direct output of the UbiC reaction, placing the enzyme squarely at the chorismate-to-aromatic branch point.</p>
+<h3 id="f005-in-kt2440-ubic-pp_5317-is-contiguous-with-ubia-pp_5318-forming-a-ubica-gene-pair">F005 — In KT2440, <em>ubiC</em> (PP_5317) is contiguous with <em>ubiA</em> (PP_5318), forming a <em>ubiCA</em> gene pair</h3>
+<p>Genome coordinates from KEGG show the two genes are physically <strong>coupled on the same strand</strong>: <em>ubiC</em>/PP_5317 spans 6,063,112–6,063,669 (+ strand), and <em>ubiA</em>/PP_5318 (4-hydroxybenzoate octaprenyltransferase, K03179, EC 2.5.1.39) spans 6,063,669–6,064,559 (+ strand). The <em>ubiC</em> stop coordinate (6,063,669) coincides exactly with the <em>ubiA</em> start coordinate — the two ORFs directly abut/overlap, a classic operon arrangement. Flanking genes lie on the opposite strand (PP_5315 <em>rubA</em> rubredoxin; PP_5319 hypothetical), reinforcing the <em>ubiCA</em> unit. KEGG assigns PP_5317 to KO <strong>K03181</strong> (chorismate lyase, EC 4.1.3.40), pathway <strong>ppu00130</strong> ("Ubiquinone and other terpenoid-quinone biosynthesis"), and module <strong>M00117</strong> ("Ubiquinone biosynthesis, prokaryotes, chorismate (+ polyprenyl-PP) =&gt; ubiquinol"). The gene uses a GTG start (558 nt, 185 aa) and carries the Chor_lyase Pfam motif plus an Rv2949c-like motif linking it to the mycobacterial chorismate pyruvate-lyase family.</p>
+<p>This synteny mirrors <em>E. coli</em>, where "the two genes are linked at 91.5 min in the <em>Escherichia coli</em> chromosome" (<a href="https://pubmed.ncbi.nlm.nih.gov/15902464/">PMID: 15902464</a>), with <em>ubiA</em> transcribed from the upstream <em>ubiC</em> promoter. Physical coupling of the 4HB-<strong>producing</strong> enzyme (UbiC) to the 4HB-<strong>consuming</strong> prenyltransferase (UbiA) implies coordinated expression and efficient substrate hand-off: the soluble UbiC generates 4HB in the cytoplasm and delivers it directly to the membrane-embedded UbiA for the next committed step.</p>
+<h3 id="f006-ubic-is-the-dedicated-anabolic-4hb-source-distinct-from-the-catabolic-monooxygenase-poba-pp_3537">F006 — UbiC is the dedicated anabolic 4HB source, distinct from the catabolic monooxygenase PobA (PP_3537)</h3>
+<p><em>P. putida</em> KT2440 maintains <strong>two functionally opposite 4HB nodes</strong>, and UbiC belongs to the anabolic one. KEGG shows: (i) UbiC/PP_5317 (K03181) <strong>synthesizes</strong> 4HB from chorismate for ubiquinone via the adjacent UbiA/PP_5318 (K03179); and (ii) PobA/PP_3537 (K00481; 4-hydroxybenzoate 3-monooxygenase, EC 1.14.13.2), located elsewhere in the genome, <strong>catabolizes</strong> 4HB to protocatechuate, feeding the β-ketoadipate pathway for aromatic degradation. UbiC is anabolic (cofactor supply); PobA is catabolic (carbon/energy); 4HB sits at the junction between them. This distinction rules out any degradative interpretation of UbiC.</p>
+<p>The separability is not merely annotational: in muconate-production strains, UbiC-derived 4HB is deliberately routed through PobA → protocatechuate → <em>cis,cis</em>-muconate, exploiting "an experimental production strain for the industrial precursor <em>cis,cis</em>-muconic acid (muconate)" (<a href="https://pubmed.ncbi.nlm.nih.gov/30861344/">PMID: 30861344</a>). The clean, independently addressable separation of the two enzymes — one making, one consuming 4HB — confirms that UbiC's precise native role is <strong>biosynthetic entry into the ubiquinone cofactor branch</strong>, not aromatic catabolism.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>UbiC occupies a single, sharply defined node in central metabolism: the committed diversion of chorismate toward the respiratory quinone cofactor. The schematic below integrates all six findings.</p>
+<div class="codehilite"><pre><span></span><code><span class="w">         </span><span class="n">SHIKIMATE</span><span class="w"> </span><span class="n">PATHWAY</span>
+<span class="w">                </span><span class="o">|</span>
+<span class="w">          </span><span class="p">(</span><span class="n">from</span><span class="w"> </span><span class="n">PEP</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">E4P</span><span class="p">)</span>
+<span class="w">                </span><span class="n">v</span>
+<span class="w">        </span><span class="o">+---------------+</span>
+<span class="w">        </span><span class="o">|</span><span class="w">   </span><span class="n">CHORISMATE</span><span class="w">  </span><span class="o">|</span><span class="w">  </span><span class="o">&lt;--</span><span class="w"> </span><span class="n">branch</span><span class="o">-</span><span class="n">point</span><span class="w"> </span><span class="n">metabolite</span>
+<span class="w">        </span><span class="o">+---------------+</span><span class="w">      </span><span class="p">(</span><span class="n">also</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Trp</span><span class="o">/</span><span class="n">Phe</span><span class="o">/</span><span class="n">Tyr</span><span class="p">,</span><span class="w"> </span><span class="n">folate</span><span class="p">,</span>
+<span class="w">                </span><span class="o">|</span><span class="w">               </span><span class="n">menaquinone</span><span class="p">,</span><span class="w"> </span><span class="n">salicylate</span><span class="p">...)</span>
+<span class="w">                </span><span class="o">|</span>
+<span class="n">UbiC</span><span class="w">  </span><span class="p">(</span><span class="n">PP_5317</span><span class="p">,</span><span class="w"> </span><span class="n">EC</span><span class="w"> </span><span class="mf">4.1.3.40</span><span class="p">)</span><span class="w">  </span><span class="o">----</span><span class="w"> </span><span class="n">CYTOPLASM</span><span class="w"> </span><span class="o">----</span>
+<span class="n">chorismate</span><span class="w"> </span><span class="n">pyruvate</span><span class="o">-</span><span class="n">lyase</span><span class="w">          </span><span class="n">cofactor</span><span class="o">-</span><span class="kr">independent</span>
+<span class="p">[</span><span class="w"> </span><span class="n">Q88C66</span><span class="p">,</span><span class="w"> </span><span class="mi">185</span><span class="w"> </span><span class="n">aa</span><span class="p">,</span><span class="w"> </span><span class="n">GTG</span><span class="w"> </span><span class="n">start</span><span class="w"> </span><span class="p">]</span><span class="w">      </span><span class="kr">FIRST</span><span class="w"> </span><span class="n">COMMITTED</span><span class="w"> </span><span class="n">STEP</span>
+<span class="w">                </span><span class="o">|</span><span class="w">            </span><span class="n">feedback</span><span class="o">-</span><span class="n">inhibited</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="mi">4</span><span class="n">HB</span><span class="w"> </span><span class="p">(</span><span class="n">F003</span><span class="p">)</span>
+<span class="w">                </span><span class="n">v</span>
+<span class="w">      </span><span class="n">chorismate</span><span class="w">  </span><span class="o">---&gt;</span><span class="w">  </span><span class="mi">4</span><span class="o">-</span><span class="n">HYDROXYBENZOATE</span><span class="w"> </span><span class="p">(</span><span class="mi">4</span><span class="n">HB</span><span class="p">)</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="n">PYRUVATE</span>
+<span class="w">                </span><span class="o">|</span><span class="w">   </span><span class="err">\</span>
+<span class="w">     </span><span class="p">(</span><span class="n">anabolic</span><span class="p">)</span><span class="w">         </span><span class="o">|</span><span class="w">    </span><span class="err">\</span><span class="n">____</span><span class="w"> </span><span class="p">(</span><span class="n">catabolic</span><span class="w"> </span><span class="n">sink</span><span class="p">)</span><span class="w"> </span><span class="n">____</span>
+<span class="w">                </span><span class="n">v</span><span class="w">                                </span><span class="n">v</span>
+<span class="w">   </span><span class="n">UbiA</span><span class="w"> </span><span class="p">(</span><span class="n">PP_5318</span><span class="p">,</span><span class="w"> </span><span class="n">EC</span><span class="w"> </span><span class="mf">2.5.1.39</span><span class="p">)</span><span class="w">                        </span><span class="n">PobA</span><span class="w"> </span><span class="p">(</span><span class="n">PP_3537</span><span class="p">,</span><span class="w"> </span><span class="n">EC</span><span class="w"> </span><span class="mf">1.14.13.2</span><span class="p">)</span>
+<span class="w">   </span><span class="mi">4</span><span class="n">HB</span><span class="w"> </span><span class="n">octaprenyltransferase</span><span class="w">                          </span><span class="mi">4</span><span class="n">HB</span><span class="w"> </span><span class="mi">3</span><span class="o">-</span><span class="n">monooxygenase</span>
+<span class="w">   </span><span class="n">INNER</span><span class="w"> </span><span class="n">MEMBRANE</span><span class="w">                                     </span><span class="n">ANABOLIC</span><span class="w"> </span><span class="n">vs</span><span class="w"> </span><span class="n">CATABOLIC</span><span class="w"> </span><span class="p">(</span><span class="n">F006</span><span class="p">)</span>
+<span class="o">|</span><span class="w">                                                        </span><span class="o">|</span>
+<span class="n">v</span><span class="w">                                                        </span><span class="n">v</span>
+<span class="w">   </span><span class="mi">3</span><span class="o">-</span><span class="n">octaprenyl</span><span class="o">-</span><span class="mi">4</span><span class="n">HB</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">(</span><span class="n">Ubi</span><span class="w"> </span><span class="n">pathway</span><span class="p">)</span><span class="w"> </span><span class="p">...</span><span class="w">                </span><span class="n">PROTOCATECHUATE</span>
+<span class="o">|</span><span class="w">                                                        </span><span class="o">|</span>
+<span class="n">v</span><span class="w">                                              </span><span class="n">beta</span><span class="o">-</span><span class="n">ketoadipate</span><span class="w"> </span><span class="n">pathway</span>
+<span class="w">   </span><span class="o">+----------------+</span><span class="w">                                  </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">TCA</span><span class="w"> </span><span class="p">(</span><span class="n">carbon</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">energy</span><span class="p">)</span>
+<span class="w">   </span><span class="o">|</span><span class="w">   </span><span class="n">UBIQUINONE</span><span class="w">   </span><span class="o">|</span><span class="w">  </span><span class="n">respiratory</span><span class="o">-</span><span class="n">chain</span><span class="w"> </span><span class="n">electron</span><span class="w"> </span><span class="n">carrier</span><span class="w"> </span><span class="p">(</span><span class="n">F002</span><span class="p">)</span>
+<span class="w">   </span><span class="o">|</span><span class="w">  </span><span class="p">(</span><span class="n">coenzyme</span><span class="w"> </span><span class="n">Q</span><span class="p">)</span><span class="w">  </span><span class="o">|</span>
+<span class="w">   </span><span class="o">+----------------+</span>
+
+<span class="w">   </span><span class="n">ubiCA</span><span class="w"> </span><span class="n">operon</span><span class="w"> </span><span class="p">(</span><span class="n">F005</span><span class="p">)</span><span class="o">:</span><span class="w">  </span><span class="p">...</span><span class="n">PP_5317</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">PP_5318</span><span class="p">...</span><span class="w">  </span><span class="p">(</span><span class="n">same</span><span class="w"> </span><span class="n">strand</span><span class="p">;</span><span class="w"> </span><span class="n">abutting</span><span class="w"> </span><span class="n">ORFs</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>Reaction and specificity (F001).</strong> UbiC catalyzes a cofactor-independent, intramolecular elimination: the C3 enolpyruvyl ether of chorismate is cleaved and the ring aromatizes, releasing pyruvate and 4-hydroxybenzoate. The narrow substrate specificity matches the small helix-grip fold that encloses the aromatic ring (F004).</p>
+<p><strong>Localization (F002).</strong> The enzyme is soluble and cytoplasmic, producing 4HB in the cytosol where the small polar product can diffuse to the inner-membrane UbiA. Pairing a soluble upstream enzyme with a membrane-bound downstream partner is a common motif for delivering a hydrophilic precursor into a membrane-anchored pathway.</p>
+<p><strong>Pathway logic (F002, F005).</strong> UbiC is committed because chorismate is a hub metabolite feeding multiple essential branches. Placing a regulated, product-inhibited (F003) lyase at this junction lets the cell meter carbon into ubiquinone according to respiratory demand — reinforced by carbon-source-responsive expression. The physical <em>ubiCA</em> linkage provides a genetic mechanism to co-express producer and consumer, minimizing free-4HB accumulation.</p>
+<p><strong>Anabolic vs catabolic split (F006).</strong> A separate catabolic 4HB enzyme (PobA) underscores that UbiC's role is specifically anabolic cofactor supply. In engineered strains, 4HB can be intentionally shunted from the UbiC source into the PobA route to make muconate — direct proof that the two nodes are independently addressable.</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>UbiC (PP_5317)</th>
+<th>UbiA (PP_5318)</th>
+<th>PobA (PP_3537)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>EC</td>
+<td>4.1.3.40</td>
+<td>2.5.1.39</td>
+<td>1.14.13.2</td>
+</tr>
+<tr>
+<td>Reaction</td>
+<td>chorismate → 4HB + pyruvate</td>
+<td>4HB + polyprenyl-PP → 3-prenyl-4HB</td>
+<td>4HB + O₂ + NADPH → protocatechuate</td>
+</tr>
+<tr>
+<td>Direction</td>
+<td>Anabolic (4HB producer)</td>
+<td>Anabolic (4HB consumer)</td>
+<td>Catabolic (4HB consumer)</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Cytoplasm</td>
+<td>Inner membrane</td>
+<td>Cytoplasm</td>
+</tr>
+<tr>
+<td>Cofactor</td>
+<td>None</td>
+<td>Polyprenyl diphosphate</td>
+<td>FAD, NADPH, O₂</td>
+</tr>
+<tr>
+<td>Pathway</td>
+<td>Ubiquinone biosynthesis (entry)</td>
+<td>Ubiquinone biosynthesis (step 2)</td>
+<td>β-ketoadipate degradation</td>
+</tr>
+<tr>
+<td>Role vs UbiC</td>
+<td>—</td>
+<td>Downstream operon partner</td>
+<td>Competing catabolic sink</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15902464/">15902464</a></td>
+<td><em>Regulation of the ubiquinone biosynthetic genes ubiCA in E. coli</em></td>
+<td>Defines UbiC as chorismate pyruvate-lyase making 4HB (F001); establishes downstream UbiA prenylation and ubiquinone/respiratory context (F002); documents <em>ubiCA</em> chromosomal linkage mirrored in KT2440 (F005).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/37036340/">37036340</a></td>
+<td><em>A 4-HBA-mediated signaling system in Shigella sonnei</em></td>
+<td>Independent confirmation in another gammaproteobacterium that UbiC is a chorismate pyruvate-lyase converting chorismate → 4HB (F001).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30861344/">30861344</a></td>
+<td><em>Sensor-Enabled Alleviation of Product Inhibition in Chorismate Pyruvate-Lyase</em></td>
+<td>Verifies full stoichiometry (chorismate → 4HB + pyruvate) in KT2440 (F001); demonstrates product (4HB) inhibition of UbiC in the native host (F003); shows 4HB routing toward muconate, distinguishing anabolic from catabolic use (F006).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27871872/">27871872</a></td>
+<td><em>Biotechnological production of aromatic compounds from biomass</em></td>
+<td>Confirms chorismate is the branch-point precursor exploited in engineering — the UbiC substrate (F004).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19875279/">19875279</a></td>
+<td><em>Production of aromatic compounds in bacteria</em></td>
+<td>Shows <em>P. putida</em> is used to make p-hydroxybenzoate (4HB), the UbiC product, situating UbiC in the chorismate-derived aromatic network (F004).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Supporting / context literature.</strong> The <em>ubiA</em> prenyltransferase modeling study (<a href="https://pubmed.ncbi.nlm.nih.gov/15597200/">PMID: 15597200</a>) details the downstream membrane step; multiple metabolic-engineering reports (<a href="https://pubmed.ncbi.nlm.nih.gov/30031819/">PMID: 30031819</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/36575132/">PMID: 36575132</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/42025600/">PMID: 42025600</a>) reuse chorismate-pyruvate lyases (including product-inhibition-relieved variants) to over-produce 4HB, corroborating both the reaction and the product-inhibition property across hosts. No reviewed source contradicted the chorismate pyruvate-lyase assignment.</p>
+<p><strong>Evidence hierarchy for Q88C66 specifically.</strong> (1) <em>Direct biochemistry of close orthologs</em> (highest weight): UbiC catalysis established in <em>E. coli</em> and <em>Shigella</em>, and UbiC activity/kinetics measured in the KT2440 background itself (PMID 30861344). (2) <em>Genetic/regulatory evidence</em>: <em>ubiCA</em> operon organization and carbon-source-dependent regulation in <em>E. coli</em> (PMID 15902464). (3) <em>Bioinformatic/curatorial inference</em>: HAMAP rule MF_01632, UbiC-family membership, Pfam PF04345, ~30% identity to <em>E. coli</em> UbiC, and the "Probable" qualifier indicate the <em>P. putida</em> ortholog's function is assigned by strong homology and rule-based curation rather than a dedicated in vitro study of Q88C66 alone. The assignment is nonetheless robust because it is corroborated by direct work on close orthologs and by demonstrated UbiC activity in the KT2440 host.</p>
+<hr />
+<h2 id="supported-vs-refuted-hypotheses">Supported vs Refuted Hypotheses</h2>
+<p><strong>Supported:</strong><br />
+- UbiC catalyzes chorismate → 4HB + pyruvate (EC 4.1.3.40). <strong>Supported</strong> (curated reaction + multiple orthologs).<br />
+- UbiC is the committed entry step of ubiquinone biosynthesis. <strong>Supported</strong> (PMID 15902464).<br />
+- UbiC is a soluble cytoplasmic enzyme. <strong>Supported</strong> (UniProt; no TM/signal features in the 185-aa sequence).<br />
+- UbiC is product-inhibited by 4HB. <strong>Supported</strong> (PMID 30861344, in KT2440).<br />
+- <em>ubiC</em> and <em>ubiA</em> form a conserved contiguous gene pair in <em>P. putida</em>. <strong>Supported</strong> (KEGG coordinates; PP_5317 abuts PP_5318).<br />
+- UbiC is the anabolic, cofactor-directed 4HB source, distinct from catabolic PobA/PP_3537. <strong>Supported</strong> (KEGG; separate locus/KO).</p>
+<p><strong>Refuted / not supported:</strong><br />
+- The gene-symbol-ambiguity concern (a different gene sharing the "ubiC" symbol) was <strong>refuted</strong>: <em>ubiC</em> uniformly denotes chorismate pyruvate-lyase; no conflicting literature was found.<br />
+- No evidence that UbiC acts on non-chorismate substrates or requires a cofactor — consistent with a specific, cofactor-independent lyase.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li><strong>No direct enzymology of Q88C66 itself.</strong> The reaction, substrate specificity, and mechanism are established for orthologs (<em>E. coli</em>, <em>Shigella</em>) and for UbiC activity in the KT2440 host, but no purified-enzyme kinetic study (kcat, Km for chorismate, Ki for 4HB) of the specific PP_5317 gene product has been reported. The UniProt name retains "Probable," reflecting rule-based (MF_01632) assignment.</li>
+<li><strong>Localization is inferred.</strong> The cytoplasmic assignment rests on UniProt annotation and the enzyme's soluble, cofactor-independent character (no transmembrane segment or signal peptide); it has not been confirmed experimentally in <em>P. putida</em>.</li>
+<li><strong>Structural inference only.</strong> The helix-grip / START-like fold (IPR028978) and active-site residues are inferred from family membership and ~30% identity to <em>E. coli</em> UbiC, not from an experimental <em>P. putida</em> UbiC structure.</li>
+<li><strong>Operon transcription not directly mapped in KT2440.</strong> The <em>ubiCA</em> linkage is established from genome coordinates and by analogy to <em>E. coli</em>; a <em>P. putida</em>-specific transcript/promoter map has not been verified.</li>
+<li><strong>Anabolic/catabolic balance unquantified.</strong> The partitioning of 4HB between UbiC-driven anabolic supply for ubiquinone and endogenous PobA-driven catabolism has not been measured for the native locus.</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li><strong>Purify and kinetically characterize Q88C66.</strong> Express recombinant PP_5317 and measure kcat and Km for chorismate and Ki for 4HB (and the benzoate surrogate), converting the "Probable" annotation into a directly demonstrated one.</li>
+<li><strong>Solve or model the structure.</strong> Obtain a crystal/cryo-EM structure or high-confidence AlphaFold model with docking to map the chorismate-binding cavity and the residues responsible for 4HB feedback inhibition; compare with the <em>E. coli</em> UbiC helix-grip fold.</li>
+<li><strong>Confirm subcellular localization.</strong> Use cell fractionation and/or a functional fluorescent fusion in KT2440 to verify cytoplasmic localization and any transient association with UbiA.</li>
+<li><strong>Map the <em>ubiCA</em> transcript.</strong> Perform RT-PCR/RNA-seq and 5′-RACE to confirm co-transcription of PP_5317–PP_5318, identify the promoter, and test carbon-source responsiveness.</li>
+<li><strong>Genetic dependency test.</strong> Construct a <em>ubiC</em> deletion and complementation in KT2440; assess ubiquinone content, aerobic respiratory growth, and rescue by exogenous 4HB to formally establish UbiC as the committed, essential entry to the Ubi pathway in this organism.</li>
+<li><strong>Quantify flux partitioning.</strong> Introduce product-inhibition-relieved UbiC variants at the native locus and measure flux between the anabolic (UbiA) and catabolic (PobA) 4HB fates to define the branch-point control exerted by UbiC.</li>
+</ol>
+<hr />
+<h2 id="conclusion-integrated-model">Conclusion (Integrated Model)</h2>
+<p>Six mutually reinforcing lines of evidence — curated reaction annotation (UniProt/HAMAP MF_01632), direct biochemistry of close orthologs (<em>E. coli</em>, <em>Shigella</em>), native-host activity/kinetics in <em>P. putida</em> KT2440, ~30% sequence identity to <em>E. coli</em> UbiC, a conserved contiguous <em>ubiCA</em> gene pair, and clear separation from the catabolic PobA enzyme — converge on a single, precise annotation:</p>
+<blockquote>
+<p><strong>UbiC (Q88C66 / PP_5317) is a soluble cytoplasmic chorismate pyruvate-lyase (EC 4.1.3.40) that cleaves the enolpyruvyl side chain from chorismate — its specific substrate — to yield 4-hydroxybenzoate + pyruvate, the first committed, cofactor-independent, feedback-inhibited step of ubiquinone (coenzyme Q) biosynthesis. Its 4HB product is handed to the immediately adjacent, co-transcribed membrane prenyltransferase UbiA (PP_5318), committing shikimate-pathway carbon to the respiratory-chain lipophilic electron carrier. This anabolic, cofactor-directed role is distinct from catabolic 4HB processing by PobA (PP_3537).</strong></p>
+</blockquote>
+<p>The primary function, substrate specificity, localization, and pathway placement are established with high confidence; the outstanding gaps are strain-specific in vitro kinetics and a <em>P. putida</em>-specific structure.</p>
+<hr />
+<h3 id="key-references">Key References</h3>
+<ul>
+<li>Kwon O, Druce-Hoffman M, Meganathan R (2005) <em>Regulation of the ubiquinone (coenzyme Q) biosynthetic genes ubiCA in E. coli.</em> <a href="https://pubmed.ncbi.nlm.nih.gov/15902464/">PMID: 15902464</a></li>
+<li>Jha RK et al. (2019) <em>Sensor-Enabled Alleviation of Product Inhibition in Chorismate Pyruvate-Lyase</em> (in <em>P. putida</em> KT2440). <a href="https://pubmed.ncbi.nlm.nih.gov/30861344/">PMID: 30861344</a></li>
+<li>Wang et al. (2023) <em>A 4-Hydroxybenzoic Acid-Mediated Signaling System Controls the Physiology and Virulence of Shigella sonnei.</em> <a href="https://pubmed.ncbi.nlm.nih.gov/37036340/">PMID: 37036340</a></li>
+<li><em>Biotechnological production of aromatic compounds of the extended shikimate pathway from renewable biomass.</em> <a href="https://pubmed.ncbi.nlm.nih.gov/27871872/">PMID: 27871872</a></li>
+<li><em>Production of aromatic compounds in bacteria.</em> <a href="https://pubmed.ncbi.nlm.nih.gov/19875279/">PMID: 19875279</a></li>
+<li>UniProt Q88C66 (curated entry; HAMAP MF_01632).</li>
+<li>KEGG genome: ppu:PP_5317 (<em>ubiC</em>, K03181), ppu:PP_5318 (<em>ubiA</em>, K03179), ppu:PP_3537 (<em>pobA</em>, K00481); pathway ppu00130; module M00117.</li>
+</ul>
+<p><em>Report generated from a 5-iteration autonomous investigation; 6 findings confirmed, 18 papers reviewed. All functional claims are traceable to the reviewed UniProt/KEGG records and to the cited primary literature, with the most decisive functional evidence originating in the target strain</em> P. putida <em>KT2440.</em></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="ubiC-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="ubiC-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:15902464</li>
+<li>PMID:37036340</li>
+<li>PMID:30861344</li>
+<li>PMID:27871872</li>
+<li>PMID:19875279</li>
+<li>PMID:15597200</li>
+<li>PMID:30031819</li>
+<li>PMID:36575132</li>
+<li>PMID:42025600</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88C66
+gene_symbol: ubiC
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  ubiC encodes chorismate pyruvate-lyase, which cleaves chorismate to
+  4-hydroxybenzoate and pyruvate. The 4-hydroxybenzoate product supplies the
+  aromatic head group for ubiquinone biosynthesis in the cytosol.
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Cytoplasm is redundant with the more specific cytosol annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The broad parent location adds no information beyond GO:0005829 for this soluble enzyme.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: UbiC is a soluble cytosolic enzyme.
+    action: ACCEPT
+    reason: The reviewed UniProt record assigns UbiC to the cytoplasm.
+    supported_by:
+    - reference_id: file:PSEPK/ubiC/ubiC-uniprot.txt
+      supporting_text: Cytoplasm
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Ubiquinone biosynthesis is the core process for UbiC.
+    action: ACCEPT
+    reason: UbiC supplies the 4-hydroxybenzoate aromatic head group for this pathway.
+    supported_by:
+    - reference_id: file:PSEPK/ubiC/ubiC-uniprot.txt
+      supporting_text: ubiquinone pathway
+- term:
+    id: GO:0008813
+    label: chorismate lyase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Chorismate lyase activity is the core molecular function of UbiC.
+    action: ACCEPT
+    reason: UniProt assigns EC 4.1.3.40 and Rhea 16505 for chorismate cleavage.
+    supported_by:
+    - reference_id: file:PSEPK/ubiC/ubiC-uniprot.txt
+      supporting_text: chorismate pyruvate-lyase
+    - reference_id: file:PSEPK/ubiC/ubiC-deep-research-openscientist.md
+      supporting_text: chorismate = 4-hydroxybenzoate + pyruvate
+- term:
+    id: GO:0042866
+    label: pyruvate biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: Pyruvate is a coproduct, not the biological purpose of the UbiC reaction.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      UbiC is selected to supply 4-hydroxybenzoate for ubiquinone biosynthesis;
+      annotating it to general pyruvate biosynthesis overstates a side product.
+references:
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/ubiC/ubiC-uniprot.txt
+  title: UniProt entry Q88C66 for ubiC
+  findings:
+  - statement: &gt;-
+      The reviewed entry assigns cytosolic chorismate pyruvate-lyase activity
+      that supplies 4-hydroxybenzoate to ubiquinone biosynthesis.
+- id: file:PSEPK/ubiC/ubiC-goa.tsv
+  title: QuickGO GOA annotations for ubiC
+  findings:
+  - statement: The fetched GOA table contains the five annotations reviewed here.
+- id: file:PSEPK/ubiC/ubiC-deep-research-openscientist.md
+  title: OpenScientist functional review of PSEPK ubiC
+  findings:
+  - statement: &gt;-
+      The report confirms the exact Rhea reaction, intact UbiC family identity,
+      and a directly adjacent ubiC-ubiA pathway context in KT2440; no direct
+      target-protein assay was assumed from host-level engineering studies.
+core_functions:
+- description: &gt;-
+    Cytosolic cleavage of chorismate to 4-hydroxybenzoate and pyruvate,
+    supplying the aromatic head group for ubiquinone biosynthesis.
+  molecular_function:
+    id: GO:0008813
+    label: chorismate lyase activity
+  directly_involved_in:
+  - id: GO:0006744
+    label: ubiquinone biosynthetic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:PSEPK/ubiC/ubiC-uniprot.txt
+    supporting_text: chorismate pyruvate-lyase
+  - reference_id: file:PSEPK/ubiC/ubiC-deep-research-openscientist.md
+    supporting_text: chorismate = 4-hydroxybenzoate + pyruvate
+proposed_new_terms: []
+suggested_questions: []
+suggested_experiments: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

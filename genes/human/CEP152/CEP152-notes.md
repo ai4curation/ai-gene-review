@@ -1,0 +1,33 @@
+# CEP152 review notes
+
+## 2026-07-18: source collection and review scope
+
+- `just fetch-gene human CEP152` produced a 61-row GOA snapshot and UniProt record for O94986.
+- `just fetch-gene-pmids human CEP152` cached every PMID used by the GOA snapshot.
+- Automated deep research was attempted first with Falcon/Edison and then with the Perplexity-lite fallback. The provider endpoints returned HTTP 402 and HTTP 401, respectively, so no provider-named deep-research file was created. Primary publications and the local PAINT source were reviewed directly instead; the synthesis is in `CEP152-deep-research-manual.md`.
+- PAINT source inspection: PANTHER node `PTN000818649` carries IBD assertions for centrosome and centriole replication and seeds the human O94986 and mouse Cep152 annotations. The node is CEP152-specific even though the broader PTHR10337 family also contains SHC-family proteins. The IBA calls are therefore biologically coherent and independently supported, but are not independent experimental evidence because human CEP152 is one of the source genes.
+
+## Functional synthesis
+
+- CEP152 is a long, coiled-coil pericentriolar-material scaffold. Its N terminus binds PLK4 and its C-terminal region binds CPAP/CENPJ, providing a spatial platform for procentriole initiation [PMID:20852615 "Here we show that the centriolar protein Asterless (Asl; human orthologue CEP152) provides a conserved molecular platform, the amino terminus of which interacts with the cryptic Polo box of Plk4 whereas the carboxy terminus interacts with the centriolar protein Sas-4 (CPAP in humans)."]
+- Human CEP152 is required to recruit PLK4 and CPAP and for faithful centrosome duplication [PMID:21059844 "Our results suggest that Cep152 recruits Plk4 and CPAP to the centrosome to ensure a faithful centrosome duplication process."]
+- CEP63 and CEP152 form a self-assembling cylindrical architecture around the parent centriole that recruits PLK4 [PMID:30858376 "Here we show that two human pericentriolar material scaffolds, Cep63 and Cep152, cooperatively generate a heterotetrameric α-helical bundle that functions in conjunction with its neighboring hydrophobic motifs to self-assemble into a higher-order cylindrical architecture capable of recruiting downstream components, including Plk4, a key regulator for centriole duplication."]
+- The newer structural/cell-biological analysis confirms stepwise CEP63-CEP152 assembly and shows that assembly-defective mutants compromise CEP152 organization, PLK4 relocalization, and centriole duplication [PMID:37433832 "Mutants defective in Cep63•Cep152 heterotetramer formation displayed crippled pericentriolar Cep152 organization, polo-like kinase 4 (Plk4) relocalization to the procentriole assembly site, and Plk4-mediated centriole duplication."]
+- CEP152 also has a temporally regulated mitotic role. It recruits APC/C to spindle poles and is an APC/C substrate; CEP152 ubiquitylation releases CEP57 so CEP57 can engage pericentrin and promote microtubule nucleation [PMID:34878135 "The APC/C-mediated ubiquitylation of Cep152 at the centrosome releases Cep57 from this inhibitory complex and enables its interaction with pericentrin, a critical step in promoting microtubule nucleation."] This supports adding `mitotic spindle assembly` but does not justify assigning catalytic ubiquitin-ligase or microtubule-nucleator activity to CEP152.
+- In multiciliated-cell models, DEUP1 condensates recruit CEP152 and PLK4 [PMID:33658185 "Using an optogenetic approach, we demonstrated that self-assembly and the C-terminal half of Deup1 were sufficient to spatially compartmentalize centrosomal protein 152 (Cep152) and polo like kinase 4 (Plk4), master components for centriole biogenesis, in the cytoplasm."] Mouse airway multiciliated cells show Cep152 at parental centrioles and deuterosomes [PMID:33627667 "Cep152 decorated parental centrioles (arrows), deuterosomes (arrowheads indicating typical ones), and, in stages V–VI, a spot at the proximal side of the nascent centrioles or basal bodies in mTECs8."] These annotations are credible specialized-context functions, but direct human evidence is not in the current source set.
+- Biallelic CEP152 variants cause MCPH9 and Seckel syndrome 5. A truncating allele prevented centrosomal localization in transfected cells [PMID:20598275 "The third affected child was compound heterozygous for the missense mutation plus a second, premature-termination mutation truncating a third of the protein and preventing its localization to centrosomes in transfected cells."] Disease phenotypes are consequences of centrosome/centriole dysfunction, not separate molecular functions.
+
+## Annotation decisions
+
+- Retain centriole-replication, centrosome-duplication, centrosome, centriole, pericentriolar-material, procentriole, and procentriole-replication-complex annotations. They converge with direct depletion, localization, interaction, and structural evidence.
+- Retain `protein-macromolecule adaptor activity` and `protein kinase binding`. Replace PLK4-supported generic `protein binding` records with `protein kinase binding`; replace the CENPJ/CPAP generic binding record with adaptor activity because the experiment establishes a two-ended scaffold.
+- Mark generic protein-binding records for CEP131, MOV10, CCDC66, and CINP as over-annotated. The interactions may be real, but GO:0005515 does not convey CEP152's role and the available evidence does not support a more precise molecular activity for those individual contacts.
+- Keep basal-body, deuterosome, and multiciliated epithelial centriole-amplification annotations as non-core specialized-context annotations.
+- Keep the 22 Reactome-derived cytosol records as non-core. A soluble pool is plausible, but cytosol is broad and not CEP152's defining site of action; the record multiplicity reflects Reactome event membership rather than 22 independent localization experiments.
+- Add `mitotic spindle assembly` from the direct APC/C-CEP152-CEP57-pericentrin study.
+
+## Boundaries and unresolved points
+
+- The architecture and recruitment mechanism are strong, but the stoichiometry and dynamic handoff among CEP192, CEP63-CEP152, PLK4, STIL, and CENPJ across the cell cycle remain incompletely resolved.
+- It is unclear how much of the deuterosome/multiciliated-cell mechanism is conserved in human epithelia and how essential deuterosomes are relative to parent-centriole-associated amplification routes.
+- Isoform-specific functions are not established. UniProt lists four alternative products, but the reviewed functional studies do not provide a robust basis for assigning distinct GO activities to individual isoforms.

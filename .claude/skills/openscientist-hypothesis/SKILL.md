@@ -125,6 +125,8 @@ hypothesis jobs for gene function review.
 
 - Background jobs are killed on container restart; the harness reports which.
   Check the `GENE-hypotheses/<slug>/` dir — if empty, clean it and re-launch.
-- The API key is not persisted in the environment here; pass
-  `OPENSCIENTIST_API_KEY` inline when calling the script directly. Wire it into
-  the environment/setup config for reproducible `just` runs.
+- Check whether the API key is already set before assuming it is not:
+  `printenv OPENSCIENTIST_API_KEY` (it is exported in some environments, so the
+  `just` recipes work directly). Only if it is absent, pass
+  `OPENSCIENTIST_API_KEY` inline when calling the script directly, and wire it
+  into the environment/setup config for reproducible `just` runs.

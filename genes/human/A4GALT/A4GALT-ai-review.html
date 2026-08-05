@@ -1,0 +1,3092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A4GALT - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>A4GALT</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9NPC4" target="_blank" class="term-link">
+                        Q9NPC4
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "A4GALT";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9NPC4" data-a="DESCRIPTION: A4GALT (lactosylceramide 4-alpha-galactosyltransfe..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>A4GALT (lactosylceramide 4-alpha-galactosyltransferase; Gb3/CD77 synthase; alpha-1,4-galactosyltransferase, Alpha4Gal-T1; EC 2.4.1.228) is a Golgi apparatus membrane enzyme of glycosyltransferase family 32 that initiates the globo-series branch of glycosphingolipid biosynthesis. It transfers galactose from UDP-alpha-D-galactose, in an alpha-1,4 linkage, onto the terminal beta-galactose of lactosylceramide (LacCer) to produce globotriaosylceramide (Gb3Cer), also known as CD77 or the P(k) antigen, releasing UDP. Gb3Cer is the root structure of the neutral globo-series glycosphingolipids and the basis of the P1PK histo-blood group system; it is the precursor of globoside (Gb4Cer) and the cell-surface receptor exploited by Shiga toxins (verotoxins). The enzyme is a single-pass type II membrane protein with a short N-terminal cytoplasmic tail, a transmembrane signal-anchor, and a lumenal catalytic domain bearing a conserved DXD motif required for activity. Beyond the canonical LacCer acceptor it can also galactosylate galactosylceramide and, depending on the residue at position 211, extend its acceptor range to build the P1 and NOR blood-group glycotopes. Loss-of-function variants cause the rare p (null) blood group phenotype, and the Q211E variant causes NOR polyagglutination syndrome.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008378" target="_blank" class="term-link">
+                                    GO:0008378
+                                </a>
+                            </span>
+                            <span class="term-label">galactosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPC4" data-a="GO:0008378" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation to the general parent term galactosyltransferase activity. A4GALT is indeed a galactosyltransferase, so this is correct but insufficiently specific: the enzyme&#39;s defined activity is lactosylceramide 4-alpha-galactosyltransferase (Gb3/CD77 synthase, EC 2.4.1.228). The informative specific term GO:0050512 is already annotated with experimental evidence, so this general term is best retained as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but a general parent of the specific, experimentally supported GO:0050512; kept for completeness but not the core function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006688" target="_blank" class="term-link">
+                                    GO:0006688
+                                </a>
+                            </span>
+                            <span class="term-label">glycosphingolipid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPC4" data-a="GO:0006688" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation to glycosphingolipid biosynthetic process. This is the correct core biological process: A4GALT initiates the globo-series branch of neutral glycosphingolipid biosynthesis by converting lactosylceramide to globotriaosylceramide (Gb3Cer), the root structure of the globo-series.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10748143" target="_blank" class="term-link">
+                                        PMID:10748143
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Since Gb3/CD77 synthase initiates the synthesis of globo series glycolipids</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000139" target="_blank" class="term-link">
+                                    GO:0000139
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPC4" data-a="GO:0000139" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation (UniProt Subcellular Location keyword mapping) to Golgi membrane. This is the correct, specific compartment for A4GALT, a single-pass type II Golgi membrane glycosyltransferase, and is consistent with the UniProt subcellular location and the Reactome TAS annotation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/A4GALT/A4GALT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Golgi apparatus membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016758" target="_blank" class="term-link">
+                                    GO:0016758
+                                </a>
+                            </span>
+                            <span class="term-label">hexosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPC4" data-a="GO:0016758" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA) annotation to the very general term hexosyltransferase activity. Galactose is a hexose, so this is a correct high-level parent, but it is far less informative than the specific GO:0050512 lactosylceramide 4-alpha-galactosyltransferase activity that is experimentally supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but a very general parent of the specific experimentally supported MF term; retained as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050512" target="_blank" class="term-link">
+                                    GO:0050512
+                                </a>
+                            </span>
+                            <span class="term-label">lactosylceramide 4-alpha-galactosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPC4" data-a="GO:0050512" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation (RHEA:11924 / EC:2.4.1.228 mapping) to the specific molecular function lactosylceramide 4-alpha-galactosyltransferase activity. This precisely captures the Gb3/CD77 synthase reaction and is corroborated by direct experimental evidence (PMID:10748143) and by Reactome. Core function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10748143" target="_blank" class="term-link">
+                                        PMID:10748143
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">showed alpha1, 4-galactosyltransferase activity only on lactosylceramide and galactosylceramide</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006688" target="_blank" class="term-link">
+                                    GO:0006688
+                                </a>
+                            </span>
+                            <span class="term-label">glycosphingolipid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9840309
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPC4" data-a="GO:0006688" data-r="Reactome:R-HSA-9840309" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS annotation to glycosphingolipid biosynthetic process, via the &#34;Glycosphingolipid biosynthesis&#34; pathway. Correct core biological process; A4GALT catalyzes the LacCer-to-Gb3Cer step that initiates the globo-series of glycosphingolipids.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10748143" target="_blank" class="term-link">
+                                        PMID:10748143
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Since Gb3/CD77 synthase initiates the synthesis of globo series glycolipids</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050512" target="_blank" class="term-link">
+                                    GO:0050512
+                                </a>
+                            </span>
+                            <span class="term-label">lactosylceramide 4-alpha-galactosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9846477
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPC4" data-a="GO:0050512" data-r="Reactome:R-HSA-9846477" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS annotation (reaction &#34;A4GALT transfers galactose to LacCer&#34;) to the specific molecular function lactosylceramide 4-alpha-galactosyltransferase activity. This is the enzyme&#39;s core catalytic function and matches the experimental evidence.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10748143" target="_blank" class="term-link">
+                                        PMID:10748143
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">showed alpha1, 4-galactosyltransferase activity only on lactosylceramide and galactosylceramide</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050512" target="_blank" class="term-link">
+                                    GO:0050512
+                                </a>
+                            </span>
+                            <span class="term-label">lactosylceramide 4-alpha-galactosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10748143" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10748143
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning of globotriaosylceramide/CD77 synthase, a ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPC4" data-a="GO:0050512" data-r="PMID:10748143" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (EXP) annotation to lactosylceramide 4-alpha-galactosyltransferase activity. In the expression-cloning study, extracts of cells transfected with the A4GALT cDNA showed alpha-1,4- galactosyltransferase activity on lactosylceramide, producing Gb3/CD77. This is the definitive experimental support for the core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10748143" target="_blank" class="term-link">
+                                        PMID:10748143
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">showed alpha1, 4-galactosyltransferase activity only on lactosylceramide and galactosylceramide</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000139" target="_blank" class="term-link">
+                                    GO:0000139
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9846477
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPC4" data-a="GO:0000139" data-r="Reactome:R-HSA-9846477" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS annotation to Golgi membrane. This is the correct specific compartment where A4GALT acts as a type II Golgi glycosyltransferase, consistent with the UniProt subcellular location.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/A4GALT/A4GALT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Golgi apparatus membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10748143" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10748143
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning of globotriaosylceramide/CD77 synthase, a ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPC4" data-a="GO:0016020" data-r="PMID:10748143" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation to the general term membrane (from MGI, based on PMID:10748143, which characterized A4GALT as a type II membrane protein). This is experimentally grounded but the more specific and informative compartment, Golgi membrane (GO:0000139), is also annotated. As an experimental annotation it is retained, but as a general parent it is non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10748143" target="_blank" class="term-link">
+                                        PMID:10748143
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">predicted a type II membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007009" target="_blank" class="term-link">
+                                    GO:0007009
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane organization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10747952" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10747952
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and expression of the histo-blood group Pk UDP-galac...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPC4" data-a="GO:0007009" data-r="PMID:10747952" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation (acts_upstream_of_or_within) to plasma membrane organization, from MGI based on the Pk-synthase cloning/expression study. A4GALT is a Golgi enzyme; any effect on the plasma membrane is an indirect, downstream consequence of depositing Gb3/CD77 glycosphingolipids into surface membranes/microdomains rather than a direct molecular role of the enzyme in organizing the plasma membrane. As an experimental annotation it is retained, but it is a peripheral, non-core process for this enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Indirect downstream effect of Gb3/CD77 deposition on cell-surface glycosphingolipids; not the enzyme&#39;s core (Golgi glycosyltransferase) function. Experimental, so retained rather than removed.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008378" target="_blank" class="term-link">
+                                    GO:0008378
+                                </a>
+                            </span>
+                            <span class="term-label">galactosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10747952" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10747952
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and expression of the histo-blood group Pk UDP-galac...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPC4" data-a="GO:0008378" data-r="PMID:10747952" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation to the general parent galactosyltransferase activity. Steffensen et al. expressed alpha4Gal-T1 (A4GALT) and demonstrated Pk (Gb3) synthase activity, confirming galactosyltransferase function. The annotation is experimentally valid but general; the specific term GO:0050512 is the core function, so this parent is kept as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10747952" target="_blank" class="term-link">
+                                        PMID:10747952
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">revealed it encoded P(k) but not P(1) synthase activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008378" target="_blank" class="term-link">
+                                    GO:0008378
+                                </a>
+                            </span>
+                            <span class="term-label">galactosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10748143" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10748143
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning of globotriaosylceramide/CD77 synthase, a ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPC4" data-a="GO:0008378" data-r="PMID:10748143" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation to the general parent galactosyltransferase activity from the expression-cloning study, which directly demonstrated alpha-1,4- galactosyltransferase activity on lactosylceramide. Experimentally valid but general; the specific term GO:0050512 is annotated as the core function, so this parent is retained as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10748143" target="_blank" class="term-link">
+                                        PMID:10748143
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">showed alpha1, 4-galactosyltransferase activity only on lactosylceramide and galactosylceramide</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000139" target="_blank" class="term-link">
+                                    GO:0000139
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10748143" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10748143
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning of globotriaosylceramide/CD77 synthase, a ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPC4" data-a="GO:0000139" data-r="PMID:10748143" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAS annotation to Golgi membrane. This is the correct specific compartment for A4GALT and is consistent with its characterization as a type II membrane glycosyltransferase and with the UniProt Golgi apparatus membrane location; also independently supported by TAS (Reactome) and IEA.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/A4GALT/A4GALT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Golgi apparatus membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006688" target="_blank" class="term-link">
+                                    GO:0006688
+                                </a>
+                            </span>
+                            <span class="term-label">glycosphingolipid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10748143" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10748143
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning of globotriaosylceramide/CD77 synthase, a ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPC4" data-a="GO:0006688" data-r="PMID:10748143" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAS annotation to glycosphingolipid biosynthetic process. Correct core biological process; A4GALT initiates globo-series glycosphingolipid synthesis by converting lactosylceramide to Gb3Cer. Independently supported by IBA and Reactome TAS.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10748143" target="_blank" class="term-link">
+                                        PMID:10748143
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Since Gb3/CD77 synthase initiates the synthesis of globo series glycolipids</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Lactosylceramide 4-alpha-galactosyltransferase (Gb3/CD77 synthase): transfers galactose from UDP-alpha-D-galactose in an alpha-1,4 linkage onto lactosylceramide to produce globotriaosylceramide (Gb3Cer / CD77 / P(k) antigen), initiating the globo-series glycosphingolipid branch.</h3>
+                <span class="vote-buttons" data-g="Q9NPC4" data-a="FUNCTION: Lactosylceramide 4-alpha-galactosyltransferase (Gb..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050512" target="_blank" class="term-link">
+                            lactosylceramide 4-alpha-galactosyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000139" target="_blank" class="term-link">
+                                Golgi membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10748143" target="_blank" class="term-link">
+                                PMID:10748143
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">showed alpha1, 4-galactosyltransferase activity only on lactosylceramide and galactosylceramide</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10747952" target="_blank" class="term-link">
+                                PMID:10747952
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">revealed it encoded P(k) but not P(1) synthase activity</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Initiates biosynthesis of the neutral globo-series glycosphingolipids by generating Gb3Cer, the root structure and precursor of globoside (Gb4Cer) and the P1PK blood-group glycolipids.</h3>
+                <span class="vote-buttons" data-g="Q9NPC4" data-a="FUNCTION: Initiates biosynthesis of the neutral globo-series..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050512" target="_blank" class="term-link">
+                            lactosylceramide 4-alpha-galactosyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000139" target="_blank" class="term-link">
+                                Golgi membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10748143" target="_blank" class="term-link">
+                                PMID:10748143
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Since Gb3/CD77 synthase initiates the synthesis of globo series glycolipids</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10747952" target="_blank" class="term-link">
+                            PMID:10747952
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cloning and expression of the histo-blood group Pk UDP-galactose: Ga1beta-4G1cbeta1-cer alpha1, 4-galactosyltransferase. Molecular genetic basis of the p phenotype.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Expression of A4GALT (alpha4Gal-T1) coding constructs in insect cells demonstrated P(k) (Gb3) synthase activity, establishing A4GALT as the P(k) synthase; the loss-of-function M183K mutation defines the rare p (null) phenotype.</div>
+
+                        <div class="finding-text">"Expression of full coding constructs of alpha4Gal-T1 in insect cells revealed it encoded P(k) but not P(1) synthase activity"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10748143" target="_blank" class="term-link">
+                            PMID:10748143
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Molecular cloning of globotriaosylceramide/CD77 synthase, a glycosyltransferase that initiates the synthesis of globo series glycosphingolipids.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Expression cloning of the A4GALT cDNA (Gb3/CD77 synthase) produced alpha-1,4-galactosyltransferase activity on lactosylceramide (and galactosylceramide), yielding Gb3/CD77 and initiating globo-series glycosphingolipid synthesis; the protein is a type II membrane protein.</div>
+
+                        <div class="finding-text">"the extracts of the transfectant cells showed alpha1, 4-galactosyltransferase activity only on lactosylceramide and galactosylceramide"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9840309
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Glycosphingolipid biosynthesis</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9846477
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A4GALT transfers galactose to LacCer</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/A4GALT/A4GALT-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry Q9NPC4 (A4GAT_HUMAN), Lactosylceramide 4-alpha-galactosyltransferase</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A4GALT is a Golgi apparatus membrane, single-pass type II membrane glycosyltransferase (EC 2.4.1.228) that transfers galactose from UDP-alpha-D-galactose in an alpha-1,4 linkage to lactosylceramide to produce globotriaosylceramide/Gb3Cer (P(k)/CD77 antigen), the root structure of the globo-series neutral glycosphingolipids.</div>
+
+                        <div class="finding-text">"SUBCELLULAR LOCATION: Golgi apparatus membrane"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(A4GALT-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9NPC4" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="a4galt-q9npc4-review-notes">A4GALT (Q9NPC4) review notes</h1>
+<p>Human <strong>A4GALT</strong> = Lactosylceramide 4-alpha-galactosyltransferase, a.k.a. Gb3/CD77<br />
+synthase, alpha-1,4-galactosyltransferase (Alpha4Gal-T1), P1/Pk synthase,<br />
+globotriaosylceramide synthase. EC 2.4.1.228. UniProt Q9NPC4, HGNC:18149,<br />
+chr 22q13.2, 353 aa, glycosyltransferase family 32 (CAZy GT32).</p>
+<h2 id="core-molecular-function">Core molecular function</h2>
+<p>A4GALT is the enzyme that <strong>initiates the globo-series glycosphingolipid branch</strong>.<br />
+It transfers galactose from UDP-alpha-D-galactose, in an alpha-1,4 linkage, onto the<br />
+4-position of the terminal beta-galactose of <strong>lactosylceramide (LacCer)</strong>, producing<br />
+<strong>globotriaosylceramide (Gb3Cer / CD77 / P^k antigen)</strong> + UDP + H+.</p>
+<ul>
+<li>EC and reaction from UniProt: <code>EC=2.4.1.228 {ECO:0000269|PubMed:10748143}</code>; Rhea<br />
+  RHEA:11924 [file:human/A4GALT/A4GALT-uniprot.txt, "EC=2.4.1.228 {ECO:0000269|PubMed:10748143}"].</li>
+<li>UniProt FUNCTION: "Catalyzes the transfer of galactose from UDP-alpha-D-galactose in<br />
+  an alpha1,4 linkage to lactosylceramide ... to produce<br />
+  globotriaosylceramide/globoside Gb3Cer ... also known as P(k) antigen or CD77"<br />
+  [file:human/A4GALT/A4GALT-uniprot.txt].</li>
+<li>Expression-cloning paper (Kojima et al. 2000): "the extracts of the transfectant<br />
+  cells showed alpha1, 4-galactosyltransferase activity only on lactosylceramide and<br />
+  galactosylceramide" [PMID:10748143 abstract].</li>
+<li>Steffensen et al. 2000: "Expression of full coding constructs of alpha4Gal-T1 in<br />
+  insect cells revealed it encoded P(k) but not P(1) synthase activity" [PMID:10747952<br />
+  abstract]; the p (null) phenotype maps to loss-of-function A4GALT mutations<br />
+  ("A single homozygous missense mutation, M183K, was found in six Swedish individuals<br />
+  of the rare p phenotype").</li>
+</ul>
+<p>The current specific GO MF term is <strong>GO:0050512 lactosylceramide 4-alpha-galactosyltransferase<br />
+activity</strong> (OLS def: "beta-D-galactosyl-(1,4)-D-glucosylceramide + UDP-galactose =<br />
+alpha-D-galactosyl-(1,4)-beta-D-galactosyl-(1,4)-D-glucosylceramide + UDP"), which exactly<br />
+matches the Gb3-synthase reaction. The broader GO:0008378 galactosyltransferase activity<br />
+is a correct-but-general parent (IDA in GOA); GO:0016758 hexosyltransferase activity is a<br />
+still-more-general IEA parent.</p>
+<h2 id="additional-acceptor-broadened-activities">Additional (acceptor-broadened) activities</h2>
+<p>Beyond the canonical LacCer→Gb3 reaction, the enzyme also (per UniProt CATALYTIC ACTIVITY /<br />
+FUNCTION):<br />
+- Transfers Gal to <strong>galactosylceramide</strong> (GalCer) → Ga2 (KM 132 uM; secondary, in vitro)<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/10748143">PMID:10748143</a>.<br />
+- Synthesizes the <strong>P1 glycan</strong> epitope on paragloboside/neolacto (nLc4) and on complex-type<br />
+  N-glycans [PMID:26773500, PMID:33460651 — abstract-only, not cached locally].<br />
+- The <strong>Q211E</strong> variant broadens acceptor specificity to make the <strong>NOR antigen</strong><br />
+  (Gal-alpha1,4-GalNAc on Gb4) and increases catalytic efficiency; underlies NOR<br />
+  polyagglutination syndrome [MIM:111400] (PubMed:22965229, 26773500, 33460651 —<br />
+  not cached locally). These are captured in UniProt but not (yet) as separate GO terms.</p>
+<p>These extended activities are real but the <strong>core</strong> annotated MF remains Gb3/CD77 synthase.</p>
+<h2 id="cellular-location">Cellular location</h2>
+<p>Golgi apparatus membrane; single-pass <strong>type II</strong> membrane protein (N-terminal cytoplasmic<br />
+tail 1-22, TM 23-43 signal-anchor, lumenal catalytic domain 44-353)<br />
+[file:human/A4GALT/A4GALT-uniprot.txt, "SUBCELLULAR LOCATION: Golgi apparatus membrane"; and<br />
+"Single-\nCC       pass type II membrane protein"]. Kojima et al.: "predicted a type II<br />
+membrane protein with 19 amino acids of cytoplasmic domain, 26 amino acids of transmembrane<br />
+region, and a catalytic domain" <a href="https://pubmed.ncbi.nlm.nih.gov/10748143">PMID:10748143</a>. The GOA <code>GO:0016020 membrane</code> IDA and<br />
+<code>GO:0000139 Golgi membrane</code> (TAS/IEA/NAS) annotations are consistent; Golgi membrane is the<br />
+specific correct compartment.</p>
+<h2 id="biological-process">Biological process</h2>
+<p>Gb3 is the <strong>root structure of the neutral globo-series glycosphingolipids</strong> and the P1PK<br />
+(and GLOB) blood-group system. UniProt: "Globoside Gb3Cer/P(k)/CD77 is a root structure in<br />
+biosynthesis pathway of neutral glycosphingolipids of the globo-series"<br />
+[file:human/A4GALT/A4GALT-uniprot.txt]. Reactome R-HSA-9846477 "A4GALT transfers galactose to<br />
+LacCer ... starts the biosynthesis of globo series glycolipids". Core BP =<br />
+<strong>GO:0006688 glycosphingolipid biosynthetic process</strong> (IBA + TAS + NAS). The narrower<br />
+GO:0001576 globoside biosynthetic process technically begins at the Gb4 tetrasaccharide core<br />
+(one step downstream of A4GALT's Gb3 product), so GO:0006688 is the appropriate core BP.</p>
+<h2 id="physiology-disease-relevance-context-not-core">Physiology / disease relevance (context, not core)</h2>
+<ul>
+<li><strong>Shiga toxin / verotoxin receptor</strong>: Gb3/CD77 is the cell-surface receptor for Shiga toxins;<br />
+  expressing A4GALT confers toxin sensitivity. UniProt FUNCTION (Microbial infection):<br />
+  "P1 and Pk antigens are targeted by Shiga toxins (also called verotoxins), as a way to enter<br />
+  the cell". Kojima: "Transfection of the cDNA into L cells resulted in the constitution of<br />
+  sensitivity to the apoptosis with Shiga-like toxins (verotoxins)" <a href="https://pubmed.ncbi.nlm.nih.gov/10748143">PMID:10748143</a>. This<br />
+  underlies the IEA <code>GO:0015643 toxic substance binding</code> (Ensembl) in the UniProt DR block —<br />
+  note that term is NOT in the GOA TSV, so it is not among the 15 seeded annotations.</li>
+<li><strong>Fabry disease</strong>: Gb3 is the substrate that accumulates when the downstream lysosomal<br />
+  enzyme GLA (alpha-galactosidase A) is deficient; A4GALT itself is not mutated in Fabry.</li>
+<li><strong>Blood groups / transfusion</strong>: A4GALT loss-of-function → rare p (null) phenotype;<br />
+  Q211E → NOR polyagglutination [MIM:111400].</li>
+<li><strong>Cancer / EMT</strong>: A4GALT-made globo-GSLs modulate epithelial-mesenchymal transition and<br />
+  E-cadherin adhesion (PMID:29572228, not cached).</li>
+</ul>
+<h2 id="goa-annotation-review-summary-15-seeded-annotations">GOA annotation-review summary (15 seeded annotations)</h2>
+<p>Molecular function:<br />
+- GO:0050512 lactosylceramide 4-alpha-galactosyltransferase activity — the specific correct MF.<br />
+  EXP (PMID:10748143) → ACCEPT (core). Two Reactome TAS + one IEA (RHEA/EC) → ACCEPT/KEEP as<br />
+  corroborating.<br />
+- GO:0008378 galactosyltransferase activity — correct but general parent. Three IDA<br />
+  (PMID:10747952 x2, 10748143) and one IBA. Keep IDAs (experimental, not removable); general —<br />
+  KEEP_AS_NON_CORE (GO:0050512 is the informative term).<br />
+- GO:0016758 hexosyltransferase activity — general IEA parent (ARBA). KEEP_AS_NON_CORE.</p>
+<p>Cellular component:<br />
+- GO:0000139 Golgi membrane — correct specific compartment. TAS (Reactome), IEA (SubCell),<br />
+  NAS (PMID:10748143). ACCEPT the TAS as core location; keep the others.<br />
+- GO:0016020 membrane — general parent of Golgi membrane; IDA (PMID:10748143).<br />
+  KEEP_AS_NON_CORE (experimental, not removable; but Golgi membrane is more informative).</p>
+<p>Biological process:<br />
+- GO:0006688 glycosphingolipid biosynthetic process — correct core BP. IBA, TAS, NAS. ACCEPT.<br />
+- GO:0007009 plasma membrane organization — IDA acts_upstream_of_or_within (PMID:10747952,<br />
+  MGI). Indirect/downstream consequence of Gb3 synthesis on membrane microdomains, not a direct<br />
+  molecular role of the enzyme. Experimental so not removable → KEEP_AS_NON_CORE.</p>
+<h2 id="core-functions-chosen">Core functions chosen</h2>
+<ol>
+<li>MF: GO:0050512 lactosylceramide 4-alpha-galactosyltransferase activity (Gb3/CD77 synthase).</li>
+<li>CC/location: GO:0000139 Golgi membrane.</li>
+<li>BP: GO:0006688 glycosphingolipid biosynthetic process (globo-series initiation).</li>
+</ol>
+<p>All term ids verified current &amp; non-obsolete via OLS (2026-07).</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9NPC4
+gene_symbol: A4GALT
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  A4GALT (lactosylceramide 4-alpha-galactosyltransferase; Gb3/CD77 synthase;
+  alpha-1,4-galactosyltransferase, Alpha4Gal-T1; EC 2.4.1.228) is a Golgi
+  apparatus membrane enzyme of glycosyltransferase family 32 that initiates the
+  globo-series branch of glycosphingolipid biosynthesis. It transfers galactose
+  from UDP-alpha-D-galactose, in an alpha-1,4 linkage, onto the terminal
+  beta-galactose of lactosylceramide (LacCer) to produce globotriaosylceramide
+  (Gb3Cer), also known as CD77 or the P(k) antigen, releasing UDP. Gb3Cer is the
+  root structure of the neutral globo-series glycosphingolipids and the basis of
+  the P1PK histo-blood group system; it is the precursor of globoside (Gb4Cer)
+  and the cell-surface receptor exploited by Shiga toxins (verotoxins). The
+  enzyme is a single-pass type II membrane protein with a short N-terminal
+  cytoplasmic tail, a transmembrane signal-anchor, and a lumenal catalytic domain
+  bearing a conserved DXD motif required for activity. Beyond the canonical
+  LacCer acceptor it can also galactosylate galactosylceramide and, depending on
+  the residue at position 211, extend its acceptor range to build the P1 and NOR
+  blood-group glycotopes. Loss-of-function variants cause the rare p (null) blood
+  group phenotype, and the Q211E variant causes NOR polyagglutination syndrome.
+existing_annotations:
+- term:
+    id: GO:0008378
+    label: galactosyltransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) annotation to the general parent term
+      galactosyltransferase activity. A4GALT is indeed a galactosyltransferase,
+      so this is correct but insufficiently specific: the enzyme&#39;s defined
+      activity is lactosylceramide 4-alpha-galactosyltransferase (Gb3/CD77
+      synthase, EC 2.4.1.228). The informative specific term GO:0050512 is
+      already annotated with experimental evidence, so this general term is best
+      retained as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but a general parent of the specific, experimentally supported
+      GO:0050512; kept for completeness but not the core function.
+- term:
+    id: GO:0006688
+    label: glycosphingolipid biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) annotation to glycosphingolipid biosynthetic process.
+      This is the correct core biological process: A4GALT initiates the
+      globo-series branch of neutral glycosphingolipid biosynthesis by converting
+      lactosylceramide to globotriaosylceramide (Gb3Cer), the root structure of
+      the globo-series.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:10748143
+      supporting_text: &gt;-
+        Since Gb3/CD77 synthase initiates the synthesis of globo series glycolipids
+- term:
+    id: GO:0000139
+    label: Golgi membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic annotation (UniProt Subcellular Location keyword mapping) to
+      Golgi membrane. This is the correct, specific compartment for A4GALT, a
+      single-pass type II Golgi membrane glycosyltransferase, and is consistent
+      with the UniProt subcellular location and the Reactome TAS annotation.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/A4GALT/A4GALT-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Golgi apparatus membrane&#39;
+- term:
+    id: GO:0016758
+    label: hexosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (ARBA) annotation to the very general term hexosyltransferase
+      activity. Galactose is a hexose, so this is a correct high-level parent,
+      but it is far less informative than the specific GO:0050512 lactosylceramide
+      4-alpha-galactosyltransferase activity that is experimentally supported.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but a very general parent of the specific experimentally supported
+      MF term; retained as non-core.
+- term:
+    id: GO:0050512
+    label: lactosylceramide 4-alpha-galactosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic annotation (RHEA:11924 / EC:2.4.1.228 mapping) to the specific
+      molecular function lactosylceramide 4-alpha-galactosyltransferase activity.
+      This precisely captures the Gb3/CD77 synthase reaction and is corroborated
+      by direct experimental evidence (PMID:10748143) and by Reactome. Core
+      function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:10748143
+      supporting_text: &gt;-
+        showed alpha1, 4-galactosyltransferase activity only on lactosylceramide
+        and galactosylceramide
+- term:
+    id: GO:0006688
+    label: glycosphingolipid biosynthetic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9840309
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome TAS annotation to glycosphingolipid biosynthetic process, via the
+      &#34;Glycosphingolipid biosynthesis&#34; pathway. Correct core biological process;
+      A4GALT catalyzes the LacCer-to-Gb3Cer step that initiates the globo-series
+      of glycosphingolipids.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:10748143
+      supporting_text: &gt;-
+        Since Gb3/CD77 synthase initiates the synthesis of globo series glycolipids
+- term:
+    id: GO:0050512
+    label: lactosylceramide 4-alpha-galactosyltransferase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9846477
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome TAS annotation (reaction &#34;A4GALT transfers galactose to LacCer&#34;)
+      to the specific molecular function lactosylceramide
+      4-alpha-galactosyltransferase activity. This is the enzyme&#39;s core catalytic
+      function and matches the experimental evidence.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:10748143
+      supporting_text: &gt;-
+        showed alpha1, 4-galactosyltransferase activity only on lactosylceramide
+        and galactosylceramide
+- term:
+    id: GO:0050512
+    label: lactosylceramide 4-alpha-galactosyltransferase activity
+  evidence_type: EXP
+  original_reference_id: PMID:10748143
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental (EXP) annotation to lactosylceramide
+      4-alpha-galactosyltransferase activity. In the expression-cloning study,
+      extracts of cells transfected with the A4GALT cDNA showed alpha-1,4-
+      galactosyltransferase activity on lactosylceramide, producing Gb3/CD77.
+      This is the definitive experimental support for the core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:10748143
+      supporting_text: &gt;-
+        showed alpha1, 4-galactosyltransferase activity only on lactosylceramide
+        and galactosylceramide
+- term:
+    id: GO:0000139
+    label: Golgi membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9846477
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome TAS annotation to Golgi membrane. This is the correct specific
+      compartment where A4GALT acts as a type II Golgi glycosyltransferase,
+      consistent with the UniProt subcellular location.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/A4GALT/A4GALT-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Golgi apparatus membrane&#39;
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IDA
+  original_reference_id: PMID:10748143
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      IDA annotation to the general term membrane (from MGI, based on
+      PMID:10748143, which characterized A4GALT as a type II membrane protein).
+      This is experimentally grounded but the more specific and informative
+      compartment, Golgi membrane (GO:0000139), is also annotated. As an
+      experimental annotation it is retained, but as a general parent it is
+      non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:10748143
+      supporting_text: predicted a type II membrane protein
+- term:
+    id: GO:0007009
+    label: plasma membrane organization
+  evidence_type: IDA
+  original_reference_id: PMID:10747952
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: &gt;-
+      IDA annotation (acts_upstream_of_or_within) to plasma membrane
+      organization, from MGI based on the Pk-synthase cloning/expression study.
+      A4GALT is a Golgi enzyme; any effect on the plasma membrane is an indirect,
+      downstream consequence of depositing Gb3/CD77 glycosphingolipids into
+      surface membranes/microdomains rather than a direct molecular role of the
+      enzyme in organizing the plasma membrane. As an experimental annotation it
+      is retained, but it is a peripheral, non-core process for this enzyme.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Indirect downstream effect of Gb3/CD77 deposition on cell-surface
+      glycosphingolipids; not the enzyme&#39;s core (Golgi glycosyltransferase)
+      function. Experimental, so retained rather than removed.
+- term:
+    id: GO:0008378
+    label: galactosyltransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:10747952
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IDA annotation to the general parent galactosyltransferase activity.
+      Steffensen et al. expressed alpha4Gal-T1 (A4GALT) and demonstrated Pk
+      (Gb3) synthase activity, confirming galactosyltransferase function. The
+      annotation is experimentally valid but general; the specific term
+      GO:0050512 is the core function, so this parent is kept as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:10747952
+      supporting_text: &gt;-
+        revealed it encoded P(k) but not P(1) synthase activity
+- term:
+    id: GO:0008378
+    label: galactosyltransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:10748143
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IDA annotation to the general parent galactosyltransferase activity from
+      the expression-cloning study, which directly demonstrated alpha-1,4-
+      galactosyltransferase activity on lactosylceramide. Experimentally valid
+      but general; the specific term GO:0050512 is annotated as the core
+      function, so this parent is retained as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:10748143
+      supporting_text: &gt;-
+        showed alpha1, 4-galactosyltransferase activity only on lactosylceramide
+        and galactosylceramide
+- term:
+    id: GO:0000139
+    label: Golgi membrane
+  evidence_type: NAS
+  original_reference_id: PMID:10748143
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      NAS annotation to Golgi membrane. This is the correct specific compartment
+      for A4GALT and is consistent with its characterization as a type II
+      membrane glycosyltransferase and with the UniProt Golgi apparatus membrane
+      location; also independently supported by TAS (Reactome) and IEA.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/A4GALT/A4GALT-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Golgi apparatus membrane&#39;
+- term:
+    id: GO:0006688
+    label: glycosphingolipid biosynthetic process
+  evidence_type: NAS
+  original_reference_id: PMID:10748143
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      NAS annotation to glycosphingolipid biosynthetic process. Correct core
+      biological process; A4GALT initiates globo-series glycosphingolipid
+      synthesis by converting lactosylceramide to Gb3Cer. Independently supported
+      by IBA and Reactome TAS.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:10748143
+      supporting_text: &gt;-
+        Since Gb3/CD77 synthase initiates the synthesis of globo series glycolipids
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10747952
+  title: &#39;Cloning and expression of the histo-blood group Pk UDP-galactose: Ga1beta-4G1cbeta1-cer
+    alpha1, 4-galactosyltransferase. Molecular genetic basis of the p phenotype.&#39;
+  findings:
+  - statement: &gt;-
+      Expression of A4GALT (alpha4Gal-T1) coding constructs in insect cells
+      demonstrated P(k) (Gb3) synthase activity, establishing A4GALT as the P(k)
+      synthase; the loss-of-function M183K mutation defines the rare p (null)
+      phenotype.
+    supporting_text: &gt;-
+      Expression of full coding constructs of alpha4Gal-T1 in insect cells
+      revealed it encoded P(k) but not P(1) synthase activity
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Original cloning/expression paper identifying A4GALT as the
+      Pk (Gb3) synthase and the molecular basis of the p phenotype. Cached entry
+      is abstract-only (full_text_available: false).
+- id: PMID:10748143
+  title: Molecular cloning of globotriaosylceramide/CD77 synthase, a glycosyltransferase
+    that initiates the synthesis of globo series glycosphingolipids.
+  findings:
+  - statement: &gt;-
+      Expression cloning of the A4GALT cDNA (Gb3/CD77 synthase) produced
+      alpha-1,4-galactosyltransferase activity on lactosylceramide (and
+      galactosylceramide), yielding Gb3/CD77 and initiating globo-series
+      glycosphingolipid synthesis; the protein is a type II membrane protein.
+    supporting_text: &gt;-
+      the extracts of the transfectant cells showed alpha1, 4-galactosyltransferase
+      activity only on lactosylceramide and galactosylceramide
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Definitive expression-cloning paper for human Gb3/CD77
+      synthase; source of the EXP catalytic-activity annotation and EC 2.4.1.228.
+      Cached entry is abstract-only (full_text_available: false).
+- id: Reactome:R-HSA-9840309
+  title: Glycosphingolipid biosynthesis
+  findings: []
+- id: Reactome:R-HSA-9846477
+  title: A4GALT transfers galactose to LacCer
+  findings: []
+- id: file:human/A4GALT/A4GALT-uniprot.txt
+  title: UniProt entry Q9NPC4 (A4GAT_HUMAN), Lactosylceramide 4-alpha-galactosyltransferase
+  findings:
+  - statement: &gt;-
+      A4GALT is a Golgi apparatus membrane, single-pass type II membrane
+      glycosyltransferase (EC 2.4.1.228) that transfers galactose from
+      UDP-alpha-D-galactose in an alpha-1,4 linkage to lactosylceramide to produce
+      globotriaosylceramide/Gb3Cer (P(k)/CD77 antigen), the root structure of the
+      globo-series neutral glycosphingolipids.
+    supporting_text: &#39;SUBCELLULAR LOCATION: Golgi apparatus membrane&#39;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Authoritative UniProt record for Q9NPC4.
+core_functions:
+- description: &gt;-
+    Lactosylceramide 4-alpha-galactosyltransferase (Gb3/CD77 synthase): transfers
+    galactose from UDP-alpha-D-galactose in an alpha-1,4 linkage onto
+    lactosylceramide to produce globotriaosylceramide (Gb3Cer / CD77 / P(k)
+    antigen), initiating the globo-series glycosphingolipid branch.
+  molecular_function:
+    id: GO:0050512
+    label: lactosylceramide 4-alpha-galactosyltransferase activity
+  supported_by:
+  - reference_id: PMID:10748143
+    supporting_text: &gt;-
+      showed alpha1, 4-galactosyltransferase activity only on lactosylceramide
+      and galactosylceramide
+  - reference_id: PMID:10747952
+    supporting_text: &gt;-
+      revealed it encoded P(k) but not P(1) synthase activity
+  locations:
+  - id: GO:0000139
+    label: Golgi membrane
+- description: &gt;-
+    Initiates biosynthesis of the neutral globo-series glycosphingolipids by
+    generating Gb3Cer, the root structure and precursor of globoside (Gb4Cer) and
+    the P1PK blood-group glycolipids.
+  molecular_function:
+    id: GO:0050512
+    label: lactosylceramide 4-alpha-galactosyltransferase activity
+  supported_by:
+  - reference_id: PMID:10748143
+    supporting_text: &gt;-
+      Since Gb3/CD77 synthase initiates the synthesis of globo series glycolipids
+  locations:
+  - id: GO:0000139
+    label: Golgi membrane
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

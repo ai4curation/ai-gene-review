@@ -1,0 +1,4402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DAD1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>DAD1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P61803" target="_blank" class="term-link">
+                        P61803
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "DAD1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P61803" data-a="DESCRIPTION: DAD1 (defender against cell death 1) is a small (1..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DAD1 (defender against cell death 1) is a small (113 aa), hydrophobic, multi-pass endoplasmic reticulum (ER) membrane protein that is a non-catalytic core subunit of the oligosaccharyltransferase (OST) complex. OST catalyzes the first committed step of protein N-linked glycosylation: the en-bloc transfer of the pre-assembled Glc3Man9GlcNAc2 oligosaccharide from the dolichyl-pyrophosphate lipid carrier onto asparagine residues within Asn-X-Ser/Thr sequons of nascent polypeptides. DAD1 is a common core subunit shared by both mammalian OST forms — the cotranslational STT3A complex (OST-A) and the post-translocational STT3B complex (OST-B) — and is required for the assembly and stability of both. It has no independent catalytic activity; rather, it contributes structurally to the integrity of the holo-enzyme, and its loss destabilizes OST and abolishes N-glycosylation. Because N-glycosylation is essential for the folding, quality control, and surface delivery of secretory and membrane proteins, depletion of DAD1 produces global hypoglycosylation and, historically, was first identified through the apoptotic phenotype that follows loss of the protein, which is the origin of its &#34;defender against cell death&#34; name.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006487" target="_blank" class="term-link">
+                                    GO:0006487
+                                </a>
+                            </span>
+                            <span class="term-label">protein N-linked glycosylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0006487" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) propagation of the core biological process. DAD1 is a subunit of the OST complex that performs the first step of N-linked glycosylation; this is the correct core BP for the gene. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/DAD1/DAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Subunit of the oligosaccharyl transferase (OST) complex that catalyzes the initial transfer of a defined glycan</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008250" target="_blank" class="term-link">
+                                    GO:0008250
+                                </a>
+                            </span>
+                            <span class="term-label">oligosaccharyltransferase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0008250" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) propagation of OST complex membership. DAD1 is a conserved core subunit of the OST complex across eukaryotes; this is the correct core cellular component. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/DAD1/DAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Component of the oligosaccharyltransferase (OST) complex</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0005789" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA from the UniProt Subcellular Location mapping. This is the correct, specific subcellular location for DAD1 (a multi-pass ER membrane protein) and is the gene&#39;s core localization. A redundant-but-correct core CC; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/DAD1/DAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane; Multi-pass</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008250" target="_blank" class="term-link">
+                                    GO:0008250
+                                </a>
+                            </span>
+                            <span class="term-label">oligosaccharyltransferase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0008250" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO (IEA) mapping of the DAD/Ost2 domain (IPR003038) to the OST complex. Correct core CC, redundant with experimental annotations; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/DAD1/DAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Component of the oligosaccharyltransferase (OST) complex</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO (IEA) mapping to the generic parent term &#34;membrane&#34;. This is subsumed by the specific and correct &#34;endoplasmic reticulum membrane&#34; annotation and adds no information. Not wrong, but over-general; mark as over-annotated.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/DAD1/DAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane; Multi-pass</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31831667" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31831667
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cryo-electron microscopy structures of human oligosaccharylt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0005789" data-r="PMID:31831667" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAS (ComplexPortal) localization to the ER membrane, consistent with the cryo-EM structures of human OST-A and OST-B and with the UniProt subcellular location. Correct core CC; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/DAD1/DAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane; Multi-pass</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006487" target="_blank" class="term-link">
+                                    GO:0006487
+                                </a>
+                            </span>
+                            <span class="term-label">protein N-linked glycosylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31831667" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31831667
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cryo-electron microscopy structures of human oligosaccharylt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0006487" data-r="PMID:31831667" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA (ComplexPortal) for the OST complex, of which DAD1 is a subunit, performing N-linked glycosylation; supported by the cryo-EM structures of human OST-A and OST-B. This is the core biological process for DAD1; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31831667" target="_blank" class="term-link">
+                                        PMID:31831667
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzes the transfer of a high-mannose glycan onto secretory proteins in the endoplasmic reticulum</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006487" target="_blank" class="term-link">
+                                    GO:0006487
+                                </a>
+                            </span>
+                            <span class="term-label">protein N-linked glycosylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31831667" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31831667
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cryo-electron microscopy structures of human oligosaccharylt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0006487" data-r="PMID:31831667" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAS (ComplexPortal) duplicate of the core N-linked glycosylation BP from the same OST structural paper. Correct but redundant with the IDA annotation above; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31831667" target="_blank" class="term-link">
+                                        PMID:31831667
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzes the transfer of a high-mannose glycan onto secretory proteins in the endoplasmic reticulum</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008250" target="_blank" class="term-link">
+                                    GO:0008250
+                                </a>
+                            </span>
+                            <span class="term-label">oligosaccharyltransferase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31831667" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31831667
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cryo-electron microscopy structures of human oligosaccharylt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0008250" data-r="PMID:31831667" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI (ComplexPortal) placing DAD1 in the OST complex, based on the cryo-EM structures resolving DAD1 as a subunit of OST-A and OST-B. Correct core CC; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/DAD1/DAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Component of the oligosaccharyltransferase (OST) complex</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008250" target="_blank" class="term-link">
+                                    GO:0008250
+                                </a>
+                            </span>
+                            <span class="term-label">oligosaccharyltransferase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31831667" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31831667
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cryo-electron microscopy structures of human oligosaccharylt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0008250" data-r="PMID:31831667" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAS (ComplexPortal) duplicate of OST complex membership from the same structural paper. Correct but redundant with the IPI/IDA/IBA annotations; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/DAD1/DAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Component of the oligosaccharyltransferase (OST) complex</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160226" target="_blank" class="term-link">
+                                    GO:0160226
+                                </a>
+                            </span>
+                            <span class="term-label">oligosaccharyltransferase complex A</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31831667" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31831667
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cryo-electron microscopy structures of human oligosaccharylt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0160226" data-r="PMID:31831667" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA placing DAD1 in the specific STT3A-containing OST-A complex, based on the cryo-EM structure of human OST-A (PDB 6S7O/6S7T, DAD1 = chain D). DAD1 is a shared core subunit present in both OST forms; this specific-form membership is correct and more informative than the generic GO:0008250. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/DAD1/DAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">OST exists in two different complex forms which contain common core</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160226" target="_blank" class="term-link">
+                                    GO:0160226
+                                </a>
+                            </span>
+                            <span class="term-label">oligosaccharyltransferase complex A</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36697828" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36697828
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Visualization of translation and protein biogenesis at the E...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0160226" data-r="PMID:36697828" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA placing DAD1 in OST-A, from the cryo-ET study of the ribosome–translocon that resolved the SEC61-OSTA-TRAP translocon (PDB 8B6L includes DAD1 chain M per UniProt). The paper does not name DAD1 in the abstract/full text but structurally resolves the OST-A complex of which DAD1 is a subunit. Correct specific-form CC; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36697828" target="_blank" class="term-link">
+                                        PMID:36697828
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">OSTA, which is responsible for co-translational N-glycosylation of substrates, is observed in at least 50% of translocon particles in mammalian cells</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160226" target="_blank" class="term-link">
+                                    GO:0160226
+                                </a>
+                            </span>
+                            <span class="term-label">oligosaccharyltransferase complex A</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38670073" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:38670073
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Positive selection CRISPR screens reveal a druggable pocket ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0160226" data-r="PMID:38670073" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA placing DAD1 in OST-A, from the CRISPR/cryo-EM study of the STT3A-containing OST (PDB 8PN9, DAD1 = chain D per UniProt). Correct specific-form CC; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38670073" target="_blank" class="term-link">
+                                        PMID:38670073
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the LPS receptor Toll-like receptor 4 (TLR4) is specifically dependent on the oligosaccharyltransferase complex OST-A for N-glycosylation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160227" target="_blank" class="term-link">
+                                    GO:0160227
+                                </a>
+                            </span>
+                            <span class="term-label">oligosaccharyltransferase complex B</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31831667" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31831667
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cryo-electron microscopy structures of human oligosaccharylt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0160227" data-r="PMID:31831667" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA placing DAD1 in the specific STT3B-containing OST-B complex, based on the cryo-EM structure of human OST-B. DAD1 is a shared core subunit of both OST forms, so membership in OST-B is correct and informative alongside the OST-A annotation. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/DAD1/DAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">OST exists in two different complex forms which contain common core</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008250" target="_blank" class="term-link">
+                                    GO:0008250
+                                </a>
+                            </span>
+                            <span class="term-label">oligosaccharyltransferase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22467853" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22467853
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The oligosaccharyltransferase subunits OST48, DAD1 and KCP2 ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0008250" data-r="PMID:22467853" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA (ARUK-UCL) for OST complex membership from the DAD1 knockdown study, which analyzed the stability and composition of STT3A- and STT3B-containing OST complexes. Correct core CC; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22467853" target="_blank" class="term-link">
+                                        PMID:22467853
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DAD1 are required for the assembly of both STT3A- and STT3B-containing OST complexes</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006487" target="_blank" class="term-link">
+                                    GO:0006487
+                                </a>
+                            </span>
+                            <span class="term-label">protein N-linked glycosylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22467853" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22467853
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The oligosaccharyltransferase subunits OST48, DAD1 and KCP2 ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0006487" data-r="PMID:22467853" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP: siRNA knockdown of DAD1 destabilizes OST and produces a pronounced hypoglycosylation phenotype, demonstrating a functional requirement of DAD1 for N-linked glycosylation. This is the core BP for the gene; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22467853" target="_blank" class="term-link">
+                                        PMID:22467853
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">underlie their pronounced hypoglycosylation phenotypes. Thus, OST48 and DAD1 are global modulators of OST stability and hence N-glycosylation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031647" target="_blank" class="term-link">
+                                    GO:0031647
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of protein stability</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22467853" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22467853
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The oligosaccharyltransferase subunits OST48, DAD1 and KCP2 ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0031647" data-r="PMID:22467853" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP: DAD1 depletion destabilizes both STT3A- and STT3B-containing OST complexes. This annotation captures DAD1&#39;s role in maintaining the stability/integrity of the OST complex (i.e., the stability of OST subunit proteins), which is a real and well-supported aspect of DAD1 biology but is ancillary to (a mechanism underlying) its core N-glycosylation role rather than a distinct core process. Keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22467853" target="_blank" class="term-link">
+                                        PMID:22467853
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DAD1 are required for the assembly of both STT3A- and STT3B-containing OST complexes</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008047" target="_blank" class="term-link">
+                                    GO:0008047
+                                </a>
+                            </span>
+                            <span class="term-label">enzyme activator activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22467853" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22467853
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The oligosaccharyltransferase subunits OST48, DAD1 and KCP2 ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0008047" data-r="PMID:22467853" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP-based molecular function asserting that DAD1 activates the OST enzyme. DAD1 is a non-catalytic structural subunit that is required for OST assembly/stability and hence for maximal enzyme activity; it does not act as a classical enzyme activator (allosteric or covalent stimulator) that binds and switches on a separate enzyme. The better model is a non-catalytic subunit contributing to the OST catalytic activity via complex integrity. This experimental annotation is not removed, but its MF is an over-interpretation; mark as over-annotated (the core MF contribution is modeled in core_functions via contributes_to_molecular_function).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22467853" target="_blank" class="term-link">
+                                        PMID:22467853
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">global modulators of OST stability and hence N-glycosylation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19946888
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Defining the membrane proteome of NK cells.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0016020" data-r="PMID:19946888" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HDA from a large-scale NK-cell membrane proteome; DAD1 was one of 1843 MS-identified proteins. Only supports the generic &#34;membrane&#34; term, which is subsumed by the specific and correct ER membrane annotation. Low-information; mark as over-annotated.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link">
+                                        PMID:19946888
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mass spectrometric analysis identified 1843 proteins with high confidence scores</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-446209
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0005789" data-r="Reactome:R-HSA-446209" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS (Reactome) ER membrane localization from the &#34;Transfer of N-glycan to the protein&#34; reaction, in which DAD1 is listed as a component of the OST complex. Correct core CC; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-446209
+
+                                </span>
+
+                                <div class="support-text">This reaction is catalyzed by the oligosaccharyltransferase (OST) complex, comprising at least seven proteins; DAD1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9694793
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0005789" data-r="Reactome:R-HSA-9694793" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS (Reactome) ER membrane localization from an OST-catalyzed N-glycosylation reaction (viral spike protein). Correct core CC, redundant with the other ER membrane annotations; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/DAD1/DAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane; Multi-pass</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9816276
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0005789" data-r="Reactome:R-HSA-9816276" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS (Reactome) ER membrane localization from the CDH1 (E-cadherin) N-glycosylation reaction catalyzed by OST. Correct core CC, redundant; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/DAD1/DAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane; Multi-pass</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9918962
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0005789" data-r="Reactome:R-HSA-9918962" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS (Reactome) ER membrane localization from an OST-catalyzed N-glycosylation reaction. Correct core CC, redundant; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/DAD1/DAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane; Multi-pass</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9918988
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0005789" data-r="Reactome:R-HSA-9918988" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS (Reactome) ER membrane localization from an OST-catalyzed N-glycosylation reaction. Correct core CC, redundant; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/DAD1/DAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane; Multi-pass</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9919011
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0005789" data-r="Reactome:R-HSA-9919011" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS (Reactome) ER membrane localization from an OST-catalyzed N-glycosylation reaction. Correct core CC, redundant; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/DAD1/DAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane; Multi-pass</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9931286
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0005789" data-r="Reactome:R-HSA-9931286" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS (Reactome) ER membrane localization from the PD-L1 (CD274) N-glycosylation reaction catalyzed by the OST complex in the ER lumen. Correct core CC, redundant; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/DAD1/DAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane; Multi-pass</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008250" target="_blank" class="term-link">
+                                    GO:0008250
+                                </a>
+                            </span>
+                            <span class="term-label">oligosaccharyltransferase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0008250" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS (curator transfer from ortholog UniProtKB:E2R4X3) of OST complex membership. Correct core CC, redundant with experimental annotations; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/DAD1/DAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Component of the oligosaccharyltransferase (OST) complex</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009101" target="_blank" class="term-link">
+                                    GO:0009101
+                                </a>
+                            </span>
+                            <span class="term-label">glycoprotein biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0009101" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation to the broad parent process &#34;glycoprotein biosynthetic process&#34;. DAD1&#39;s role is specifically in protein N-linked glycosylation (GO:0006487), a descendant of this term, which is already annotated. This more general term is correct but subsumed; keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/DAD1/DAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">the first step in protein N-glycosylation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043066" target="_blank" class="term-link">
+                                    GO:0043066
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of apoptotic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8413235" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8413235
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning of a human cDNA encoding a novel protein, ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P61803" data-a="GO:0043066" data-r="PMID:8413235" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS from the original DAD1 cloning paper, where loss of DAD1 triggers apoptosis in the tsBN7 hamster mutant (hence &#34;defender against cell death&#34;). This anti-apoptotic phenotype is a downstream, indirect consequence of DAD1&#39;s essential OST / N-glycosylation role (loss of DAD1 destabilizes OST, abolishes N-glycosylation, and triggers apoptosis) rather than a distinct core molecular/biological function. Retain as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8413235" target="_blank" class="term-link">
+                                        PMID:8413235
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">loss of the DAD1 protein triggers apoptosis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Non-catalytic core subunit of the oligosaccharyltransferase (OST) complex; required for assembly and stability of both the cotranslational STT3A (OST-A) and post-translocational STT3B (OST-B) complexes, thereby contributing to the OST dolichyl-diphosphooligosaccharide-protein glycotransferase activity that carries out the first step of protein N-linked glycosylation at the ER membrane.</h3>
+                <span class="vote-buttons" data-g="P61803" data-a="FUNCTION: Non-catalytic core subunit of the oligosaccharyltr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006487" target="_blank" class="term-link">
+                                protein N-linked glycosylation
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008250" target="_blank" class="term-link">
+                            oligosaccharyltransferase complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/DAD1/DAD1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Subunit of the oligosaccharyl transferase (OST) complex that catalyzes the initial transfer of a defined glycan</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/DAD1/DAD1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Required for the assembly of both SST3A- and SS3B-</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22467853" target="_blank" class="term-link">
+                                PMID:22467853
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">DAD1 are required for the assembly of both STT3A- and STT3B-containing OST complexes</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link">
+                            PMID:19946888
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defining the membrane proteome of NK cells.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22467853" target="_blank" class="term-link">
+                            PMID:22467853
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The oligosaccharyltransferase subunits OST48, DAD1 and KCP2 function as ubiquitous and selective modulators of mammalian N-glycosylation.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31831667" target="_blank" class="term-link">
+                            PMID:31831667
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cryo-electron microscopy structures of human oligosaccharyltransferase complexes OST-A and OST-B.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36697828" target="_blank" class="term-link">
+                            PMID:36697828
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Visualization of translation and protein biogenesis at the ER membrane.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38670073" target="_blank" class="term-link">
+                            PMID:38670073
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Positive selection CRISPR screens reveal a druggable pocket in an oligosaccharyltransferase required for inflammatory signaling to NF-κB.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8413235" target="_blank" class="term-link">
+                            PMID:8413235
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Molecular cloning of a human cDNA encoding a novel protein, DAD1, whose defect causes apoptotic cell death in hamster BHK21 cells.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-446209
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Transfer of N-glycan to the protein</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9694793
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Spike protein gets N-glycosylated</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9816276
+
+                    </span>
+                </div>
+
+                <div class="reference-title">CDH1 is N-glycosylated on asparagine residues in endoplasmic reticulum</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9918962
+
+                    </span>
+                </div>
+
+                <div class="reference-title">E is N-glycosylated</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9918988
+
+                    </span>
+                </div>
+
+                <div class="reference-title">pre-M is N-glycosylated</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9919011
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Pre-NS1 folds and is N-glycosylated</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9931286
+
+                    </span>
+                </div>
+
+                <div class="reference-title">CD274 N-linked glycosylation in ER</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(DAD1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P61803" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="dad1-defender-against-cell-death-1-review-notes">DAD1 (defender against cell death 1) — review notes</h1>
+<p>UniProt: <strong>P61803</strong> (DAD1_HUMAN), HGNC:2664, 113 aa, chromosome 14.<br />
+RecName (UniProt): <strong>Dolichyl-diphosphooligosaccharide--protein glycosyltransferase subunit DAD1</strong>;<br />
+AltName: <strong>Defender against cell death 1 (DAD-1)</strong> [file:human/DAD1/DAD1-uniprot.txt].</p>
+<h2 id="core-biology">Core biology</h2>
+<p>DAD1 is a small, hydrophobic, <strong>multi-pass ER membrane protein</strong> that is a <strong>non-catalytic subunit<br />
+of the oligosaccharyltransferase (OST) complex</strong>. The OST complex catalyzes the first committed step<br />
+of protein N-linked glycosylation: en-bloc transfer of the pre-assembled Glc3Man9GlcNAc2 glycan from<br />
+the dolichol-pyrophosphate lipid carrier onto asparagine residues in Asn-X-Ser/Thr sequons of nascent<br />
+polypeptides in the ER.</p>
+<ul>
+<li>UniProt FUNCTION: "Subunit of the oligosaccharyl transferase (OST) complex that catalyzes the<br />
+  initial transfer of a defined glycan (Glc(3)Man(9)GlcNAc(2) in eukaryotes) from the lipid carrier<br />
+  dolichol-pyrophosphate to an asparagine residue within an Asn-X-Ser/Thr consensus motif in nascent<br />
+  polypeptide chains, the first step in protein N-glycosylation" [file:human/DAD1/DAD1-uniprot.txt].</li>
+<li>"All subunits are required for a maximal enzyme activity" and DAD1 is "Required for the assembly of<br />
+  both SST3A- and SS3B-containing OST complexes. Loss of the DAD1 protein triggers apoptosis"<br />
+  [file:human/DAD1/DAD1-uniprot.txt].</li>
+<li>Topology: three transmembrane helices; TOPO_DOM cytoplasmic 2–30, TM 31–51, TM 53–73, TM 93–113<br />
+  [file:human/DAD1/DAD1-uniprot.txt]. SUBCELLULAR LOCATION: "Endoplasmic reticulum membrane;<br />
+  Multi-pass membrane protein" [file:human/DAD1/DAD1-uniprot.txt].</li>
+<li>SIMILARITY: "Belongs to the DAD/OST2 family" [file:human/DAD1/DAD1-uniprot.txt].</li>
+</ul>
+<h2 id="ost-complex-composition-and-the-two-forms-ost-a-vs-ost-b">OST complex composition and the two forms (OST-A vs OST-B)</h2>
+<p>Mammalian OST exists in two forms sharing common core subunits, distinguished by catalytic subunit<br />
+and accessory subunits:</p>
+<ul>
+<li>UniProt SUBUNIT: "OST exists in two different complex forms which contain common core subunits<br />
+  RPN1, RPN2, OST48, OST4, DAD1 and TMEM258, either STT3A or STT3B as catalytic subunits, and<br />
+  form-specific accessory subunits" [file:human/DAD1/DAD1-uniprot.txt].</li>
+<li>OST-A (co-translational, STT3A) vs OST-B (post-translocational, STT3B): "Mammals express two<br />
+  distinct OST complexes that act in a cotranslational (OST-A) or posttranslocational (OST-B) manner"<br />
+  [PMID:31831667 abstract]. Cryo-EM structures of both were solved with DAD1 modeled (PDB 6S7O/6S7T,<br />
+  DAD1 = chain D, residues 1–113) [file:human/DAD1/DAD1-uniprot.txt].</li>
+<li>DAD1 is a <strong>shared core subunit present in BOTH OST-A and OST-B</strong>, hence the two ComplexPortal /<br />
+  GO annotations to GO:0160226 (OST-A) and GO:0160227 (OST-B).</li>
+</ul>
+<h2 id="functional-evidence">Functional evidence</h2>
+<ul>
+<li><strong>PMID:22467853</strong> (Roboti &amp; High 2012, abstract only): siRNA knockdown of DAD1 (and OST48)<br />
+  destabilizes both STT3A- and STT3B-containing OST complexes and causes hypoglycosylation. Abstract:<br />
+  "OST48 and DAD1 are required for the assembly of both STT3A- and STT3B-containing OST complexes.<br />
+  The structural perturbations of these complexes we observe in OST48- and DAD1-depleted cells<br />
+  underlie their pronounced hypoglycosylation phenotypes. Thus, OST48 and DAD1 are global modulators<br />
+  of OST stability and hence N-glycosylation." This is the basis for the IMP annotations to<br />
+  N-linked glycosylation (GO:0006487), regulation of protein stability (GO:0031647, referring to OST<br />
+  complex stability), enzyme activator activity (GO:0008047), and the IDA to OST complex (GO:0008250).</li>
+<li><strong>PMID:31831667</strong> (Ramírez, Kowal &amp; Locher 2019, Science, abstract only): cryo-EM structures of<br />
+  human OST-A and OST-B; identification of DAD1 in the OST complex; establishes the N-glycosylation<br />
+  pathway. Basis for the ComplexPortal IDA/IPI/NAS annotations and the UniProt IDA to OST-A/OST-B.</li>
+<li><strong>PMID:36697828</strong> (Gemmer et al. 2023, Nature, full text cached): cryo-ET of the ribosome–translocon<br />
+  showing OST-A (OSTA) as a component of the SEC61–OSTA–TRAP translocon at the ER membrane; the paper<br />
+  does not name DAD1 individually but resolves the OST-A complex (PDB 8B6L includes DAD1 chain M per<br />
+  UniProt). "OSTA, which is responsible for co-translational N-glycosylation of substrates, is<br />
+  observed in at least 50% of translocon particles in mammalian cells" <a href="https://pubmed.ncbi.nlm.nih.gov/36697828">PMID:36697828</a>. Basis for the<br />
+  UniProt IDA to OST-A.</li>
+<li><strong>PMID:38670073</strong> (Lampson et al. 2024, Cell, abstract only): CRISPR screens + cryo-EM of the<br />
+  STT3A-containing OST (OST-A); TLR4 N-glycosylation depends on OST-A; DAD1 modeled in PDB 8PN9<br />
+  (chain D) per UniProt. "the LPS receptor Toll-like receptor 4 (TLR4) is specifically dependent on<br />
+  the oligosaccharyltransferase complex OST-A for N-glycosylation and cell-surface localization"<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/38670073">PMID:38670073</a>. Basis for the UniProt IDA to OST-A.</li>
+</ul>
+<h2 id="apoptosis-historical-name">Apoptosis / historical name</h2>
+<p>DAD1 = "defender against cell death 1". Originally cloned as the gene that complements the tsBN7<br />
+temperature-sensitive apoptotic hamster BHK21 mutant; loss of DAD1 protein triggers apoptosis.<br />
+- PMID:8413235 (Nakashima et al. 1993, abstract only): "The DAD1 protein disappeared in tsBN7 cells<br />
+  following a shift to the nonpermissive temperature, suggesting that loss of the DAD1 protein<br />
+  triggers apoptosis." This is the origin of the anti-apoptotic (GO:0043066) TAS annotation and the<br />
+  UniProt-KW apoptosis keyword.<br />
+- <strong>Interpretation for curation</strong>: the anti-apoptotic phenotype is a <strong>downstream consequence</strong> of<br />
+  DAD1's essential OST role — abolishing N-glycosylation and destabilizing OST triggers apoptosis.<br />
+  It is not a distinct molecular function of DAD1. The apoptosis-related BP annotations are therefore<br />
+  retained as <strong>non-core</strong> (KEEP_AS_NON_CORE), while the core is the OST / N-glycosylation role.</p>
+<h2 id="membrane-proteome-nk-cells">Membrane proteome (NK cells)</h2>
+<ul>
+<li>PMID:19946888 (Ghosh et al. 2010, abstract only): large-scale membrane proteome of NK-like YTS cells;<br />
+  DAD1 was one of 1843 MS-identified proteins. Supports generic <code>membrane</code> (GO:0016020) HDA. Non-core,<br />
+  low-information localization; the ER-membrane term is the specific, correct one.</li>
+</ul>
+<h2 id="curation-summary-core-functions">Curation summary (core functions)</h2>
+<ul>
+<li><code>in_complex</code>: <strong>GO:0008250 oligosaccharyltransferase complex</strong> (protein-complex CC term).</li>
+<li><code>contributes_to_molecular_function</code>: <strong>GO:0004579 dolichyl-diphosphooligosaccharide-protein<br />
+  glycotransferase activity</strong> (the OST catalytic activity; DAD1 is non-catalytic but contributes to<br />
+  the holo-enzyme activity by being required for complex assembly/stability).</li>
+<li><code>involved_in</code> (BP): <strong>GO:0006487 protein N-linked glycosylation</strong>.</li>
+<li><code>locations</code>: <strong>GO:0005789 endoplasmic reticulum membrane</strong>.</li>
+</ul>
+<p>Avoid bare "protein binding" as a core function (there is no GO:0005515 IPI in the GOA anyway). The<br />
+non-catalytic subunit role is modeled via <code>in_complex</code> + <code>contributes_to_molecular_function</code>.</p>
+<h2 id="term-idlabel-verification-local-godb-oaklib">Term id/label verification (local go.db, oaklib)</h2>
+<p>Verified labels and branches:<br />
+- GO:0008250 oligosaccharyltransferase complex → subClassOf GO:0032991 (protein-containing complex) ✓ CC<br />
+- GO:0004579 dolichyl-diphosphooligosaccharide-protein glycotransferase activity → GO:0003674 ✓ MF<br />
+- GO:0006487 protein N-linked glycosylation → GO:0008150 ✓ BP<br />
+- GO:0005789 endoplasmic reticulum membrane → GO:0005575 ✓ CC</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P61803
+gene_symbol: DAD1
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  DAD1 (defender against cell death 1) is a small (113 aa), hydrophobic, multi-pass
+  endoplasmic reticulum (ER) membrane protein that is a non-catalytic core subunit of
+  the oligosaccharyltransferase (OST) complex. OST catalyzes the first committed step of
+  protein N-linked glycosylation: the en-bloc transfer of the pre-assembled
+  Glc3Man9GlcNAc2 oligosaccharide from the dolichyl-pyrophosphate lipid carrier onto
+  asparagine residues within Asn-X-Ser/Thr sequons of nascent polypeptides. DAD1 is a
+  common core subunit shared by both mammalian OST forms — the cotranslational STT3A
+  complex (OST-A) and the post-translocational STT3B complex (OST-B) — and is required
+  for the assembly and stability of both. It has no independent catalytic activity;
+  rather, it contributes structurally to the integrity of the holo-enzyme, and its loss
+  destabilizes OST and abolishes N-glycosylation. Because N-glycosylation is essential
+  for the folding, quality control, and surface delivery of secretory and membrane
+  proteins, depletion of DAD1 produces global hypoglycosylation and, historically, was
+  first identified through the apoptotic phenotype that follows loss of the protein,
+  which is the origin of its &#34;defender against cell death&#34; name.
+existing_annotations:
+- term:
+    id: GO:0006487
+    label: protein N-linked glycosylation
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) propagation of the core biological process. DAD1 is a subunit
+      of the OST complex that performs the first step of N-linked glycosylation; this is
+      the correct core BP for the gene. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/DAD1/DAD1-uniprot.txt
+      supporting_text: &gt;-
+        Subunit of the oligosaccharyl transferase (OST) complex that catalyzes the
+        initial transfer of a defined glycan
+- term:
+    id: GO:0008250
+    label: oligosaccharyltransferase complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) propagation of OST complex membership. DAD1 is a conserved core
+      subunit of the OST complex across eukaryotes; this is the correct core cellular
+      component. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/DAD1/DAD1-uniprot.txt
+      supporting_text: &gt;-
+        Component of the oligosaccharyltransferase (OST) complex
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      IEA from the UniProt Subcellular Location mapping. This is the correct, specific
+      subcellular location for DAD1 (a multi-pass ER membrane protein) and is the gene&#39;s
+      core localization. A redundant-but-correct core CC; accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/DAD1/DAD1-uniprot.txt
+      supporting_text: &gt;-
+        SUBCELLULAR LOCATION: Endoplasmic reticulum membrane; Multi-pass
+- term:
+    id: GO:0008250
+    label: oligosaccharyltransferase complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      InterPro2GO (IEA) mapping of the DAD/Ost2 domain (IPR003038) to the OST complex.
+      Correct core CC, redundant with experimental annotations; accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/DAD1/DAD1-uniprot.txt
+      supporting_text: &gt;-
+        Component of the oligosaccharyltransferase (OST) complex
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      InterPro2GO (IEA) mapping to the generic parent term &#34;membrane&#34;. This is subsumed
+      by the specific and correct &#34;endoplasmic reticulum membrane&#34; annotation and adds
+      no information. Not wrong, but over-general; mark as over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: file:human/DAD1/DAD1-uniprot.txt
+      supporting_text: &gt;-
+        SUBCELLULAR LOCATION: Endoplasmic reticulum membrane; Multi-pass
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: NAS
+  original_reference_id: PMID:31831667
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      NAS (ComplexPortal) localization to the ER membrane, consistent with the cryo-EM
+      structures of human OST-A and OST-B and with the UniProt subcellular location.
+      Correct core CC; accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/DAD1/DAD1-uniprot.txt
+      supporting_text: &gt;-
+        SUBCELLULAR LOCATION: Endoplasmic reticulum membrane; Multi-pass
+- term:
+    id: GO:0006487
+    label: protein N-linked glycosylation
+  evidence_type: IDA
+  original_reference_id: PMID:31831667
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IDA (ComplexPortal) for the OST complex, of which DAD1 is a subunit, performing
+      N-linked glycosylation; supported by the cryo-EM structures of human OST-A and
+      OST-B. This is the core biological process for DAD1; accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:31831667
+      supporting_text: &gt;-
+        catalyzes the transfer of a high-mannose glycan onto secretory proteins in the
+        endoplasmic reticulum
+- term:
+    id: GO:0006487
+    label: protein N-linked glycosylation
+  evidence_type: NAS
+  original_reference_id: PMID:31831667
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      NAS (ComplexPortal) duplicate of the core N-linked glycosylation BP from the same
+      OST structural paper. Correct but redundant with the IDA annotation above; accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:31831667
+      supporting_text: &gt;-
+        catalyzes the transfer of a high-mannose glycan onto secretory proteins in the
+        endoplasmic reticulum
+- term:
+    id: GO:0008250
+    label: oligosaccharyltransferase complex
+  evidence_type: IPI
+  original_reference_id: PMID:31831667
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      IPI (ComplexPortal) placing DAD1 in the OST complex, based on the cryo-EM
+      structures resolving DAD1 as a subunit of OST-A and OST-B. Correct core CC; accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/DAD1/DAD1-uniprot.txt
+      supporting_text: &gt;-
+        Component of the oligosaccharyltransferase (OST) complex
+- term:
+    id: GO:0008250
+    label: oligosaccharyltransferase complex
+  evidence_type: NAS
+  original_reference_id: PMID:31831667
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      NAS (ComplexPortal) duplicate of OST complex membership from the same structural
+      paper. Correct but redundant with the IPI/IDA/IBA annotations; accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/DAD1/DAD1-uniprot.txt
+      supporting_text: &gt;-
+        Component of the oligosaccharyltransferase (OST) complex
+- term:
+    id: GO:0160226
+    label: oligosaccharyltransferase complex A
+  evidence_type: IDA
+  original_reference_id: PMID:31831667
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      IDA placing DAD1 in the specific STT3A-containing OST-A complex, based on the
+      cryo-EM structure of human OST-A (PDB 6S7O/6S7T, DAD1 = chain D). DAD1 is a shared
+      core subunit present in both OST forms; this specific-form membership is correct
+      and more informative than the generic GO:0008250. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/DAD1/DAD1-uniprot.txt
+      supporting_text: &gt;-
+        OST exists in two different complex forms which contain common core
+- term:
+    id: GO:0160226
+    label: oligosaccharyltransferase complex A
+  evidence_type: IDA
+  original_reference_id: PMID:36697828
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      IDA placing DAD1 in OST-A, from the cryo-ET study of the ribosome–translocon that
+      resolved the SEC61-OSTA-TRAP translocon (PDB 8B6L includes DAD1 chain M per
+      UniProt). The paper does not name DAD1 in the abstract/full text but structurally
+      resolves the OST-A complex of which DAD1 is a subunit. Correct specific-form CC;
+      accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:36697828
+      supporting_text: &gt;-
+        OSTA, which is responsible for co-translational N-glycosylation of substrates, is
+        observed in at least 50% of translocon particles in mammalian cells
+- term:
+    id: GO:0160226
+    label: oligosaccharyltransferase complex A
+  evidence_type: IDA
+  original_reference_id: PMID:38670073
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      IDA placing DAD1 in OST-A, from the CRISPR/cryo-EM study of the STT3A-containing
+      OST (PDB 8PN9, DAD1 = chain D per UniProt). Correct specific-form CC; accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:38670073
+      supporting_text: &gt;-
+        the LPS receptor Toll-like receptor 4 (TLR4) is specifically dependent on the
+        oligosaccharyltransferase complex OST-A for N-glycosylation
+- term:
+    id: GO:0160227
+    label: oligosaccharyltransferase complex B
+  evidence_type: IDA
+  original_reference_id: PMID:31831667
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      IDA placing DAD1 in the specific STT3B-containing OST-B complex, based on the
+      cryo-EM structure of human OST-B. DAD1 is a shared core subunit of both OST forms,
+      so membership in OST-B is correct and informative alongside the OST-A annotation.
+      Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/DAD1/DAD1-uniprot.txt
+      supporting_text: &gt;-
+        OST exists in two different complex forms which contain common core
+- term:
+    id: GO:0008250
+    label: oligosaccharyltransferase complex
+  evidence_type: IDA
+  original_reference_id: PMID:22467853
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      IDA (ARUK-UCL) for OST complex membership from the DAD1 knockdown study, which
+      analyzed the stability and composition of STT3A- and STT3B-containing OST
+      complexes. Correct core CC; accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:22467853
+      supporting_text: &gt;-
+        DAD1 are required for the assembly of both STT3A- and STT3B-containing OST
+        complexes
+- term:
+    id: GO:0006487
+    label: protein N-linked glycosylation
+  evidence_type: IMP
+  original_reference_id: PMID:22467853
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IMP: siRNA knockdown of DAD1 destabilizes OST and produces a pronounced
+      hypoglycosylation phenotype, demonstrating a functional requirement of DAD1 for
+      N-linked glycosylation. This is the core BP for the gene; accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:22467853
+      supporting_text: &gt;-
+        underlie their pronounced hypoglycosylation phenotypes. Thus, OST48 and DAD1 are
+        global modulators of OST stability and hence N-glycosylation
+- term:
+    id: GO:0031647
+    label: regulation of protein stability
+  evidence_type: IMP
+  original_reference_id: PMID:22467853
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IMP: DAD1 depletion destabilizes both STT3A- and STT3B-containing OST complexes.
+      This annotation captures DAD1&#39;s role in maintaining the stability/integrity of the
+      OST complex (i.e., the stability of OST subunit proteins), which is a real and
+      well-supported aspect of DAD1 biology but is ancillary to (a mechanism underlying)
+      its core N-glycosylation role rather than a distinct core process. Keep as
+      non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:22467853
+      supporting_text: &gt;-
+        DAD1 are required for the assembly of both STT3A- and STT3B-containing OST
+        complexes
+- term:
+    id: GO:0008047
+    label: enzyme activator activity
+  evidence_type: IMP
+  original_reference_id: PMID:22467853
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IMP-based molecular function asserting that DAD1 activates the OST enzyme. DAD1 is
+      a non-catalytic structural subunit that is required for OST assembly/stability and
+      hence for maximal enzyme activity; it does not act as a classical enzyme activator
+      (allosteric or covalent stimulator) that binds and switches on a separate enzyme.
+      The better model is a non-catalytic subunit contributing to the OST catalytic
+      activity via complex integrity. This experimental annotation is not removed, but
+      its MF is an over-interpretation; mark as over-annotated (the core MF contribution
+      is modeled in core_functions via contributes_to_molecular_function).
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:22467853
+      supporting_text: &gt;-
+        global modulators of OST stability and hence N-glycosylation
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: HDA
+  original_reference_id: PMID:19946888
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      HDA from a large-scale NK-cell membrane proteome; DAD1 was one of 1843
+      MS-identified proteins. Only supports the generic &#34;membrane&#34; term, which is
+      subsumed by the specific and correct ER membrane annotation. Low-information;
+      mark as over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:19946888
+      supporting_text: &gt;-
+        Mass spectrometric analysis identified 1843 proteins with high confidence scores
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-446209
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      TAS (Reactome) ER membrane localization from the &#34;Transfer of N-glycan to the
+      protein&#34; reaction, in which DAD1 is listed as a component of the OST complex.
+      Correct core CC; accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: Reactome:R-HSA-446209
+      supporting_text: &gt;-
+        This reaction is catalyzed by the oligosaccharyltransferase (OST) complex,
+        comprising at least seven proteins; DAD1
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9694793
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      TAS (Reactome) ER membrane localization from an OST-catalyzed N-glycosylation
+      reaction (viral spike protein). Correct core CC, redundant with the other ER
+      membrane annotations; accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/DAD1/DAD1-uniprot.txt
+      supporting_text: &gt;-
+        SUBCELLULAR LOCATION: Endoplasmic reticulum membrane; Multi-pass
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9816276
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      TAS (Reactome) ER membrane localization from the CDH1 (E-cadherin)
+      N-glycosylation reaction catalyzed by OST. Correct core CC, redundant; accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/DAD1/DAD1-uniprot.txt
+      supporting_text: &gt;-
+        SUBCELLULAR LOCATION: Endoplasmic reticulum membrane; Multi-pass
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9918962
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      TAS (Reactome) ER membrane localization from an OST-catalyzed N-glycosylation
+      reaction. Correct core CC, redundant; accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/DAD1/DAD1-uniprot.txt
+      supporting_text: &gt;-
+        SUBCELLULAR LOCATION: Endoplasmic reticulum membrane; Multi-pass
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9918988
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      TAS (Reactome) ER membrane localization from an OST-catalyzed N-glycosylation
+      reaction. Correct core CC, redundant; accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/DAD1/DAD1-uniprot.txt
+      supporting_text: &gt;-
+        SUBCELLULAR LOCATION: Endoplasmic reticulum membrane; Multi-pass
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9919011
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      TAS (Reactome) ER membrane localization from an OST-catalyzed N-glycosylation
+      reaction. Correct core CC, redundant; accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/DAD1/DAD1-uniprot.txt
+      supporting_text: &gt;-
+        SUBCELLULAR LOCATION: Endoplasmic reticulum membrane; Multi-pass
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9931286
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      TAS (Reactome) ER membrane localization from the PD-L1 (CD274) N-glycosylation
+      reaction catalyzed by the OST complex in the ER lumen. Correct core CC, redundant;
+      accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/DAD1/DAD1-uniprot.txt
+      supporting_text: &gt;-
+        SUBCELLULAR LOCATION: Endoplasmic reticulum membrane; Multi-pass
+- term:
+    id: GO:0008250
+    label: oligosaccharyltransferase complex
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      ISS (curator transfer from ortholog UniProtKB:E2R4X3) of OST complex membership.
+      Correct core CC, redundant with experimental annotations; accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/DAD1/DAD1-uniprot.txt
+      supporting_text: &gt;-
+        Component of the oligosaccharyltransferase (OST) complex
+- term:
+    id: GO:0009101
+    label: glycoprotein biosynthetic process
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ISS annotation to the broad parent process &#34;glycoprotein biosynthetic process&#34;.
+      DAD1&#39;s role is specifically in protein N-linked glycosylation (GO:0006487), a
+      descendant of this term, which is already annotated. This more general term is
+      correct but subsumed; keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/DAD1/DAD1-uniprot.txt
+      supporting_text: &gt;-
+        the first step in
+        protein N-glycosylation
+- term:
+    id: GO:0043066
+    label: negative regulation of apoptotic process
+  evidence_type: TAS
+  original_reference_id: PMID:8413235
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      TAS from the original DAD1 cloning paper, where loss of DAD1 triggers apoptosis in
+      the tsBN7 hamster mutant (hence &#34;defender against cell death&#34;). This anti-apoptotic
+      phenotype is a downstream, indirect consequence of DAD1&#39;s essential OST /
+      N-glycosylation role (loss of DAD1 destabilizes OST, abolishes N-glycosylation, and
+      triggers apoptosis) rather than a distinct core molecular/biological function.
+      Retain as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:8413235
+      supporting_text: &gt;-
+        loss of the DAD1 protein triggers apoptosis
+core_functions:
+- description: &gt;-
+    Non-catalytic core subunit of the oligosaccharyltransferase (OST) complex; required
+    for assembly and stability of both the cotranslational STT3A (OST-A) and
+    post-translocational STT3B (OST-B) complexes, thereby contributing to the OST
+    dolichyl-diphosphooligosaccharide-protein glycotransferase activity that carries out
+    the first step of protein N-linked glycosylation at the ER membrane.
+  in_complex:
+    id: GO:0008250
+    label: oligosaccharyltransferase complex
+  contributes_to_molecular_function:
+    id: GO:0004579
+    label: dolichyl-diphosphooligosaccharide-protein glycotransferase activity
+  directly_involved_in:
+  - id: GO:0006487
+    label: protein N-linked glycosylation
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  supported_by:
+  - reference_id: file:human/DAD1/DAD1-uniprot.txt
+    supporting_text: &gt;-
+      Subunit of the oligosaccharyl transferase (OST) complex that catalyzes the
+      initial transfer of a defined glycan
+  - reference_id: file:human/DAD1/DAD1-uniprot.txt
+    supporting_text: &gt;-
+      Required for the assembly of both SST3A- and SS3B-
+  - reference_id: PMID:22467853
+    supporting_text: &gt;-
+      DAD1 are required for the assembly of both STT3A- and STT3B-containing OST
+      complexes
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: PMID:19946888
+  title: Defining the membrane proteome of NK cells.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale NK-cell membrane proteomics; DAD1 identified among 1843 proteins.
+      Supports only generic membrane localization, not specific function. PubMed-verified
+      title.
+- id: PMID:22467853
+  title: The oligosaccharyltransferase subunits OST48, DAD1 and KCP2 function as ubiquitous
+    and selective modulators of mammalian N-glycosylation.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Key functional paper: siRNA knockdown shows DAD1 required for assembly of both
+      STT3A- and STT3B-containing OST complexes and for N-glycosylation. Abstract-only in
+      cache; PubMed-verified.
+- id: PMID:31831667
+  title: Cryo-electron microscopy structures of human oligosaccharyltransferase complexes
+    OST-A and OST-B.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cryo-EM structures of human OST-A and OST-B with DAD1 resolved as a subunit;
+      establishes complex membership and the N-glycosylation pathway. Abstract-only in
+      cache; PubMed-verified.
+- id: PMID:36697828
+  title: Visualization of translation and protein biogenesis at the ER membrane.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cryo-ET of the ribosome-translocon resolving the SEC61-OSTA-TRAP translocon (OST-A)
+      at the ER membrane. Does not name DAD1 individually but structurally locates the
+      OST-A complex of which DAD1 is a subunit (PDB 8B6L). Full text cached.
+- id: PMID:38670073
+  title: Positive selection CRISPR screens reveal a druggable pocket in an oligosaccharyltransferase
+    required for inflammatory signaling to NF-κB.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      CRISPR screens + cryo-EM of the STT3A-containing OST-A (PDB 8PN9 includes DAD1);
+      TLR4 N-glycosylation depends on OST-A. Supports OST-A membership. Abstract-only in
+      cache; PubMed-verified.
+- id: PMID:8413235
+  title: Molecular cloning of a human cDNA encoding a novel protein, DAD1, whose defect
+    causes apoptotic cell death in hamster BHK21 cells.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Original DAD1 cloning paper; loss of DAD1 triggers apoptosis in tsBN7 hamster
+      cells, origin of the &#34;defender against cell death&#34; name. The anti-apoptotic role is
+      downstream of the OST/N-glycosylation function. Abstract-only in cache;
+      PubMed-verified.
+- id: Reactome:R-HSA-446209
+  title: Transfer of N-glycan to the protein
+  findings: []
+- id: Reactome:R-HSA-9694793
+  title: Spike protein gets N-glycosylated
+  findings: []
+- id: Reactome:R-HSA-9816276
+  title: CDH1 is N-glycosylated on asparagine residues in endoplasmic reticulum
+  findings: []
+- id: Reactome:R-HSA-9918962
+  title: E is N-glycosylated
+  findings: []
+- id: Reactome:R-HSA-9918988
+  title: pre-M is N-glycosylated
+  findings: []
+- id: Reactome:R-HSA-9919011
+  title: Pre-NS1 folds and is N-glycosylated
+  findings: []
+- id: Reactome:R-HSA-9931286
+  title: CD274 N-linked glycosylation in ER
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
