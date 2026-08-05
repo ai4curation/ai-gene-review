@@ -23,6 +23,8 @@ Systematic evaluation of BioReason-Pro functional summaries and reasoning traces
 
 📄 **[Read the manuscript (PDF)](BIOREASON_COMPARISON/article/manuscript.pdf)** &nbsp;·&nbsp; 🖥 **[View the slide deck](BIOREASON_COMPARISON/article/slides.html)** &nbsp;·&nbsp; 📝 [Abstract](BIOREASON_COMPARISON/article/abstract.md)
 
+🎤 **Presented at ISMB 2026** (Function COSI, Washington DC, 14 July 2026): Caufield JH, Joachimiak MP, Mungall CJ. *Agentic evaluation of AI function prediction pipelines.* Slides archived at [doi:10.5281/zenodo.21810552](https://doi.org/10.5281/zenodo.21810552)
+
 **Explore the evaluations interactively:**
 - [BioReason-Pro SFT evaluation](BIOREASON_COMPARISON/sft-eval.html) — ARGO95 primary cohort: 95 genes, 955 predictions; the browser also includes supplemental source cohorts
 - [GO-GPT leaf evaluation](BIOREASON_COMPARISON/gogpt-eval.html) — ARGO139 collected cohort; unresolved terms are explicitly pending
