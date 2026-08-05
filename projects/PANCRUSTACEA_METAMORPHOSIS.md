@@ -1,9 +1,9 @@
 ---
 title: "Pancrustacea Metamorphosis Gene Families"
-maturity: PLANNING
+maturity: IN_PROGRESS
 tags: [LITERATURE, ARTHROPOD, DEVELOPMENT, CANDIDATE_GENES]
 species: [DROME]
-genes: []
+genes: [kni, hairy]
 ---
 
 # Pancrustacea Metamorphosis Gene Families
@@ -97,15 +97,15 @@ expansion at metamorphic origins. Named genes below are the *Drosophila*
 reference members — the natural entry points for a GO-annotation review, none
 of which is yet reviewed in this corpus. "Family N" is the paper's numbering.
 
-| Drosophila gene | Family | Protein type | Implicated roles (per paper) |
-|---|---|---|---|
-| **knirps** (*kni*) | 11 | Zn-finger transcriptional repressor (gap gene) | segmentation (pair-rule control), neural development; regulates ecdysteroid-biosynthesis enzymes in prothoracic gland |
-| **hairy** (*h*) | 5 | bHLH-O transcriptional repressor (pair-rule) | segmentation cascade (conserved across arthropods), neural development, moulting regulation |
-| **klingon** (*klg*) | 1 | Ig-superfamily cell-adhesion protein | photoreceptor-neuron development, cell adhesion, axon guidance |
-| **Kurtz** (*krz*) | 12 | non-visual (β-)arrestin | inhibitor of MAPK and Toll pathways in development; rhodopsin regulation |
-| **inscuteable** (*insc*) | 7 | spindle-orientation adaptor | asymmetric cell division of neuroblasts and epithelial cells |
-| **tartan** (*trn*) / capricious (*caps*) | 3 | LRR transmembrane proteins (receptor pair) | neuronal & tracheal morphogenesis, axon guidance, imaginal-disc D/V boundary |
-| **kekkon** (*kek1* family) | 9 | LRR + Ig transmembrane | synaptic growth (with Toll), EGFR-pathway inhibition in eye/wing discs |
+| Drosophila gene | Family | Protein type | Implicated roles (per paper) | Review |
+|---|---|---|---|---|
+| **knirps** (*kni*) | 11 | orphan nuclear receptor (NR0A1), C4 zinc-finger short-range repressor (gap gene) | segmentation (pair-rule control), tracheal branch morphogenesis, gut endoreduplication; regulates ecdysteroid-biosynthesis enzymes in prothoracic gland | ✅ [reviewed](../genes/DROME/kni/kni-ai-review.yaml) |
+| **hairy** (*h*) | 5 | bHLH-Orange (HES-family) Groucho-recruiting repressor (pair-rule) | segmentation cascade (conserved across arthropods), sensory-bristle patterning via *achaete-scute* repression | ✅ [reviewed](../genes/DROME/hairy/hairy-ai-review.yaml) |
+| **klingon** (*klg*) | 1 | Ig-superfamily cell-adhesion protein | photoreceptor-neuron development, cell adhesion, axon guidance | — |
+| **Kurtz** (*krz*) | 12 | non-visual (β-)arrestin | inhibitor of MAPK and Toll pathways in development; rhodopsin regulation | — |
+| **inscuteable** (*insc*) | 7 | spindle-orientation adaptor | asymmetric cell division of neuroblasts and epithelial cells | — |
+| **tartan** (*trn*) / capricious (*caps*) | 3 | LRR transmembrane proteins (receptor pair) | neuronal & tracheal morphogenesis, axon guidance, imaginal-disc D/V boundary | — |
+| **kekkon** (*kek1* family) | 9 | LRR + Ig transmembrane | synaptic growth (with Toll), EGFR-pathway inhibition in eye/wing discs | — |
 
 *deadpan (dpn)* is also mentioned alongside *knirps*/*hairy* in insect neural
 development but was not called out as an adaptively expanding family.
@@ -136,6 +136,22 @@ just fetch-gene DROME kni      # then deep research + notes, then the ai-review.
 
 ## Status
 
-**PLANNING.** No gene reviews created yet — this page records the source, the
-findings, and the candidate list. Genes move onto the `genes:` frontmatter list
-as their reviews are started.
+**IN_PROGRESS.** Two candidate transcription factors reviewed so far:
+
+- **knirps (*kni*, P10734)** — 29 annotations adjudicated (17 ACCEPT, 6 MODIFY,
+  4 KEEP_AS_NON_CORE, 1 REMOVE, 1 UNDECIDED). Notable: removed an
+  over-propagated `intracellular receptor signaling pathway` term (knirps is a
+  ligand-independent orphan NR that lost its ligand-binding domain) and
+  redirected the IBA `nuclear receptor activity` / `estrogen response element
+  binding` terms and the bare `protein binding` IPIs to informative repressor /
+  corepressor-binding terms.
+- **hairy (*h*, P14003)** — 45 annotations adjudicated (28 ACCEPT, 7
+  KEEP_AS_NON_CORE, 6 MODIFY, 3 UNDECIDED, 1 MARK_AS_OVER_ANNOTATED). Notable:
+  resolved the `protein binding` IPIs to STUbL (Topors/Degringolade) and Groucho
+  corepressor interactions, and flagged a distal `membrane organization` term as
+  over-annotation of a nuclear repressor.
+
+Both reviews validate clean, with every `supporting_text` quote independently
+confirmed verbatim against the cached literature. Remaining candidates
+(*klingon*, *Kurtz*, *inscuteable*, *tartan*/*capricious*, *kekkon*) are not yet
+started; genes move onto the `genes:` frontmatter list as their reviews land.
