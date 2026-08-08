@@ -1,0 +1,4020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FANCB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>FANCB</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q8NB91" target="_blank" class="term-link">
+                        Q8NB91
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "FANCB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q8NB91" data-a="DESCRIPTION: Fanconi anemia group B protein (FANCB, also FAAP95..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Fanconi anemia group B protein (FANCB, also FAAP95) is a non-catalytic subunit of the Fanconi anemia (FA) core complex, a nuclear multisubunit ubiquitin ligase that, in response to DNA replication stress and interstrand crosslinks (ICLs), monoubiquitinates the FANCD2-FANCI (ID2) heterodimer to activate the FA/BRCA DNA repair pathway. FANCB assembles with the RING E3 ligase FANCL and with FAAP100 into the FANCB-FANCL-FAAP100 (BL100) catalytic module, where it serves as the central scaffold and dimerization factor: two BL100 heterotrimers associate through FANCB to form the symmetric &#34;dimer of trimers&#34; that gives the core complex its architecture and positions the two FANCL RING domains to ubiquitinate FANCD2 and FANCI. FANCB is required for the stability and coordinated nuclear import of the module (chaperoned by FANCA and FANCM) and for chromatin loading of the complex at sites of damage; in its absence FANCD2 monoubiquitination fails. The gene is X-linked (Xp22.31) and subject to X-inactivation, so a single active copy is functional, making FANCB a dosage-sensitive node whose loss causes Fanconi anemia complementation group B, frequently a severe VACTERL-with-hydrocephalus phenotype, with cellular hypersensitivity to crosslinking agents and chromosomal instability.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043240" target="_blank" class="term-link">
+                                    GO:0043240
+                                </a>
+                            </span>
+                            <span class="term-label">Fanconi anaemia nuclear complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NB91" data-a="GO:0043240" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FANCB is a core structural subunit of the Fanconi anemia nuclear (core) complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the defining, best-supported complex-membership annotation for FANCB and is corroborated experimentally (IDA, NAS below) and structurally. FANCB is one of the eight stably associated subunits of the FA core complex and, with FANCL and FAAP100, forms its central catalytic module.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15502827" target="_blank" class="term-link">
+                                        PMID:15502827
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">essential component of the nuclear protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31666700" target="_blank" class="term-link">
+                                        PMID:31666700
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A dimer of FANCB-FAAP100 heterodimers is located in the middle region of the structure</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905168" target="_blank" class="term-link">
+                                    GO:1905168
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of double-strand break repair via homologous recombination</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NB91" data-a="GO:1905168" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference that the FA pathway promotes homologous-recombination repair of double-strand breaks.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Promotion of HR is a genuine but downstream, pathway-level consequence of FA-core-complex activity rather than FANCB&#39;s direct molecular function. FANCB&#39;s core role is architectural scaffolding of the BL100 module that enables FANCD2-FANCI monoubiquitination; effects on HR are indirect and shared across FA proteins. Retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21458466" target="_blank" class="term-link">
+                                        PMID:21458466
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Gene targeting efficiency was 16.2% (6/37) for control cells and 0% (0/96) for fancbΔex2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990414" target="_blank" class="term-link">
+                                    GO:1990414
+                                </a>
+                            </span>
+                            <span class="term-label">replication-born double-strand break repair via sister chromatid exchange</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NB91" data-a="GO:1990414" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference linking FANCB to repair of replication-associated double-strand breaks via sister-chromatid exchange.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The FA core complex modulates sister-chromatid-exchange outcomes at stalled/blocked replication forks, but this is a downstream pathway-level role rather than FANCB&#39;s direct scaffolding activity. Retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20347428" target="_blank" class="term-link">
+                                        PMID:20347428
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FANCM-MHF associates with the Fanconi anemia (FA) core complex</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21458466" target="_blank" class="term-link">
+                                        PMID:21458466
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Decreased Homologous RecombinationThe fancbΔex2 cells were tested for spontaneous sister chromatid exchanges (SCEs)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000042" target="_blank" class="term-link">
+                                    GO:2000042
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of double-strand break repair via homologous recombination</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NB91" data-a="GO:2000042" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference that the FA pathway also restrains homologous recombination.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The FA pathway both promotes and limits HR/crossover outcomes (fork protection, suppression of aberrant recombination and sister-chromatid exchange). This regulatory role is downstream and pathway-level, not FANCB&#39;s direct molecular function. Retained as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NB91" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FANCB localizes to the nucleus, where the FA core complex acts on chromatin.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with UniProt subcellular location (Nucleus) and with the more specific nucleoplasm and Fanconi anaemia nuclear complex annotations. Nuclear import of the BL100 module is chaperoned by FANCA/FANCM. Broad but correct.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17396147" target="_blank" class="term-link">
+                                        PMID:17396147
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">each member of the L-B-P100 subcomplex has a disturbed nuclear localization in FA-A cells</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036297" target="_blank" class="term-link">
+                                    GO:0036297
+                                </a>
+                            </span>
+                            <span class="term-label">interstrand cross-link repair</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NB91" data-a="GO:0036297" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FANCB participates in DNA interstrand crosslink repair as part of the FA core complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the central biological process of the FA pathway. FANCB is required for the FANCD2-FANCI monoubiquitination step that activates replication-coupled ICL repair. Correct and specific.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19965384" target="_blank" class="term-link">
+                                        PMID:19965384
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FANCI-FANCD2 is required for replication-coupled ICL repair in S phase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32106311" target="_blank" class="term-link">
+                                        PMID:32106311
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the indispensable role of FANCB protein in the enzymatic activation of FANCD2 monoubiquitination, an essential step in the repair of DNA interstrand crosslinks</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043240" target="_blank" class="term-link">
+                                    GO:0043240
+                                </a>
+                            </span>
+                            <span class="term-label">Fanconi anaemia nuclear complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NB91" data-a="GO:0043240" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FANCB is a subunit of the Fanconi anemia nuclear (core) complex (InterPro-based).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the experimental IDA/NAS and phylogenetic IBA annotations of the same term; FANCB (IPR033333) is a defining FA core complex component.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17396147" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17396147
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    FAAP100 is essential for activation of the Fanconi anemia-as...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NB91" data-a="GO:0005515" data-r="PMID:17396147" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Binary interaction evidence (with FAAP100, Q0VG06). &#34;Protein binding&#34; is uninformative; the underlying, well-supported molecular function is a protein-macromolecule adaptor / scaffold activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The IPI captures the direct FANCB-FAAP100 interaction, but GO:0005515 conveys no specific function. Structural and biochemical work shows FANCB is the dimerization/scaffold factor that bridges FANCL and FAAP100 into the BL100 module and templates core-complex assembly, stimulating FANCL ligase activity. This is best represented as protein-macromolecule adaptor activity (GO:0030674).
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030674" target="_blank" class="term-link">
+                                    protein-macromolecule adaptor activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17396147" target="_blank" class="term-link">
+                                        PMID:17396147
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">directly interacts with FANCB and FANCL to form a stable subcomplex</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27986592" target="_blank" class="term-link">
+                                        PMID:27986592
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FANCB plays a key structural function, being the dimerization factor</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000785" target="_blank" class="term-link">
+                                    GO:0000785
+                                </a>
+                            </span>
+                            <span class="term-label">chromatin</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22343915" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22343915
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    FAAP20: a novel ubiquitin-binding FA nuclear core-complex pr...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NB91" data-a="GO:0000785" data-r="PMID:22343915" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FANCB, as part of the FA core complex, is loaded onto chromatin upon DNA damage.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental (IDA) chromatin localization is consistent with the DNA-damage-induced chromatin loading of the FA core complex, which delivers the FANCD2-FANCI substrate to damaged chromatin. Defer to the curator&#39;s experimental assessment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22343915" target="_blank" class="term-link">
+                                        PMID:22343915
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">required for DNA-damage-induced chromatin loading of FANCA</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036297" target="_blank" class="term-link">
+                                    GO:0036297
+                                </a>
+                            </span>
+                            <span class="term-label">interstrand cross-link repair</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19965384" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19965384
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Fanconi anemia pathway promotes replication-dependent DN...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NB91" data-a="GO:0036297" data-r="PMID:19965384" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FANCB contributes to interstrand crosslink repair via the FA pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Duplicate of the ICL-repair process term (also IEA) supported by an authoritative statement that the FA pathway (FANCI-FANCD2 monoubiquitination, which FANCB enables) drives replication-coupled ICL repair. Correct and central.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19965384" target="_blank" class="term-link">
+                                        PMID:19965384
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FANCI-FANCD2 is required for replication-coupled ICL repair in S phase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043240" target="_blank" class="term-link">
+                                    GO:0043240
+                                </a>
+                            </span>
+                            <span class="term-label">Fanconi anaemia nuclear complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22343915" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22343915
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    FAAP20: a novel ubiquitin-binding FA nuclear core-complex pr...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NB91" data-a="GO:0043240" data-r="PMID:22343915" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FANCB is an integral component of the FA nuclear core complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the IDA/IEA/IBA annotations of the same term. The FAAP20 study treats FANCB as an established FA nuclear core-complex subunit.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9835411
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NB91" data-a="GO:0005829" data-r="Reactome:R-HSA-9835411" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A cytosolic pool of FANCB exists as the assembled BL100 module prior to chaperoned nuclear import (and in the FA-core-complex:HSP70 assembly implicated in PKR signaling).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The BL100 (L-B-P100) module is the major cytosolic form of FANCL/FANCB/FAAP100 and moves to the nucleus only when associated with FANCA and FANCM. Cytosolic localization is thus biologically accurate for an assembly/storage pool, though FANCB&#39;s functional site is nuclear.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17396147" target="_blank" class="term-link">
+                                        PMID:17396147
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">each member of the L-B-P100 subcomplex has a disturbed nuclear localization in FA-A cells</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6785126
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NB91" data-a="GO:0005654" data-r="Reactome:R-HSA-6785126" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FANCB acts in the nucleoplasm as part of the FA core complex during ICL repair.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Nucleoplasm is the functional compartment of the assembled FA core complex; consistent with the nucleus and Fanconi anaemia nuclear complex annotations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6785342
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NB91" data-a="GO:0005654" data-r="Reactome:R-HSA-6785342" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FANCB acts in the nucleoplasm as part of the FA core complex during ICL repair.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant Reactome nucleoplasm localization; correct functional compartment.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6785361
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NB91" data-a="GO:0005654" data-r="Reactome:R-HSA-6785361" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FANCB acts in the nucleoplasm as part of the FA core complex during ICL repair.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant Reactome nucleoplasm localization; correct functional compartment.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6785732
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NB91" data-a="GO:0005654" data-r="Reactome:R-HSA-6785732" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FANCB acts in the nucleoplasm as part of the FA core complex during ICL repair.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant Reactome nucleoplasm localization; correct functional compartment.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6785986
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NB91" data-a="GO:0005654" data-r="Reactome:R-HSA-6785986" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FANCB acts in the nucleoplasm as part of the FA core complex during ICL repair.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant Reactome nucleoplasm localization; correct functional compartment.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6786155
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NB91" data-a="GO:0005654" data-r="Reactome:R-HSA-6786155" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FANCB acts in the nucleoplasm as part of the FA core complex during ICL repair.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant Reactome nucleoplasm localization; correct functional compartment.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6786166
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NB91" data-a="GO:0005654" data-r="Reactome:R-HSA-6786166" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FANCB acts in the nucleoplasm as part of the FA core complex during ICL repair.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant Reactome nucleoplasm localization; correct functional compartment.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6786171
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NB91" data-a="GO:0005654" data-r="Reactome:R-HSA-6786171" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FANCB acts in the nucleoplasm as part of the FA core complex during ICL repair.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant Reactome nucleoplasm localization; correct functional compartment.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6788385
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NB91" data-a="GO:0005654" data-r="Reactome:R-HSA-6788385" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FANCB acts in the nucleoplasm as part of the FA core complex during ICL repair.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant Reactome nucleoplasm localization; correct functional compartment.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6788392
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NB91" data-a="GO:0005654" data-r="Reactome:R-HSA-6788392" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FANCB acts in the nucleoplasm as part of the FA core complex during ICL repair.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant Reactome nucleoplasm localization; correct functional compartment.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043240" target="_blank" class="term-link">
+                                    GO:0043240
+                                </a>
+                            </span>
+                            <span class="term-label">Fanconi anaemia nuclear complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20347428" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20347428
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A histone-fold complex and FANCM form a conserved DNA-remode...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NB91" data-a="GO:0043240" data-r="PMID:20347428" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) evidence places FANCB in the FA nuclear core complex, which the FANCM-MHF DNA-remodeling complex associates with.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental complex-membership annotation consistent with all other GO:0043240 annotations. The full study biochemically purified the FA core complex (of which FANCB is a subunit); defer to the curator&#39;s experimental determination.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20347428" target="_blank" class="term-link">
+                                        PMID:20347428
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FANCM-MHF associates with the Fanconi anemia (FA) core complex</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Central scaffold and dimerization subunit of the FANCB-FANCL-FAAP100 (BL100) catalytic module of the Fanconi anemia core complex. FANCB bridges and dimerizes two BL100 heterotrimers, templating assembly of the symmetric core complex and stimulating the FANCL RING E3 ligase to monoubiquitinate the FANCD2-FANCI complex during replication-coupled interstrand crosslink repair.</h3>
+                <span class="vote-buttons" data-g="Q8NB91" data-a="FUNCTION: Central scaffold and dimerization subunit of the F..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030674" target="_blank" class="term-link">
+                            protein-macromolecule adaptor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036297" target="_blank" class="term-link">
+                                interstrand cross-link repair
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                nucleoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043240" target="_blank" class="term-link">
+                            Fanconi anaemia nuclear complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27986592" target="_blank" class="term-link">
+                                PMID:27986592
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">leaving the FANCB subunit as the sole candidate for the dimerization element of the BL100 complex</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27986592" target="_blank" class="term-link">
+                                PMID:27986592
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">its mono-ubiquitination function is stimulated by 6-fold in the presence of FANCB and FAAP100</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31666700" target="_blank" class="term-link">
+                                PMID:31666700
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">deletion of FANCB, FANCL or FAAP100, that comprise the catalytic module and the structural scaffold for the complex</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15502827" target="_blank" class="term-link">
+                            PMID:15502827
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">X-linked inheritance of Fanconi anemia complementation group B.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16116422" target="_blank" class="term-link">
+                            PMID:16116422
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A human ortholog of archaeal DNA repair protein Hef is defective in Fanconi anemia complementation group M.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17396147" target="_blank" class="term-link">
+                            PMID:17396147
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">FAAP100 is essential for activation of the Fanconi anemia-associated DNA damage response pathway.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19965384" target="_blank" class="term-link">
+                            PMID:19965384
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The Fanconi anemia pathway promotes replication-dependent DNA interstrand cross-link repair.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20347428" target="_blank" class="term-link">
+                            PMID:20347428
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A histone-fold complex and FANCM form a conserved DNA-remodeling complex to maintain genome stability.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21458466" target="_blank" class="term-link">
+                            PMID:21458466
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The phenotype of FancB-mutant mouse embryonic stem cells.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22343915" target="_blank" class="term-link">
+                            PMID:22343915
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">FAAP20: a novel ubiquitin-binding FA nuclear core-complex protein required for functional integrity of the FA-BRCA DNA repair pathway.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27986592" target="_blank" class="term-link">
+                            PMID:27986592
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The FA Core Complex Contains a Homo-dimeric Catalytic Module for the Symmetric Mono-ubiquitination of FANCI-FANCD2.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31666700" target="_blank" class="term-link">
+                            PMID:31666700
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structure of the Fanconi anaemia monoubiquitin ligase complex.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32106311" target="_blank" class="term-link">
+                            PMID:32106311
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Association of clinical severity with FANCB variant type in Fanconi anemia.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32939280" target="_blank" class="term-link">
+                            PMID:32939280
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Deep learning enables the atomic structure determination of the Fanconi Anemia core complex from cryoEM.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6785126
+
+                    </span>
+                </div>
+
+                <div class="reference-title">FA core complex assembles at DNA interstrand crosslinks (ICLs)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6785342
+
+                    </span>
+                </div>
+
+                <div class="reference-title">FANCD2:FANCI complex and UBE2T bind ICL-DNA associated with the FA core complex</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6785361
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Monoubiquitination of FANCD2:FANCI</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6785732
+
+                    </span>
+                </div>
+
+                <div class="reference-title">DNA nucleases bind monoubiquitinated ID2 complex</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6785986
+
+                    </span>
+                </div>
+
+                <div class="reference-title">DNA nucleases unhook the interstrand crosslink (ICL)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6786155
+
+                    </span>
+                </div>
+
+                <div class="reference-title">POLN binds ICL-DNA</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6786166
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Translesion synthesis across unhooked ICL by POLN</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6786171
+
+                    </span>
+                </div>
+
+                <div class="reference-title">FANCD2 deubiquitination by USP1:WDR48</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6788385
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The complex of ATR and ATRIP is recruited to ICL-DNA</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6788392
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ATR phosphorylates RPA2, FANCI, FANCD2 and FANCM at ICL-DNA</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9835411
+
+                    </span>
+                </div>
+
+                <div class="reference-title">FA core complex:HSP70s binds PKR</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does FANCB self-associate to form the dimerization interface directly, or is the &#34;dimer of trimers&#34; bridged through FANCB-FAAP100 contacts (isolated FANCB self-association has not been demonstrated)?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q8NB91" data-a="Q: Does FANCB self-associate to form the dimerization..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does hemizygous/X-inactivation dosage of the single active FANCB allele set the threshold for FA core complex assembly and FANCD2 monoubiquitination?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q8NB91" data-a="Q: How does hemizygous/X-inactivation dosage of the s..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Structure-guided mutagenesis of the FANCB dimerization interface to test whether disrupting BL100 dimerization abolishes FANCD2-FANCI monoubiquitination while preserving individual subunit stability.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q8NB91" data-a="EXPERIMENT: Structure-guided mutagenesis of the FANCB dimeriza..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Quantitative reconstitution of FANCL ubiquitin-ligase activity with and without FANCB to dissect its architectural (adaptor) versus allosteric stimulation of catalysis.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q8NB91" data-a="EXPERIMENT: Quantitative reconstitution of FANCL ubiquitin-lig..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Affinage</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(FANCB-deep-research-affinage.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8NB91" data-a="DEEP_RESEARCH: Affinage" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Affinage mechanistic annotation for FANCB (human)</span>
+
+
+                    <span class="report-badge">Affinage</span>
+
+
+                    <span class="report-badge">Affinage (Claude Sonnet reading pass + Opus synthesis pass)</span>
+
+
+                    <span class="report-badge">8 citations</span>
+
+
+
+
+
+                </div>
+
+
+                <h1 id="affinage-mechanistic-annotation-for-fancb-human">Affinage mechanistic annotation for FANCB (human)</h1>
+<h2 id="current-model-mechanistic-narrative">Current model (mechanistic narrative)</h2>
+<p>FANCB (originally identified as FAAP95) is an X-linked component of the Fanconi anemia (FA) core complex that acts upstream to promote FANCD2 monoubiquitination during the repair of DNA interstrand crosslinks (ICLs) [PMID:15611632, PMID:21458466]. Loss of FANCB abolishes MMC- and crosslink-induced FANCD2 foci formation and reduces RAD51 foci, sister chromatid exchange, and gene targeting, producing crosslinker hypersensitivity and chromosomal instability, while a parallel MUS81-dependent route handles replication-fork repair independently of FANCB [PMID:17903171, PMID:21458466]. Biochemical reconstitution establishes that FANCB protein is indispensable for FANCD2 monoubiquitination, and the degree of residual monoubiquitination conferred by FANCB missense variants correlates with clinical severity <a href="https://pubmed.ncbi.nlm.nih.gov/32106311">PMID:32106311</a>. Beyond canonical ICL repair, FANCB has dedicated germline and stem-cell roles: during male meiosis it localizes to the sex chromosomes in an MDC1/γH2AX-dependent manner, is required for meiotic FANCD2 localization, and shapes sex-chromosome H3K9 methylation (decreasing H3K9me2 and increasing H3K9me3 upon loss), with FANCB-mutant mice showing primordial germ cell defects and spermatogonial failure <a href="https://pubmed.ncbi.nlm.nih.gov/26123487">PMID:26123487</a>; it also maintains hematopoietic stem cell quiescence and repopulating capacity <a href="https://pubmed.ncbi.nlm.nih.gov/26658157">PMID:26658157</a>. Truncating loss-of-function FANCB mutations cause X-linked VACTERL-hydrocephalus syndrome in hemizygous males, with carrier females showing skewed X-inactivation <a href="https://pubmed.ncbi.nlm.nih.gov/21910217">PMID:21910217</a>.</p>
+<h2 id="affinage-mechanism-profile-affinages-own-goreactome-grounding">Affinage mechanism profile (Affinage's own GO/Reactome grounding)</h2>
+<ul>
+<li><strong>molecular_activity:</strong> GO:0140096 catalytic activity, acting on a protein</li>
+<li><strong>localization:</strong> GO:0005634 nucleus, GO:0000228 nuclear chromosome</li>
+<li><strong>pathway (Reactome):</strong> R-HSA-73894 DNA Repair, R-HSA-4839726 Chromatin organization</li>
+<li><strong>partners:</strong> FANCD2, MDC1</li>
+<li><strong>complexes:</strong> FA core complex</li>
+</ul>
+<h2 id="dated-findings-citation-anchored">Dated findings (citation-anchored)</h2>
+<table>
+<thead>
+<tr>
+<th>Year</th>
+<th>Confidence</th>
+<th>Finding</th>
+<th>PMIDs</th>
+<th>Journal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2005</td>
+<td>Medium</td>
+<td>FANCB (previously misidentified as BRCA2/FANCB) was identified as FAAP95, a previously uncharacterized component of the FA core complex that functions upstream of FANCD2 monoubiquitination, placing FANCB in the FA core complex rather than downstream or in a parallel pathway.</td>
+<td>PMID:15611632</td>
+<td>Cell cycle (Georgetown, Tex.)</td>
+</tr>
+<tr>
+<td>2007</td>
+<td>High</td>
+<td>FANCB (as a component of the FA core complex) and Mus81 act independently in repairing camptothecin-induced DNA damage during replication; FANCB is required for FANCD2 foci formation after DNA crosslink damage but not for sister chromatid exchanges, gene targeting, or hydroxyurea-induced replication fork repair, while Mus81 handles the latter functions.</td>
+<td>PMID:17903171</td>
+<td>Genes to cells : devoted to molecular &amp; cellular mechanisms</td>
+</tr>
+<tr>
+<td>2011</td>
+<td>High</td>
+<td>FancB-mutant mouse embryonic stem cells show hypersensitivity to the crosslinking agent mitomycin C, increased chromosomal abnormalities, reduced sister chromatid exchanges, reduced gene targeting, reduced MMC-induced Rad51 foci, and absent MMC-induced FancD2 foci, confirming FANCB is required for FancD2 monoubiquitination/foci formation and HR repair of ICLs.</td>
+<td>PMID:21458466</td>
+<td>Mutation research</td>
+</tr>
+<tr>
+<td>2015</td>
+<td>High</td>
+<td>FANCB is essential for male germline function: Fancb mutant mice are infertile with primordial germ cell defects and spermatogonial maintenance failure. During meiosis, FANCB localizes to sex chromosomes in an MDC1-dependent manner (MDC1 binds γH2AX to initiate chromosome-wide silencing), is required for FANCD2 localization during meiosis, and regulates H3K9 methylation on sex chromosomes—loss of FANCB decreases H3K9me2 and increases H3K9me3 on sex chromosomes.</td>
+<td>PMID:26123487</td>
+<td>Human molecular genetics</td>
+</tr>
+<tr>
+<td>2015</td>
+<td>High</td>
+<td>Fancb-deficient mice have decreased HSC quiescence, reduced progenitor activity in vitro, and reduced repopulating capacity in vivo; Fancb-deficient bone marrow is hypersensitive to MMC and shows impaired recovery from myelotoxic stress; RNA-seq reveals altered expression of genes involved in HSC function and cell cycle regulation in Fancb-deficient HSCs.</td>
+<td>PMID:26658157</td>
+<td>Scientific reports</td>
+</tr>
+<tr>
+<td>2020</td>
+<td>High</td>
+<td>FANCB protein is indispensable for FANCD2 monoubiquitination (an essential step in ICL repair); FANCB missense variants show variable residual FANCD2 monoubiquitination activity that correlates with clinical severity. Aberrant splicing and transcript destabilization were associated with 2 missense variants. Biochemical reconstitution confirmed that reduced FANCD2 monoubiquitination correlates with earlier disease onset and shorter survival.</td>
+<td>PMID:32106311</td>
+<td>Blood</td>
+</tr>
+<tr>
+<td>2017</td>
+<td>Medium</td>
+<td>A somatic mosaic intragenic duplication of FANCB covering exon 3 introduces a premature stop codon (p.A319*) in the FANCB protein; lentiviral transduction of FANCB-null cells with the mutant construct confirmed loss of FANCD2 ubiquitination and foci formation activity, while WT FANCB restored these functions.</td>
+<td>PMID:29193904</td>
+<td>Molecular genetics &amp; genomic medicine</td>
+</tr>
+<tr>
+<td>2011</td>
+<td>Medium</td>
+<td>Loss-of-function FANCB mutations (truncating) cause X-linked VACTERL-hydrocephalus syndrome in hemizygous males, and carrier females show highly skewed X-inactivation; increased chromosomal breakage on exposure to DNA cross-linking agents was confirmed in affected cells, consistent with FANCB's role in the FA pathway.</td>
+<td>PMID:21910217</td>
+<td>American journal of medical genetics. Part A</td>
+</tr>
+</tbody>
+</table>
+<h2 id="citations">Citations</h2>
+<ul>
+<li>PMID:15611632</li>
+<li>PMID:17903171</li>
+<li>PMID:21458466</li>
+<li>PMID:21910217</li>
+<li>PMID:26123487</li>
+<li>PMID:26658157</li>
+<li>PMID:29193904</li>
+<li>PMID:32106311</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(FANCB-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8NB91" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="fancb-q8nb91-gene-review-notes">FANCB (Q8NB91) — Gene Review Notes</h1>
+<p>Human Fanconi anemia group B protein / FAAP95. Gene at Xp22.31; X-linked. 859 aa. HGNC:3583.</p>
+<h2 id="summary-of-function">Summary of function</h2>
+<p>FANCB is a non-catalytic structural subunit of the Fanconi anemia (FA) core complex, the<br />
+multisubunit E3 ubiquitin ligase (FANCA/B/C/E/F/G/L/M + FAAPs) that monoubiquitinates the<br />
+FANCD2–FANCI (ID2) heterodimer during replication-coupled DNA interstrand crosslink (ICL)<br />
+repair. Within the complex FANCB forms, together with the RING E3 ligase FANCL and FAAP100,<br />
+the FANCB–FANCL–FAAP100 (BL100) catalytic module. FANCB is the dimerization/scaffold factor:<br />
+two BL100 heterotrimers associate through FANCB to give the symmetric "dimer of trimers" that<br />
+templates assembly of the whole core complex and positions the two FANCL RING domains to<br />
+ubiquitinate both FANCD2 and FANCI. Loss of FANCB abolishes FANCD2 monoubiquitination, causes<br />
+crosslinker hypersensitivity, chromosomal instability, and the FA-B clinical phenotype (often<br />
+severe VACTERL-H).</p>
+<h2 id="key-provenance">Key provenance</h2>
+<h3 id="identity-x-linkage-essentiality-for-fancd2-ubiquitination">Identity, X-linkage, essentiality for FANCD2 ubiquitination</h3>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/15502827" title="the protein defective in individuals with Fanconi anemia belonging to complementation group B is an essential component of the nuclear protein 'core complex' responsible for monoubiquitination of FANCD2">PMID:15502827</a> — Meetei 2004, Nat Genet; identified FANCB (=FAAP95) as FA core complex subunit.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/15502827" title="the gene encoding this protein, FANCB, is localized at Xp22.31 and subject to X-chromosome inactivation">PMID:15502827</a> — X-linked inheritance; single active copy makes FANCB a uniquely vulnerable node.</li>
+<li>UniProt FUNCTION: [file:human/FANCB/FANCB-uniprot.txt "DNA repair protein required for FANCD2 ubiquitination"].</li>
+<li>UniProt SUBUNIT: multisubunit FA complex composed of FANCA, FANCB, FANCC, FANCE, FANCF, FANCG, FANCL/PHF9 and FANCM; "The complex is not found in FA patients." Nucleus (ECO:0000269|PubMed:15502827).</li>
+</ul>
+<h3 id="fancb-is-the-scaffold-dimerization-factor-of-the-bl100-catalytic-module">FANCB is the scaffold / dimerization factor of the BL100 catalytic module</h3>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/27986592" title="leaving the FANCB subunit as the sole candidate for the dimerization element of the BL100 complex">PMID:27986592</a> — Swuec 2017, cryo-EM of the dimeric catalytic module.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/27986592" title="FANCB plays a key structural function, being the dimerization factor">PMID:27986592</a>.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/27986592" title="its mono-ubiquitination function is stimulated by 6-fold in the presence of FANCB and FAAP100">PMID:27986592</a> — FANCL activity architecturally stimulated by FANCB/FAAP100.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/31666700" title="A dimer of FANCB-FAAP100 heterodimers is located in the middle region of the structure">PMID:31666700</a> — Shakeel 2019, Nature, full FA core complex structure.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/31666700" title="deletion of FANCB, FANCL or FAAP100, that comprise the catalytic module and the structural scaffold for the complex, eliminates this residual activity">PMID:31666700</a>.</li>
+<li>Note FANCB is the only BL100 protomer carrying disease-associated missense mutations (Swuec 2017), underscoring its structural role.</li>
+</ul>
+<h3 id="direct-interaction-with-fancl-and-faap100-subcomplex-protects-members-nuclear-localization">Direct interaction with FANCL and FAAP100; subcomplex protects members; nuclear localization</h3>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/17396147" title="directly interacts with FANCB and FANCL to form a stable subcomplex">PMID:17396147</a> — Ling 2007; FAAP100 + FANCB + FANCL = L-B-P100 subcomplex.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/17396147" title="each member of the L-B-P100 subcomplex has a disturbed nuclear localization in FA-A cells">PMID:17396147</a> — nuclear import of the module is FANCA/FANCM-dependent; the module is cytosolic until chaperoned to the nucleus.</li>
+</ul>
+<h3 id="chromatin-loading-and-icl-repair-context">Chromatin loading and ICL repair context</h3>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/22343915" title="required for DNA-damage-induced chromatin loading of FANCA">PMID:22343915</a> — FAAP20 paper; FA core complex (incl. FANCB, IDA chromatin) loads onto chromatin upon damage.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/19965384" title="FANCI-FANCD2 is required for replication-coupled ICL repair in S phase">PMID:19965384</a> — Knipscheer 2009; places the FANCD2 monoubiquitination output (which FANCB enables) in replication-coupled ICL repair.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/20347428" title="FANCM-MHF associates with the Fanconi anemia (FA) core complex">PMID:20347428</a> — Yan 2010; FA core complex (of which FANCB is a subunit) purified; suppresses sister-chromatid exchanges, promotes FANCD2 monoubiquitination.</li>
+</ul>
+<h2 id="curation-reasoning-highlights">Curation reasoning highlights</h2>
+<ul>
+<li>MF "protein binding" (GO:0005515, IPI with FAAP100): uninformative; the real, well-supported MF is a protein-macromolecule adaptor/scaffold activity (GO:0030674) — FANCB bridges/dimerizes FANCL and FAAP100 and templates core-complex assembly. MODIFY.</li>
+<li>HR/SCE regulation IBA terms (GO:1905168, GO:2000042, GO:1990414) are phylogenetic (mouse Fancb) and reflect broad FA-pathway roles downstream of FANCB's direct scaffolding function → KEEP_AS_NON_CORE.</li>
+<li>Multiple redundant Reactome nucleoplasm TAS lines and cytosol TAS: locations are correct (cytosolic assembly pool + nuclear function) → ACCEPT.</li>
+<li>Structural PDBs: 7KZP/7KZQ etc. (human FA core complex, PMID:32939280); 6SRI (chicken, PMID:31666700).<br />
+</content></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q8NB91
+gene_symbol: FANCB
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  Fanconi anemia group B protein (FANCB, also FAAP95) is a non-catalytic subunit of the
+  Fanconi anemia (FA) core complex, a nuclear multisubunit ubiquitin ligase that, in
+  response to DNA replication stress and interstrand crosslinks (ICLs), monoubiquitinates
+  the FANCD2-FANCI (ID2) heterodimer to activate the FA/BRCA DNA repair pathway. FANCB
+  assembles with the RING E3 ligase FANCL and with FAAP100 into the FANCB-FANCL-FAAP100
+  (BL100) catalytic module, where it serves as the central scaffold and dimerization
+  factor: two BL100 heterotrimers associate through FANCB to form the symmetric
+  &#34;dimer of trimers&#34; that gives the core complex its architecture and positions the two
+  FANCL RING domains to ubiquitinate FANCD2 and FANCI. FANCB is required for the
+  stability and coordinated nuclear import of the module (chaperoned by FANCA and FANCM)
+  and for chromatin loading of the complex at sites of damage; in its absence FANCD2
+  monoubiquitination fails. The gene is X-linked (Xp22.31) and subject to X-inactivation,
+  so a single active copy is functional, making FANCB a dosage-sensitive node whose loss
+  causes Fanconi anemia complementation group B, frequently a severe VACTERL-with-hydrocephalus
+  phenotype, with cellular hypersensitivity to crosslinking agents and chromosomal
+  instability.
+existing_annotations:
+- term:
+    id: GO:0043240
+    label: Fanconi anaemia nuclear complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: FANCB is a core structural subunit of the Fanconi anemia nuclear (core) complex.
+    action: ACCEPT
+    reason: &gt;-
+      This is the defining, best-supported complex-membership annotation for FANCB and is
+      corroborated experimentally (IDA, NAS below) and structurally. FANCB is one of the eight
+      stably associated subunits of the FA core complex and, with FANCL and FAAP100, forms its
+      central catalytic module.
+    supported_by:
+    - reference_id: PMID:15502827
+      supporting_text: essential component of the nuclear protein
+    - reference_id: PMID:31666700
+      supporting_text: A dimer of FANCB-FAAP100 heterodimers is located in the middle region of the structure
+- term:
+    id: GO:1905168
+    label: positive regulation of double-strand break repair via homologous recombination
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference that the FA pathway promotes homologous-recombination
+      repair of double-strand breaks.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Promotion of HR is a genuine but downstream, pathway-level consequence of FA-core-complex
+      activity rather than FANCB&#39;s direct molecular function. FANCB&#39;s core role is architectural
+      scaffolding of the BL100 module that enables FANCD2-FANCI monoubiquitination; effects on
+      HR are indirect and shared across FA proteins. Retained as non-core.
+    supported_by:
+    - reference_id: PMID:21458466
+      supporting_text: Gene targeting efficiency was 16.2% (6/37) for control cells and 0% (0/96) for fancbΔex2
+- term:
+    id: GO:1990414
+    label: replication-born double-strand break repair via sister chromatid exchange
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference linking FANCB to repair of replication-associated
+      double-strand breaks via sister-chromatid exchange.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The FA core complex modulates sister-chromatid-exchange outcomes at stalled/blocked
+      replication forks, but this is a downstream pathway-level role rather than FANCB&#39;s
+      direct scaffolding activity. Retained as non-core.
+    supported_by:
+    - reference_id: PMID:20347428
+      supporting_text: FANCM-MHF associates with the Fanconi anemia (FA) core complex
+    - reference_id: PMID:21458466
+      supporting_text: Decreased Homologous RecombinationThe fancbΔex2 cells were tested for spontaneous sister chromatid exchanges (SCEs)
+- term:
+    id: GO:2000042
+    label: negative regulation of double-strand break repair via homologous recombination
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference that the FA pathway also restrains homologous recombination.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The FA pathway both promotes and limits HR/crossover outcomes (fork protection, suppression
+      of aberrant recombination and sister-chromatid exchange). This regulatory role is downstream
+      and pathway-level, not FANCB&#39;s direct molecular function. Retained as non-core.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: FANCB localizes to the nucleus, where the FA core complex acts on chromatin.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with UniProt subcellular location (Nucleus) and with the more specific
+      nucleoplasm and Fanconi anaemia nuclear complex annotations. Nuclear import of the
+      BL100 module is chaperoned by FANCA/FANCM. Broad but correct.
+    supported_by:
+    - reference_id: PMID:17396147
+      supporting_text: each member of the L-B-P100 subcomplex has a disturbed nuclear localization in FA-A cells
+- term:
+    id: GO:0036297
+    label: interstrand cross-link repair
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: FANCB participates in DNA interstrand crosslink repair as part of the FA core complex.
+    action: ACCEPT
+    reason: &gt;-
+      This is the central biological process of the FA pathway. FANCB is required for the
+      FANCD2-FANCI monoubiquitination step that activates replication-coupled ICL repair.
+      Correct and specific.
+    supported_by:
+    - reference_id: PMID:19965384
+      supporting_text: FANCI-FANCD2 is required for replication-coupled ICL repair in S phase
+    - reference_id: PMID:32106311
+      supporting_text: the indispensable role of FANCB protein in the enzymatic activation of FANCD2 monoubiquitination, an essential step in the repair of DNA interstrand crosslinks
+- term:
+    id: GO:0043240
+    label: Fanconi anaemia nuclear complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: part_of
+  review:
+    summary: FANCB is a subunit of the Fanconi anemia nuclear (core) complex (InterPro-based).
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the experimental IDA/NAS and phylogenetic IBA annotations of the same
+      term; FANCB (IPR033333) is a defining FA core complex component.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:17396147
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Binary interaction evidence (with FAAP100, Q0VG06). &#34;Protein binding&#34; is uninformative;
+      the underlying, well-supported molecular function is a protein-macromolecule adaptor /
+      scaffold activity.
+    action: MODIFY
+    reason: &gt;-
+      The IPI captures the direct FANCB-FAAP100 interaction, but GO:0005515 conveys no specific
+      function. Structural and biochemical work shows FANCB is the dimerization/scaffold factor
+      that bridges FANCL and FAAP100 into the BL100 module and templates core-complex assembly,
+      stimulating FANCL ligase activity. This is best represented as protein-macromolecule
+      adaptor activity (GO:0030674).
+    proposed_replacement_terms:
+    - id: GO:0030674
+      label: protein-macromolecule adaptor activity
+    supported_by:
+    - reference_id: PMID:17396147
+      supporting_text: directly interacts with FANCB and FANCL to form a stable subcomplex
+    - reference_id: PMID:27986592
+      supporting_text: FANCB plays a key structural function, being the dimerization factor
+- term:
+    id: GO:0000785
+    label: chromatin
+  evidence_type: IDA
+  original_reference_id: PMID:22343915
+  qualifier: located_in
+  review:
+    summary: FANCB, as part of the FA core complex, is loaded onto chromatin upon DNA damage.
+    action: ACCEPT
+    reason: &gt;-
+      Experimental (IDA) chromatin localization is consistent with the DNA-damage-induced
+      chromatin loading of the FA core complex, which delivers the FANCD2-FANCI substrate
+      to damaged chromatin. Defer to the curator&#39;s experimental assessment.
+    supported_by:
+    - reference_id: PMID:22343915
+      supporting_text: required for DNA-damage-induced chromatin loading of FANCA
+- term:
+    id: GO:0036297
+    label: interstrand cross-link repair
+  evidence_type: NAS
+  original_reference_id: PMID:19965384
+  qualifier: involved_in
+  review:
+    summary: FANCB contributes to interstrand crosslink repair via the FA pathway.
+    action: ACCEPT
+    reason: &gt;-
+      Duplicate of the ICL-repair process term (also IEA) supported by an authoritative
+      statement that the FA pathway (FANCI-FANCD2 monoubiquitination, which FANCB enables)
+      drives replication-coupled ICL repair. Correct and central.
+    supported_by:
+    - reference_id: PMID:19965384
+      supporting_text: FANCI-FANCD2 is required for replication-coupled ICL repair in S phase
+- term:
+    id: GO:0043240
+    label: Fanconi anaemia nuclear complex
+  evidence_type: NAS
+  original_reference_id: PMID:22343915
+  qualifier: part_of
+  review:
+    summary: FANCB is an integral component of the FA nuclear core complex.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the IDA/IEA/IBA annotations of the same term. The FAAP20 study treats
+      FANCB as an established FA nuclear core-complex subunit.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9835411
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      A cytosolic pool of FANCB exists as the assembled BL100 module prior to chaperoned
+      nuclear import (and in the FA-core-complex:HSP70 assembly implicated in PKR signaling).
+    action: ACCEPT
+    reason: &gt;-
+      The BL100 (L-B-P100) module is the major cytosolic form of FANCL/FANCB/FAAP100 and moves
+      to the nucleus only when associated with FANCA and FANCM. Cytosolic localization is thus
+      biologically accurate for an assembly/storage pool, though FANCB&#39;s functional site is nuclear.
+    supported_by:
+    - reference_id: PMID:17396147
+      supporting_text: each member of the L-B-P100 subcomplex has a disturbed nuclear localization in FA-A cells
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6785126
+  qualifier: located_in
+  review:
+    summary: FANCB acts in the nucleoplasm as part of the FA core complex during ICL repair.
+    action: ACCEPT
+    reason: &gt;-
+      Nucleoplasm is the functional compartment of the assembled FA core complex; consistent
+      with the nucleus and Fanconi anaemia nuclear complex annotations.
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6785342
+  qualifier: located_in
+  review:
+    summary: FANCB acts in the nucleoplasm as part of the FA core complex during ICL repair.
+    action: ACCEPT
+    reason: Redundant Reactome nucleoplasm localization; correct functional compartment.
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6785361
+  qualifier: located_in
+  review:
+    summary: FANCB acts in the nucleoplasm as part of the FA core complex during ICL repair.
+    action: ACCEPT
+    reason: Redundant Reactome nucleoplasm localization; correct functional compartment.
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6785732
+  qualifier: located_in
+  review:
+    summary: FANCB acts in the nucleoplasm as part of the FA core complex during ICL repair.
+    action: ACCEPT
+    reason: Redundant Reactome nucleoplasm localization; correct functional compartment.
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6785986
+  qualifier: located_in
+  review:
+    summary: FANCB acts in the nucleoplasm as part of the FA core complex during ICL repair.
+    action: ACCEPT
+    reason: Redundant Reactome nucleoplasm localization; correct functional compartment.
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6786155
+  qualifier: located_in
+  review:
+    summary: FANCB acts in the nucleoplasm as part of the FA core complex during ICL repair.
+    action: ACCEPT
+    reason: Redundant Reactome nucleoplasm localization; correct functional compartment.
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6786166
+  qualifier: located_in
+  review:
+    summary: FANCB acts in the nucleoplasm as part of the FA core complex during ICL repair.
+    action: ACCEPT
+    reason: Redundant Reactome nucleoplasm localization; correct functional compartment.
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6786171
+  qualifier: located_in
+  review:
+    summary: FANCB acts in the nucleoplasm as part of the FA core complex during ICL repair.
+    action: ACCEPT
+    reason: Redundant Reactome nucleoplasm localization; correct functional compartment.
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6788385
+  qualifier: located_in
+  review:
+    summary: FANCB acts in the nucleoplasm as part of the FA core complex during ICL repair.
+    action: ACCEPT
+    reason: Redundant Reactome nucleoplasm localization; correct functional compartment.
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6788392
+  qualifier: located_in
+  review:
+    summary: FANCB acts in the nucleoplasm as part of the FA core complex during ICL repair.
+    action: ACCEPT
+    reason: Redundant Reactome nucleoplasm localization; correct functional compartment.
+- term:
+    id: GO:0043240
+    label: Fanconi anaemia nuclear complex
+  evidence_type: IDA
+  original_reference_id: PMID:20347428
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Experimental (IDA) evidence places FANCB in the FA nuclear core complex, which the
+      FANCM-MHF DNA-remodeling complex associates with.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental complex-membership annotation consistent with all other GO:0043240
+      annotations. The full study biochemically purified the FA core complex (of which FANCB
+      is a subunit); defer to the curator&#39;s experimental determination.
+    supported_by:
+    - reference_id: PMID:20347428
+      supporting_text: FANCM-MHF associates with the Fanconi anemia (FA) core complex
+core_functions:
+- description: &gt;-
+    Central scaffold and dimerization subunit of the FANCB-FANCL-FAAP100 (BL100) catalytic
+    module of the Fanconi anemia core complex. FANCB bridges and dimerizes two BL100
+    heterotrimers, templating assembly of the symmetric core complex and stimulating the
+    FANCL RING E3 ligase to monoubiquitinate the FANCD2-FANCI complex during replication-coupled
+    interstrand crosslink repair.
+  supported_by:
+  - reference_id: PMID:27986592
+    supporting_text: leaving the FANCB subunit as the sole candidate for the dimerization element of the BL100 complex
+  - reference_id: PMID:27986592
+    supporting_text: its mono-ubiquitination function is stimulated by 6-fold in the presence of FANCB and FAAP100
+  - reference_id: PMID:31666700
+    supporting_text: deletion of FANCB, FANCL or FAAP100, that comprise the catalytic module and the structural scaffold for the complex
+  molecular_function:
+    id: GO:0030674
+    label: protein-macromolecule adaptor activity
+  directly_involved_in:
+  - id: GO:0036297
+    label: interstrand cross-link repair
+  locations:
+  - id: GO:0005654
+    label: nucleoplasm
+  in_complex:
+    id: GO:0043240
+    label: Fanconi anaemia nuclear complex
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does FANCB self-associate to form the dimerization interface directly, or is the
+    &#34;dimer of trimers&#34; bridged through FANCB-FAAP100 contacts (isolated FANCB self-association
+    has not been demonstrated)?
+- question: &gt;-
+    How does hemizygous/X-inactivation dosage of the single active FANCB allele set the
+    threshold for FA core complex assembly and FANCD2 monoubiquitination?
+suggested_experiments:
+- description: &gt;-
+    Structure-guided mutagenesis of the FANCB dimerization interface to test whether disrupting
+    BL100 dimerization abolishes FANCD2-FANCI monoubiquitination while preserving individual
+    subunit stability.
+- description: &gt;-
+    Quantitative reconstitution of FANCL ubiquitin-ligase activity with and without FANCB to
+    dissect its architectural (adaptor) versus allosteric stimulation of catalysis.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: PMID:15502827
+  title: X-linked inheritance of Fanconi anemia complementation group B.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Founding paper identifying FANCB (FAAP95) as an essential FA core-complex subunit required
+      for FANCD2 monoubiquitination and establishing X-linkage at Xp22.31. Directly supports the
+      complex-membership and function annotations.
+- id: PMID:16116422
+  title: A human ortholog of archaeal DNA repair protein Hef is defective in Fanconi
+    anemia complementation group M.
+  findings: []
+- id: PMID:17396147
+  title: FAAP100 is essential for activation of the Fanconi anemia-associated DNA
+    damage response pathway.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Shows FAAP100 directly interacts with FANCB and FANCL to form the stable L-B-P100 (BL100)
+      subcomplex, protecting members from degradation and coordinating nuclear import. Basis for
+      the FANCB IPI and the adaptor/scaffold reinterpretation.
+- id: PMID:19965384
+  title: The Fanconi anemia pathway promotes replication-dependent DNA interstrand
+    cross-link repair.
+  findings: []
+- id: PMID:20347428
+  title: A histone-fold complex and FANCM form a conserved DNA-remodeling complex
+    to maintain genome stability.
+  findings: []
+- id: PMID:21458466
+  title: The phenotype of FancB-mutant mouse embryonic stem cells.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      FancB-mutant mouse ES cells show MMC hypersensitivity, chromosomal instability, absent
+      MMC-induced FancD2 foci, reduced Rad51 foci, abolished gene targeting (0/96 vs 16.2% in
+      controls), and reduced spontaneous SCEs. Provides direct experimental support for the
+      FANCD2-monoubiquitination requirement and the (non-core) HR/SCE-promotion annotations.
+- id: PMID:22343915
+  title: &#39;FAAP20: a novel ubiquitin-binding FA nuclear core-complex protein required
+    for functional integrity of the FA-BRCA DNA repair pathway.&#39;
+  findings: []
+- id: PMID:27986592
+  title: The FA Core Complex Contains a Homo-dimeric Catalytic Module for the Symmetric
+    Mono-ubiquitination of FANCI-FANCD2.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cryo-EM of the BL100 catalytic module identifies FANCB as the sole dimerization element,
+      forming a dimer of FANCB-FANCL-FAAP100 heterotrimers that stimulates FANCL activity ~6-fold.
+      Primary support for the protein-macromolecule adaptor/scaffold core function.
+- id: PMID:31666700
+  title: Structure of the Fanconi anaemia monoubiquitin ligase complex.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full FA core complex structure; a central dimer of FANCB-FAAP100 heterodimers forms the
+      structural scaffold, and deletion of FANCB/FANCL/FAAP100 (the catalytic module/scaffold)
+      eliminates activity. Supports the scaffold/architecture core function.
+- id: PMID:32106311
+  title: Association of clinical severity with FANCB variant type in Fanconi anemia.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Genotype-phenotype study using transcript analysis, genetic complementation, and
+      biochemical reconstitution of FANCD2 monoubiquitination. Establishes FANCB as
+      indispensable for the enzymatic activation of FANCD2 monoubiquitination in ICL repair,
+      with residual activity of missense variants correlating with clinical severity.
+- id: PMID:32939280
+  title: Deep learning enables the atomic structure determination of the Fanconi Anemia
+    core complex from cryoEM.
+  findings: []
+- id: Reactome:R-HSA-6785126
+  title: FA core complex assembles at DNA interstrand crosslinks (ICLs)
+  findings: []
+- id: Reactome:R-HSA-6785342
+  title: FANCD2:FANCI complex and UBE2T bind ICL-DNA associated with the FA core complex
+  findings: []
+- id: Reactome:R-HSA-6785361
+  title: Monoubiquitination of FANCD2:FANCI
+  findings: []
+- id: Reactome:R-HSA-6785732
+  title: DNA nucleases bind monoubiquitinated ID2 complex
+  findings: []
+- id: Reactome:R-HSA-6785986
+  title: DNA nucleases unhook the interstrand crosslink (ICL)
+  findings: []
+- id: Reactome:R-HSA-6786155
+  title: POLN binds ICL-DNA
+  findings: []
+- id: Reactome:R-HSA-6786166
+  title: Translesion synthesis across unhooked ICL by POLN
+  findings: []
+- id: Reactome:R-HSA-6786171
+  title: FANCD2 deubiquitination by USP1:WDR48
+  findings: []
+- id: Reactome:R-HSA-6788385
+  title: The complex of ATR and ATRIP is recruited to ICL-DNA
+  findings: []
+- id: Reactome:R-HSA-6788392
+  title: ATR phosphorylates RPA2, FANCI, FANCD2 and FANCM at ICL-DNA
+  findings: []
+- id: Reactome:R-HSA-9835411
+  title: FA core complex:HSP70s binds PKR
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

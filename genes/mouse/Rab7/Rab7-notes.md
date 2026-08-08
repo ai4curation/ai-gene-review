@@ -25,6 +25,20 @@ The mouse-specific experimental literature emphasizes physiological roles:
 - Numerous late-endosome/lysosome co-localization studies (TrkB/NHE6, TrkA/Nedd4-2,
   BACE1, TMEM127, WASH/strumpellin, C9ORF72, etc.).
 
+## 2026-07-19 SynGO revisit
+
+The SynGO annotations from PMID:24217640 were revisited during the human/mouse
+RAB7A/Rab7a comparison for the Deliverome project. The accessible paper text
+supports AMPA-receptor routing from early endosomes toward late
+endosomal/lysosomal compartments during LTD [PMID:24217640 Stargazin regulates
+AMPA receptor trafficking through adaptor protein complexes during long-term
+depression, "transport from the cell surface to early endosomes and from early
+endosomes to late endosomes/lysosomes"]. However, the experimentally centered
+actors in the accessible text are stargazin, AP-2, and AP-3A, not Rab7. I
+therefore changed the four cached SynGO review rows from `UNDECIDED` to
+`KEEP_AS_NON_CORE`, retaining them as indirect neuronal-context annotations
+rather than core Rab7 biology.
+
 ## Key requested reference
 
 **[PMID:41814093]** Jozić et al. (2026) *Nature Biotechnology*,

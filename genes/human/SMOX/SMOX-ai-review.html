@@ -1,0 +1,3916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMOX - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SMOX</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9NWM0" target="_blank" class="term-link">
+                        Q9NWM0
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "SMOX";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9NWM0" data-a="DESCRIPTION: SMOX (spermine oxidase, also known as PAOh1/SMO) i..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SMOX (spermine oxidase, also known as PAOh1/SMO) is a soluble, FAD-dependent amine oxidase of the flavin monoamine oxidase / polyamine-oxidase family (EC 1.5.3.16). It catalyzes the direct oxidation of the free polyamine spermine to spermidine, releasing 3-aminopropanal and hydrogen peroxide (spermine + O2 + H2O -&gt; spermidine + 3-aminopropanal + H2O2). This reaction constitutes the direct back-conversion arm of polyamine catabolism and, together with spermidine/spermine N1-acetyltransferase (SSAT) and N1-acetylpolyamine oxidase (PAOX/PAO), controls the interconversion and intracellular concentrations of the polyamines spermine, spermidine and putrescine. Unlike PAOX, which acts on N1-acetylated polyamines, SMOX acts preferentially on non-acetylated spermine and does not require prior acetylation. SMOX is a monomeric flavoprotein that binds one FAD per subunit. The enzyme is expressed from at least six alternatively spliced isoforms with differing substrate affinities and is found in both the cytoplasm and the nucleus. Its products link SMOX to oxidative stress: the H2O2 and reactive aldehyde generated by spermine oxidation, particularly when produced in the nucleus, can cause reactive-oxygen-species-mediated DNA damage and apoptosis, and elevated SMOX activity is implicated in inflammation-associated carcinogenesis.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWM0" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (PAN-GO) inference placing SMOX in the cytoplasm. Consistent with the experimentally determined localization of isoform 1 (IDA, PMID:18422650) and UniProt, which report SMOX in the cytoplasm/cytosol. A more specific experimentally supported location (cytosol, GO:0005829) is also annotated; keep this general cytoplasm location as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct cellular component but general; the specific cytosol location (GO:0005829, IDA) better captures where the soluble enzyme acts.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046592" target="_blank" class="term-link">
+                                    GO:0046592
+                                </a>
+                            </span>
+                            <span class="term-label">polyamine oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWM0" data-a="GO:0046592" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference of the general family activity (polyamine oxidase). SMOX&#39;s specific, experimentally demonstrated activity is spermine oxidase activity (GO:0052901), a child of polyamine oxidase activity. The general term is not wrong but the specific term is available and directly supported, so it should be used instead.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A more specific and experimentally supported term (spermine oxidase activity, GO:0052901) exists and is the enzyme&#39;s characterized activity.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052901" target="_blank" class="term-link">
+                                    spermine oxidase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046208" target="_blank" class="term-link">
+                                    GO:0046208
+                                </a>
+                            </span>
+                            <span class="term-label">spermine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWM0" data-a="GO:0046208" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference that SMOX participates in spermine catabolism. This is the core biological process for SMOX, which oxidatively degrades spermine to spermidine. Directly supported by experimental data (isoform 1 IDA, PMID:18422650) and the UniProt spermine-degradation pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correctly captures the enzyme&#39;s core catabolic role; consistent with experimental annotations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWM0" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic mapping from the UniProt Subcellular Location vocabulary (Nucleus). Consistent with experimental evidence that SMOX isoforms localize to the nucleus (isoform 1 IDA, PMID:18422650), where spermine oxidation generates H2O2 near DNA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is experimentally supported (PMID:18422650) and biologically important for the DNA-damage phenotype.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWM0" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic mapping from the UniProt Subcellular Location vocabulary (Cytoplasm). Consistent with experimental evidence (isoform 1 IDA, PMID:18422650) and the annotated cytosol location. Keep as a general, non-core location alongside the more specific cytosol term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but general; the specific cytosol location (GO:0005829) is the core location for this soluble enzyme.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWM0" data-a="GO:0016491" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-to-GO mapping from the amine oxidase domain (IPR002937) to the broad parent term oxidoreductase activity. While SMOX is an oxidoreductase, this term is far more general than the specific, experimentally established spermine oxidase activity (GO:0052901) that is also annotated.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformatively general parent of the characterized spermine oxidase activity; the specific term is available and directly supported.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046592" target="_blank" class="term-link">
+                                    GO:0046592
+                                </a>
+                            </span>
+                            <span class="term-label">polyamine oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWM0" data-a="GO:0046592" data-r="GO_REF:0000117" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA machine-learning electronic annotation to the general family activity. As with the IBA polyamine oxidase annotation, the specific characterized activity spermine oxidase activity (GO:0052901) is available and directly supported, so the more specific term should be used.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A more specific, experimentally supported term (GO:0052901) exists and is the enzyme&#39;s characterized activity.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052901" target="_blank" class="term-link">
+                                    spermine oxidase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052901" target="_blank" class="term-link">
+                                    GO:0052901
+                                </a>
+                            </span>
+                            <span class="term-label">spermine oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWM0" data-a="GO:0052901" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation derived from the RHEA:25804 / EC 1.5.3.16 mapping to spermine oxidase activity. This is the correct, specific molecular function of SMOX and is independently supported by multiple experimental annotations (EXP: PMID:11454677, PMID:12141946, PMID:12398765; IDA: PMID:12477380).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct specific molecular function, matching the UniProt catalytic activity and the experimentally established reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052901" target="_blank" class="term-link">
+                                    GO:0052901
+                                </a>
+                            </span>
+                            <span class="term-label">spermine oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12477380" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12477380
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genomic identification and biochemical characterization of t...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWM0" data-a="GO:0052901" data-r="PMID:12477380" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct-assay annotation of spermine oxidase activity. The paper&#39;s abstract foregrounds the N1-acetylpolyamine oxidase (PAO/PAOX) that prefers N1-acetylspermine, explicitly contrasting it with the spermine oxidase (SMO) which prefers spermine over N1-acetylspermine; the curator (FlyBase) had the full text and attributed the spermine oxidase activity to SMOX. This is the enzyme&#39;s core, experimentally verified molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core molecular function; experimental (IDA) annotation consistent with all other biochemical characterizations of SMOX.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052901" target="_blank" class="term-link">
+                                    GO:0052901
+                                </a>
+                            </span>
+                            <span class="term-label">spermine oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+                        <br>
+                        <span class="isoform-badge" title="This annotation was made on a specific isoform">
+                            <a href="https://www.uniprot.org/uniprotkb/Q9NWM0-1" target="_blank" class="term-link" style="font-size: 0.7rem;">
+                                Q9NWM0-1
+                            </a>
+                        </span>
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18422650" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18422650
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Nuclear localization of human spermine oxidase isoforms - po...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWM0" data-a="GO:0052901" data-r="PMID:18422650" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct-assay annotation showing isoform 1 (SMO/PAOh1) oxidizes spermine; the paper also characterizes the SMO5/isoform 6 splice variant with substrate specificities and affinities comparable to those of SMO/PAOh1. Core molecular function of SMOX; the isoform tag marks what was assayed, not an isoform-restricted activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core molecular function directly demonstrated for the displayed isoform.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006596" target="_blank" class="term-link">
+                                    GO:0006596
+                                </a>
+                            </span>
+                            <span class="term-label">polyamine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-351200
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWM0" data-a="GO:0006596" data-r="Reactome:R-HSA-351200" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation propagated from the Reactome Interconversion of polyamines pathway, which groups both biosynthetic aminopropyltransferase steps and catabolic oxidase steps. SMOX is a catabolic enzyme that degrades spermine to spermidine; it does not biosynthesize polyamines. Its role in the interconversion pathway recycles spermine to spermidine (a catabolic / back-conversion event), so polyamine biosynthetic process mis-frames the enzyme&#39;s direction and is an over-annotation arising from the mixed-content Reactome pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> SMOX is catabolic (spermine to spermidine + H2O2); biosynthesis is the wrong process direction. The correct catabolic processes are separately annotated.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006805" target="_blank" class="term-link">
+                                    GO:0006805
+                                </a>
+                            </span>
+                            <span class="term-label">xenobiotic metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-141334
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWM0" data-a="GO:0006805" data-r="Reactome:R-HSA-141334" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation from the Reactome PAOs oxidise polyamines to amines reaction, whose summary notes that PAOs act on endogenous polyamines as well as some xenobiotics. SMOX&#39;s characterized, physiological substrate is endogenous spermine; there is no experimental evidence that SMOX metabolizes xenobiotics. This is a family-level generalization that does not reflect the specific biology of SMOX.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> No SMOX-specific evidence for xenobiotic metabolism; the enzyme acts on the endogenous polyamine spermine.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046208" target="_blank" class="term-link">
+                                    GO:0046208
+                                </a>
+                            </span>
+                            <span class="term-label">spermine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWM0" data-a="GO:0046208" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation (ARBA / UniPathway UPA00211 spermine degradation) to spermine catabolic process. This is the core biological process of SMOX and matches the UniProt PATHWAY assignment and the experimental IDA annotation (PMID:18422650).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core catabolic process, consistent with experimental evidence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052901" target="_blank" class="term-link">
+                                    GO:0052901
+                                </a>
+                            </span>
+                            <span class="term-label">spermine oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-141341
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWM0" data-a="GO:0052901" data-r="Reactome:R-HSA-141341" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation from the Reactome reaction SMOX-3 oxidises SPN to SPM (spermine oxidase flavoenzyme catalysing oxidation of spermine to spermidine). Correct specific molecular function, corroborating the experimental spermine oxidase activity annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct specific molecular function, consistent with experimental evidence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWM0" data-a="GO:0005654" data-r="GO_REF:0000052" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HPA immunofluorescence localization to the nucleoplasm. Consistent with the experimentally demonstrated nuclear localization of SMOX isoforms (PMID:18422650), where nuclear spermine oxidation generates H2O2 near DNA. A more specific sub-nuclear compartment than the core nucleus location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supported sub-nuclear localization; retained as a specific, non-core location alongside the core nucleus annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWM0" data-a="GO:0005829" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HPA immunofluorescence localization to the cytosol. SMOX is a soluble flavoenzyme lacking membrane- or organelle-targeting signals, and the cytosol is where much of its spermine oxidation occurs. This is a core location for the enzyme&#39;s activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core cytosolic location for a soluble amine oxidase, supported by direct immunofluorescence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031965" target="_blank" class="term-link">
+                                    GO:0031965
+                                </a>
+                            </span>
+                            <span class="term-label">nuclear membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWM0" data-a="GO:0031965" data-r="GO_REF:0000052" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HPA immunofluorescence signal at the nuclear membrane. SMOX is a soluble protein with no known transmembrane domain or membrane anchor; a nuclear-membrane assignment likely reflects perinuclear / nuclear-envelope staining rather than integral nuclear-membrane residence. It is at best a minor, non-core localization compared with the well-supported cytosol and nucleoplasm/nucleus locations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> SMOX has no membrane-targeting features; the nuclear-membrane signal is likely perinuclear and is not a core location of the soluble enzyme.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052901" target="_blank" class="term-link">
+                                    GO:0052901
+                                </a>
+                            </span>
+                            <span class="term-label">spermine oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11454677" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11454677
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and characterization of a human polyamine oxidase th...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWM0" data-a="GO:0052901" data-r="PMID:11454677" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Original cloning and biochemical characterization of human SMOX (PAOh1). The cDNA product has PAO activity that is inhibited by MDL 72,527, a specific inhibitor of mammalian PAO, but not by monoamine- or diamine-oxidase inhibitors, establishing the FAD-dependent polyamine / spermine oxidase activity that defines SMOX (UniProt cites this reference for EC 1.5.3.16). Core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core, experimentally established molecular function from the founding characterization of the enzyme.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052901" target="_blank" class="term-link">
+                                    GO:0052901
+                                </a>
+                            </span>
+                            <span class="term-label">spermine oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12141946" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12141946
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification and characterization of a novel flavin-contai...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWM0" data-a="GO:0052901" data-r="PMID:12141946" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Biochemical identification of SMOX as a novel flavin-containing spermine oxidase of mammalian cell origin that strongly favoured spermine over N1-acetylspermine and failed to act on N1-acetylspermidine, spermidine or the preferred PAO substrate N1,N12-diacetylspermine, directly defining spermine oxidase activity. Core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core molecular function; direct biochemical demonstration of spermine oxidase activity and its substrate preference.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052901" target="_blank" class="term-link">
+                                    GO:0052901
+                                </a>
+                            </span>
+                            <span class="term-label">spermine oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12398765" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12398765
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and characterization of multiple human polyamine oxi...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWM0" data-a="GO:0052901" data-r="PMID:12398765" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cloning and characterization of multiple human SMOX splice variants coding for isoenzymes with distinct biochemical characteristics but efficient oxidation of polyamines (spermine). UniProt cites this reference for the EC 1.5.3.16 catalytic activity and the spermine-degradation pathway. Core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core molecular function; experimentally established across the isoform set.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-141341
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWM0" data-a="GO:0005829" data-r="Reactome:R-HSA-141341" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS cytosol location from the Reactome SMOX oxidation reaction. Consistent with the direct HPA immunofluorescence cytosol annotation. Core location for the soluble enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Corroborates the core cytosolic location of the enzyme.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006598" target="_blank" class="term-link">
+                                    GO:0006598
+                                </a>
+                            </span>
+                            <span class="term-label">polyamine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12477380" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12477380
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genomic identification and biochemical characterization of t...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWM0" data-a="GO:0006598" data-r="PMID:12477380" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct-assay annotation placing SMOX in polyamine catabolism. The paper characterizes the polyamine back-conversion pathway (SSAT acetylation then oxidation by PAO) and contrasts it with SMO, which directly oxidizes spermine. Involvement in polyamine catabolism is correct; the more specific spermine catabolic process (GO:0046208) is separately annotated and better captures the exact substrate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but more general than the specific spermine catabolic process; kept as a valid, broader catabolic annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+                        <br>
+                        <span class="isoform-badge" title="This annotation was made on a specific isoform">
+                            <a href="https://www.uniprot.org/uniprotkb/Q9NWM0-1" target="_blank" class="term-link" style="font-size: 0.7rem;">
+                                Q9NWM0-1
+                            </a>
+                        </span>
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18422650" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18422650
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Nuclear localization of human spermine oxidase isoforms - po...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWM0" data-a="GO:0005634" data-r="PMID:18422650" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct demonstration that overexpressed SMO/PAOh1 (isoform 1) shows significant localization in the nucleus by confocal microscopy, with increased spermine oxidation in the nucleus producing H2O2 close to DNA. Core, functionally important nuclear localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally demonstrated core nuclear localization with direct functional (DNA-damage) relevance.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+                        <br>
+                        <span class="isoform-badge" title="This annotation was made on a specific isoform">
+                            <a href="https://www.uniprot.org/uniprotkb/Q9NWM0-1" target="_blank" class="term-link" style="font-size: 0.7rem;">
+                                Q9NWM0-1
+                            </a>
+                        </span>
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18422650" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18422650
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Nuclear localization of human spermine oxidase isoforms - po...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWM0" data-a="GO:0005737" data-r="PMID:18422650" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct-assay cytoplasmic localization of isoform 1. Consistent with the soluble nature of the enzyme and the cytosol annotations. Keep as a valid general location; the specific cytosol term is treated as core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but general cytoplasmic location; specific cytosol (GO:0005829) is the core location term.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046208" target="_blank" class="term-link">
+                                    GO:0046208
+                                </a>
+                            </span>
+                            <span class="term-label">spermine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+                        <br>
+                        <span class="isoform-badge" title="This annotation was made on a specific isoform">
+                            <a href="https://www.uniprot.org/uniprotkb/Q9NWM0-1" target="_blank" class="term-link" style="font-size: 0.7rem;">
+                                Q9NWM0-1
+                            </a>
+                        </span>
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18422650" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18422650
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Nuclear localization of human spermine oxidase isoforms - po...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWM0" data-a="GO:0046208" data-r="PMID:18422650" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct-assay annotation that isoform 1 participates in spermine catabolism, based on increased spermine oxidation in the nucleus with accompanying alterations in individual nuclear polyamine concentrations. This is the core biological process of SMOX.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core catabolic process, experimentally demonstrated for the displayed isoform.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FAD-dependent oxidation of the free polyamine spermine to spermidine, with production of 3-aminopropanal and hydrogen peroxide (spermine oxidase activity; EC 1.5.3.16), the direct back-conversion step of polyamine catabolism.</h3>
+                <span class="vote-buttons" data-g="Q9NWM0" data-a="FUNCTION: FAD-dependent oxidation of the free polyamine sper..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052901" target="_blank" class="term-link">
+                            spermine oxidase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046208" target="_blank" class="term-link">
+                                spermine catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Substrates:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:45725" target="_blank" class="term-link">
+                                spermine
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12141946" target="_blank" class="term-link">
+                                PMID:12141946
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">novel flavin-containing spermine oxidase of mammalian cell origin</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12141946" target="_blank" class="term-link">
+                                PMID:12141946
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the newly identified oxidase strongly favoured spermine over N</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/SMOX/SMOX-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=spermine + O2 + H2O = 3-aminopropanal + spermidine + H2O2;</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binding of the FAD cofactor required for the amine-oxidase catalytic cycle; SMOX binds one FAD per subunit as a member of the flavin monoamine oxidase family.</h3>
+                <span class="vote-buttons" data-g="Q9NWM0" data-a="FUNCTION: Binding of the FAD cofactor required for the amine..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071949" target="_blank" class="term-link">
+                            FAD binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/SMOX/SMOX-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Binds 1 FAD per subunit.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/SMOX/SMOX-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Belongs to the flavin monoamine oxidase family.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11454677" target="_blank" class="term-link">
+                            PMID:11454677
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cloning and characterization of a human polyamine oxidase that is inducible by polyamine analogue exposure.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cloning of human PAOh1/SMOX; the cDNA product has FAD-dependent polyamine oxidase activity inhibited by the specific mammalian PAO inhibitor MDL 72,527 but not by monoamine- or diamine-oxidase inhibitors, and is inducible by antitumor polyamine analogues.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12141946" target="_blank" class="term-link">
+                            PMID:12141946
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification and characterization of a novel flavin-containing spermine oxidase of mammalian cell origin.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Identifies SMOX as a flavin-containing spermine oxidase that strongly favors spermine over N1-acetylspermine and does not act on N1-acetylspermidine, spermidine or N1,N12-diacetylspermine, defining the direct (non-acetylation-dependent) spermine oxidase activity.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12398765" target="_blank" class="term-link">
+                            PMID:12398765
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cloning and characterization of multiple human polyamine oxidase splice variants that code for isoenzymes with different biochemical characteristics.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reports multiple human SMOX splice variants encoding isoenzymes with distinct biochemical characteristics; UniProt cites this reference for the EC 1.5.3.16 catalytic activity and the spermine-degradation pathway.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12477380" target="_blank" class="term-link">
+                            PMID:12477380
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genomic identification and biochemical characterization of the mammalian polyamine oxidase involved in polyamine back-conversion.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Characterizes the polyamine back-conversion pathway (SSAT then oxidation by PAO) and explicitly contrasts the N1-acetylspermine-preferring PAO with SMO, which prefers spermine over N1-acetylspermine; source of IDA annotations for SMOX spermine oxidase activity and polyamine catabolism.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18422650" target="_blank" class="term-link">
+                            PMID:18422650
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Nuclear localization of human spermine oxidase isoforms - possible implications in drug response and disease etiology.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Demonstrates nuclear localization of SMO/PAOh1 and the SMO5 splice variant by confocal microscopy, with increased nuclear spermine oxidation producing H2O2 near DNA, linking SMOX to oxidative DNA damage and inflammation-induced carcinogenesis.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-141334
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PAOs oxidise polyamines to amines</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-141341
+
+                    </span>
+                </div>
+
+                <div class="reference-title">SMOX-3 oxidises SPN to SPM</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-351200
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Interconversion of polyamines</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SMOX-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9NWM0" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="smox-spermine-oxidase-review-notes">SMOX (Spermine oxidase) — review notes</h1>
+<p>UniProt: Q9NWM0 (SMOX_HUMAN). Gene: SMOX (synonyms C20orf16, SMO; ORFNames UNQ3039/PRO9854).<br />
+HGNC:15862. Chromosome 20. EC 1.5.3.16.</p>
+<h2 id="core-identity-and-reaction">Core identity and reaction</h2>
+<p>SMOX is a <strong>soluble FAD-dependent amine oxidase</strong> of the <strong>flavin monoamine oxidase /<br />
+polyamine-oxidase family</strong>. It carries out the <strong>direct back-conversion</strong> step of polyamine<br />
+catabolism: oxidation of <strong>free spermine to spermidine</strong> with release of <strong>3-aminopropanal</strong><br />
+and <strong>H2O2</strong>.</p>
+<ul>
+<li>Reaction (UniProt CATALYTIC ACTIVITY):<br />
+  [file:human/SMOX/SMOX-uniprot.txt "Reaction=spermine + O2 + H2O = 3-aminopropanal + spermidine + H2O2;"]<br />
+  Rhea:RHEA:25804; EC=1.5.3.16; evidence from PubMed:11454677, 12141946, 12398765.</li>
+<li>Function summary: [file:human/SMOX/SMOX-uniprot.txt "Flavoenzyme which catalyzes the oxidation of spermine to"] ... "spermidine".</li>
+<li>Cofactor: binds one FAD per subunit —<br />
+  [file:human/SMOX/SMOX-uniprot.txt "Binds 1 FAD per subunit."]<br />
+  (Cofactor ChEBI:CHEBI:57692 FAD; multiple FT BINDING sites: residues 35, 55, 63, 79-80,<br />
+  261, 519, 528-529.)</li>
+<li>Family: [file:human/SMOX/SMOX-uniprot.txt "Belongs to the flavin monoamine oxidase family."]</li>
+<li>Pathway: [file:human/SMOX/SMOX-uniprot.txt "Amine and polyamine degradation; spermine degradation."]<br />
+  (UniPathway UPA00211.)</li>
+</ul>
+<h2 id="substrate-specificity-distinguishes-smox-from-paox">Substrate specificity — distinguishes SMOX from PAOX</h2>
+<p>SMOX acts on <strong>non-acetylated spermine</strong>; it does NOT require prior N1-acetylation. This is<br />
+the key distinction from PAOX (N1-acetylpolyamine oxidase), which prefers N1-acetylated<br />
+substrates.</p>
+<ul>
+<li>[PMID:12141946 "the newly identified oxidase strongly favoured spermine over N" (1)-acetylspermine]<br />
+  and "failed to act on N (1)-acetylspermidine, spermidine or the preferred PAO substrate,<br />
+  N (1), N (12)-diacetylspermine".</li>
+<li>Designation as spermine oxidase to distinguish from back-conversion PAO:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/12141946" title="novel flavin-containing spermine oxidase of mammalian cell origin">PMID:12141946</a>.</li>
+<li>The contrasting PAOX enzyme (PMID:12477380) has preference ranking<br />
+  "N1-acetylspermine= N1-acetylspermidine&gt; N1,N12-diacetylspermine&gt;&gt;spermine", i.e. the<br />
+  opposite of SMOX; the same paper notes SMO "prefers spermine over N1-acetylspermine".<br />
+  This paper's abstract foregrounds PAOX, but curators (FlyBase) attributed the SMOX<br />
+  spermine-oxidase-activity and polyamine-catabolism IDA annotations from the full text.</li>
+<li>UniProt notes SMOX can also use N1-acetylspermine and spermidine with lower affinity, isoform-<br />
+  dependent: [file:human/SMOX/SMOX-uniprot.txt "Can also use N(1)-acetylspermine and spermidine as"]<br />
+  substrates. Kinetics: KM ~0.5-0.6 uM for spermine vs ~3 uM for N1-acetylspermine; kcat 27-fold<br />
+  higher with spermine.</li>
+</ul>
+<h2 id="induction-and-inhibitors">Induction and inhibitors</h2>
+<ul>
+<li>Inducible by antitumor polyamine analogues (e.g. N1,N11-bis(ethyl)norspermine); ~5-fold mRNA,<blockquote>
+<p>3-fold activity induction in NCI H157 cells [PMID:11454677 abstract].</p>
+</blockquote>
+</li>
+<li>Inhibited by MDL 72,527 (mammalian PAO inhibitor), not by pargyline (MAO inhibitor) or<br />
+  semicarbazide (diamine oxidase inhibitor) [PMID:11454677 abstract]. DrugBank DB04188 = MDL72527.</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Cytoplasm and Nucleus (isoforms 1, 4, 6) per UniProt SUBCELLULAR LOCATION.</li>
+<li>Experimental nuclear localization of SMO/PAOh1 (isoform 1) and SMO5 (isoform 6) by confocal<br />
+  microscopy, with increased nuclear spermine oxidation producing H2O2 near DNA<br />
+  [PMID:18422650 abstract: "significant localization of SMO protein in the nucleus, as<br />
+  determined by confocal microscopy" and "increased oxidation of spermine in the nucleus<br />
+  therefore increases the production of highly reactive H2O2 in close proximity to DNA"].</li>
+<li>HPA immunofluorescence: cytosol (GO:0005829), nucleoplasm (GO:0005654), nuclear membrane<br />
+  (GO:0031965). SMOX has no TM domain or membrane anchor, so the nuclear-membrane signal is<br />
+  likely perinuclear (marked over-annotated in the review).</li>
+</ul>
+<h2 id="isoforms">Isoforms</h2>
+<p>Six named isoforms by alternative splicing with different substrate affinities:<br />
+1 (PAOh1/SMO, displayed), 2 (PAOh2), 3 (PAOh3, major isoform, highest affinity), 4 (PAOh4),<br />
+5, 6 (SMO5/SMOX5). Isoform 3 is the one modeled by Reactome (R-HSA-141341 "SMOX-3").<br />
+Isoform 5 (missing 1-196) may lack activity (unconfirmed per UniProt MISCELLANEOUS).</p>
+<h2 id="disease-functional-significance">Disease / functional significance</h2>
+<p>The H2O2 and reactive aldehyde products link SMOX to <strong>oxidative stress, mutagenic DNA damage,<br />
+apoptosis, and inflammation-associated carcinogenesis</strong> (e.g. gastric/colon inflammation).<br />
+[PMID:18422650 abstract: "SMO-produced reactive oxygen species are directly responsible for<br />
+oxidative stress capable of inducing apoptosis and potentially mutagenic DNA damage" and<br />
+"the potential role of spermine oxidase in inflammation-induced carcinogenesis"].</p>
+<h2 id="annotation-review-decisions-summary">Annotation review decisions (summary)</h2>
+<p>Core molecular function: <strong>GO:0052901 spermine oxidase activity</strong> (EC 1.5.3.16), supported by<br />
+EXP (PMID:11454677, 12141946, 12398765) and IDA (PMID:12477380, 18422650). Second core MF:<br />
+<strong>GO:0071949 FAD binding</strong> (UniProt cofactor). Core BP: <strong>GO:0046208 spermine catabolic<br />
+process</strong> (IDA PMID:18422650) with broader GO:0006598 polyamine catabolic process kept<br />
+non-core. Core locations: <strong>GO:0005829 cytosol</strong> and <strong>GO:0005634 nucleus</strong>.</p>
+<ul>
+<li>MODIFY: the two general <strong>polyamine oxidase activity</strong> (GO:0046592) IBA/IEA annotations -&gt;<br />
+  replace with specific spermine oxidase activity (GO:0052901).</li>
+<li>MARK_AS_OVER_ANNOTATED (never REMOVE experimental):</li>
+<li>GO:0016491 oxidoreductase activity (IEA, uninformative parent).</li>
+<li>GO:0006596 polyamine biosynthetic process (TAS Reactome; SMOX is catabolic, wrong direction).</li>
+<li>GO:0006805 xenobiotic metabolic process (TAS Reactome; PAO-family generalization, SMOX acts<br />
+    on endogenous spermine).</li>
+<li>GO:0031965 nuclear membrane (IDA HPA; soluble protein, likely perinuclear signal).</li>
+<li>KEEP_AS_NON_CORE: general cytoplasm (GO:0005737) locations, nucleoplasm (GO:0005654),<br />
+  broad polyamine catabolic process (GO:0006598).</li>
+<li>ACCEPT: all spermine oxidase activity (GO:0052901) MF (EXP/IDA/IEA/TAS), spermine catabolic<br />
+  process (GO:0046208) BP, cytosol (GO:0005829) and nucleus (GO:0005634) core locations.</li>
+</ul>
+<p>No REMOVE actions used (per policy: no REMOVE for experimental annotations or bare protein<br />
+binding; no clearly-wrong IEA present here — the questionable IEAs are general parents best<br />
+handled by MODIFY/MARK_AS_OVER_ANNOTATED).</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9NWM0
+gene_symbol: SMOX
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  SMOX (spermine oxidase, also known as PAOh1/SMO) is a soluble, FAD-dependent
+  amine oxidase of the flavin monoamine oxidase / polyamine-oxidase family
+  (EC 1.5.3.16). It catalyzes the direct oxidation of the free polyamine
+  spermine to spermidine, releasing 3-aminopropanal and hydrogen peroxide
+  (spermine + O2 + H2O -&gt; spermidine + 3-aminopropanal + H2O2). This reaction
+  constitutes the direct back-conversion arm of polyamine catabolism and,
+  together with spermidine/spermine N1-acetyltransferase (SSAT) and
+  N1-acetylpolyamine oxidase (PAOX/PAO), controls the interconversion and
+  intracellular concentrations of the polyamines spermine, spermidine and
+  putrescine. Unlike PAOX, which acts on N1-acetylated polyamines, SMOX acts
+  preferentially on non-acetylated spermine and does not require prior
+  acetylation. SMOX is a monomeric flavoprotein that binds one FAD per subunit.
+  The enzyme is expressed from at least six alternatively spliced isoforms with
+  differing substrate affinities and is found in both the cytoplasm and the
+  nucleus. Its products link SMOX to oxidative stress: the H2O2 and reactive
+  aldehyde generated by spermine oxidation, particularly when produced in the
+  nucleus, can cause reactive-oxygen-species-mediated DNA damage and apoptosis,
+  and elevated SMOX activity is implicated in inflammation-associated
+  carcinogenesis.
+alternative_products:
+- name: 1 (PAOh1, SMO)
+  id: Q9NWM0-1
+- name: 2 (PAOh2)
+  id: Q9NWM0-2
+  sequence_note: VSP_011125
+- name: 3 (PAOh3)
+  id: Q9NWM0-3
+  sequence_note: VSP_011124
+- name: 4 (PAOh4)
+  id: Q9NWM0-4
+  sequence_note: VSP_011125, VSP_011126
+- name: &#39;5&#39;
+  id: Q9NWM0-5
+  sequence_note: VSP_011123, VSP_011126
+- name: 6 (SMO5, SMOX5)
+  id: Q9NWM0-6
+  sequence_note: VSP_011126
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (PAN-GO) inference placing SMOX in the cytoplasm. Consistent
+      with the experimentally determined localization of isoform 1 (IDA,
+      PMID:18422650) and UniProt, which report SMOX in the cytoplasm/cytosol. A
+      more specific experimentally supported location (cytosol, GO:0005829) is
+      also annotated; keep this general cytoplasm location as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct cellular component but general; the specific cytosol location
+      (GO:0005829, IDA) better captures where the soluble enzyme acts.
+- term:
+    id: GO:0046592
+    label: polyamine oxidase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic inference of the general family activity (polyamine oxidase).
+      SMOX&#39;s specific, experimentally demonstrated activity is spermine oxidase
+      activity (GO:0052901), a child of polyamine oxidase activity. The general
+      term is not wrong but the specific term is available and directly
+      supported, so it should be used instead.
+    action: MODIFY
+    reason: &gt;-
+      A more specific and experimentally supported term (spermine oxidase
+      activity, GO:0052901) exists and is the enzyme&#39;s characterized activity.
+    proposed_replacement_terms:
+    - id: GO:0052901
+      label: spermine oxidase activity
+- term:
+    id: GO:0046208
+    label: spermine catabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic inference that SMOX participates in spermine catabolism. This
+      is the core biological process for SMOX, which oxidatively degrades
+      spermine to spermidine. Directly supported by experimental data (isoform 1
+      IDA, PMID:18422650) and the UniProt spermine-degradation pathway.
+    action: ACCEPT
+    reason: &gt;-
+      Correctly captures the enzyme&#39;s core catabolic role; consistent with
+      experimental annotations.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic mapping from the UniProt Subcellular Location vocabulary
+      (Nucleus). Consistent with experimental evidence that SMOX isoforms
+      localize to the nucleus (isoform 1 IDA, PMID:18422650), where spermine
+      oxidation generates H2O2 near DNA.
+    action: ACCEPT
+    reason: &gt;-
+      Nuclear localization is experimentally supported (PMID:18422650) and
+      biologically important for the DNA-damage phenotype.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic mapping from the UniProt Subcellular Location vocabulary
+      (Cytoplasm). Consistent with experimental evidence (isoform 1 IDA,
+      PMID:18422650) and the annotated cytosol location. Keep as a general,
+      non-core location alongside the more specific cytosol term.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but general; the specific cytosol location (GO:0005829) is the
+      core location for this soluble enzyme.
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro-to-GO mapping from the amine oxidase domain (IPR002937) to the
+      broad parent term oxidoreductase activity. While SMOX is an oxidoreductase,
+      this term is far more general than the specific, experimentally established
+      spermine oxidase activity (GO:0052901) that is also annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformatively general parent of the characterized spermine oxidase
+      activity; the specific term is available and directly supported.
+- term:
+    id: GO:0046592
+    label: polyamine oxidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: &gt;-
+      ARBA machine-learning electronic annotation to the general family activity.
+      As with the IBA polyamine oxidase annotation, the specific characterized
+      activity spermine oxidase activity (GO:0052901) is available and directly
+      supported, so the more specific term should be used.
+    action: MODIFY
+    reason: &gt;-
+      A more specific, experimentally supported term (GO:0052901) exists and is
+      the enzyme&#39;s characterized activity.
+    proposed_replacement_terms:
+    - id: GO:0052901
+      label: spermine oxidase activity
+- term:
+    id: GO:0052901
+    label: spermine oxidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic annotation derived from the RHEA:25804 / EC 1.5.3.16 mapping to
+      spermine oxidase activity. This is the correct, specific molecular function
+      of SMOX and is independently supported by multiple experimental
+      annotations (EXP: PMID:11454677, PMID:12141946, PMID:12398765; IDA:
+      PMID:12477380).
+    action: ACCEPT
+    reason: &gt;-
+      Correct specific molecular function, matching the UniProt catalytic
+      activity and the experimentally established reaction.
+- term:
+    id: GO:0052901
+    label: spermine oxidase activity
+  evidence_type: IDA
+  original_reference_id: PMID:12477380
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct-assay annotation of spermine oxidase activity. The paper&#39;s abstract
+      foregrounds the N1-acetylpolyamine oxidase (PAO/PAOX) that prefers
+      N1-acetylspermine, explicitly contrasting it with the spermine oxidase
+      (SMO) which prefers spermine over N1-acetylspermine; the curator (FlyBase)
+      had the full text and attributed the spermine oxidase activity to SMOX.
+      This is the enzyme&#39;s core, experimentally verified molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Core molecular function; experimental (IDA) annotation consistent with all
+      other biochemical characterizations of SMOX.
+- term:
+    id: GO:0052901
+    label: spermine oxidase activity
+  evidence_type: IDA
+  original_reference_id: PMID:18422650
+  qualifier: enables
+  isoform: Q9NWM0-1
+  review:
+    summary: &gt;-
+      Direct-assay annotation showing isoform 1 (SMO/PAOh1) oxidizes spermine;
+      the paper also characterizes the SMO5/isoform 6 splice variant with
+      substrate specificities and affinities comparable to those of SMO/PAOh1.
+      Core molecular function of SMOX; the isoform tag marks what was assayed,
+      not an isoform-restricted activity.
+    action: ACCEPT
+    reason: &gt;-
+      Core molecular function directly demonstrated for the displayed isoform.
+- term:
+    id: GO:0006596
+    label: polyamine biosynthetic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-351200
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      TAS annotation propagated from the Reactome Interconversion of polyamines
+      pathway, which groups both biosynthetic aminopropyltransferase steps and
+      catabolic oxidase steps. SMOX is a catabolic enzyme that degrades spermine
+      to spermidine; it does not biosynthesize polyamines. Its role in the
+      interconversion pathway recycles spermine to spermidine (a catabolic /
+      back-conversion event), so polyamine biosynthetic process mis-frames the
+      enzyme&#39;s direction and is an over-annotation arising from the mixed-content
+      Reactome pathway.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      SMOX is catabolic (spermine to spermidine + H2O2); biosynthesis is the
+      wrong process direction. The correct catabolic processes are separately
+      annotated.
+- term:
+    id: GO:0006805
+    label: xenobiotic metabolic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-141334
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      TAS annotation from the Reactome PAOs oxidise polyamines to amines
+      reaction, whose summary notes that PAOs act on endogenous polyamines as
+      well as some xenobiotics. SMOX&#39;s characterized, physiological substrate is
+      endogenous spermine; there is no experimental evidence that SMOX
+      metabolizes xenobiotics. This is a family-level generalization that does
+      not reflect the specific biology of SMOX.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      No SMOX-specific evidence for xenobiotic metabolism; the enzyme acts on the
+      endogenous polyamine spermine.
+- term:
+    id: GO:0046208
+    label: spermine catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic annotation (ARBA / UniPathway UPA00211 spermine degradation) to
+      spermine catabolic process. This is the core biological process of SMOX and
+      matches the UniProt PATHWAY assignment and the experimental IDA annotation
+      (PMID:18422650).
+    action: ACCEPT
+    reason: &gt;-
+      Correct core catabolic process, consistent with experimental evidence.
+- term:
+    id: GO:0052901
+    label: spermine oxidase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-141341
+  qualifier: enables
+  review:
+    summary: &gt;-
+      TAS annotation from the Reactome reaction SMOX-3 oxidises SPN to SPM
+      (spermine oxidase flavoenzyme catalysing oxidation of spermine to
+      spermidine). Correct specific molecular function, corroborating the
+      experimental spermine oxidase activity annotations.
+    action: ACCEPT
+    reason: &gt;-
+      Correct specific molecular function, consistent with experimental evidence.
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      HPA immunofluorescence localization to the nucleoplasm. Consistent with the
+      experimentally demonstrated nuclear localization of SMOX isoforms
+      (PMID:18422650), where nuclear spermine oxidation generates H2O2 near DNA.
+      A more specific sub-nuclear compartment than the core nucleus location.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Supported sub-nuclear localization; retained as a specific, non-core
+      location alongside the core nucleus annotation.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      HPA immunofluorescence localization to the cytosol. SMOX is a soluble
+      flavoenzyme lacking membrane- or organelle-targeting signals, and the
+      cytosol is where much of its spermine oxidation occurs. This is a core
+      location for the enzyme&#39;s activity.
+    action: ACCEPT
+    reason: &gt;-
+      Core cytosolic location for a soluble amine oxidase, supported by direct
+      immunofluorescence.
+- term:
+    id: GO:0031965
+    label: nuclear membrane
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      HPA immunofluorescence signal at the nuclear membrane. SMOX is a soluble
+      protein with no known transmembrane domain or membrane anchor; a
+      nuclear-membrane assignment likely reflects perinuclear / nuclear-envelope
+      staining rather than integral nuclear-membrane residence. It is at best a
+      minor, non-core localization compared with the well-supported cytosol and
+      nucleoplasm/nucleus locations.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      SMOX has no membrane-targeting features; the nuclear-membrane signal is
+      likely perinuclear and is not a core location of the soluble enzyme.
+- term:
+    id: GO:0052901
+    label: spermine oxidase activity
+  evidence_type: EXP
+  original_reference_id: PMID:11454677
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Original cloning and biochemical characterization of human SMOX (PAOh1).
+      The cDNA product has PAO activity that is inhibited by MDL 72,527, a
+      specific inhibitor of mammalian PAO, but not by monoamine- or
+      diamine-oxidase inhibitors, establishing the FAD-dependent polyamine /
+      spermine oxidase activity that defines SMOX (UniProt cites this reference
+      for EC 1.5.3.16). Core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Core, experimentally established molecular function from the founding
+      characterization of the enzyme.
+- term:
+    id: GO:0052901
+    label: spermine oxidase activity
+  evidence_type: EXP
+  original_reference_id: PMID:12141946
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Biochemical identification of SMOX as a novel flavin-containing spermine
+      oxidase of mammalian cell origin that strongly favoured spermine over
+      N1-acetylspermine and failed to act on N1-acetylspermidine, spermidine or
+      the preferred PAO substrate N1,N12-diacetylspermine, directly defining
+      spermine oxidase activity. Core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Core molecular function; direct biochemical demonstration of spermine
+      oxidase activity and its substrate preference.
+- term:
+    id: GO:0052901
+    label: spermine oxidase activity
+  evidence_type: EXP
+  original_reference_id: PMID:12398765
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Cloning and characterization of multiple human SMOX splice variants coding
+      for isoenzymes with distinct biochemical characteristics but efficient
+      oxidation of polyamines (spermine). UniProt cites this reference for the
+      EC 1.5.3.16 catalytic activity and the spermine-degradation pathway. Core
+      molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Core molecular function; experimentally established across the isoform set.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-141341
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      TAS cytosol location from the Reactome SMOX oxidation reaction. Consistent
+      with the direct HPA immunofluorescence cytosol annotation. Core location
+      for the soluble enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      Corroborates the core cytosolic location of the enzyme.
+- term:
+    id: GO:0006598
+    label: polyamine catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:12477380
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct-assay annotation placing SMOX in polyamine catabolism. The paper
+      characterizes the polyamine back-conversion pathway (SSAT acetylation then
+      oxidation by PAO) and contrasts it with SMO, which directly oxidizes
+      spermine. Involvement in polyamine catabolism is correct; the more specific
+      spermine catabolic process (GO:0046208) is separately annotated and better
+      captures the exact substrate.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but more general than the specific spermine catabolic process; kept
+      as a valid, broader catabolic annotation.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IDA
+  original_reference_id: PMID:18422650
+  qualifier: located_in
+  isoform: Q9NWM0-1
+  review:
+    summary: &gt;-
+      Direct demonstration that overexpressed SMO/PAOh1 (isoform 1) shows
+      significant localization in the nucleus by confocal microscopy, with
+      increased spermine oxidation in the nucleus producing H2O2 close to DNA.
+      Core, functionally important nuclear localization.
+    action: ACCEPT
+    reason: &gt;-
+      Experimentally demonstrated core nuclear localization with direct
+      functional (DNA-damage) relevance.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:18422650
+  qualifier: located_in
+  isoform: Q9NWM0-1
+  review:
+    summary: &gt;-
+      Direct-assay cytoplasmic localization of isoform 1. Consistent with the
+      soluble nature of the enzyme and the cytosol annotations. Keep as a valid
+      general location; the specific cytosol term is treated as core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but general cytoplasmic location; specific cytosol (GO:0005829) is
+      the core location term.
+- term:
+    id: GO:0046208
+    label: spermine catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:18422650
+  qualifier: involved_in
+  isoform: Q9NWM0-1
+  review:
+    summary: &gt;-
+      Direct-assay annotation that isoform 1 participates in spermine catabolism,
+      based on increased spermine oxidation in the nucleus with accompanying
+      alterations in individual nuclear polyamine concentrations. This is the
+      core biological process of SMOX.
+    action: ACCEPT
+    reason: &gt;-
+      Core catabolic process, experimentally demonstrated for the displayed
+      isoform.
+core_functions:
+- description: &gt;-
+    FAD-dependent oxidation of the free polyamine spermine to spermidine, with
+    production of 3-aminopropanal and hydrogen peroxide (spermine oxidase
+    activity; EC 1.5.3.16), the direct back-conversion step of polyamine
+    catabolism.
+  supported_by:
+  - reference_id: PMID:12141946
+    supporting_text: &#34;novel flavin-containing spermine oxidase of mammalian cell origin&#34;
+  - reference_id: PMID:12141946
+    supporting_text: &#34;the newly identified oxidase strongly favoured spermine over N&#34;
+  - reference_id: file:human/SMOX/SMOX-uniprot.txt
+    supporting_text: &#34;Reaction=spermine + O2 + H2O = 3-aminopropanal + spermidine + H2O2;&#34;
+  molecular_function:
+    id: GO:0052901
+    label: spermine oxidase activity
+  directly_involved_in:
+  - id: GO:0046208
+    label: spermine catabolic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  - id: GO:0005634
+    label: nucleus
+  substrates:
+  - id: CHEBI:45725
+    label: spermine
+- description: &gt;-
+    Binding of the FAD cofactor required for the amine-oxidase catalytic cycle;
+    SMOX binds one FAD per subunit as a member of the flavin monoamine oxidase
+    family.
+  supported_by:
+  - reference_id: file:human/SMOX/SMOX-uniprot.txt
+    supporting_text: &#34;Binds 1 FAD per subunit.&#34;
+  - reference_id: file:human/SMOX/SMOX-uniprot.txt
+    supporting_text: &#34;Belongs to the flavin monoamine oxidase family.&#34;
+  molecular_function:
+    id: GO:0071949
+    label: FAD binding
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  - id: GO:0005634
+    label: nucleus
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:11454677
+  title: Cloning and characterization of a human polyamine oxidase that is inducible
+    by polyamine analogue exposure.
+  findings:
+  - statement: &gt;-
+      Cloning of human PAOh1/SMOX; the cDNA product has FAD-dependent polyamine
+      oxidase activity inhibited by the specific mammalian PAO inhibitor
+      MDL 72,527 but not by monoamine- or diamine-oxidase inhibitors, and is
+      inducible by antitumor polyamine analogues.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Founding characterization of human SMOX; UniProt cites this reference for
+      the EC 1.5.3.16 catalytic activity. Abstract-only cache; claims anchored to
+      the verbatim abstract and the UniProt EC evidence.
+- id: PMID:12141946
+  title: Identification and characterization of a novel flavin-containing spermine
+    oxidase of mammalian cell origin.
+  findings:
+  - statement: &gt;-
+      Identifies SMOX as a flavin-containing spermine oxidase that strongly
+      favors spermine over N1-acetylspermine and does not act on
+      N1-acetylspermidine, spermidine or N1,N12-diacetylspermine, defining the
+      direct (non-acetylation-dependent) spermine oxidase activity.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Directly establishes SMOX substrate specificity distinguishing it from
+      PAOX. Verbatim substrate-preference text quoted in core_functions.
+- id: PMID:12398765
+  title: Cloning and characterization of multiple human polyamine oxidase splice variants
+    that code for isoenzymes with different biochemical characteristics.
+  findings:
+  - statement: &gt;-
+      Reports multiple human SMOX splice variants encoding isoenzymes with
+      distinct biochemical characteristics; UniProt cites this reference for the
+      EC 1.5.3.16 catalytic activity and the spermine-degradation pathway.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Establishes the isoform diversity of SMOX and their spermine oxidase
+      activity. Abstract-only cache.
+- id: PMID:12477380
+  title: Genomic identification and biochemical characterization of the mammalian
+    polyamine oxidase involved in polyamine back-conversion.
+  findings:
+  - statement: &gt;-
+      Characterizes the polyamine back-conversion pathway (SSAT then oxidation
+      by PAO) and explicitly contrasts the N1-acetylspermine-preferring PAO with
+      SMO, which prefers spermine over N1-acetylspermine; source of IDA
+      annotations for SMOX spermine oxidase activity and polyamine catabolism.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Primary focus is the N1-acetylpolyamine oxidase (PAOX), but the abstract
+      explicitly discusses SMO and its opposite substrate preference; the SMOX
+      IDA annotations (assigned by FlyBase from full text) are defensible.
+- id: PMID:18422650
+  title: Nuclear localization of human spermine oxidase isoforms - possible implications
+    in drug response and disease etiology.
+  findings:
+  - statement: &gt;-
+      Demonstrates nuclear localization of SMO/PAOh1 and the SMO5 splice variant
+      by confocal microscopy, with increased nuclear spermine oxidation
+      producing H2O2 near DNA, linking SMOX to oxidative DNA damage and
+      inflammation-induced carcinogenesis.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Source of the experimental nuclear-localization and isoform-specific
+      spermine catabolism annotations; verbatim confocal/nuclear-oxidation text
+      quoted in reviews.
+- id: Reactome:R-HSA-141334
+  title: PAOs oxidise polyamines to amines
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Family-level Reactome reaction; its mention of xenobiotic action and
+      peroxisomal localization is a PAO-family generalization not specific to
+      soluble SMOX.
+- id: Reactome:R-HSA-141341
+  title: SMOX-3 oxidises SPN to SPM
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      SMOX-specific Reactome reaction for spermine to spermidine oxidation.
+- id: Reactome:R-HSA-351200
+  title: Interconversion of polyamines
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Mixed biosynthetic/catabolic pathway; drives an over-broad
+      polyamine-biosynthesis TAS annotation for the catabolic SMOX.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

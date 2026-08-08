@@ -1,0 +1,2111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ubiK - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ubiK</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88CE6" target="_blank" class="term-link">
+                        Q88CE6
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ubiK";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88CE6" data-a="DESCRIPTION: ubiK encodes a small cytoplasmic accessory factor ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ubiK encodes a small cytoplasmic accessory factor required for efficient ubiquinone biosynthesis. It associates with the bacterial Ubi machinery and is proposed to facilitate assembly, targeting, or both, without a defined catalytic molecular function.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CE6" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization is supported by the UbiK family rule.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt explicitly assigns UbiK to the cytoplasm.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ubiK/ubiK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CE6" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol is redundant with the accepted bacterial cytoplasm annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retaining both near-equivalent locations adds no biological resolution for this bacterial protein; GO:0005737 is directly supported by UniProt.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CE6" data-a="GO:0006744" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ubiquinone biosynthesis is the core process supported by UbiK.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UbiK is required for efficient pathway operation as an accessory factor.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ubiK/ubiK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Required for efficient ubiquinone (coenzyme Q) biosynthesis</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ubiK/ubiK-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">UbiK is an accessory factor required for efficient ubiquinone (coenzyme Q) biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Cytoplasmic assembly or targeting support for efficient operation of the bacterial ubiquinone biosynthetic machinery.</h3>
+                <span class="vote-buttons" data-g="Q88CE6" data-a="FUNCTION: Cytoplasmic assembly or targeting support for effi..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                ubiquinone biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/ubiK/ubiK-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">UbiK is probably an accessory factor of Ubi enzymes</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/ubiK/ubiK-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">no catalytic annotation</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ubiK/ubiK-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry Q88CE6 for ubiK</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The record assigns a cytoplasmic Ubi accessory factor proposed to support assembly or targeting for efficient ubiquinone biosynthesis.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ubiK/ubiK-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for ubiK</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the three annotations reviewed here.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ubiK/ubiK-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist functional review of PSEPK ubiK</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Ortholog experiments, UbiJ partner presence, sequence conservation, and structural modeling support a non-catalytic aerobic metabolon assembly role; Q88CE6 itself remains unassayed.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ubiK-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88CE6" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: UbiK (Q88CE6, PP_5235) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">4 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-18T18:26:10.692939</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="ubiK-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="ubiK-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-ubik-q88ce6-pp_5235-in-pseudomonas-putida-kt2440">Functional Annotation Report: UbiK (Q88CE6, PP_5235) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>UbiK (UniProt Q88CE6; ordered locus PP_5235) is a small, ~88-residue cytoplasmic, non-enzymatic accessory factor that is required for the efficient biosynthesis of ubiquinone (coenzyme Q, UQ), the lipophilic electron carrier of the proteobacterial aerobic respiratory chain.</strong> It does not catalyze any step of the pathway itself. Instead, it functions as a structural/organizational protein: through its conserved C-terminal coiled coil it forms a heterotrimeric UbiJ–UbiK₂ subcomplex that nucleates and organizes a large (~1-MDa) soluble multi-enzyme assembly — the "Ubi metabolon" — that carries out the terminal, oxygen-dependent reactions of UQ biosynthesis in the cytoplasm, and that couples this metabolon to the cytoplasmic face of the inner membrane so that finished UQ can be released into the lipid bilayer.</p>
+<p>The functional model for UbiK derives from detailed experimental work on its ortholog in <em>Escherichia coli</em> (originally annotated as <em>yqiC</em>, renamed <em>ubiK</em>). In <em>E. coli</em>, loss of UbiK (or its partner UbiJ) does not block a single defined enzymatic step but instead stalls the pathway globally: cells accumulate octaprenylphenol, an early UQ biosynthetic intermediate, and lose efficient UQ production. UbiK physically binds the C-terminal region of UbiJ, and the UbiK–UbiJ complex binds fatty acids (palmitoleic acid), consistent with a lipid/membrane-interfacing role. The requirement for UbiK is specific to the aerobic (O₂-dependent) UQ pathway — both UbiK and UbiJ are dispensable for UQ production under anaerobiosis even though they remain expressed.</p>
+<p>For the <em>P. putida</em> protein specifically, the annotation is inferred by homology (UniProt evidence level PE=3; HAMAP-Rule MF_02216) rather than from a direct experimental study of PP_5235. However, the inference is well-supported: <em>P. putida</em> KT2440 is an obligate aerobe that depends on UQ for respiration, it encodes the complete aerobic Ubi enzyme complement <strong>and both accessory factors</strong> (UbiJ = PP_5012 and UbiK = PP_5235), and the <em>P. putida</em> UbiK protein is a genuine ortholog of the experimentally characterized <em>E. coli</em> UbiK (32% global identity, with conservation focused precisely on the functional C-terminal coiled coil). An AlphaFold model of Q88CE6 confirms the predicted C-terminal coiled coil at high confidence. Taken together, the evidence places <em>P. putida</em> UbiK firmly within the proteobacterial aerobic UQ-synthesizing metabolon as the cytoplasmic, UbiJ-partnered assembly/membrane-targeting factor.</p>
+<hr />
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt accession</td>
+<td>Q88CE6</td>
+</tr>
+<tr>
+<td>Protein name</td>
+<td>Ubiquinone biosynthesis accessory factor UbiK</td>
+</tr>
+<tr>
+<td>Gene name</td>
+<td><em>ubiK</em></td>
+</tr>
+<tr>
+<td>Ordered locus</td>
+<td>PP_5235</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950)</td>
+</tr>
+<tr>
+<td>Length</td>
+<td>88 aa</td>
+</tr>
+<tr>
+<td>Family / domains</td>
+<td>UbiK family; Pfam PF04380 (BMFP); InterPro IPR007475</td>
+</tr>
+<tr>
+<td>Evidence level</td>
+<td>PE=3 (inferred from homology); HAMAP-Rule MF_02216</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Verification outcome:</strong> The gene symbol <em>ubiK</em>, the protein description ("Ubiquinone biosynthesis accessory factor"), the organism (<em>P. putida</em> KT2440), and the domain/family assignment (UbiK / PF04380 / IPR007475) are all mutually consistent, and they align with the published literature on the UbiK family. No conflicting gene-symbol ambiguity was encountered. Research proceeded on the correct target.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="f001-ubik-is-an-accessory-factor-required-for-efficient-ubiquinone-coenzyme-q-biosynthesis">F001 — UbiK is an accessory factor required for efficient ubiquinone (coenzyme Q) biosynthesis</h3>
+<p>UniProt Q88CE6, governed by HAMAP-Rule MF_02216, describes UbiK as an 88-amino-acid cytoplasmic protein that is "Required for efficient ubiquinone (coenzyme Q) biosynthesis" and is an "accessory factor of Ubi enzymes... an assembly factor, a targeting factor, or both." It is assigned to the ubiquinone biosynthesis pathway, to the UbiK protein family, and carries Pfam domain PF04380 (BMFP) / InterPro IPR007475. Critically, UbiK carries <strong>no catalytic annotation</strong> — it is not an enzyme and does not perform a chemical transformation on the UQ biosynthetic intermediates.</p>
+<p>The experimental basis for this annotation lies in the <em>E. coli</em> ortholog. Loiseau et al. (2017, <em>J. Biol. Chem.</em>) showed that the gene <em>yqiC</em>, which they renamed <em>ubiK</em>, is required for efficient UQ biosynthesis. Importantly, both <em>ubiK</em> and <em>ubiJ</em> mutants accumulate <strong>octaprenylphenol</strong>, an early UQ biosynthetic intermediate. The accumulation of an early intermediate — rather than the specific intermediate that would flank a single missing enzymatic step — indicates that UbiK has a <strong>global</strong> role in the pathway, consistent with an organizational/assembly function rather than a single catalytic one.</p>
+<p>This finding is anchored by the paper that identified and named <em>ubiK</em>, which establishes the identity and role of the pathway's end-product:</p>
+<blockquote>
+<p>"Ubiquinone (UQ), also referred to as coenzyme Q, is a widespread lipophilic molecule in both prokaryotes and eukaryotes in which it primarily acts as an electron carrier" — <a href="https://pubmed.ncbi.nlm.nih.gov/28559279/">PMID: 28559279</a></p>
+</blockquote>
+<h3 id="f002-ubik-acts-within-a-soluble-cytoplasmic-ubi-metabolon-forming-a-ubijubik2-subcomplex-that-organizes-and-membrane-couples-uq-biosynthesis">F002 — UbiK acts within a soluble cytoplasmic Ubi metabolon, forming a UbiJ–UbiK₂ subcomplex that organizes and membrane-couples UQ biosynthesis</h3>
+<p>The mechanistic role of UbiK is to help assemble and target a large, soluble multi-enzyme complex. Hajj Chehade et al. (2019, <em>Cell Chem. Biol.</em>) demonstrated that seven Ubi proteins (UbiE, UbiF, UbiG, UbiH, UbiI, UbiJ, and UbiK) form a stable <strong>~1-MDa soluble metabolon</strong> that catalyzes the last six reactions of UQ biosynthesis in the cytoplasm of <em>E. coli</em>. Within this assembly, the SCP2 domain of UbiJ forms an extended hydrophobic cavity that binds the highly hydrophobic UQ intermediates, effectively sequestering these lipophilic molecules away from the aqueous cytoplasm while they are being processed.</p>
+<p>UbiK's specific place in this architecture is defined by two features. First, Loiseau et al. (2017) showed that UbiK <strong>physically forms a complex with the C-terminal part of UbiJ</strong>, and that the UbiK–UbiJ complex binds palmitoleic acid — a fatty acid ligand consistent with an interface to the lipid membrane. Second, Launay et al. (2022) provided a molecular model in which a <strong>UbiJ–UbiK₂ heterotrimer is the interface between the membrane and the Ubi metabolon</strong>, mediating the release of newly synthesized UQ into the membrane. UbiK therefore functions as the connective, membrane-coupling element of the metabolon.</p>
+<p>Structurally, this is enabled by UbiK's C-terminal coiled coil. UniProt localizes UbiK to the cytoplasm/cytosol (GO:0005829) and annotates a C-terminal coiled coil (residues 60–87) consistent with oligomerization; the <em>P. putida</em> sequence shows the expected heptad-repeat Leu/Ala character in this region.</p>
+<p>Supporting quotations:</p>
+<blockquote>
+<p>"seven Ubi proteins form the Ubi complex, a stable metabolon that catalyzes the last six reactions of the UQ biosynthetic pathway in Escherichia coli" — <a href="https://pubmed.ncbi.nlm.nih.gov/30686758/">PMID: 30686758</a></p>
+<p>"The SCP2 domain of UbiJ forms an extended hydrophobic cavity that binds UQ intermediates inside the 1-MDa Ubi complex" — <a href="https://pubmed.ncbi.nlm.nih.gov/30686758/">PMID: 30686758</a></p>
+<p>"UQ has important roles, notably in respiratory metabolisms which sustain cellular bioenergetics" — <a href="https://pubmed.ncbi.nlm.nih.gov/36142227/">PMID: 36142227</a></p>
+</blockquote>
+<h3 id="f003-ubiks-function-is-specific-to-the-o2-dependent-aerobic-uq-pathway-the-p-putida-annotation-is-inferred-by-homology">F003 — UbiK's function is specific to the O₂-dependent (aerobic) UQ pathway; the <em>P. putida</em> annotation is inferred by homology</h3>
+<p>Loiseau et al. (2017) demonstrated that UbiK and UbiJ are <strong>dispensable for UQ biosynthesis under anaerobiosis</strong>, even though both proteins continue to be expressed in the absence of oxygen. This establishes that the UbiK/UbiJ role is restricted to the <strong>aerobic</strong> UQ pathway. The physiological importance of this pathway is underscored by observations in <em>Salmonella enterica</em>, where <em>ubiK</em> is required for proliferation in macrophages and for virulence in mice.</p>
+<p>For the <em>P. putida</em> protein Q88CE6/PP_5235 there is <strong>no direct experimental study</strong>: its evidence level is PE=3 (inferred from homology), with the functional annotation propagated by HAMAP-Rule MF_02216. This homology inference is biologically reasonable because <em>P. putida</em> is an obligate aerobe that relies on UQ for respiration — precisely the condition under which the UbiJ/UbiK metabolon operates. Genomic-context analysis (STRING, taxid 160488) shows that PP_5235 is <strong>not</strong> encoded in an operon with the <em>ubi</em> enzyme genes; its top genomic neighbors are cell-division and outer-membrane genes. This mirrors <em>E. coli</em>, where <em>ubiK/yqiC</em> is a standalone gene whose partnership with UbiJ is <strong>physical (protein–protein), not genomic (operonic)</strong>.</p>
+<p>Supporting quotation (source paper whose experimental conclusions are propagated by homology):</p>
+<blockquote>
+<p>"Ubiquinone (UQ), also referred to as coenzyme Q, is a widespread lipophilic molecule in both prokaryotes and eukaryotes in which it primarily acts as an electron carrier" — <a href="https://pubmed.ncbi.nlm.nih.gov/28559279/">PMID: 28559279</a></p>
+</blockquote>
+<h3 id="f004-p-putida-kt2440-encodes-the-complete-ubi-pathway-including-the-ubij-partner-pp_5012-and-ubik-has-a-high-confidence-alphafold-coiled-coil">F004 — <em>P. putida</em> KT2440 encodes the complete Ubi pathway including the UbiJ partner (PP_5012), and UbiK has a high-confidence AlphaFold coiled coil</h3>
+<p>A UniProt survey of <em>P. putida</em> KT2440 (taxid 160488) confirms that the organism possesses the <strong>full aerobic UQ biosynthetic complement</strong>, meaning the metabolon UbiK organizes can actually be built. The genes present include:</p>
+<table>
+<thead>
+<tr>
+<th>Gene</th>
+<th>Locus tag</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>ubiA</em></td>
+<td>PP_5318</td>
+<td>4-hydroxybenzoate polyprenyltransferase</td>
+</tr>
+<tr>
+<td><em>ubiB</em></td>
+<td>PP_5013</td>
+<td>UQ biosynthesis regulatory kinase / hydroxylase-associated</td>
+</tr>
+<tr>
+<td><em>ubiD</em></td>
+<td>PP_5213</td>
+<td>3-octaprenyl-4-hydroxybenzoate decarboxylase</td>
+</tr>
+<tr>
+<td><em>ubiE</em></td>
+<td>PP_5011</td>
+<td>C-methyltransferase</td>
+</tr>
+<tr>
+<td><em>ubiG</em></td>
+<td>PP_1765</td>
+<td>O-methyltransferase</td>
+</tr>
+<tr>
+<td><em>ubiH</em></td>
+<td>PP_5199</td>
+<td>2-octaprenyl-6-methoxyphenol hydroxylase</td>
+</tr>
+<tr>
+<td><em>ubiX</em></td>
+<td>PP_0548</td>
+<td>flavin prenyltransferase</td>
+</tr>
+<tr>
+<td><strong><em>ubiJ</em></strong></td>
+<td><strong>PP_5012</strong> (207 aa, cytoplasm, HAMAP MF_02215)</td>
+<td>SCP2 accessory / intermediate-binding factor</td>
+</tr>
+<tr>
+<td><strong><em>ubiK</em></strong></td>
+<td><strong>PP_5235</strong> (88 aa, cytoplasm, HAMAP MF_02216)</td>
+<td>assembly/targeting accessory factor (this report)</td>
+</tr>
+</tbody>
+</table>
+<p>Crucially, the physical partner <strong>UbiJ (PP_5012) is present</strong>, so the UbiJ–UbiK₂ metabolon model can operate in <em>P. putida</em>. Genomic-locus inspection shows <em>ubiK</em> (PP_5235) is standalone, separate from the <em>ubi</em> cluster near PP_5011–5013 (which contains <em>ubiE–ubiJ–ubiB</em>) and from PP_5199–5213 — matching the <em>E. coli</em> arrangement.</p>
+<p>An AlphaFold model of Q88CE6 supports the structural prediction: the overall model has a mean pLDDT of <strong>83.9</strong> (high confidence), with 75 of 88 residues at pLDDT &gt; 70. The <strong>C-terminal coiled-coil region (residues 60–87) is modeled at even higher confidence (mean pLDDT = 86.6)</strong>, corroborating the predicted oligomerization/UbiJ-binding coiled coil that is central to UbiK's function.</p>
+<h3 id="f005-p-putida-and-e-coli-ubik-are-orthologs-32-identity-with-conservation-concentrated-in-the-functional-c-terminal-coiled-coil">F005 — <em>P. putida</em> and <em>E. coli</em> UbiK are orthologs (32% identity) with conservation concentrated in the functional C-terminal coiled coil</h3>
+<p>A global Needleman–Wunsch alignment (BLOSUM62) of <em>P. putida</em> UbiK (Q88CE6, 88 aa) against the experimentally characterized <em>E. coli</em> UbiK (Q46868 / UBIK_ECOLI, 96 aa) yields <strong>32.2% identity</strong> (28/87 aligned columns) and <strong>54.0% similarity</strong> (47/87 positive-scoring positions). Critically, the conservation is <strong>not uniform</strong> — it is concentrated in the C-terminal half corresponding to the coiled coil (residues ~44–83), including a near-invariant central motif:</p>
+<table>
+<thead>
+<tr>
+<th>Region</th>
+<th><em>P. putida</em> (Q88CE6)</th>
+<th><em>E. coli</em> (Q46868)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Central coiled-coil motif</td>
+<td><code>KLDLVSRDEFDSQMV</code></td>
+<td><code>TRLDLVSREEFDVQT</code></td>
+</tr>
+</tbody>
+</table>
+<p>This conserved block is precisely the region that UniProt annotates as the coiled coil (60–87), that mediates UbiJ binding and UbiK oligomerization, and that AlphaFold models at highest confidence (pLDDT 86.6). The convergence of evolutionary conservation, functional annotation, and structural confidence on the same segment provides strong triangulated evidence that the <em>P. putida</em> protein retains the UbiJ-binding/oligomerization function of the experimentally studied ortholog.</p>
+<h3 id="f006-review-level-context-uq-is-the-proteobacterial-respiratory-electron-carrier-and-ubi-proteins-are-supramolecularly-organized">F006 — Review-level context: UQ is the proteobacterial respiratory electron carrier, and Ubi proteins are supramolecularly organized</h3>
+<p>The authoritative review by Abby, Kazemzadeh, Vragniau, Pelosi, and Pierrel (2020, <em>"Advances in bacterial pathways for the biosynthesis of ubiquinone"</em>) situates UbiK within the broader biology of UQ metabolism. The review states that "Ubiquinone is an important component of the electron transfer chains in proteobacteria and eukaryotes," and it explicitly discusses "the supramolecular organization of ubiquinone biosynthesis proteins" — i.e., the Ubi metabolon that contains UbiJ and UbiK. The review also notes the discovery of a newly described O₂-independent UQ pathway, which is consistent with the observation that UbiK/UbiJ are dispensable under anaerobiosis. As a Gammaproteobacterium that uses UQ for aerobic respiration, <em>P. putida</em> falls squarely within this framework.</p>
+<p>Supporting quotations:</p>
+<blockquote>
+<p>"Ubiquinone is an important component of the electron transfer chains in proteobacteria and eukaryotes" — <a href="https://pubmed.ncbi.nlm.nih.gov/32663475/">PMID: 32663475</a></p>
+<p>"We also discuss the supramolecular organization of ubiquinone biosynthesis proteins" — <a href="https://pubmed.ncbi.nlm.nih.gov/32663475/">PMID: 32663475</a></p>
+</blockquote>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>The picture that emerges is coherent and internally consistent across biochemistry, structure, evolution, and genomics. UbiK is best understood as a <strong>molecular organizer and membrane-coupling adapter</strong>, not an enzyme.</p>
+<h3 id="the-pathway-and-where-ubik-fits">The pathway and where UbiK fits</h3>
+<p>Ubiquinone biosynthesis in proteobacteria proceeds through a series of modifications to a polyprenylated aromatic ring. The terminal, O₂-dependent reactions (hydroxylations and methylations) are carried out by the Ubi enzymes (UbiE, UbiF, UbiG, UbiH, UbiI). These enzymes and their hydrophobic substrates do not float freely in the cytoplasm; instead they are gathered into a soluble ~1-MDa <strong>metabolon</strong> whose non-catalytic scaffolding is provided by the accessory factors UbiJ and UbiK.</p>
+<div class="codehilite"><pre><span></span><code>         CYTOPLASM
+   ┌─────────────────────────────────────────────────────┐
+   │   ~1-MDa soluble Ubi metabolon                       │
+   │                                                      │
+   │    UbiE  UbiF  UbiG  UbiH  UbiI   (catalytic enzymes)│
+   │        \    |    |    |    /                         │
+   │         \   |    |    |   /                          │
+   │        ┌──────────────────┐                          │
+   │        │   UbiJ (SCP2)    │  ← hydrophobic cavity    │
+   │        │  binds UQ inter- │    sequesters lipophilic │
+   │        │  mediates        │    intermediates         │
+   │        └────────┬─────────┘                          │
+   │           C-terminus of UbiJ                         │
+   │                 │  (physical interaction)            │
+   │        ┌────────┴─────────┐                          │
+   │        │   UbiK₂ (coiled  │  ← this protein          │
+   │        │   coil dimer)    │    binds fatty acid      │
+   │        └────────┬─────────┘    (palmitoleic acid)    │
+   └─────────────────┼───────────────────────────────────┘
+     │  UbiJ–UbiK₂ = membrane interface
+   ══════════════════▼═══════════════════════════  INNER MEMBRANE
+finished UQ released into the lipid bilayer
+     │
+     ▼
+Aerobic respiratory electron transport chain
+</code></pre></div>
+
+<h3 id="ubiks-three-interlocking-roles">UbiK's three interlocking roles</h3>
+<ol>
+<li>
+<p><strong>Oligomerization.</strong> UbiK forms a homodimer (UbiK₂) via its C-terminal coiled coil. This coiled coil is the most conserved and highest-confidence-modeled part of the protein.</p>
+</li>
+<li>
+<p><strong>Partnering with UbiJ.</strong> The UbiK₂ dimer binds the C-terminal region of UbiJ, forming a UbiJ–UbiK₂ heterotrimer. UbiJ in turn brings its SCP2 hydrophobic cavity — which holds the lipophilic UQ intermediates — into the assembly. UbiK therefore anchors the intermediate-carrying subunit into the larger metabolon.</p>
+</li>
+<li>
+<p><strong>Membrane coupling / product release.</strong> The UbiJ–UbiK₂ subcomplex (with UbiK's fatty-acid-binding activity) forms the physical interface between the soluble metabolon and the inner membrane, enabling newly synthesized UQ to be released into the lipid bilayer where it functions as a respiratory electron carrier.</p>
+</li>
+</ol>
+<p>The <strong>global</strong> phenotype of <em>ubiK</em> loss (accumulation of the early intermediate octaprenylphenol, rather than a single defined intermediate) is exactly what this model predicts: removing the organizer collapses the metabolon and stalls flux through the whole downstream pathway, not one step. The <strong>aerobic specificity</strong> of UbiK likewise fits: the O₂-dependent enzymatic steps are those organized by the metabolon, so under anaerobiosis (where an alternative O₂-independent route operates) UbiK/UbiJ are not needed.</p>
+<h3 id="confidence-in-the-p-putida-assignment">Confidence in the <em>P. putida</em> assignment</h3>
+<p>For PP_5235 specifically, all evidence is inferential (homology) rather than direct, but it is triangulated:</p>
+<table>
+<thead>
+<tr>
+<th>Line of evidence</th>
+<th>Result</th>
+<th>What it supports</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Orthology to <em>E. coli</em> UbiK</td>
+<td>32% identity, 54% similarity</td>
+<td>Same protein family/function</td>
+</tr>
+<tr>
+<td>Location of conservation</td>
+<td>Concentrated in C-terminal coiled coil (residues ~44–83)</td>
+<td>Retained UbiJ-binding/oligomerization function</td>
+</tr>
+<tr>
+<td>AlphaFold structure</td>
+<td>Mean pLDDT 83.9; coiled coil 86.6</td>
+<td>Predicted coiled coil is real</td>
+</tr>
+<tr>
+<td>Partner present</td>
+<td>UbiJ = PP_5012 encoded in genome</td>
+<td>Metabolon can assemble</td>
+</tr>
+<tr>
+<td>Full pathway present</td>
+<td>All Ubi enzymes encoded</td>
+<td>UQ made aerobically</td>
+</tr>
+<tr>
+<td>Physiology</td>
+<td>Obligate aerobe, UQ-respiring</td>
+<td>Aerobic metabolon relevant</td>
+</tr>
+<tr>
+<td>Genomic context</td>
+<td><em>ubiK</em> standalone, not in <em>ubi</em> operon</td>
+<td>Matches <em>E. coli</em> (physical not genomic partnership)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>Contribution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/28559279/">28559279</a></td>
+<td><em>The UbiK protein is an accessory factor necessary for bacterial ubiquinone (UQ) biosynthesis and forms a complex with the UQ biogenesis factor UbiJ</em> (Loiseau et al. 2017)</td>
+<td><strong>Primary experimental source.</strong> Identified/renamed <em>ubiK</em> (<em>yqiC</em>); showed <em>ubiK</em>/<em>ubiJ</em> mutants accumulate octaprenylphenol (global role); UbiK binds C-terminal UbiJ; UbiK–UbiJ complex binds palmitoleic acid; aerobic specificity; role in <em>Salmonella</em> virulence.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30686758/">30686758</a></td>
+<td><em>A Soluble Metabolon Synthesizes the Isoprenoid Lipid Ubiquinone</em> (Hajj Chehade et al. 2019)</td>
+<td>Defined the ~1-MDa soluble Ubi metabolon of seven Ubi proteins (including UbiK); showed UbiJ's SCP2 cavity binds UQ intermediates. Establishes the structural context of UbiK's function.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/36142227/">36142227</a></td>
+<td><em>Towards Molecular Understanding of the Functional Role of UbiJ-UbiK₂</em> (Launay et al. 2022)</td>
+<td>Modeled the UbiJ–UbiK₂ heterotrimer as the membrane–metabolon interface mediating UQ release into the membrane. Provides the membrane-coupling mechanism.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/32663475/">32663475</a></td>
+<td><em>Advances in bacterial pathways for the biosynthesis of ubiquinone</em> (Abby et al. 2020)</td>
+<td>Authoritative review: UQ as the proteobacterial respiratory electron carrier; supramolecular organization of Ubi proteins; O₂-independent UQ pathway. Frames UbiK in the broader field.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/38710096/">38710096</a></td>
+<td><em>Structural Reconstruction of [the Ubi metabolon]</em></td>
+<td>Further structural characterization of the UQ-synthesizing complex, reinforcing the metabolon model.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>How the evidence converges:</strong> No single paper studies <em>P. putida</em> PP_5235 directly. The functional model rests on <em>E. coli</em> biochemistry (Loiseau 2017), metabolon structural biology (Hajj Chehade 2019; Launay 2022; PMID 38710096), and field-level synthesis (Abby 2020), transferred to <em>P. putida</em> through orthology, structural prediction, and genomic completeness. This is a well-justified homology-based annotation, not a direct measurement.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct experimental data for PP_5235.</strong> All functional claims for the <em>P. putida</em> protein are inferred (UniProt PE=3). No <em>P. putida ubiK</em> knockout, UQ-quantification, or protein-interaction study has been reported here. The phenotypes (octaprenylphenol accumulation, aerobic specificity) are from <em>E. coli</em> / <em>Salmonella</em>.</p>
+</li>
+<li>
+<p><strong>Moderate sequence identity.</strong> At 32% global identity, orthology is confident but not trivial. While conservation is reassuringly concentrated in the functional coiled coil, divergence in the N-terminal region could in principle modulate species-specific interactions or regulation.</p>
+</li>
+<li>
+<p><strong>Structural model, not experimental structure.</strong> The coiled coil and UbiK₂ dimer are supported by AlphaFold (high pLDDT) and by the <em>E. coli</em> model of Launay et al. (2022), but no experimental structure of <em>P. putida</em> UbiK or its UbiJ complex exists.</p>
+</li>
+<li>
+<p><strong>Membrane-coupling mechanism partly modeled.</strong> The UbiJ–UbiK₂ membrane interface and UQ-release step are based on molecular modeling; the precise stoichiometry and dynamics in <em>P. putida</em> are unverified.</p>
+</li>
+<li>
+<p><strong>Regulation unknown.</strong> How <em>ubiK</em> (PP_5235) expression is controlled in <em>P. putida</em>, and whether UbiK abundance limits UQ flux under specific growth or stress conditions, is not addressed.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Targeted deletion of PP_5235 in <em>P. putida</em> KT2440.</strong> Construct a clean <em>ΔubiK</em> mutant and quantify UQ (UQ-9/UQ-8) and biosynthetic intermediates (especially octaprenylphenol) by LC-MS under aerobic vs. anaerobic/microaerophilic growth. This directly tests whether the <em>E. coli</em> phenotype transfers.</p>
+</li>
+<li>
+<p><strong>Growth/respiration phenotyping.</strong> Assess aerobic growth rate, respiratory capacity (oxygen consumption), and sensitivity to respiratory stress in <em>ΔubiK</em>, with complementation by plasmid-borne <em>ubiK</em> and by <em>E. coli ubiK</em> (cross-species complementation to confirm functional orthology).</p>
+</li>
+<li>
+<p><strong>Protein–protein interaction validation.</strong> Use co-purification / bacterial two-hybrid / crosslinking to confirm that <em>P. putida</em> UbiK (PP_5235) binds UbiJ (PP_5012) and co-assembles with the Ubi enzymes into a high-molecular-weight metabolon.</p>
+</li>
+<li>
+<p><strong>Biophysical/structural characterization.</strong> Recombinantly express UbiK; verify coiled-coil-mediated dimerization (SEC-MALS, circular dichroism); attempt to solve the UbiJ–UbiK₂ structure (cryo-EM or X-ray) to confirm the modeled membrane interface.</p>
+</li>
+<li>
+<p><strong>Fatty-acid / lipid binding assay.</strong> Test whether the <em>P. putida</em> UbiK–UbiJ complex binds palmitoleic acid or other fatty acids, mirroring the <em>E. coli</em> observation and probing the membrane-targeting mechanism.</p>
+</li>
+<li>
+<p><strong>Localization.</strong> Fluorescent-fusion or fractionation studies to confirm cytoplasmic localization with membrane association, consistent with the metabolon-at-membrane model.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>UbiK (Q88CE6, PP_5235) in <em>Pseudomonas putida</em> KT2440 is a small cytoplasmic, non-catalytic accessory factor for aerobic ubiquinone (coenzyme Q) biosynthesis. It uses a conserved C-terminal coiled coil to dimerize and to bind the accessory factor UbiJ, forming a UbiJ–UbiK₂ subcomplex that assembles and organizes the soluble ~1-MDa Ubi metabolon (which performs the terminal O₂-dependent UQ reactions) and couples it to the inner membrane for release of finished UQ. Loss of the protein stalls the pathway globally and is dispensable anaerobically. For <em>P. putida</em> this is a strong homology-based inference (32% identity to experimentally characterized <em>E. coli</em> UbiK, conservation focused on the functional coiled coil, partner UbiJ and full Ubi enzyme set present, high-confidence AlphaFold coiled coil), pending direct experimental confirmation.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="ubiK-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="ubiK-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:28559279</li>
+<li>PMID:30686758</li>
+<li>PMID:36142227</li>
+<li>PMID:32663475</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88CE6
+gene_symbol: ubiK
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  ubiK encodes a small cytoplasmic accessory factor required for efficient
+  ubiquinone biosynthesis. It associates with the bacterial Ubi machinery and
+  is proposed to facilitate assembly, targeting, or both, without a defined
+  catalytic molecular function.
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Cytoplasmic localization is supported by the UbiK family rule.
+    action: ACCEPT
+    reason: UniProt explicitly assigns UbiK to the cytoplasm.
+    supported_by:
+    - reference_id: file:PSEPK/ubiK/ubiK-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: Cytosol is redundant with the accepted bacterial cytoplasm annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Retaining both near-equivalent locations adds no biological resolution
+      for this bacterial protein; GO:0005737 is directly supported by UniProt.
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Ubiquinone biosynthesis is the core process supported by UbiK.
+    action: ACCEPT
+    reason: UbiK is required for efficient pathway operation as an accessory factor.
+    supported_by:
+    - reference_id: file:PSEPK/ubiK/ubiK-uniprot.txt
+      supporting_text: Required for efficient ubiquinone (coenzyme Q) biosynthesis
+    - reference_id: file:PSEPK/ubiK/ubiK-deep-research-openscientist.md
+      supporting_text: UbiK is an accessory factor required for efficient ubiquinone (coenzyme Q) biosynthesis
+references:
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/ubiK/ubiK-uniprot.txt
+  title: UniProt entry Q88CE6 for ubiK
+  findings:
+  - statement: &gt;-
+      The record assigns a cytoplasmic Ubi accessory factor proposed to support
+      assembly or targeting for efficient ubiquinone biosynthesis.
+- id: file:PSEPK/ubiK/ubiK-goa.tsv
+  title: QuickGO GOA annotations for ubiK
+  findings:
+  - statement: The fetched GOA table contains the three annotations reviewed here.
+- id: file:PSEPK/ubiK/ubiK-deep-research-openscientist.md
+  title: OpenScientist functional review of PSEPK ubiK
+  findings:
+  - statement: &gt;-
+      Ortholog experiments, UbiJ partner presence, sequence conservation, and
+      structural modeling support a non-catalytic aerobic metabolon assembly
+      role; Q88CE6 itself remains unassayed.
+core_functions:
+- description: &gt;-
+    Cytoplasmic assembly or targeting support for efficient operation of the
+    bacterial ubiquinone biosynthetic machinery.
+  directly_involved_in:
+  - id: GO:0006744
+    label: ubiquinone biosynthetic process
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: file:PSEPK/ubiK/ubiK-uniprot.txt
+    supporting_text: UbiK is probably an accessory factor of Ubi enzymes
+  - reference_id: file:PSEPK/ubiK/ubiK-deep-research-openscientist.md
+    supporting_text: no catalytic annotation
+proposed_new_terms: []
+suggested_questions: []
+suggested_experiments: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

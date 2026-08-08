@@ -1,0 +1,4291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GLIPR1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>GLIPR1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P48060" target="_blank" class="term-link">
+                        P48060
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "GLIPR1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P48060" data-a="DESCRIPTION: GLIPR1 is a type-I single-pass membrane member of ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>GLIPR1 is a type-I single-pass membrane member of the CAP/CRISP superfamily, produced with an N-terminal signal peptide and a large extracellular CAP domain; soluble or released ectodomain forms can also act on cells. Its direct physiological ligand and biochemical activity are unresolved. In prostate cancer cells, GLIPR1 restoration promotes ROS-JNK-dependent apoptosis and suppresses proliferation through CK1alpha/c-Myc and Hsc70-AURKA/TPX2-linked pathways. In glioma cells and glioma stem cells it has the opposite, context-specific effect of promoting N-WASP-dependent spreading, migration, invasion, and matrix degradation while weakening the inhibitory association between N-WASP and hnRNPK. GLIPR1 is therefore a context-dependent membrane and extracellular regulatory protein rather than a demonstrated enzyme or a universally acting tumor suppressor.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P48060" data-a="GO:0005576" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PAINT places GLIPR1 activity in the extracellular region, consistent with its signal peptide, extracellular CAP domain, type-I membrane topology, and biologically active soluble ectodomain.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Extracellular exposure is broadly conserved among CAP-family proteins and is independently supported for human GLIPR1 by the crystal-structure study and reviewed sequence topology. The term accommodates both the extracellular-facing membrane pool and released or soluble forms.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN000036124</span>
+
+                                    &middot; broad PTHR10334 ancestral node
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">Multiple extracellular CAP-family seeds support this conserved localization, and GLIPR1&#39;s own signal peptide and topology provide independent corroboration.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21931216" target="_blank" class="term-link">
+                                        PMID:21931216
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GLIPR1 is composed of a signal peptide that directs its secretion, a conserved cysteine-rich CAP (cysteine-rich secretory proteins, antigen 5 and pathogenesis-related 1 proteins) domain and a transmembrane domain.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060090" target="_blank" class="term-link">
+                                    GO:0060090
+                                </a>
+                            </span>
+                            <span class="term-label">molecular adaptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P48060" data-a="GO:0060090" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PAINT propagated molecular adaptor activity from mouse Glipr1l1 across a broad CAP-family ancestral node to GLIPR1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Mouse Glipr1l1 is a specialized sperm/acrosomal paralog, and the CAP family has strongly diversified functions. Human GLIPR1 interacts with N-WASP, hnRNPK, and Hsc70, but no study shows it bringing molecules together as required by the GO definition. In the best-defined glioma mechanism, GLIPR1 instead decreases the N-WASP-hnRNPK association. The sole Glipr1l1-derived seed therefore does not support adaptor activity in GLIPR1.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">WRONG ORTHOLOG OR PARALOG</span>
+
+                                <span class="badge">CONTEXT OR TISSUE MISMATCH</span>
+
+                                <span class="badge">ROLE CONFLATION</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">MGI:MGI:1916536</span>
+
+                                    &middot; mouse Glipr1l1
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">The source activity belongs to a sperm/acrosomal GLIPR1-like paralog functioning in IZUMO1 localization during the acrosome reaction.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">gomodel:62f58d8800005094/62f58d8800005346</span>
+
+                                    &middot; mouse Glipr1l1 GO-CAM adaptor activity
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">The production model places the activity at the outer acrosomal membrane in protein localization during the acrosome reaction, a sperm-specific context not shared by GLIPR1.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN000036124</span>
+
+                                    &middot; broad PTHR10334 ancestral node
+
+
+                                    <span class="badge">UNRESOLVED</span>
+
+
+                                    <div class="propagation-comment">This node spans many functionally divergent CAP-family subfamilies and is too broad for propagation of the Glipr1l1-specific adaptor role.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26305187" target="_blank" class="term-link">
+                                        PMID:26305187
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">overexpression of RTVP-1 decreased the association of N-WASP and hnRNPK.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GLIPR1/GLIPR1-deep-research-manual.md
+
+                                </span>
+
+                                <div class="support-text">Human GLIPR1&#39;s own interactions do not demonstrate the GO-defined activity of bringing two molecules together.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P48060" data-a="GO:0005576" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro maps the CAP-family signature to the broad extracellular region. The canonical human protein is more precisely an extracellular-facing type-I plasma-membrane protein, while soluble forms can also be released.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The broad localization is correct for both the extracellular-facing membrane pool and released or soluble GLIPR1. A separate proposed annotation to GO:0009897 captures the more precise topology of the canonical membrane-bound pool without invalidating this broader term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21931216" target="_blank" class="term-link">
+                                        PMID:21931216
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A model is also proposed for the structure of full-length membrane-bound GLIPR1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P48060" data-a="GO:0016020" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt subcellular-location mapping assigns the canonical single-pass membrane protein to membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reviewed human sequence contains a C-terminal transmembrane helix, and the human structural study explicitly models full-length membrane-bound GLIPR1. The term is broad but correct and independently supported.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21931216" target="_blank" class="term-link">
+                                        PMID:21931216
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Human glioma pathogenesis-related protein 1 (GLIPR1) is a membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28514442
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of the human interactome defines protein commun...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P48060" data-a="GO:0005515" data-r="PMID:28514442" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BioPlex 2.0 AP-MS reports an association between GLIPR1 and ALOXE3.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The high-throughput interaction may be real and is repeated in BioPlex 3.0, but generic protein binding does not identify GLIPR1&#39;s molecular activity. The cached article does not establish a GLIPR1-specific functional consequence for the ALOXE3 association, so it should not be treated as core function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32814053
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interactome Mapping Provides a Network of Neurodegenerative ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P48060" data-a="GO:0005515" data-r="PMID:32814053" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A neurodegeneration-focused interaction map reports GLIPR1 association with HTT.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The interaction is retained in IntAct and UniProt, but generic protein binding is uninformative and the abstract-only cached paper does not establish a GLIPR1-specific consequence of HTT association. It should not define GLIPR1&#39;s molecular or biological core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P48060" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BioPlex 3.0 independently reports the GLIPR1-ALOXE3 association seen in BioPlex 2.0.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Replication strengthens confidence in co-association but does not convert the generic protein-binding term into an informative molecular function. ALOXE3-dependent consequences for GLIPR1 have not been demonstrated.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035577" target="_blank" class="term-link">
+                                    GO:0035577
+                                </a>
+                            </span>
+                            <span class="term-label">azurophil granule membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6798739
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P48060" data-a="GO:0035577" data-r="Reactome:R-HSA-6798739" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome places GLIPR1 among azurophil-granule membrane proteins released during neutrophil degranulation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a plausible specialized localization for a single-pass membrane protein expressed in blood cells, and it should not be overruled from the summary-level Reactome cache. It represents a neutrophil trafficking context rather than the general site or defining function of GLIPR1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-6798739
+
+                                </span>
+
+                                <div class="support-text">Exocytosis of azurophil granule membrane proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19946888
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Defining the membrane proteome of NK cells.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P48060" data-a="GO:0016020" data-r="PMID:19946888" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput proteomics identified GLIPR1 in the membrane preparation of the YTS NK-like cell line.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Although the cached abstract does not enumerate individual proteins, the curated HDA assignment agrees with GLIPR1&#39;s transmembrane helix and independent human structural evidence. Membrane localization is a core property of the canonical isoform.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link">
+                                        PMID:19946888
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The present study was initiated to define the composition of the membrane proteome of the Natural Killer (NK) like cell line YTS.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1989772
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P48060" data-a="GO:0005886" data-r="Reactome:R-HSA-1989772" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome models expressed GLIPR1 protein at the plasma membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The Reactome event is sparse, but plasma-membrane placement is independently supported by the signal peptide plus C-terminal transmembrane topology and the human structure-based model of full-length membrane-bound GLIPR1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21931216" target="_blank" class="term-link">
+                                        PMID:21931216
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A model is also proposed for the structure of full-length membrane-bound GLIPR1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6798739
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P48060" data-a="GO:0005886" data-r="Reactome:R-HSA-6798739" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome assigns plasma-membrane localization after exocytosis of GLIPR1-containing azurophil granules in neutrophils.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Plasma-membrane localization is compatible with canonical GLIPR1 topology, and independent structural evidence establishes this as a general core location. This particular Reactome evidence describes a specialized neutrophil degranulation route, but the term itself is correct and core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-6798739
+
+                                </span>
+
+                                <div class="support-text">Azurophil granules undergo limited exocytosis in response to stimulation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009897" target="_blank" class="term-link">
+                                    GO:0009897
+                                </a>
+                            </span>
+                            <span class="term-label">external side of plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21931216" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21931216
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural studies of human glioma pathogenesis-related prot...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P48060" data-a="GO:0009897" data-r="PMID:21931216" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed topology-based human annotation. The canonical precursor has an N-terminal signal peptide, an extracellular CAP domain, and a C-terminal transmembrane helix, placing the mature CAP domain on the external side of the plasma membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> External side of plasma membrane is more precise than the existing broad membrane and extracellular-region terms for the canonical membrane-bound protein. IC reflects curator inference from the experimentally solved human ectodomain and the structure-based full-length topology model.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21931216" target="_blank" class="term-link">
+                                        PMID:21931216
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A model is also proposed for the structure of full-length membrane-bound GLIPR1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043065" target="_blank" class="term-link">
+                                    GO:0043065
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of apoptotic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18199537" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18199537
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Glioma pathogenesis-related protein 1 exerts tumor suppresso...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P48060" data-a="GO:0043065" data-r="PMID:18199537" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed direct human-cell annotation. GLIPR1 restoration or overexpression promotes apoptosis through ROS production and sustained JNK signaling in several cancer-cell models.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Gain-of-function experiments in human cancer cells and genetic loss in mouse provide causal support for a pro-apoptotic role. The annotation is context-dependent and does not imply that GLIPR1 promotes apoptosis in every cell type.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18199537" target="_blank" class="term-link">
+                                        PMID:18199537
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Overexpression of GLIPR1 in cancer cells leads to suppression of colony growth and induction of apoptosis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008285" target="_blank" class="term-link">
+                                    GO:0008285
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of cell population proliferation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22025562" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22025562
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    GLIPR1 suppresses prostate cancer development through target...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P48060" data-a="GO:0008285" data-r="PMID:22025562" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed direct human-cell annotation. Restoring GLIPR1 in prostate cancer cells decreases c-MYC expression and inhibits cell-cycle progression.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GLIPR1 perturbation changes CK1alpha localization, beta-catenin/TCF4-driven c-MYC transcription, c-Myc turnover, and prostate-cell proliferation. This supports negative regulation of proliferation in the experimentally defined prostate context.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22025562" target="_blank" class="term-link">
+                                        PMID:22025562
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Restoration of GLIPR1 expression in prostate cancer cells downregulated c-myc levels, inhibiting cell-cycle progression.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030335" target="_blank" class="term-link">
+                                    GO:0030335
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of cell migration</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26305187" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26305187
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    RTVP-1 regulates glioma cell migration and invasion via inte...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P48060" data-a="GO:0030335" data-r="PMID:26305187" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed direct human-cell annotation. GLIPR1 gain and loss alter glioma cell and glioma-stem-cell spreading, migration, invasion, and matrix degradation through an N-WASP-dependent mechanism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Overexpression increases migration whereas GLIPR1 silencing decreases it, and N-WASP depletion attenuates the phenotype. The term captures the demonstrated glioma-cell process without asserting an unproven catalytic activity or universal effect across tissues.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26305187" target="_blank" class="term-link">
+                                        PMID:26305187
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We found that RTVP-1 increased cell spreading, migration and invasion and these effects were at least partly mediated by N-WASP.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>In prostate cancer-cell contexts, membrane-bound or released GLIPR1 promotes ROS-JNK-dependent apoptosis and suppresses cell population proliferation by altering CK1alpha/c-Myc and Hsc70-SP1/c-Myb-AURKA/TPX2 regulatory pathways. These are experimentally demonstrated context-specific outputs; the direct molecular activity that initiates them remains unknown.</h3>
+                <span class="vote-buttons" data-g="P48060" data-a="FUNCTION: In prostate cancer-cell contexts, membrane-bound o..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043065" target="_blank" class="term-link">
+                                positive regulation of apoptotic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008285" target="_blank" class="term-link">
+                                negative regulation of cell population proliferation
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009897" target="_blank" class="term-link">
+                                external side of plasma membrane
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18199537" target="_blank" class="term-link">
+                                PMID:18199537
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">GLIPR1 up-regulation increases the production of reactive oxygen species (ROS) leading to apoptosis through activation of the c-Jun-NH(2) kinase (JNK) signaling cascade.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22025562" target="_blank" class="term-link">
+                                PMID:22025562
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Restoration of GLIPR1 expression in prostate cancer cells downregulated c-myc levels, inhibiting cell-cycle progression.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>In glioma cells and glioma stem cells, GLIPR1 associates with N-WASP and hnRNPK, weakens the inhibitory N-WASP-hnRNPK interaction, and thereby promotes cell spreading, migration, invasion, and extracellular-matrix degradation. This activity is context-specific and does not establish molecular adaptor activity in the GO sense.</h3>
+                <span class="vote-buttons" data-g="P48060" data-a="FUNCTION: In glioma cells and glioma stem cells, GLIPR1 asso..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030335" target="_blank" class="term-link">
+                                positive regulation of cell migration
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26305187" target="_blank" class="term-link">
+                                PMID:26305187
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">We found that RTVP-1 increased cell spreading, migration and invasion and these effects were at least partly mediated by N-WASP.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7607567" target="_blank" class="term-link">
+                            PMID:7607567
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The human glioma pathogenesis-related protein is structurally related to plant pathogenesis-related proteins and its gene is expressed specifically in brain tumors.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The original cloning study identified human GLIPR1 and reported high expression in glioblastoma.</div>
+
+                        <div class="finding-text">"We report the cloning of a cDNA encoding GliPR (glioma pathogenesis-related protein), a protein that is structurally similar to plant pathogenesis-related proteins."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8973356" target="_blank" class="term-link">
+                            PMID:8973356
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">RTVP-1, a novel human gene with sequence similarity to genes of diverse species, is expressed in tumor cell lines of glial but not neuronal origin.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">An independent cloning study reported broad adult-tissue expression and enrichment in glial-derived tumor lines.</div>
+
+                        <div class="finding-text">"Northern hybridization analysis revealed that in fetal tissue RTVP-1 RNA was detected only in the kidney, but its expression was ubiquitous in adult tissues including brain."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17825796" target="_blank" class="term-link">
+                            PMID:17825796
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cloning and characterization of human RTVP-1b, a novel splice variant of RTVP-1 in glioma cells.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">RTVP-1b is an alternative human isoform that diverges after residue 141.</div>
+
+                        <div class="finding-text">"The deduced protein was 237 amino acids in length, sharing the N-terminal 141 amino acids with RTVP-1."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">RTVP-1b overexpression promotes glioma-cell proliferation but not migration.</div>
+
+                        <div class="finding-text">"Overexpression of RTVP-1b increased glioma cell proliferation but did not affect cell migration."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21931216" target="_blank" class="term-link">
+                            PMID:21931216
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural studies of human glioma pathogenesis-related protein 1.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human GLIPR1 contains a signal peptide, CAP domain, and transmembrane domain.</div>
+
+                        <div class="finding-text">"GLIPR1 is composed of a signal peptide that directs its secretion, a conserved cysteine-rich CAP (cysteine-rich secretory proteins, antigen 5 and pathogenesis-related 1 proteins) domain and a transmembrane domain."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The isolated human CAP domain coordinates zinc in its central cavity.</div>
+
+                        <div class="finding-text">"the putative binding cavity coordinates Zn2+ similarly to snake-venom CRISPs"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14871827" target="_blank" class="term-link">
+                            PMID:14871827
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">RTVP-1, a tumor suppressor inactivated by methylation in prostate cancer.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human GLIPR1 is p53 regulated and induces apoptosis in human prostate cancer cells.</div>
+
+                        <div class="finding-text">"the human RTVP-1 gene is also regulated by p53 and induces apoptosis in human prostate cancer cell lines."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18199537" target="_blank" class="term-link">
+                            PMID:18199537
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Glioma pathogenesis-related protein 1 exerts tumor suppressor activities through proapoptotic reactive oxygen species-c-Jun-NH2 kinase signaling.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GLIPR1 overexpression induces apoptosis and suppresses colony growth in human cancer cells.</div>
+
+                        <div class="finding-text">"Overexpression of GLIPR1 in cancer cells leads to suppression of colony growth and induction of apoptosis."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GLIPR1-driven apoptosis proceeds through ROS and JNK signaling.</div>
+
+                        <div class="finding-text">"GLIPR1 up-regulation increases the production of reactive oxygen species (ROS) leading to apoptosis through activation of the c-Jun-NH(2) kinase (JNK) signaling cascade."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22025562" target="_blank" class="term-link">
+                            PMID:22025562
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GLIPR1 suppresses prostate cancer development through targeted oncoprotein destruction.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Restored GLIPR1 reduces c-MYC and cell-cycle progression in prostate cancer cells.</div>
+
+                        <div class="finding-text">"Restoration of GLIPR1 expression in prostate cancer cells downregulated c-myc levels, inhibiting cell-cycle progression."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GLIPR1 promotes c-Myc ubiquitination and degradation.</div>
+
+                        <div class="finding-text">"GLIPR1 also promoted c-Myc protein ubiquitination and degradation by glycogen synthase kinase-3alpha- and/or CK1alpha-mediated c-Myc phosphorylation."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23333597" target="_blank" class="term-link">
+                            PMID:23333597
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Glioma pathogenesis-related protein 1 induces prostate cancer cell death through Hsc70-mediated suppression of AURKA and TPX2.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GLIPR1 interacts with Hsc70 in a pathway that destabilizes SP1/c-Myb and suppresses AURKA/TPX2.</div>
+
+                        <div class="finding-text">"GLIPR1 interacts with heat shock cognate protein 70 (Hsc70); this interaction is associated with SP1 and c-Myb destabilization and suppression of SP1- and c-Myb-mediated AURKA and TPX2 transcription."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Recombinant GLIPR1 ectodomain induces apoptosis and mitotic catastrophe.</div>
+
+                        <div class="finding-text">"Recombinant GLIPR1-DeltaTM protein inhibited AURKA and TPX2 expression, induced apoptosis and MC, and suppressed orthotopic xenograft tumor growth."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26305187" target="_blank" class="term-link">
+                            PMID:26305187
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">RTVP-1 regulates glioma cell migration and invasion via interaction with N-WASP and hnRNPK.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GLIPR1 promotes glioma-cell spreading, migration, and invasion in an N-WASP-dependent manner.</div>
+
+                        <div class="finding-text">"We found that RTVP-1 increased cell spreading, migration and invasion and these effects were at least partly mediated by N-WASP."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GLIPR1 decreases the inhibitory N-WASP-hnRNPK association.</div>
+
+                        <div class="finding-text">"overexpression of RTVP-1 decreased the association of N-WASP and hnRNPK."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reciprocal co-immunoprecipitation and FRET support direct GLIPR1-N-WASP interaction.</div>
+
+                        <div class="finding-text">"RTVP-1 and N-WASP showed FRET efficiency of 33.43 + 2.72%, suggesting a direct interaction of these two proteins in glioma cells."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link">
+                            PMID:19946888
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defining the membrane proteome of NK cells.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The study defined the membrane proteome of the YTS NK-like cell line.</div>
+
+                        <div class="finding-text">"The present study was initiated to define the composition of the membrane proteome of the Natural Killer (NK) like cell line YTS."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                            PMID:28514442
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Architecture of the human interactome defines protein communities and disease networks.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                            PMID:32814053
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread Protein Aggregation in Affected Brains.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-1989772
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Expression of GLIPR1</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reactome models GLIPR1 transcription, translation, and plasma-membrane placement.</div>
+
+                        <div class="finding-text">"The GLIPR1 gene is transcribed to yield mRNA and the mRNA is translated to yield protein."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6798739
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Exocytosis of azurophil granule membrane proteins</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reactome places GLIPR1 in the azurophil-granule membrane and at the plasma membrane after exocytosis.</div>
+
+                        <div class="finding-text">"Exocytosis of azurophil granule membrane proteins"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR10334/PTHR10334-paint.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Local PAINT export for PTHR10334</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The broad ancestral node carries extracellular-region and molecular-adaptor annotations.</div>
+
+                        <div class="finding-text">"PTN000036124"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:gocams/62f58d8800005094/62f58d8800005094-src.yaml
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GO-CAM source model for regulation of oolemmal binding multimeric complex formation</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The model places mouse Glipr1l1 molecular adaptor activity at the outer acrosomal membrane in protein localization involved in the acrosome reaction.</div>
+
+                        <div class="finding-text">"term: MGI:MGI:1916536"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/GLIPR1/GLIPR1-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry for human GLIPR1 (P48060)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Canonical human GLIPR1 is a single-pass membrane CAP-family protein.</div>
+
+                        <div class="finding-text">"Single-pass membrane protein"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt records ALOXE3 and HTT interactions.</div>
+
+                        <div class="finding-text">"P48060; Q9BYJ1: ALOXE3"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/GLIPR1/GLIPR1-deep-research-manual.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual literature synthesis for GLIPR1</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/GLIPR1/GLIPR1-notes.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GLIPR1 review notes</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What physiological extracellular ligand, receptor, lipid, or substrate engages the GLIPR1 CAP-domain cavity, and is zinc coordination required?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: CAP-superfamily structural biologists, extracellular signaling biochemists</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="P48060" data-a="Q: What physiological extracellular ligand, receptor,..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which normal human cell types use the prostate-like pro-apoptotic output, the glioma-like pro-migratory output, or a distinct GLIPR1 function?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: human tissue and single-cell biologists, cancer signaling specialists</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="P48060" data-a="Q: Which normal human cell types use the prostate-lik..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does an extracellular-facing protein with a very short cytoplasmic tail control or contact cytosolic N-WASP, hnRNPK, Hsc70, and CK1alpha?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: membrane-trafficking and proteolysis specialists, cytoskeletal signaling biologists</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="P48060" data-a="Q: How does an extracellular-facing protein with a ve..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify full-length nanodisc-embedded GLIPR1 and its soluble CAP ectodomain, then perform quantitative ligand, lipid, protease, and metal-binding screens with CAP-cavity and zinc-coordinating residue mutants.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: GLIPR1 binds a restricted extracellular ligand or lipid through its CAP cavity, and this binding supplies the missing initiating molecular activity.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: biochemical activity and ligand-discovery profiling</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P48060" data-a="EXPERIMENT: Purify full-length nanodisc-embedded GLIPR1 and it..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Endogenously tag GLIPR1 in primary prostate epithelial cells, macrophages, and patient-derived glioma cells; map topology, shedding, internalization, and proximity partners before and after defined stimuli.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Cell-type-specific cleavage or internalization determines whether GLIPR1 engages extracellular, membrane, or cytosolic regulatory partners.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: endogenous topology, trafficking, and proximity proteomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P48060" data-a="EXPERIMENT: Endogenously tag GLIPR1 in primary prostate epithe..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Create GLIPR1-null human prostate epithelial and glioma organoid models and rescue them with full-length, cleavage-resistant, transmembrane-deleted, cytoplasmic-tail-deleted, and CAP-cavity mutant proteins while measuring ROS-JNK apoptosis, proliferation, N-WASP activity, migration, and invasion.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Distinct GLIPR1 structural modules and trafficking states drive the pro-apoptotic prostate and pro-migratory glioma outputs.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: CRISPR genetics and separation-of-function rescue</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P48060" data-a="EXPERIMENT: Create GLIPR1-null human prostate epithelial and g..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The direct physiological molecular activity, ligand, receptor, lipid, or substrate of human GLIPR1 is unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> The extracellular CAP-domain structure, zinc-coordinating cavity, single-pass topology, soluble ectodomain activity, and several downstream signaling consequences are established, but none identifies the initiating biochemical action.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Resolving this is necessary for a defensible molecular-function annotation and for distinguishing receptor, ligand, competitor, and catalytic models.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Direct binding and activity screens with purified full-length and ectodomain protein, followed by cellular rescue with cavity mutants, should identify the initiating activity.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"GLIPR1 is an extracellular-facing membrane CAP protein whose direct ligand and biochemical activity are unknown."</em> — file:human/GLIPR1/GLIPR1-deep-research-manual.md</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The normal physiological context and direction of GLIPR1 action are not established beyond disease-cell models.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Direct experiments show pro-apoptotic and antiproliferative effects in prostate cancer cells but pro-migratory and pro-invasive effects in glioma cells, while normal-tissue expression studies also disagree.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Without a normal-cell context, disease phenotypes cannot be safely treated as a single universal evolved core process.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Conditional loss-of-function and endogenous rescue across primary human epithelial, immune, and neural-lineage systems should reveal which outputs are physiological and which are tumor-state adaptations.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"In contrast to GLIPR1&#39;s tumor suppressor activities in PCa, in glioblastomas, GLIPR1 was upregulated and promoted cell growth, survival, and invasion, suggesting a context-specific role for GLIPR1 in malignant growth"</em> — PMID:22025562</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The topology and trafficking step that permit GLIPR1 to regulate cytosolic N-WASP, hnRNPK, Hsc70, and CK1alpha are unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Canonical GLIPR1 has a large extracellular CAP domain, a C-terminal transmembrane helix, and a very short cytoplasmic tail, while soluble ectodomain can be internalized and full-length constructs yield cytosolic interaction phenotypes.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> This mechanistic gap determines whether the reported partners are contacted at the cell surface, after cleavage/internalization, or indirectly.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Endogenous topology mapping, pulse-chase shedding/internalization assays, compartment-resolved proximity labeling, and tail/cleavage mutants should establish the causal trafficking route.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"RTVP-1 and N-WASP showed FRET efficiency of 33.43 + 2.72%, suggesting a direct interaction of these two proteins in glioma cells."</em> — PMID:26305187</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Manual</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(GLIPR1-deep-research-manual.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P48060" data-a="DEEP_RESEARCH: Manual" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Manual literature synthesis for human GLIPR1 (P48060)</span>
+
+
+                    <span class="report-badge">Manual</span>
+
+
+
+
+
+
+
+                </div>
+
+
+                <h1 id="manual-literature-synthesis-for-human-glipr1-p48060">Manual literature synthesis for human GLIPR1 (P48060)</h1>
+<h2 id="scope-and-evidence-boundary">Scope and evidence boundary</h2>
+<p>The configured automated deep-research providers were unavailable on 2026-07-18 (Falcon/Edison HTTP 402; Perplexity-lite HTTP 401). This manual synthesis uses the reviewed human UniProt record, local PAINT and Reactome data, and primary publications cached in <code>publications/</code>. The normal physiological molecular activity remains less well defined than the disease-cell phenotypes.</p>
+<h2 id="molecular-architecture-and-localization">Molecular architecture and localization</h2>
+<p>Canonical human GLIPR1 is synthesized with an N-terminal signal peptide, contains a large CAP/SCP domain, and is retained by a C-terminal transmembrane helix as a type-I single-pass membrane protein. The CAP domain is therefore extracellular-facing, while the cytoplasmic tail is only approximately 11 residues. The crystal structure of the isolated human CAP domain shows the conserved CAP fold and zinc coordination in its central cavity, but no physiological ligand or enzymatic reaction was identified. [PMID:21931216, "GLIPR1 is composed of a signal peptide that directs its secretion, a conserved cysteine-rich CAP (cysteine-rich secretory proteins, antigen 5 and pathogenesis-related 1 proteins) domain and a transmembrane domain."]</p>
+<p>Canonical GLIPR1 can be released or experimentally supplied as a soluble transmembrane-deleted ectodomain, and prostate cancer cells internalize recombinant protein. Thus both the external plasma-membrane pool and a soluble extracellular pool are biologically plausible. The azurophil-granule localization captured by Reactome is a specialized neutrophil trafficking context, not evidence that granules define the protein's general function.</p>
+<h2 id="context-dependent-cellular-functions">Context-dependent cellular functions</h2>
+<p>In prostate cancer cells, GLIPR1 restoration induces ROS-JNK-dependent apoptosis, suppresses colony growth, redistributes CK1alpha, reduces beta-catenin/TCF4-dependent c-MYC transcription, and promotes c-Myc turnover. It also interacts with Hsc70 in a pathway associated with SP1/c-Myb destabilization and reduced AURKA/TPX2 expression. These experiments support positive regulation of apoptosis and negative regulation of cell proliferation, but the direct biochemical action of GLIPR1 upstream of ROS, CK1alpha redistribution, and Hsc70 remains unresolved. [PMID:18199537, "Overexpression of GLIPR1 in cancer cells leads to suppression of colony growth and induction of apoptosis."] [PMID:22025562, "Restoration of GLIPR1 expression in prostate cancer cells downregulated c-myc levels, inhibiting cell-cycle progression."]</p>
+<p>In glioma cells and glioma stem cells, GLIPR1 instead promotes spreading, migration, invasion, invadopodia/podosome formation, and extracellular-matrix degradation. It interacts with N-WASP and hnRNPK, and N-WASP depletion attenuates the motility phenotype. GLIPR1 overexpression reduces the inhibitory N-WASP-hnRNPK association. [PMID:26305187, "We found that RTVP-1 increased cell spreading, migration and invasion and these effects were at least partly mediated by N-WASP."] These findings support positive regulation of cell migration in this context, not a universal tumor-suppressor role.</p>
+<h2 id="molecular-adaptor-paint-inference">Molecular-adaptor PAINT inference</h2>
+<p>The local PTHR10334 PAINT export shows GO:0060090 <code>molecular adaptor activity</code> at ancestral node PTN000036124 with mouse Glipr1l1 as its only experimental seed. The source GO-CAM activity <code>gomodel:62f58d8800005094/62f58d8800005346</code> places mouse Glipr1l1 molecular adaptor activity at the outer acrosomal membrane, in protein localization involved in the acrosome reaction [file:gocams/62f58d8800005094/62f58d8800005094-src.yaml]. Human GLIPR1's own interactions do not demonstrate the GO-defined activity of bringing two molecules together. Its best-resolved glioma mechanism instead weakens N-WASP-hnRNPK association. Therefore the adaptor IBA is a paralog- and tissue-context over-propagation.</p>
+<h2 id="evidence-bounded-conclusion">Evidence-bounded conclusion</h2>
+<p>GLIPR1 is an extracellular-facing membrane CAP protein whose direct ligand and biochemical activity are unknown. It regulates distinct protein-interaction/signaling systems in different cell contexts: pro-apoptotic and antiproliferative pathways in prostate cancer cells, and N-WASP-dependent motility pathways in glioma cells. The disease-context evidence is strong, but whether either output represents the protein's dominant normal physiological role remains open.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(GLIPR1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P48060" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="glipr1-review-notes">GLIPR1 review notes</h1>
+<p>Date: 2026-07-18</p>
+<h2 id="research-provenance">Research provenance</h2>
+<ul>
+<li><code>just fetch-gene human GLIPR1</code> retrieved the reviewed UniProt record, 11 GOA annotation groups, and the local PANTHER family data.</li>
+<li><code>just fetch-gene-pmids human GLIPR1</code> cached all four PMIDs cited by GOA.</li>
+<li>The configured automated research attempt failed: Falcon/Edison returned HTTP 402 and the Perplexity-lite fallback returned HTTP 401 because provider quota was exhausted. The evidence synthesis below was therefore performed manually from repository-cached primary publications, the UniProt record, Reactome records, and the local PANTHER export.</li>
+</ul>
+<h2 id="protein-identity-and-topology">Protein identity and topology</h2>
+<p>GLIPR1 (UniProt P48060; also RTVP-1) is a 266-amino-acid CAP/CRISP-superfamily protein. The canonical precursor has an N-terminal signal peptide (residues 1-21), an extracellular CAP/SCP domain, a single C-terminal transmembrane helix (233-255), and a short cytoplasmic tail. A crystal structure of the soluble human CAP domain showed the conserved CAP fold and a cavity capable of coordinating zinc, but the physiological ligand and direct biochemical activity remain unknown. [PMID:21931216, "GLIPR1 is composed of a signal peptide that directs its secretion, a conserved cysteine-rich CAP (cysteine-rich secretory proteins, antigen 5 and pathogenesis-related 1 proteins) domain and a transmembrane domain."] [PMID:21931216, "the putative binding cavity coordinates Zn2+ similarly to snake-venom CRISPs"]</p>
+<p>The second human isoform, RTVP-1b, diverges after residue 141. It is broadly expressed, is increased in glioblastoma relative to normal brain and lower-grade tumors, and promoted glioma-cell proliferation when overexpressed without increasing migration. No normal isoform-specific function has been established. [PMID:17825796, "Overexpression of RTVP-1b increased glioma cell proliferation but did not affect cell migration."]</p>
+<h2 id="expression-and-context-dependence">Expression and context dependence</h2>
+<p>The initial cloning studies disagreed about normal-tissue breadth. One study reported expression in glioblastoma but not normal brain, while another found fetal expression in kidney and ubiquitous adult expression, with high expression in glial-derived tumor lines. [PMID:7607567, "The GLIPR gene is highly expressed in the human brain tumor, glioblastoma multiforme/astrocytoma, but neither in normal fetal or adult brain tissue, nor in other nervous system tumors."] [PMID:8973356, "Northern hybridization analysis revealed that in fetal tissue RTVP-1 RNA was detected only in the kidney, but its expression was ubiquitous in adult tissues including brain."] The reviewed UniProt record accordingly reports conflicting tissue-expression results rather than a single brain-specific pattern.</p>
+<p>GLIPR1 has opposite experimentally observed effects in different tumor-cell contexts. In prostate cancer cells, GLIPR1 is frequently down-regulated and restoration or overexpression promotes apoptosis and growth suppression. In glioblastoma cells, GLIPR1 is elevated and promotes spreading, migration, invasion, and extracellular-matrix degradation. These results should be represented as context-dependent regulatory roles, not collapsed into a universal tumor-suppressor or oncogenic label.</p>
+<h2 id="prostate-cell-growth-suppression-and-apoptosis">Prostate-cell growth suppression and apoptosis</h2>
+<p>Human prostate cancer studies establish a p53-responsive, pro-apoptotic role. GLIPR1 overexpression increases ROS and engages JNK-dependent apoptosis; Glipr1-null mice show increased tumor susceptibility. [PMID:18199537, "Mechanistic analysis indicated that GLIPR1 up-regulation increases the production of reactive oxygen species (ROS) leading to apoptosis through activation of the c-Jun-NH(2) kinase (JNK) signaling cascade."]</p>
+<p>Additional mechanistic work showed that GLIPR1 redistributes CK1alpha and promotes beta-catenin and c-Myc destruction, reducing c-MYC transcription and cell-cycle progression. [PMID:22025562, "Restoration of GLIPR1 expression in prostate cancer cells downregulated c-myc levels, inhibiting cell-cycle progression."] GLIPR1 also interacts with Hsc70, with associated destabilization of SP1 and c-Myb and suppression of AURKA and TPX2; a recombinant transmembrane-deleted protein is internalized and can reproduce apoptosis/mitotic-catastrophe phenotypes. [PMID:23333597, "GLIPR1 interacts with heat shock cognate protein 70 (Hsc70); this interaction is associated with SP1 and c-Myb destabilization and suppression of SP1- and c-Myb-mediated AURKA and TPX2 transcription."]</p>
+<p>These studies support positive regulation of apoptosis and negative regulation of cell population proliferation in the tested human cancer-cell contexts. They do not establish a catalytic molecular function for GLIPR1.</p>
+<h2 id="glioma-cell-motility-and-invasion">Glioma-cell motility and invasion</h2>
+<p>In human glioma cells and glioma stem cells, gain- and loss-of-function experiments show that GLIPR1 promotes spreading, migration, invasion, invadopodia/podosome formation, and matrix degradation. GLIPR1 associates with N-WASP and hnRNPK; reciprocal immunoprecipitation and FRET support a direct GLIPR1-N-WASP interaction. N-WASP knockdown attenuates GLIPR1-driven cell spreading, migration, and matrix degradation. [PMID:26305187, "We found that RTVP-1 increased cell spreading, migration and invasion and these effects were at least partly mediated by N-WASP."]</p>
+<p>GLIPR1 overexpression decreases the association between N-WASP and its inhibitor hnRNPK, thereby relieving inhibition of N-WASP-dependent motility. [PMID:26305187, "overexpression of RTVP-1 decreased the association of N-WASP and hnRNPK."] This supports positive regulation of cell migration in glioma cells. It does not cleanly satisfy <code>molecular adaptor activity</code>, whose GO definition requires bringing molecules together: the demonstrated effect is disruption of an inhibitory N-WASP-hnRNPK association.</p>
+<h2 id="paint-propagation-assessment">PAINT propagation assessment</h2>
+<p>The local <code>PTHR10334-paint.tsv</code> export places both GO:0005576 <code>extracellular region</code> and GO:0060090 <code>molecular adaptor activity</code> at the broad ancestral node PTN000036124. The localization inference is supported by numerous extracellular CAP-family seeds and independently fits GLIPR1's signal peptide, type-I membrane topology, extracellular CAP domain, and soluble active ectodomain.</p>
+<p>The adaptor inference has only one experimental seed: mouse Glipr1l1 (MGI:MGI:1916536), a sperm/acrosomal GLIPR1-like paralog. The source GO-CAM activity <code>gomodel:62f58d8800005094/62f58d8800005346</code> models mouse Glipr1l1 molecular adaptor activity at the outer acrosomal membrane in protein localization involved in the acrosome reaction [file:gocams/62f58d8800005094/62f58d8800005094-src.yaml]. GLIPR1-specific human studies show interactions with N-WASP, hnRNPK, and Hsc70, but do not show GLIPR1 bringing two molecules together. In the best-defined glioma mechanism, GLIPR1 instead decreases N-WASP-hnRNPK association. The IBA adaptor annotation is therefore a paralog/context over-propagation and should be removed.</p>
+<h2 id="localization-annotations">Localization annotations</h2>
+<ul>
+<li>Extracellular-region and membrane annotations are supported by canonical signal peptide/TM topology and the human soluble-domain structure. The more precise location for the canonical membrane-bound pool is the external side of the plasma membrane (GO:0009897).</li>
+<li>NK-cell membrane proteomics directly detected GLIPR1 in a membrane preparation, although the cached abstract does not enumerate individual proteins. [PMID:19946888, "The present study was initiated to define the composition of the membrane proteome of the Natural Killer (NK) like cell line YTS."]</li>
+<li>Reactome places GLIPR1 in the plasma membrane and, in neutrophils, the azurophil-granule membrane. The latter and the corresponding post-exocytosis plasma-membrane localization are defensible but context-specific rather than defining GLIPR1's general function.</li>
+</ul>
+<h2 id="interaction-annotations">Interaction annotations</h2>
+<p>The GOA protein-binding rows report ALOXE3 in two BioPlex AP-MS networks and HTT in a neurodegeneration-focused interaction map. The ALOXE3 interaction is replicated across two high-throughput datasets, and UniProt/IntAct records both ALOXE3 and HTT. However, generic <code>protein binding</code> does not describe GLIPR1's molecular activity, and none of these high-throughput interactions has a demonstrated GLIPR1-specific functional consequence. All three should be marked over-annotated rather than used as core molecular functions.</p>
+<h2 id="curation-conclusion">Curation conclusion</h2>
+<p>The strongest conserved structural conclusion is that canonical GLIPR1 is an extracellular-facing, single-pass membrane CAP protein that can also act in a released/soluble form. Its immediate physiological ligand and biochemical activity remain unresolved. Direct human-cell evidence supports context-specific regulation of apoptosis/proliferation and N-WASP-dependent migration, while the sperm-paralog-derived molecular-adaptor IBA is not transferable.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P48060
+gene_symbol: GLIPR1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  GLIPR1 is a type-I single-pass membrane member of the CAP/CRISP superfamily,
+  produced with an N-terminal signal peptide and a large extracellular CAP
+  domain; soluble or released ectodomain forms can also act on cells. Its direct
+  physiological ligand and biochemical activity are unresolved. In prostate
+  cancer cells, GLIPR1 restoration promotes ROS-JNK-dependent apoptosis and
+  suppresses proliferation through CK1alpha/c-Myc and Hsc70-AURKA/TPX2-linked
+  pathways. In glioma cells and glioma stem cells it has the opposite,
+  context-specific effect of promoting N-WASP-dependent spreading, migration,
+  invasion, and matrix degradation while weakening the inhibitory association
+  between N-WASP and hnRNPK. GLIPR1 is therefore a context-dependent membrane
+  and extracellular regulatory protein rather than a demonstrated enzyme or a
+  universally acting tumor suppressor.
+alternative_products:
+- name: &#39;1&#39;
+  id: P48060-1
+  description: &gt;-
+    Canonical 266-amino-acid precursor with an N-terminal signal peptide,
+    extracellular CAP domain, C-terminal transmembrane helix, and short
+    cytoplasmic tail.
+- name: 2 (RTVP-1b)
+  id: P48060-2
+  sequence_note: VSP_043902
+  description: &gt;-
+    Diverges from the canonical protein after residue 141. It is expressed in
+    glioma and promoted proliferation, but not migration, when overexpressed in
+    glioma cells; no normal isoform-specific function has been established.
+existing_annotations:
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      PAINT places GLIPR1 activity in the extracellular region, consistent with
+      its signal peptide, extracellular CAP domain, type-I membrane topology,
+      and biologically active soluble ectodomain.
+    action: ACCEPT
+    reason: &gt;-
+      Extracellular exposure is broadly conserved among CAP-family proteins and
+      is independently supported for human GLIPR1 by the crystal-structure study
+      and reviewed sequence topology. The term accommodates both the
+      extracellular-facing membrane pool and released or soluble forms.
+    propagation_review:
+      root_cause: NO_FAILURE_CORE
+      source_entities:
+      - source_id: PANTHER:PTN000036124
+        source_label: broad PTHR10334 ancestral node
+        source_status: SUPPORTS_TRANSFER
+        comment: &gt;-
+          Multiple extracellular CAP-family seeds support this conserved
+          localization, and GLIPR1&#39;s own signal peptide and topology provide
+          independent corroboration.
+    additional_reference_ids:
+    - PMID:21931216
+    - PMID:23333597
+    supported_by:
+    - reference_id: PMID:21931216
+      supporting_text: &gt;-
+        GLIPR1 is composed of a signal peptide that directs its secretion, a
+        conserved cysteine-rich CAP (cysteine-rich secretory proteins, antigen 5
+        and pathogenesis-related 1 proteins) domain and a transmembrane domain.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0060090
+    label: molecular adaptor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      PAINT propagated molecular adaptor activity from mouse Glipr1l1 across a
+      broad CAP-family ancestral node to GLIPR1.
+    action: REMOVE
+    reason: &gt;-
+      Mouse Glipr1l1 is a specialized sperm/acrosomal paralog, and the CAP family
+      has strongly diversified functions. Human GLIPR1 interacts with N-WASP,
+      hnRNPK, and Hsc70, but no study shows it bringing molecules together as
+      required by the GO definition. In the best-defined glioma mechanism,
+      GLIPR1 instead decreases the N-WASP-hnRNPK association. The sole
+      Glipr1l1-derived seed therefore does not support adaptor activity in
+      GLIPR1.
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - WRONG_ORTHOLOG_OR_PARALOG
+      - CONTEXT_OR_TISSUE_MISMATCH
+      - ROLE_CONFLATION
+      source_entities:
+      - source_id: MGI:MGI:1916536
+        source_label: mouse Glipr1l1
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &gt;-
+          The source activity belongs to a sperm/acrosomal GLIPR1-like paralog
+          functioning in IZUMO1 localization during the acrosome reaction.
+      - source_id: gomodel:62f58d8800005094/62f58d8800005346
+        source_label: mouse Glipr1l1 GO-CAM adaptor activity
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &gt;-
+          The production model places the activity at the outer acrosomal
+          membrane in protein localization during the acrosome reaction, a
+          sperm-specific context not shared by GLIPR1.
+      - source_id: PANTHER:PTN000036124
+        source_label: broad PTHR10334 ancestral node
+        source_status: UNRESOLVED
+        comment: &gt;-
+          This node spans many functionally divergent CAP-family subfamilies and
+          is too broad for propagation of the Glipr1l1-specific adaptor role.
+    additional_reference_ids:
+    - PMID:26305187
+    - file:interpro/panther/PTHR10334/PTHR10334-paint.tsv
+    - file:gocams/62f58d8800005094/62f58d8800005094-src.yaml
+    supported_by:
+    - reference_id: PMID:26305187
+      supporting_text: &gt;-
+        overexpression of RTVP-1 decreased the association of N-WASP and hnRNPK.
+      reference_section_type: ABSTRACT
+    - reference_id: file:human/GLIPR1/GLIPR1-deep-research-manual.md
+      supporting_text: &gt;-
+        Human GLIPR1&#39;s own interactions do not demonstrate the GO-defined
+        activity of bringing two molecules together.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      InterPro maps the CAP-family signature to the broad extracellular region.
+      The canonical human protein is more precisely an extracellular-facing
+      type-I plasma-membrane protein, while soluble forms can also be released.
+    action: ACCEPT
+    reason: &gt;-
+      The broad localization is correct for both the extracellular-facing
+      membrane pool and released or soluble GLIPR1. A separate proposed
+      annotation to GO:0009897 captures the more precise topology of the
+      canonical membrane-bound pool without invalidating this broader term.
+    additional_reference_ids:
+    - PMID:21931216
+    supported_by:
+    - reference_id: PMID:21931216
+      supporting_text: A model is also proposed for the structure of full-length membrane-bound GLIPR1.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      UniProt subcellular-location mapping assigns the canonical single-pass
+      membrane protein to membrane.
+    action: ACCEPT
+    reason: &gt;-
+      The reviewed human sequence contains a C-terminal transmembrane helix, and
+      the human structural study explicitly models full-length membrane-bound
+      GLIPR1. The term is broad but correct and independently supported.
+    additional_reference_ids:
+    - PMID:21931216
+    supported_by:
+    - reference_id: PMID:21931216
+      supporting_text: Human glioma pathogenesis-related protein 1 (GLIPR1) is a membrane protein
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28514442
+  qualifier: enables
+  review:
+    summary: &gt;-
+      BioPlex 2.0 AP-MS reports an association between GLIPR1 and ALOXE3.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The high-throughput interaction may be real and is repeated in BioPlex
+      3.0, but generic protein binding does not identify GLIPR1&#39;s molecular
+      activity. The cached article does not establish a GLIPR1-specific
+      functional consequence for the ALOXE3 association, so it should not be
+      treated as core function.
+    additional_reference_ids:
+    - PMID:33961781
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32814053
+  qualifier: enables
+  review:
+    summary: &gt;-
+      A neurodegeneration-focused interaction map reports GLIPR1 association
+      with HTT.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The interaction is retained in IntAct and UniProt, but generic protein
+      binding is uninformative and the abstract-only cached paper does not
+      establish a GLIPR1-specific consequence of HTT association. It should not
+      define GLIPR1&#39;s molecular or biological core.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: &gt;-
+      BioPlex 3.0 independently reports the GLIPR1-ALOXE3 association seen in
+      BioPlex 2.0.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Replication strengthens confidence in co-association but does not convert
+      the generic protein-binding term into an informative molecular function.
+      ALOXE3-dependent consequences for GLIPR1 have not been demonstrated.
+    additional_reference_ids:
+    - PMID:28514442
+- term:
+    id: GO:0035577
+    label: azurophil granule membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6798739
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome places GLIPR1 among azurophil-granule membrane proteins released
+      during neutrophil degranulation.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This is a plausible specialized localization for a single-pass membrane
+      protein expressed in blood cells, and it should not be overruled from the
+      summary-level Reactome cache. It represents a neutrophil trafficking
+      context rather than the general site or defining function of GLIPR1.
+    supported_by:
+    - reference_id: Reactome:R-HSA-6798739
+      supporting_text: Exocytosis of azurophil granule membrane proteins
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: HDA
+  original_reference_id: PMID:19946888
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput proteomics identified GLIPR1 in the membrane preparation
+      of the YTS NK-like cell line.
+    action: ACCEPT
+    reason: &gt;-
+      Although the cached abstract does not enumerate individual proteins, the
+      curated HDA assignment agrees with GLIPR1&#39;s transmembrane helix and
+      independent human structural evidence. Membrane localization is a core
+      property of the canonical isoform.
+    additional_reference_ids:
+    - PMID:21931216
+    supported_by:
+    - reference_id: PMID:19946888
+      supporting_text: &gt;-
+        The present study was initiated to define the composition of the
+        membrane proteome of the Natural Killer (NK) like cell line YTS.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1989772
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome models expressed GLIPR1 protein at the plasma membrane.
+    action: ACCEPT
+    reason: &gt;-
+      The Reactome event is sparse, but plasma-membrane placement is independently
+      supported by the signal peptide plus C-terminal transmembrane topology and
+      the human structure-based model of full-length membrane-bound GLIPR1.
+    additional_reference_ids:
+    - PMID:21931216
+    supported_by:
+    - reference_id: PMID:21931216
+      supporting_text: A model is also proposed for the structure of full-length membrane-bound GLIPR1.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6798739
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome assigns plasma-membrane localization after exocytosis of
+      GLIPR1-containing azurophil granules in neutrophils.
+    action: ACCEPT
+    reason: &gt;-
+      Plasma-membrane localization is compatible with canonical GLIPR1 topology,
+      and independent structural evidence establishes this as a general core
+      location. This particular Reactome evidence describes a specialized
+      neutrophil degranulation route, but the term itself is correct and core.
+    supported_by:
+    - reference_id: Reactome:R-HSA-6798739
+      supporting_text: &gt;-
+        Azurophil granules undergo limited exocytosis in response to stimulation
+- term:
+    id: GO:0009897
+    label: external side of plasma membrane
+  evidence_type: IC
+  original_reference_id: PMID:21931216
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Proposed topology-based human annotation. The canonical precursor has an
+      N-terminal signal peptide, an extracellular CAP domain, and a C-terminal
+      transmembrane helix, placing the mature CAP domain on the external side of
+      the plasma membrane.
+    action: NEW
+    reason: &gt;-
+      External side of plasma membrane is more precise than the existing broad
+      membrane and extracellular-region terms for the canonical membrane-bound
+      protein. IC reflects curator inference from the experimentally solved
+      human ectodomain and the structure-based full-length topology model.
+    supported_by:
+    - reference_id: PMID:21931216
+      supporting_text: A model is also proposed for the structure of full-length membrane-bound GLIPR1.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0043065
+    label: positive regulation of apoptotic process
+  evidence_type: IMP
+  original_reference_id: PMID:18199537
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proposed direct human-cell annotation. GLIPR1 restoration or overexpression
+      promotes apoptosis through ROS production and sustained JNK signaling in
+      several cancer-cell models.
+    action: NEW
+    reason: &gt;-
+      Gain-of-function experiments in human cancer cells and genetic loss in
+      mouse provide causal support for a pro-apoptotic role. The annotation is
+      context-dependent and does not imply that GLIPR1 promotes apoptosis in
+      every cell type.
+    supported_by:
+    - reference_id: PMID:18199537
+      supporting_text: &gt;-
+        Overexpression of GLIPR1 in cancer cells leads to suppression of colony
+        growth and induction of apoptosis.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0008285
+    label: negative regulation of cell population proliferation
+  evidence_type: IMP
+  original_reference_id: PMID:22025562
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proposed direct human-cell annotation. Restoring GLIPR1 in prostate cancer
+      cells decreases c-MYC expression and inhibits cell-cycle progression.
+    action: NEW
+    reason: &gt;-
+      GLIPR1 perturbation changes CK1alpha localization, beta-catenin/TCF4-driven
+      c-MYC transcription, c-Myc turnover, and prostate-cell proliferation. This
+      supports negative regulation of proliferation in the experimentally
+      defined prostate context.
+    supported_by:
+    - reference_id: PMID:22025562
+      supporting_text: &gt;-
+        Restoration of GLIPR1 expression in prostate cancer cells downregulated
+        c-myc levels, inhibiting cell-cycle progression.
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0030335
+    label: positive regulation of cell migration
+  evidence_type: IMP
+  original_reference_id: PMID:26305187
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proposed direct human-cell annotation. GLIPR1 gain and loss alter glioma
+      cell and glioma-stem-cell spreading, migration, invasion, and matrix
+      degradation through an N-WASP-dependent mechanism.
+    action: NEW
+    reason: &gt;-
+      Overexpression increases migration whereas GLIPR1 silencing decreases it,
+      and N-WASP depletion attenuates the phenotype. The term captures the
+      demonstrated glioma-cell process without asserting an unproven catalytic
+      activity or universal effect across tissues.
+    supported_by:
+    - reference_id: PMID:26305187
+      supporting_text: &gt;-
+        We found that RTVP-1 increased cell spreading, migration and invasion and
+        these effects were at least partly mediated by N-WASP.
+      reference_section_type: ABSTRACT
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: &gt;-
+    Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: PMID:7607567
+  title: The human glioma pathogenesis-related protein is structurally related to plant pathogenesis-related proteins and its gene is expressed specifically in brain tumors.
+  findings:
+  - statement: The original cloning study identified human GLIPR1 and reported high expression in glioblastoma.
+    supporting_text: &gt;-
+      We report the cloning of a cDNA encoding GliPR (glioma
+      pathogenesis-related protein), a protein that is structurally similar to
+      plant pathogenesis-related proteins.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and abstract were checked. The study establishes the gene
+      and tumor-expression observation but not a molecular activity.
+- id: PMID:8973356
+  title: RTVP-1, a novel human gene with sequence similarity to genes of diverse species, is expressed in tumor cell lines of glial but not neuronal origin.
+  findings:
+  - statement: An independent cloning study reported broad adult-tissue expression and enrichment in glial-derived tumor lines.
+    supporting_text: &gt;-
+      Northern hybridization analysis revealed that in fetal tissue RTVP-1 RNA
+      was detected only in the kidney, but its expression was ubiquitous in adult
+      tissues including brain.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and abstract were checked. This source is important for the
+      conflicting normal-tissue expression evidence.
+- id: PMID:17825796
+  title: Cloning and characterization of human RTVP-1b, a novel splice variant of RTVP-1 in glioma cells.
+  findings:
+  - statement: RTVP-1b is an alternative human isoform that diverges after residue 141.
+    supporting_text: &gt;-
+      The deduced protein was 237 amino acids in length, sharing the N-terminal
+      141 amino acids with RTVP-1.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: RTVP-1b overexpression promotes glioma-cell proliferation but not migration.
+    supporting_text: Overexpression of RTVP-1b increased glioma cell proliferation but did not affect cell migration.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and abstract were checked. This is the direct human isoform
+      characterization, but all functional assays use glioma cells.
+- id: PMID:21931216
+  title: Structural studies of human glioma pathogenesis-related protein 1.
+  findings:
+  - statement: Human GLIPR1 contains a signal peptide, CAP domain, and transmembrane domain.
+    supporting_text: &gt;-
+      GLIPR1 is composed of a signal peptide that directs its secretion, a
+      conserved cysteine-rich CAP (cysteine-rich secretory proteins, antigen 5
+      and pathogenesis-related 1 proteins) domain and a transmembrane domain.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: The isolated human CAP domain coordinates zinc in its central cavity.
+    supporting_text: the putative binding cavity coordinates Zn2+ similarly to snake-venom CRISPs
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and abstract were checked, and the accessible primary
+      article was inspected online. The structure establishes topology and zinc
+      coordination but not a physiological ligand or reaction.
+- id: PMID:14871827
+  title: RTVP-1, a tumor suppressor inactivated by methylation in prostate cancer.
+  findings:
+  - statement: Human GLIPR1 is p53 regulated and induces apoptosis in human prostate cancer cells.
+    supporting_text: &gt;-
+      the human RTVP-1 gene is also regulated by p53 and induces apoptosis in
+      human prostate cancer cell lines.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and abstract were checked. This is direct human-cell
+      evidence but is restricted to prostate cancer models.
+- id: PMID:18199537
+  title: Glioma pathogenesis-related protein 1 exerts tumor suppressor activities through proapoptotic reactive oxygen species-c-Jun-NH2 kinase signaling.
+  findings:
+  - statement: GLIPR1 overexpression induces apoptosis and suppresses colony growth in human cancer cells.
+    supporting_text: &gt;-
+      Overexpression of GLIPR1 in cancer cells leads to suppression of colony
+      growth and induction of apoptosis.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: GLIPR1-driven apoptosis proceeds through ROS and JNK signaling.
+    supporting_text: &gt;-
+      GLIPR1 up-regulation increases the production of reactive oxygen species
+      (ROS) leading to apoptosis through activation of the c-Jun-NH(2) kinase
+      (JNK) signaling cascade.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and abstract were checked. The paper combines direct
+      human-cell perturbation with mouse tumor-susceptibility genetics.
+- id: PMID:22025562
+  title: GLIPR1 suppresses prostate cancer development through targeted oncoprotein destruction.
+  findings:
+  - statement: Restored GLIPR1 reduces c-MYC and cell-cycle progression in prostate cancer cells.
+    supporting_text: &gt;-
+      Restoration of GLIPR1 expression in prostate cancer cells downregulated
+      c-myc levels, inhibiting cell-cycle progression.
+    reference_section_type: ABSTRACT
+  - statement: GLIPR1 promotes c-Myc ubiquitination and degradation.
+    supporting_text: &gt;-
+      GLIPR1 also promoted c-Myc protein ubiquitination and degradation by
+      glycogen synthase kinase-3alpha- and/or CK1alpha-mediated c-Myc phosphorylation.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity, abstract, and cached full text were checked. This is
+      direct mechanistic human prostate-cell evidence with supporting mouse genetics.
+- id: PMID:23333597
+  title: Glioma pathogenesis-related protein 1 induces prostate cancer cell death through Hsc70-mediated suppression of AURKA and TPX2.
+  findings:
+  - statement: GLIPR1 interacts with Hsc70 in a pathway that destabilizes SP1/c-Myb and suppresses AURKA/TPX2.
+    supporting_text: &gt;-
+      GLIPR1 interacts with heat shock cognate protein 70 (Hsc70); this
+      interaction is associated with SP1 and c-Myb destabilization and
+      suppression of SP1- and c-Myb-mediated AURKA and TPX2 transcription.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: Recombinant GLIPR1 ectodomain induces apoptosis and mitotic catastrophe.
+    supporting_text: &gt;-
+      Recombinant GLIPR1-DeltaTM protein inhibited AURKA and TPX2 expression,
+      induced apoptosis and MC, and suppressed orthotopic xenograft tumor growth.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and abstract were checked. The cache could not retrieve the
+      available PMC full text, so claims are limited to the abstract.
+- id: PMID:26305187
+  title: RTVP-1 regulates glioma cell migration and invasion via interaction with N-WASP and hnRNPK.
+  findings:
+  - statement: GLIPR1 promotes glioma-cell spreading, migration, and invasion in an N-WASP-dependent manner.
+    supporting_text: &gt;-
+      We found that RTVP-1 increased cell spreading, migration and invasion and
+      these effects were at least partly mediated by N-WASP.
+    reference_section_type: ABSTRACT
+  - statement: GLIPR1 decreases the inhibitory N-WASP-hnRNPK association.
+    supporting_text: overexpression of RTVP-1 decreased the association of N-WASP and hnRNPK.
+    reference_section_type: ABSTRACT
+  - statement: Reciprocal co-immunoprecipitation and FRET support direct GLIPR1-N-WASP interaction.
+    supporting_text: &gt;-
+      RTVP-1 and N-WASP showed FRET efficiency of 33.43 + 2.72%, suggesting a
+      direct interaction of these two proteins in glioma cells.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity, abstract, and cached full text were checked. This is
+      direct human glioma-cell and glioma-stem-cell evidence.
+- id: PMID:19946888
+  title: Defining the membrane proteome of NK cells.
+  findings:
+  - statement: The study defined the membrane proteome of the YTS NK-like cell line.
+    supporting_text: &gt;-
+      The present study was initiated to define the composition of the membrane
+      proteome of the Natural Killer (NK) like cell line YTS.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: MEDIUM
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      PubMed identity and abstract were checked. GLIPR1 is assigned by curated
+      HDA, but the individual protein list is not present in the cached abstract.
+- id: PMID:28514442
+  title: Architecture of the human interactome defines protein communities and disease networks.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      The article and cached full text were checked, but the GLIPR1-ALOXE3 pair
+      resides in supplementary interaction data not represented in the narrative cache.
+- id: PMID:32814053
+  title: Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread Protein Aggregation in Affected Brains.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      PubMed identity and abstract were checked. The cache is abstract-only and
+      does not expose the GLIPR1-HTT interaction record.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      The article and cached full text were checked, but the GLIPR1-ALOXE3 pair
+      is in supplementary network data rather than the narrative text.
+- id: Reactome:R-HSA-1989772
+  title: Expression of GLIPR1
+  findings:
+  - statement: Reactome models GLIPR1 transcription, translation, and plasma-membrane placement.
+    supporting_text: &gt;-
+      The GLIPR1 gene is transcribed to yield mRNA and the mRNA is translated to
+      yield protein.
+- id: Reactome:R-HSA-6798739
+  title: Exocytosis of azurophil granule membrane proteins
+  findings:
+  - statement: Reactome places GLIPR1 in the azurophil-granule membrane and at the plasma membrane after exocytosis.
+    supporting_text: Exocytosis of azurophil granule membrane proteins
+- id: file:interpro/panther/PTHR10334/PTHR10334-paint.tsv
+  title: Local PAINT export for PTHR10334
+  findings:
+  - statement: The broad ancestral node carries extracellular-region and molecular-adaptor annotations.
+    supporting_text: PTN000036124
+- id: file:gocams/62f58d8800005094/62f58d8800005094-src.yaml
+  title: GO-CAM source model for regulation of oolemmal binding multimeric complex formation
+  findings:
+  - statement: &gt;-
+      The model places mouse Glipr1l1 molecular adaptor activity at the outer
+      acrosomal membrane in protein localization involved in the acrosome reaction.
+    supporting_text: &#39;term: MGI:MGI:1916536&#39;
+- id: file:human/GLIPR1/GLIPR1-uniprot.txt
+  title: UniProt entry for human GLIPR1 (P48060)
+  findings:
+  - statement: Canonical human GLIPR1 is a single-pass membrane CAP-family protein.
+    supporting_text: Single-pass membrane protein
+  - statement: UniProt records ALOXE3 and HTT interactions.
+    supporting_text: &#39;P48060; Q9BYJ1: ALOXE3&#39;
+- id: file:human/GLIPR1/GLIPR1-deep-research-manual.md
+  title: Manual literature synthesis for GLIPR1
+  findings: []
+- id: file:human/GLIPR1/GLIPR1-notes.md
+  title: GLIPR1 review notes
+  findings: []
+core_functions:
+- description: &gt;-
+    In prostate cancer-cell contexts, membrane-bound or released GLIPR1 promotes
+    ROS-JNK-dependent apoptosis and suppresses cell population proliferation by
+    altering CK1alpha/c-Myc and Hsc70-SP1/c-Myb-AURKA/TPX2 regulatory pathways.
+    These are experimentally demonstrated context-specific outputs; the direct
+    molecular activity that initiates them remains unknown.
+  directly_involved_in:
+  - id: GO:0043065
+    label: positive regulation of apoptotic process
+  - id: GO:0008285
+    label: negative regulation of cell population proliferation
+  locations:
+  - id: GO:0009897
+    label: external side of plasma membrane
+  - id: GO:0005576
+    label: extracellular region
+  supported_by:
+  - reference_id: PMID:18199537
+    supporting_text: &gt;-
+      GLIPR1 up-regulation increases the production of reactive oxygen species
+      (ROS) leading to apoptosis through activation of the c-Jun-NH(2) kinase
+      (JNK) signaling cascade.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - reference_id: PMID:22025562
+    supporting_text: &gt;-
+      Restoration of GLIPR1 expression in prostate cancer cells downregulated
+      c-myc levels, inhibiting cell-cycle progression.
+    reference_section_type: ABSTRACT
+- description: &gt;-
+    In glioma cells and glioma stem cells, GLIPR1 associates with N-WASP and
+    hnRNPK, weakens the inhibitory N-WASP-hnRNPK interaction, and thereby
+    promotes cell spreading, migration, invasion, and extracellular-matrix
+    degradation. This activity is context-specific and does not establish
+    molecular adaptor activity in the GO sense.
+  directly_involved_in:
+  - id: GO:0030335
+    label: positive regulation of cell migration
+  supported_by:
+  - reference_id: PMID:26305187
+    supporting_text: &gt;-
+      We found that RTVP-1 increased cell spreading, migration and invasion and
+      these effects were at least partly mediated by N-WASP.
+    reference_section_type: ABSTRACT
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    What physiological extracellular ligand, receptor, lipid, or substrate
+    engages the GLIPR1 CAP-domain cavity, and is zinc coordination required?
+  experts:
+  - CAP-superfamily structural biologists
+  - extracellular signaling biochemists
+- question: &gt;-
+    Which normal human cell types use the prostate-like pro-apoptotic output,
+    the glioma-like pro-migratory output, or a distinct GLIPR1 function?
+  experts:
+  - human tissue and single-cell biologists
+  - cancer signaling specialists
+- question: &gt;-
+    How does an extracellular-facing protein with a very short cytoplasmic tail
+    control or contact cytosolic N-WASP, hnRNPK, Hsc70, and CK1alpha?
+  experts:
+  - membrane-trafficking and proteolysis specialists
+  - cytoskeletal signaling biologists
+suggested_experiments:
+- description: &gt;-
+    Purify full-length nanodisc-embedded GLIPR1 and its soluble CAP ectodomain,
+    then perform quantitative ligand, lipid, protease, and metal-binding screens
+    with CAP-cavity and zinc-coordinating residue mutants.
+  experiment_type: biochemical activity and ligand-discovery profiling
+  hypothesis: &gt;-
+    GLIPR1 binds a restricted extracellular ligand or lipid through its CAP
+    cavity, and this binding supplies the missing initiating molecular activity.
+- description: &gt;-
+    Endogenously tag GLIPR1 in primary prostate epithelial cells, macrophages,
+    and patient-derived glioma cells; map topology, shedding, internalization,
+    and proximity partners before and after defined stimuli.
+  experiment_type: endogenous topology, trafficking, and proximity proteomics
+  hypothesis: &gt;-
+    Cell-type-specific cleavage or internalization determines whether GLIPR1
+    engages extracellular, membrane, or cytosolic regulatory partners.
+- description: &gt;-
+    Create GLIPR1-null human prostate epithelial and glioma organoid models and
+    rescue them with full-length, cleavage-resistant, transmembrane-deleted,
+    cytoplasmic-tail-deleted, and CAP-cavity mutant proteins while measuring
+    ROS-JNK apoptosis, proliferation, N-WASP activity, migration, and invasion.
+  experiment_type: CRISPR genetics and separation-of-function rescue
+  hypothesis: &gt;-
+    Distinct GLIPR1 structural modules and trafficking states drive the
+    pro-apoptotic prostate and pro-migratory glioma outputs.
+knowledge_gaps:
+- gap_statement: &gt;-
+    The direct physiological molecular activity, ligand, receptor, lipid, or
+    substrate of human GLIPR1 is unknown.
+  boundary: &gt;-
+    The extracellular CAP-domain structure, zinc-coordinating cavity,
+    single-pass topology, soluble ectodomain activity, and several downstream
+    signaling consequences are established, but none identifies the initiating
+    biochemical action.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Resolving this is necessary for a defensible molecular-function annotation
+    and for distinguishing receptor, ligand, competitor, and catalytic models.
+  resolution: &gt;-
+    Direct binding and activity screens with purified full-length and ectodomain
+    protein, followed by cellular rescue with cavity mutants, should identify
+    the initiating activity.
+  provenance:
+  - reference_id: file:human/GLIPR1/GLIPR1-deep-research-manual.md
+    supporting_text: &gt;-
+      GLIPR1 is an extracellular-facing membrane CAP protein whose direct ligand
+      and biochemical activity are unknown.
+- gap_statement: &gt;-
+    The normal physiological context and direction of GLIPR1 action are not
+    established beyond disease-cell models.
+  boundary: &gt;-
+    Direct experiments show pro-apoptotic and antiproliferative effects in
+    prostate cancer cells but pro-migratory and pro-invasive effects in glioma
+    cells, while normal-tissue expression studies also disagree.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    Without a normal-cell context, disease phenotypes cannot be safely treated
+    as a single universal evolved core process.
+  resolution: &gt;-
+    Conditional loss-of-function and endogenous rescue across primary human
+    epithelial, immune, and neural-lineage systems should reveal which outputs
+    are physiological and which are tumor-state adaptations.
+  provenance:
+  - reference_id: PMID:22025562
+    supporting_text: &gt;-
+      In contrast to GLIPR1&#39;s tumor suppressor activities in PCa, in
+      glioblastomas, GLIPR1 was upregulated and promoted cell growth, survival,
+      and invasion, suggesting a context-specific role for GLIPR1 in malignant growth
+    reference_section_type: INTRODUCTION
+- gap_statement: &gt;-
+    The topology and trafficking step that permit GLIPR1 to regulate cytosolic
+    N-WASP, hnRNPK, Hsc70, and CK1alpha are unknown.
+  boundary: &gt;-
+    Canonical GLIPR1 has a large extracellular CAP domain, a C-terminal
+    transmembrane helix, and a very short cytoplasmic tail, while soluble
+    ectodomain can be internalized and full-length constructs yield cytosolic
+    interaction phenotypes.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: &gt;-
+    This mechanistic gap determines whether the reported partners are contacted
+    at the cell surface, after cleavage/internalization, or indirectly.
+  resolution: &gt;-
+    Endogenous topology mapping, pulse-chase shedding/internalization assays,
+    compartment-resolved proximity labeling, and tail/cleavage mutants should
+    establish the causal trafficking route.
+  provenance:
+  - reference_id: PMID:26305187
+    supporting_text: &gt;-
+      RTVP-1 and N-WASP showed FRET efficiency of 33.43 + 2.72%, suggesting a
+      direct interaction of these two proteins in glioma cells.
+    reference_section_type: RESULTS
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,3529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACMSD - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ACMSD</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q8TDX5" target="_blank" class="term-link">
+                        Q8TDX5
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ACMSD";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q8TDX5" data-a="DESCRIPTION: ACMSD encodes 2-amino-3-carboxymuconate-6-semialde..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ACMSD encodes 2-amino-3-carboxymuconate-6-semialdehyde decarboxylase (also known as alpha-amino-beta-carboxymuconate-epsilon-semialdehyde decarboxylase or picolinate carboxylase; EC 4.1.1.45), a zinc-dependent enzyme of the amidohydrolase (metallo-dependent hydrolase) superfamily that sits at the key branch point of the kynurenine pathway of tryptophan catabolism. It decarboxylates the unstable intermediate 2-amino-3-carboxymuconate-6-semialdehyde (ACMS) to 2-aminomuconate-6-semialdehyde (AMS), releasing CO2. By consuming ACMS enzymatically, ACMSD diverts flux away from the spontaneous cyclisation of ACMS to quinolinate - and thus away from de novo NAD+ biosynthesis and from picolinate formation - and toward complete oxidation of the carbon skeleton via 2-aminomuconate to acetyl-CoA and the citric acid cycle. ACMSD activity therefore sets the balance between NAD+ synthesis, picolinic acid production, and full tryptophan oxidation, and limits accumulation of quinolinate, a potent endogenous NMDA-receptor excitotoxin. The enzyme acts in the cytosol and is most highly expressed in liver and kidney. Because inhibiting ACMSD raises cellular NAD+, it is an actively pursued small-molecule drug target.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019748" target="_blank" class="term-link">
+                                    GO:0019748
+                                </a>
+                            </span>
+                            <span class="term-label">secondary metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TDX5" data-a="GO:0019748" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ACMSD acts in tryptophan/NAD central (primary) metabolism, not secondary metabolism; this phylogenetic inference is a misleading over-annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The kynurenine pathway of tryptophan catabolism and NAD/picolinate homeostasis is primary intermediary metabolism, not secondary metabolism. The specific and correct biological-process terms for ACMSD (L-tryptophan catabolic process, negative regulation of quinolinate biosynthesis, regulation of de novo NAD biosynthesis from L-tryptophan) already capture the biology, so this broad IBA term adds nothing and mischaracterizes the pathway. Retained (not removed) per policy for phylogenetic annotations, but flagged as an over-annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TDX5" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but general; the IDA-supported cytosol annotation is the informative location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cytoplasm is a correct but non-specific parent of cytosol. ACMSD is experimentally localized to the cytosol (GO:0005829, IDA, PMID:12140278), so this broader IBA term is redundant and is kept only as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TDX5" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol is the correct site of action and is independently supported by IDA; accept as core location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This phylogenetic cytosol annotation agrees with the experimental IDA cytosol annotation (PMID:12140278). ACMSD is a soluble cytosolic enzyme, consistent with its role in hepatic cytosolic tryptophan/kynurenine metabolism.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001760" target="_blank" class="term-link">
+                                    GO:0001760
+                                </a>
+                            </span>
+                            <span class="term-label">aminocarboxymuconate-semialdehyde decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TDX5" data-a="GO:0001760" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core molecular function (EC 4.1.1.45), electronically inferred and independently supported by multiple IDA annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the defining catalytic activity of ACMSD, matching the UniProt catalytic activity and EC 4.1.1.45. It is redundant with the IDA-supported annotations of the same term but is a correct electronic inference.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACMSD/ACMSD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Converts alpha-amino-beta-carboxymuconate-epsilon-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TDX5" data-a="GO:0016787" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Fold-based InterPro inference; ACMSD is mechanistically a decarboxylase (lyase), not a hydrolase. Modify to the correct carboxy-lyase parent.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This IEA derives from the amidohydrolase-related domain (InterPro IPR006680) that defines the metallo-dependent hydrolase superfamily fold, not from the catalyzed reaction. ACMSD catalyzes a decarboxylation (EC 4.1.1.45, a lyase reaction), releasing CO2, and does not hydrolyze a bond. The zinc ion serves the decarboxylation chemistry. The correct general activity term is carboxy-lyase activity.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016831" target="_blank" class="term-link">
+                                    carboxy-lyase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACMSD/ACMSD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">aminomuconate 6-semialdehyde + CO2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016831" target="_blank" class="term-link">
+                                    GO:0016831
+                                </a>
+                            </span>
+                            <span class="term-label">carboxy-lyase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TDX5" data-a="GO:0016831" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct general activity class (parent of the specific decarboxylase MF); redundant with the specific term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Carboxy-lyase activity is a correct but general parent of the specific and better-supported aminocarboxymuconate-semialdehyde decarboxylase activity (GO:0001760). It is not wrong, but is subsumed by the specific term and adds no information, so it is flagged as over-annotated rather than retained as core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TDX5" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein-binding IPI from a proteome-scale interactome screen; uninformative for molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This annotation comes from a high-throughput proteome-scale interactome map (an IntAct Y2H interaction with MAGEA11/P43364-2) with no ACMSD-specific functional characterization. Bare protein binding does not describe the enzyme&#39;s actual function and no biologically meaningful complex is defined. Retained per policy for IPI annotations but flagged as an over-annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006569" target="_blank" class="term-link">
+                                    GO:0006569
+                                </a>
+                            </span>
+                            <span class="term-label">L-tryptophan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TDX5" data-a="GO:0006569" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core biological process; ACMSD is a committed step in the kynurenine pathway of tryptophan catabolism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ACMSD acts on ACMS, an intermediate of the kynurenine pathway that catabolizes tryptophan, determining whether the carbon skeleton is fully oxidized or diverted to quinolinate/NAD or picolinate. This electronic annotation agrees with the TAS annotations of the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACMSD/ACMSD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">ultimately controls the metabolic fate of tryptophan catabolism along</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1904985" target="_blank" class="term-link">
+                                    GO:1904985
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of quinolinate biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12140278" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12140278
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification and expression of a cDNA encoding human alpha...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TDX5" data-a="GO:1904985" data-r="PMID:12140278" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core physiological consequence of the reaction: consuming ACMS diverts it from spontaneous cyclisation to quinolinate. Well supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ACMS is non-enzymatically converted to quinolinate; ACMSD is the only known enzyme that processes ACMS to a benign catabolite, thereby preventing quinolinate accumulation. This is the defining regulatory role of the enzyme at the kynurenine branch point.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12140278" target="_blank" class="term-link">
+                                        PMID:12140278
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the only known enzyme that can process ACMS to a benign catabolite and thus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001760" target="_blank" class="term-link">
+                                    GO:0001760
+                                </a>
+                            </span>
+                            <span class="term-label">aminocarboxymuconate-semialdehyde decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25392945" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25392945
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human α-amino-β-carboxymuconate-ε-semialdehyde decarboxylase...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TDX5" data-a="GO:0001760" data-r="PMID:25392945" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay of the recombinant human enzyme confirms the core catalytic activity (EC 4.1.1.45).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Recombinant human ACMSD expressed in E. coli was shown to be a catalytically active decarboxylase with steady-state kinetics (Km 5.8 uM, kcat ~7.5 s-1 for the Zn form), confirming this molecular function directly.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25392945" target="_blank" class="term-link">
+                                        PMID:25392945
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The Km (5.8 μM) and the kcat (7.5 s−1) values of hACMSD</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25392945" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25392945
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human α-amino-β-carboxymuconate-ε-semialdehyde decarboxylase...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TDX5" data-a="GO:0008270" data-r="PMID:25392945" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core catalytic cofactor binding; enzyme activity is proportional to zinc content and ACMSD is a zinc-dependent metalloenzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Metal analysis and activity assays showed that hACMSD activity is proportional to bound zinc and that the enzyme is a zinc-dependent metalloenzyme, consistent with the structurally defined His6/His8/His174/Asp291 zinc site. Zinc binding is essential to the decarboxylase mechanism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25392945" target="_blank" class="term-link">
+                                        PMID:25392945
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the activity of hACMSD is proportional to the zinc content of the enzyme</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25392945" target="_blank" class="term-link">
+                                        PMID:25392945
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">hACMSD is a zinc-dependent metalloenzyme</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905012" target="_blank" class="term-link">
+                                    GO:1905012
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of &#39;de novo&#39; NAD biosynthetic process from L-tryptophan</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12140278" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12140278
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification and expression of a cDNA encoding human alpha...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TDX5" data-a="GO:1905012" data-r="PMID:12140278" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core regulatory role: by controlling quinolinate supply, ACMSD sets the rate of de novo NAD synthesis from tryptophan.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Quinolinate is the universal precursor of de novo NAD biosynthesis. Because ACMSD consumes the quinolinate precursor ACMS, its activity governs how much tryptophan flux reaches NAD, making it a physiological regulator of de novo NAD synthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACMSD/ACMSD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">a key precursor of NAD</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905012" target="_blank" class="term-link">
+                                    GO:1905012
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of &#39;de novo&#39; NAD biosynthetic process from L-tryptophan</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19843166" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19843166
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The crystal structure of human alpha-amino-beta-carboxymucon...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TDX5" data-a="GO:1905012" data-r="PMID:19843166" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate of the core NAD-regulation annotation, supported by the structural/branch-point study; accept.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The crystal-structure study frames ACMSD at the branch point of the tryptophan-to-NAD pathway determining the amino acid&#39;s fate (PA, complete oxidation, or NAD via QA), directly supporting its role in regulating de novo NAD biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19843166" target="_blank" class="term-link">
+                                        PMID:19843166
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">branch point of the tryptophan to NAD pathway, and determines the final fate of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905004" target="_blank" class="term-link">
+                                    GO:1905004
+                                </a>
+                            </span>
+                            <span class="term-label">picolinic acid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19843166" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19843166
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The crystal structure of human alpha-amino-beta-carboxymucon...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TDX5" data-a="GO:1905004" data-r="PMID:19843166" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ACMSD acts upstream of picolinate formation but does not itself synthesize picolinate; keep as non-core pathway context.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The AMS product of ACMSD can cyclise to picolinic acid, so ACMSD influences picolinate production, and the branch-point study lists transformation into PA as one fate the enzyme controls. However, ACMSD does not directly catalyze picolinate biosynthesis; picolinate forms from the AMS product. This is a downstream pathway consequence rather than a core ACMSD function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19843166" target="_blank" class="term-link">
+                                        PMID:19843166
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">(ACMSD) is a zinc-dependent amidohydrolase that participates in picolinic acid</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006569" target="_blank" class="term-link">
+                                    GO:0006569
+                                </a>
+                            </span>
+                            <span class="term-label">L-tryptophan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12140278" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12140278
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification and expression of a cDNA encoding human alpha...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TDX5" data-a="GO:0006569" data-r="PMID:12140278" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core kynurenine-pathway biological process; author-narrative supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ACMSD ultimately controls the metabolic fate of tryptophan catabolism along the kynurenine pathway, placing it squarely in L-tryptophan catabolism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACMSD/ACMSD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">ultimately controls the metabolic fate of tryptophan catabolism along</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006569" target="_blank" class="term-link">
+                                    GO:0006569
+                                </a>
+                            </span>
+                            <span class="term-label">L-tryptophan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19843166" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19843166
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The crystal structure of human alpha-amino-beta-carboxymucon...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TDX5" data-a="GO:0006569" data-r="PMID:19843166" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate core tryptophan-catabolism annotation from the branch-point study; accept.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The structural study explicitly places ACMSD at the branch point of the tryptophan to NAD pathway, determining the final fate of the amino acid, which is a tryptophan catabolic role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19843166" target="_blank" class="term-link">
+                                        PMID:19843166
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">branch point of the tryptophan to NAD pathway, and determines the final fate of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19843166" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19843166
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The crystal structure of human alpha-amino-beta-carboxymucon...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TDX5" data-a="GO:0008270" data-r="PMID:19843166" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Structurally defined zinc site (His6/His8/His174/Asp291); core catalytic cofactor binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The crystal structure of human ACMSD defines the zinc-binding site and describes the enzyme as a zinc-dependent amidohydrolase, with a catalytically essential zinc ion. Zinc binding is a core molecular function of the enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19843166" target="_blank" class="term-link">
+                                        PMID:19843166
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">(ACMSD) is a zinc-dependent amidohydrolase that participates in picolinic acid</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12140278" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12140278
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification and expression of a cDNA encoding human alpha...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TDX5" data-a="GO:0005829" data-r="PMID:12140278" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally supported core location; ACMSD is a soluble cytosolic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental localization to the cytosol, consistent with the enzyme&#39;s role in cytosolic hepatic/renal tryptophan-kynurenine metabolism and with the IBA cytosol annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001760" target="_blank" class="term-link">
+                                    GO:0001760
+                                </a>
+                            </span>
+                            <span class="term-label">aminocarboxymuconate-semialdehyde decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12140278" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12140278
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification and expression of a cDNA encoding human alpha...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TDX5" data-a="GO:0001760" data-r="PMID:12140278" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Original identification and direct enzymatic characterization of human ACMSD; core catalytic function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Fukuoka et al. cloned human ACMSD and demonstrated its catalytic activity, converting ACMS to the benign catabolite AMS. This is the founding experimental evidence for the enzyme&#39;s core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12140278" target="_blank" class="term-link">
+                                        PMID:12140278
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the only known enzyme that can process ACMS to a benign catabolite and thus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Zinc-dependent decarboxylation of the kynurenine-pathway intermediate 2-amino-3-carboxymuconate-6-semialdehyde (ACMS) to 2-aminomuconate-6-semialdehyde plus CO2 (EC 4.1.1.45), the committed branch-point reaction of tryptophan catabolism. By consuming ACMS, ACMSD diverts flux away from the spontaneous cyclisation of ACMS to quinolinate, thereby negatively regulating quinolinate biosynthesis and de novo NAD+ synthesis and directing the carbon skeleton toward complete oxidation.</h3>
+                <span class="vote-buttons" data-g="Q8TDX5" data-a="FUNCTION: Zinc-dependent decarboxylation of the kynurenine-p..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001760" target="_blank" class="term-link">
+                            aminocarboxymuconate-semialdehyde decarboxylase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006569" target="_blank" class="term-link">
+                                L-tryptophan catabolic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1904985" target="_blank" class="term-link">
+                                negative regulation of quinolinate biosynthetic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905012" target="_blank" class="term-link">
+                                regulation of &#39;de novo&#39; NAD biosynthetic process from L-tryptophan
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12140278" target="_blank" class="term-link">
+                                PMID:12140278
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the only known enzyme that can process ACMS to a benign catabolite and thus</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25392945" target="_blank" class="term-link">
+                                PMID:25392945
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the activity of hACMSD is proportional to the zinc content of the enzyme</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19843166" target="_blank" class="term-link">
+                                PMID:19843166
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">branch point of the tryptophan to NAD pathway, and determines the final fate of</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binding of the catalytically essential zinc ion (structurally defined His6/His8/His174/Asp291 site) required for the decarboxylase activity; ACMSD is a zinc-dependent metalloenzyme of the amidohydrolase superfamily.</h3>
+                <span class="vote-buttons" data-g="Q8TDX5" data-a="FUNCTION: Binding of the catalytically essential zinc ion (s..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                            zinc ion binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25392945" target="_blank" class="term-link">
+                                PMID:25392945
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">hACMSD is a zinc-dependent metalloenzyme</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19843166" target="_blank" class="term-link">
+                                PMID:19843166
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">(ACMSD) is a zinc-dependent amidohydrolase that participates in picolinic acid</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12140278" target="_blank" class="term-link">
+                            PMID:12140278
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification and expression of a cDNA encoding human alpha-amino-beta-carboxymuconate-epsilon-semialdehyde decarboxylase (ACMSD). A key enzyme for the tryptophan-niacine pathway and &#34;quinolinate hypothesis&#34;.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19843166" target="_blank" class="term-link">
+                            PMID:19843166
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The crystal structure of human alpha-amino-beta-carboxymuconate-epsilon-semialdehyde decarboxylase in complex with 1,3-dihydroxyacetonephosphate suggests a regulatory link between NAD synthesis and glycolysis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25392945" target="_blank" class="term-link">
+                            PMID:25392945
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Human α-amino-β-carboxymuconate-ε-semialdehyde decarboxylase (ACMSD): a structural and mechanistic unveiling.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ACMSD-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8TDX5" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="acmsd-human-gene-review-notes">ACMSD (human) — gene review notes</h1>
+<p>UniProt: Q8TDX5 (ACMSD_HUMAN), 336 aa, chromosome 2. HGNC:19288. EC 4.1.1.45.</p>
+<h2 id="identity-naming">Identity / naming</h2>
+<ul>
+<li>RecName: <strong>2-amino-3-carboxymuconate-6-semialdehyde decarboxylase</strong>; EC 4.1.1.45; AltName <strong>Picolinate carboxylase</strong><br />
+  [file:human/ACMSD/ACMSD-uniprot.txt "RecName: Full=2-amino-3-carboxymuconate-6-semialdehyde decarboxylase"; "AltName: Full=Picolinate carboxylase"].</li>
+<li>Classic biochemical name: alpha-amino-beta-carboxymuconate-epsilon-semialdehyde decarboxylase (ACMSD).</li>
+</ul>
+<h2 id="core-catalytic-function">Core catalytic function</h2>
+<ul>
+<li>Converts alpha-amino-beta-carboxymuconate-epsilon-semialdehyde (ACMS) to alpha-aminomuconate<br />
+  semialdehyde (AMS), a benign catabolite<br />
+  [file:human/ACMSD/ACMSD-uniprot.txt "Converts alpha-amino-beta-carboxymuconate-epsilon- semialdehyde (ACMS) to alpha-aminomuconate semialdehyde (AMS)"].</li>
+<li>Reaction (Rhea:16557 / EC 4.1.1.45): (2Z,4Z)-2-amino-3-carboxymuconate 6-semialdehyde + H+ =<br />
+  2-aminomuconate 6-semialdehyde + CO2<br />
+  [file:human/ACMSD/ACMSD-uniprot.txt "Reaction=(2Z,4Z)-2-amino-3-carboxymuconate 6-semialdehyde + H(+) = 2-"].</li>
+<li>Original cDNA cloning + catalytic activity + function: Fukuoka et al. 2002 <a href="https://pubmed.ncbi.nlm.nih.gov/12140278">PMID:12140278</a>.</li>
+<li>Recombinant human enzyme kinetics (Zn form): Km 5.8 uM, kcat ~7.5 s^-1<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/25392945" title="The Km (5.8 μM) and the kcat (7.5 s−1) values of hACMSD">PMID:25392945</a>.</li>
+</ul>
+<h2 id="branch-point-pathway-role">Branch-point / pathway role</h2>
+<ul>
+<li>ACMS is unstable and non-enzymatically dehydrates to quinolinic acid (QUIN), the universal precursor<br />
+  for de novo NAD biosynthesis<br />
+  [PMID:25392945 "ACMS is unstable and non-enzymatically dehydrates to quinolinic acid (QUIN)"; "QUIN is the universal precursor for the de novo biosynthesis of NAD, providing the pyridine ring"].</li>
+<li>ACMSD is the only known enzyme that processes ACMS to a benign catabolite, preventing quinolinate<br />
+  accumulation <a href="https://pubmed.ncbi.nlm.nih.gov/12140278" title="the only known enzyme that can process ACMS to a benign catabolite and thus prevent the accumulation of quinolinate from ACMS">PMID:12140278</a>.</li>
+<li>Sits at the branch point of the tryptophan-to-NAD pathway, determining the fate of the amino acid:<br />
+  transformation into PA (picolinic acid), complete oxidation through the citric acid cycle, or<br />
+  conversion into NAD through QA synthesis<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/19843166" title="the enzyme stands at a branch point of the tryptophan to NAD pathway, and determines the final fate of the amino acid, i.e. transformation into PA, complete oxidation through the citric acid cycle, or conversion into NAD through QA synthesis">PMID:19843166</a>.</li>
+<li>ACMSD ultimately controls the metabolic fate of tryptophan catabolism along the kynurenine pathway<br />
+  [file:human/ACMSD/ACMSD-uniprot.txt "ACMSD ultimately controls the metabolic fate of tryptophan catabolism along the kynurenine pathway"].</li>
+<li>QUIN is a potent endogenous NMDA-receptor excitotoxin; its accumulation is implicated in<br />
+  neurodegenerative disease ("quinolinate hypothesis")<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/12140278" title="Quinolinate (quinolinic acid) is a potent endogenous excitotoxin of neuronal cells">PMID:12140278</a>.</li>
+</ul>
+<h2 id="metal-structure">Metal / structure</h2>
+<ul>
+<li>Zinc-dependent amidohydrolase-superfamily enzyme<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/19843166" title="a zinc-dependent amidohydrolase that participates in picolinic acid (PA), quinolinic acid (QA) and NAD homeostasis">PMID:19843166</a>.</li>
+<li>Activity is proportional to zinc content; hACMSD is a zinc-dependent metalloenzyme<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/25392945" title="the activity of hACMSD is proportional to the zinc content of the enzyme. These results suggest that hACMSD is a zinc-dependent metalloenzyme">PMID:25392945</a>.</li>
+<li>Zn-binding residues His6, His8, His174, Asp291 (UniProt BINDING features, ECO:0000269|PubMed:19843166).</li>
+<li>Belongs to the metallo-dependent hydrolases superfamily, ACMSD family<br />
+  [file:human/ACMSD/ACMSD-uniprot.txt "Belongs to the metallo-dependent hydrolases superfamily. ACMSD family."].</li>
+<li>Note: the amidohydrolase-superfamily fold explains the InterPro "hydrolase activity" IEA, but ACMSD<br />
+  is mechanistically a decarboxylase (lyase), not a hydrolase; the metal ion serves the decarboxylation<br />
+  chemistry. Substrate does NOT directly coordinate the metal; it is held by active-site arginines<br />
+  (Arg47, Arg235*) <a href="https://pubmed.ncbi.nlm.nih.gov/25392945" title="the substrate analogue does not directly coordinate to the metal ion but is bound to the active site by two arginine residues">PMID:25392945</a>.</li>
+</ul>
+<h2 id="oligomeric-state">Oligomeric state</h2>
+<ul>
+<li>UniProt: Monomer [file:human/ACMSD/ACMSD-uniprot.txt "SUBUNIT: Monomer."].</li>
+<li>Crystallography (Huo 2015): trimer of dimers in the asymmetric unit; dilution to nM loses activity,<br />
+  implying the enzyme is unlikely to be active as a monomer<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/25392945" title="hACMSD is unlikely to be active in the monomeric state">PMID:25392945</a>. So oligomeric state is<br />
+  somewhat contested between the two structural studies; not central to the review.</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Cytosol (IDA, UniProt, PMID:12140278). HPA: group enriched kidney/liver<br />
+  [file:human/ACMSD/ACMSD-uniprot.txt "Group enriched (kidney, liver)"]. Consistent with the liver/kidney<br />
+  site of hepatic tryptophan-to-NAD and picolinate metabolism.</li>
+</ul>
+<h2 id="interaction-annotation">Interaction annotation</h2>
+<ul>
+<li>GO:0005515 protein binding IPI from PMID:25416956 (Rolland et al., proteome-scale interactome map,<br />
+  IntAct with MAGEA11 / P43364-2). Large-scale Y2H screen; no ACMSD-specific functional interpretation<br />
+  in the paper. Bare "protein binding" — uninformative for MF; kept but marked over-annotated (do not<br />
+  REMOVE an IPI per policy).</li>
+</ul>
+<h2 id="drug-target-context">Drug-target context</h2>
+<ul>
+<li>DHAP (glycolytic intermediate) is a potent ACMSD inhibitor, suggesting a regulatory link between NAD<br />
+  synthesis and glycolysis <a href="https://pubmed.ncbi.nlm.nih.gov/19843166" title="DHAP, which we discovered to be a potent enzyme inhibitor">PMID:19843166</a>.</li>
+<li>ACMSD inhibition raises cellular NAD+; ACMSD is an actively pursued small-molecule drug target<br />
+  (Pharos Tchem; ChEMBL; DrugCentral). This is downstream pharmacology, not a distinct GO function.</li>
+</ul>
+<h2 id="curation-summary-of-existing-annotations">Curation summary of existing annotations</h2>
+<ul>
+<li>Core MF: <strong>GO:0001760 aminocarboxymuconate-semialdehyde decarboxylase activity</strong> — multiple IDA<br />
+  (PMID:12140278 original cloning, PMID:25392945 recombinant human enzyme). ACCEPT (core).</li>
+<li><strong>GO:0008270 zinc ion binding</strong> IDA (PMID:25392945, PMID:19843166) — ACCEPT (core; catalytically<br />
+  essential Zn). Note: PMID:19843166 defines the Zn-binding sites structurally; PMID:25392945<br />
+  demonstrates Zn-dependence biochemically.</li>
+<li><strong>GO:1904985 negative regulation of quinolinate biosynthetic process</strong> IDA (PMID:12140278) — ACCEPT;<br />
+  this is the defining physiological consequence of the reaction (diverting ACMS away from<br />
+  spontaneous cyclisation to quinolinate).</li>
+<li><strong>GO:0006569 L-tryptophan catabolic process</strong> (TAS/IEA) — ACCEPT (kynurenine-pathway BP).</li>
+<li><strong>GO:1905012 regulation of 'de novo' NAD biosynthetic process from L-tryptophan</strong> (TAS x2) — ACCEPT;<br />
+  by controlling quinolinate supply ACMSD regulates de novo NAD synthesis.</li>
+<li><strong>GO:1905004 picolinic acid biosynthetic process</strong> (TAS) — ACMS → AMS is the committed step upstream<br />
+  of picolinate formation; KEEP_AS_NON_CORE (ACMSD does not itself make picolinate; downstream product).</li>
+<li><strong>GO:0005829 cytosol</strong> IDA (PMID:12140278) + IBA — ACCEPT (core location).</li>
+<li><strong>GO:0005737 cytoplasm</strong> IBA — parent of cytosol; KEEP_AS_NON_CORE (redundant/general vs cytosol).</li>
+<li><strong>GO:0016831 carboxy-lyase activity</strong> IEA (InterPro) — correct parent class of the decarboxylase MF;<br />
+  MARK_AS_OVER_ANNOTATED (redundant general parent of GO:0001760).</li>
+<li><strong>GO:0016787 hydrolase activity</strong> IEA (InterPro, from amidohydrolase fold) — mechanistically wrong:<br />
+  ACMSD is a decarboxylase/lyase, not a hydrolase; the term derives from the fold family (IPR006680<br />
+  Amidohydro-rel), not the reaction. MODIFY → GO:0016831 carboxy-lyase activity (or REMOVE as a<br />
+  clearly-wrong fold-based IEA). Chose MODIFY to point to the correct lyase parent.</li>
+<li><strong>GO:0019748 secondary metabolic process</strong> IBA — tryptophan/NAD catabolism is primary/central<br />
+  metabolism, not secondary metabolism; misleading. MARK_AS_OVER_ANNOTATED (IBA, do not REMOVE by<br />
+  preference; the specific tryptophan-catabolism BP terms already cover the biology).</li>
+<li><strong>GO:0005515 protein binding</strong> IPI (PMID:25416956) — bare, uninformative; MARK_AS_OVER_ANNOTATED.</li>
+<li><strong>GO:0001760</strong> IEA (GO_REF:0000120, ARBA) — same MF as the IDA; ACCEPT (redundant IEA of the core MF).</li>
+</ul>
+<h2 id="core-functions-chosen">Core functions chosen</h2>
+<ol>
+<li>MF GO:0001760 aminocarboxymuconate-semialdehyde decarboxylase activity (EC 4.1.1.45), Zn-dependent<br />
+   (GO:0008270), in cytosol (GO:0005829), directly involved in L-tryptophan catabolic process<br />
+   (GO:0006569), negative regulation of quinolinate biosynthesis (GO:1904985), and regulation of de<br />
+   novo NAD biosynthesis from L-tryptophan (GO:1905012).</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q8TDX5
+gene_symbol: ACMSD
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  ACMSD encodes 2-amino-3-carboxymuconate-6-semialdehyde decarboxylase (also known as
+  alpha-amino-beta-carboxymuconate-epsilon-semialdehyde decarboxylase or picolinate carboxylase;
+  EC 4.1.1.45), a zinc-dependent enzyme of the amidohydrolase (metallo-dependent hydrolase)
+  superfamily that sits at the key branch point of the kynurenine pathway of tryptophan catabolism.
+  It decarboxylates the unstable intermediate 2-amino-3-carboxymuconate-6-semialdehyde (ACMS) to
+  2-aminomuconate-6-semialdehyde (AMS), releasing CO2. By consuming ACMS enzymatically, ACMSD
+  diverts flux away from the spontaneous cyclisation of ACMS to quinolinate - and thus away from de
+  novo NAD+ biosynthesis and from picolinate formation - and toward complete oxidation of the carbon
+  skeleton via 2-aminomuconate to acetyl-CoA and the citric acid cycle. ACMSD activity therefore
+  sets the balance between NAD+ synthesis, picolinic acid production, and full tryptophan oxidation,
+  and limits accumulation of quinolinate, a potent endogenous NMDA-receptor excitotoxin. The enzyme
+  acts in the cytosol and is most highly expressed in liver and kidney. Because inhibiting ACMSD
+  raises cellular NAD+, it is an actively pursued small-molecule drug target.
+alternative_products:
+- name: 1 {ECO:0000269|PubMed:12140278}
+  id: Q8TDX5-1
+- name: 2 {ECO:0000305}
+  id: Q8TDX5-2
+  sequence_note: VSP_050622, VSP_050623
+existing_annotations:
+- term:
+    id: GO:0019748
+    label: secondary metabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ACMSD acts in tryptophan/NAD central (primary) metabolism, not secondary metabolism; this
+      phylogenetic inference is a misleading over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The kynurenine pathway of tryptophan catabolism and NAD/picolinate homeostasis is primary
+      intermediary metabolism, not secondary metabolism. The specific and correct biological-process
+      terms for ACMSD (L-tryptophan catabolic process, negative regulation of quinolinate
+      biosynthesis, regulation of de novo NAD biosynthesis from L-tryptophan) already capture the
+      biology, so this broad IBA term adds nothing and mischaracterizes the pathway. Retained (not
+      removed) per policy for phylogenetic annotations, but flagged as an over-annotation.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Correct but general; the IDA-supported cytosol annotation is the informative location.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Cytoplasm is a correct but non-specific parent of cytosol. ACMSD is experimentally localized
+      to the cytosol (GO:0005829, IDA, PMID:12140278), so this broader IBA term is redundant and is
+      kept only as non-core.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Cytosol is the correct site of action and is independently supported by IDA; accept as core
+      location.
+    action: ACCEPT
+    reason: &gt;-
+      This phylogenetic cytosol annotation agrees with the experimental IDA cytosol annotation
+      (PMID:12140278). ACMSD is a soluble cytosolic enzyme, consistent with its role in hepatic
+      cytosolic tryptophan/kynurenine metabolism.
+- term:
+    id: GO:0001760
+    label: aminocarboxymuconate-semialdehyde decarboxylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct core molecular function (EC 4.1.1.45), electronically inferred and independently
+      supported by multiple IDA annotations.
+    action: ACCEPT
+    reason: &gt;-
+      This is the defining catalytic activity of ACMSD, matching the UniProt catalytic activity and
+      EC 4.1.1.45. It is redundant with the IDA-supported annotations of the same term but is a
+      correct electronic inference.
+    supported_by:
+    - reference_id: file:human/ACMSD/ACMSD-uniprot.txt
+      supporting_text: &gt;-
+        Converts alpha-amino-beta-carboxymuconate-epsilon-
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Fold-based InterPro inference; ACMSD is mechanistically a decarboxylase (lyase), not a
+      hydrolase. Modify to the correct carboxy-lyase parent.
+    action: MODIFY
+    reason: &gt;-
+      This IEA derives from the amidohydrolase-related domain (InterPro IPR006680) that defines the
+      metallo-dependent hydrolase superfamily fold, not from the catalyzed reaction. ACMSD catalyzes
+      a decarboxylation (EC 4.1.1.45, a lyase reaction), releasing CO2, and does not hydrolyze a
+      bond. The zinc ion serves the decarboxylation chemistry. The correct general activity term is
+      carboxy-lyase activity.
+    proposed_replacement_terms:
+    - id: GO:0016831
+      label: carboxy-lyase activity
+    supported_by:
+    - reference_id: file:human/ACMSD/ACMSD-uniprot.txt
+      supporting_text: &gt;-
+        aminomuconate 6-semialdehyde + CO2
+- term:
+    id: GO:0016831
+    label: carboxy-lyase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct general activity class (parent of the specific decarboxylase MF); redundant with the
+      specific term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Carboxy-lyase activity is a correct but general parent of the specific and better-supported
+      aminocarboxymuconate-semialdehyde decarboxylase activity (GO:0001760). It is not wrong, but is
+      subsumed by the specific term and adds no information, so it is flagged as over-annotated
+      rather than retained as core.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein-binding IPI from a proteome-scale interactome screen; uninformative for
+      molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This annotation comes from a high-throughput proteome-scale interactome map (an IntAct Y2H
+      interaction with MAGEA11/P43364-2) with no ACMSD-specific functional characterization. Bare
+      protein binding does not describe the enzyme&#39;s actual function and no biologically meaningful
+      complex is defined. Retained per policy for IPI annotations but flagged as an over-annotation.
+- term:
+    id: GO:0006569
+    label: L-tryptophan catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Correct core biological process; ACMSD is a committed step in the kynurenine pathway of
+      tryptophan catabolism.
+    action: ACCEPT
+    reason: &gt;-
+      ACMSD acts on ACMS, an intermediate of the kynurenine pathway that catabolizes tryptophan,
+      determining whether the carbon skeleton is fully oxidized or diverted to quinolinate/NAD or
+      picolinate. This electronic annotation agrees with the TAS annotations of the same term.
+    supported_by:
+    - reference_id: file:human/ACMSD/ACMSD-uniprot.txt
+      supporting_text: &gt;-
+        ultimately controls the metabolic fate of tryptophan catabolism along
+- term:
+    id: GO:1904985
+    label: negative regulation of quinolinate biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:12140278
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core physiological consequence of the reaction: consuming ACMS diverts it from spontaneous
+      cyclisation to quinolinate. Well supported.
+    action: ACCEPT
+    reason: &gt;-
+      ACMS is non-enzymatically converted to quinolinate; ACMSD is the only known enzyme that
+      processes ACMS to a benign catabolite, thereby preventing quinolinate accumulation. This is
+      the defining regulatory role of the enzyme at the kynurenine branch point.
+    supported_by:
+    - reference_id: PMID:12140278
+      supporting_text: &gt;-
+        the only known enzyme that can process ACMS to a benign catabolite and thus
+- term:
+    id: GO:0001760
+    label: aminocarboxymuconate-semialdehyde decarboxylase activity
+  evidence_type: IDA
+  original_reference_id: PMID:25392945
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay of the recombinant human enzyme confirms the core catalytic activity (EC
+      4.1.1.45).
+    action: ACCEPT
+    reason: &gt;-
+      Recombinant human ACMSD expressed in E. coli was shown to be a catalytically active
+      decarboxylase with steady-state kinetics (Km 5.8 uM, kcat ~7.5 s-1 for the Zn form),
+      confirming this molecular function directly.
+    supported_by:
+    - reference_id: PMID:25392945
+      supporting_text: &gt;-
+        The Km (5.8 μM) and the kcat (7.5 s−1) values of hACMSD
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IDA
+  original_reference_id: PMID:25392945
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core catalytic cofactor binding; enzyme activity is proportional to zinc content and ACMSD is
+      a zinc-dependent metalloenzyme.
+    action: ACCEPT
+    reason: &gt;-
+      Metal analysis and activity assays showed that hACMSD activity is proportional to bound zinc
+      and that the enzyme is a zinc-dependent metalloenzyme, consistent with the structurally defined
+      His6/His8/His174/Asp291 zinc site. Zinc binding is essential to the decarboxylase mechanism.
+    supported_by:
+    - reference_id: PMID:25392945
+      supporting_text: &gt;-
+        the activity of hACMSD is proportional to the zinc content of the enzyme
+    - reference_id: PMID:25392945
+      supporting_text: &gt;-
+        hACMSD is a zinc-dependent metalloenzyme
+- term:
+    id: GO:1905012
+    label: regulation of &#39;de novo&#39; NAD biosynthetic process from L-tryptophan
+  evidence_type: TAS
+  original_reference_id: PMID:12140278
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core regulatory role: by controlling quinolinate supply, ACMSD sets the rate of de novo NAD
+      synthesis from tryptophan.
+    action: ACCEPT
+    reason: &gt;-
+      Quinolinate is the universal precursor of de novo NAD biosynthesis. Because ACMSD consumes the
+      quinolinate precursor ACMS, its activity governs how much tryptophan flux reaches NAD, making
+      it a physiological regulator of de novo NAD synthesis.
+    supported_by:
+    - reference_id: file:human/ACMSD/ACMSD-uniprot.txt
+      supporting_text: &gt;-
+        a key precursor of NAD
+- term:
+    id: GO:1905012
+    label: regulation of &#39;de novo&#39; NAD biosynthetic process from L-tryptophan
+  evidence_type: TAS
+  original_reference_id: PMID:19843166
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Duplicate of the core NAD-regulation annotation, supported by the structural/branch-point
+      study; accept.
+    action: ACCEPT
+    reason: &gt;-
+      The crystal-structure study frames ACMSD at the branch point of the tryptophan-to-NAD pathway
+      determining the amino acid&#39;s fate (PA, complete oxidation, or NAD via QA), directly supporting
+      its role in regulating de novo NAD biosynthesis.
+    supported_by:
+    - reference_id: PMID:19843166
+      supporting_text: &gt;-
+        branch point of the tryptophan to NAD pathway, and determines the final fate of
+- term:
+    id: GO:1905004
+    label: picolinic acid biosynthetic process
+  evidence_type: TAS
+  original_reference_id: PMID:19843166
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ACMSD acts upstream of picolinate formation but does not itself synthesize picolinate; keep as
+      non-core pathway context.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The AMS product of ACMSD can cyclise to picolinic acid, so ACMSD influences picolinate
+      production, and the branch-point study lists transformation into PA as one fate the enzyme
+      controls. However, ACMSD does not directly catalyze picolinate biosynthesis; picolinate forms
+      from the AMS product. This is a downstream pathway consequence rather than a core ACMSD
+      function.
+    supported_by:
+    - reference_id: PMID:19843166
+      supporting_text: &gt;-
+        (ACMSD) is a zinc-dependent amidohydrolase that participates in picolinic acid
+- term:
+    id: GO:0006569
+    label: L-tryptophan catabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:12140278
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core kynurenine-pathway biological process; author-narrative supported.
+    action: ACCEPT
+    reason: &gt;-
+      ACMSD ultimately controls the metabolic fate of tryptophan catabolism along the kynurenine
+      pathway, placing it squarely in L-tryptophan catabolism.
+    supported_by:
+    - reference_id: file:human/ACMSD/ACMSD-uniprot.txt
+      supporting_text: &gt;-
+        ultimately controls the metabolic fate of tryptophan catabolism along
+- term:
+    id: GO:0006569
+    label: L-tryptophan catabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:19843166
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Duplicate core tryptophan-catabolism annotation from the branch-point study; accept.
+    action: ACCEPT
+    reason: &gt;-
+      The structural study explicitly places ACMSD at the branch point of the tryptophan to NAD
+      pathway, determining the final fate of the amino acid, which is a tryptophan catabolic role.
+    supported_by:
+    - reference_id: PMID:19843166
+      supporting_text: &gt;-
+        branch point of the tryptophan to NAD pathway, and determines the final fate of
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IDA
+  original_reference_id: PMID:19843166
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Structurally defined zinc site (His6/His8/His174/Asp291); core catalytic cofactor binding.
+    action: ACCEPT
+    reason: &gt;-
+      The crystal structure of human ACMSD defines the zinc-binding site and describes the enzyme as
+      a zinc-dependent amidohydrolase, with a catalytically essential zinc ion. Zinc binding is a
+      core molecular function of the enzyme.
+    supported_by:
+    - reference_id: PMID:19843166
+      supporting_text: &gt;-
+        (ACMSD) is a zinc-dependent amidohydrolase that participates in picolinic acid
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: PMID:12140278
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Experimentally supported core location; ACMSD is a soluble cytosolic enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental localization to the cytosol, consistent with the enzyme&#39;s role in cytosolic
+      hepatic/renal tryptophan-kynurenine metabolism and with the IBA cytosol annotation.
+- term:
+    id: GO:0001760
+    label: aminocarboxymuconate-semialdehyde decarboxylase activity
+  evidence_type: IDA
+  original_reference_id: PMID:12140278
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Original identification and direct enzymatic characterization of human ACMSD; core catalytic
+      function.
+    action: ACCEPT
+    reason: &gt;-
+      Fukuoka et al. cloned human ACMSD and demonstrated its catalytic activity, converting ACMS to
+      the benign catabolite AMS. This is the founding experimental evidence for the enzyme&#39;s core
+      molecular function.
+    supported_by:
+    - reference_id: PMID:12140278
+      supporting_text: &gt;-
+        the only known enzyme that can process ACMS to a benign catabolite and thus
+core_functions:
+- description: &gt;-
+    Zinc-dependent decarboxylation of the kynurenine-pathway intermediate
+    2-amino-3-carboxymuconate-6-semialdehyde (ACMS) to 2-aminomuconate-6-semialdehyde plus CO2 (EC
+    4.1.1.45), the committed branch-point reaction of tryptophan catabolism. By consuming ACMS, ACMSD
+    diverts flux away from the spontaneous cyclisation of ACMS to quinolinate, thereby negatively
+    regulating quinolinate biosynthesis and de novo NAD+ synthesis and directing the carbon skeleton
+    toward complete oxidation.
+  molecular_function:
+    id: GO:0001760
+    label: aminocarboxymuconate-semialdehyde decarboxylase activity
+  directly_involved_in:
+  - id: GO:0006569
+    label: L-tryptophan catabolic process
+  - id: GO:1904985
+    label: negative regulation of quinolinate biosynthetic process
+  - id: GO:1905012
+    label: regulation of &#39;de novo&#39; NAD biosynthetic process from L-tryptophan
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:12140278
+    supporting_text: &gt;-
+      the only known enzyme that can process ACMS to a benign catabolite and thus
+  - reference_id: PMID:25392945
+    supporting_text: &gt;-
+      the activity of hACMSD is proportional to the zinc content of the enzyme
+  - reference_id: PMID:19843166
+    supporting_text: &gt;-
+      branch point of the tryptophan to NAD pathway, and determines the final fate of
+- description: &gt;-
+    Binding of the catalytically essential zinc ion (structurally defined His6/His8/His174/Asp291
+    site) required for the decarboxylase activity; ACMSD is a zinc-dependent metalloenzyme of the
+    amidohydrolase superfamily.
+  molecular_function:
+    id: GO:0008270
+    label: zinc ion binding
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:25392945
+    supporting_text: &gt;-
+      hACMSD is a zinc-dependent metalloenzyme
+  - reference_id: PMID:19843166
+    supporting_text: &gt;-
+      (ACMSD) is a zinc-dependent amidohydrolase that participates in picolinic acid
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12140278
+  title: Identification and expression of a cDNA encoding human alpha-amino-beta-carboxymuconate-epsilon-semialdehyde
+    decarboxylase (ACMSD). A key enzyme for the tryptophan-niacine pathway and &#34;quinolinate
+    hypothesis&#34;.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Original cloning and enzymatic characterization of human ACMSD (Fukuoka et al. 2002).
+      PubMed-verified; abstract-only in cache but establishes the core catalytic activity, cytosolic
+      localization, and the quinolinate-regulation role. Directly supports the IDA/TAS annotations
+      attributed to it.
+- id: PMID:19843166
+  title: The crystal structure of human alpha-amino-beta-carboxymuconate-epsilon-semialdehyde
+    decarboxylase in complex with 1,3-dihydroxyacetonephosphate suggests a regulatory
+    link between NAD synthesis and glycolysis.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Crystal structure of human ACMSD defining the zinc site and framing the enzyme at the
+      tryptophan-to-NAD branch point (Garavaglia et al. 2009). PubMed-verified; abstract-only in
+      cache but supports zinc binding, branch-point BP roles, and picolinate/NAD context.
+- id: PMID:25392945
+  title: &#39;Human α-amino-β-carboxymuconate-ε-semialdehyde decarboxylase (ACMSD): a
+    structural and mechanistic unveiling.&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full-text available. Recombinant human ACMSD expressed in E. coli; demonstrates zinc-dependence
+      (activity proportional to zinc content), steady-state kinetics (Km 5.8 uM, kcat ~7.5 s-1), the
+      1.99 A native structure, and that substrate is held by active-site arginines rather than
+      coordinating the metal. Directly supports the IDA catalytic-activity and zinc-binding
+      annotations.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Proteome-scale interactome (Rolland et al. 2014). Source of a high-throughput IntAct
+      protein-binding IPI (with MAGEA11); no ACMSD-specific functional interpretation. Correctly
+      cited but provides only a bare, uninformative interaction, hence the over-annotation call.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

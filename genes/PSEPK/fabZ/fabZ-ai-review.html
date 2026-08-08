@@ -1,0 +1,2257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fabZ - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>fabZ</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88MG9" target="_blank" class="term-link">
+                        Q88MG9
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "fabZ";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88MG9" data-a="DESCRIPTION: FabZ is the broad-chain-range cytoplasmic (3R)-hyd..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>FabZ is the broad-chain-range cytoplasmic (3R)-hydroxyacyl-ACP dehydratase of Pseudomonas putida KT2440. It converts hydroxyacyl-ACP intermediates to trans-2-enoyl-ACP during type-II fatty-acid elongation and helps partition hydroxyacyl-ACP pools between phospholipid/fatty-acid synthesis and lipid A precursor production.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MG9" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct localization from the reviewed UniProt record.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reviewed UniProt places FabZ in the cytoplasm.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fabZ/fabZ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006633" target="_blank" class="term-link">
+                                    GO:0006633
+                                </a>
+                            </span>
+                            <span class="term-label">fatty acid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MG9" data-a="GO:0006633" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core pathway assignment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> FabZ dehydrates FAS-II hydroxyacyl-ACP intermediates.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fabZ/fabZ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">the dehydration of short chain beta-hydroxyacyl-ACPs and long chain</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009245" target="_blank" class="term-link">
+                                    GO:0009245
+                                </a>
+                            </span>
+                            <span class="term-label">lipid A biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MG9" data-a="GO:0009245" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Valid secondary pathway assignment for hydroxyacyl-ACP pool control.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> FabZ activity affects the hydroxyacyl-ACP substrates used in lipid A biosynthesis, but its central catalytic role is the general FAS-II dehydration reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016836" target="_blank" class="term-link">
+                                    GO:0016836
+                                </a>
+                            </span>
+                            <span class="term-label">hydro-lyase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MG9" data-a="GO:0016836" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct parent activity but redundant with the ACP-specific term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The substrate-specific (3R)-hydroxyacyl-ACP dehydratase term is available.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019171" target="_blank" class="term-link">
+                                    GO:0019171
+                                </a>
+                            </span>
+                            <span class="term-label">(3R)-hydroxyacyl-[acyl-carrier-protein] dehydratase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MG9" data-a="GO:0019171" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Exact core molecular function for FabZ.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reviewed UniProt records dehydration to a trans-2-enoyl-ACP product.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fabZ/fabZ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=a (3R)-hydroxyacyl-[ACP] = a (2E)-enoyl-[ACP] + H2O;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Dehydrates (3R)-hydroxyacyl-ACP intermediates to trans-2-enoyl-ACP during type-II fatty-acid elongation.</h3>
+                <span class="vote-buttons" data-g="Q88MG9" data-a="FUNCTION: Dehydrates (3R)-hydroxyacyl-ACP intermediates to t..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019171" target="_blank" class="term-link">
+                            (3R)-hydroxyacyl-[acyl-carrier-protein] dehydratase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006633" target="_blank" class="term-link">
+                                fatty acid biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/fabZ/fabZ-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=a (3R)-hydroxyacyl-[ACP] = a (2E)-enoyl-[ACP] + H2O;</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/fabZ/fabZ-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">FabZ (Q88MG9, PP_1602) is the (3R)-hydroxyacyl-[acyl-carrier-protein] dehydratase (EC 4.2.1.59) that catalyzes the third, dehydration step of every elongation cycle in the bacterial type II fatty acid synthase (FAS-II) system of *Pseudomonas putida* KT2440.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/fabZ/fabZ-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88MG9 for Pseudomonas putida KT2440 fabZ</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reviewed UniProt records the FabZ hydroxyacyl-ACP dehydration reaction.</div>
+
+                        <div class="finding-text">"Reaction=a (3R)-hydroxyacyl-[ACP] = a (2E)-enoyl-[ACP] + H2O;"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt describes broad FabZ hydroxyacyl-ACP chain-length use.</div>
+
+                        <div class="finding-text">"the dehydration of short chain beta-hydroxyacyl-ACPs and long chain"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/fabZ/fabZ-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research for PSEPK fabZ</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report independently supports the core FabZ dehydration step.</div>
+
+                        <div class="finding-text">"FabZ (Q88MG9, PP_1602) is the (3R)-hydroxyacyl-[acyl-carrier-protein] dehydratase (EC 4.2.1.59) that catalyzes the third, dehydration step of every elongation cycle in the bacterial type II fatty acid synthase (FAS-II) system of *Pseudomonas putida* KT2440."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">No direct biochemical or structural study of Q88MG9 was found.</div>
+
+                        <div class="finding-text">"The *P. putida* KT2440 FabZ has not been purified, assayed, or crystallized."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does FabZ substrate use partition hydroxyacyl-ACP between membrane fatty acids and lipid A?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88MG9" data-a="Q: How does FabZ substrate use partition hydroxyacyl-..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Quantify acyl-ACP and lipid A species after graded FabZ depletion and compare rescue by FabA.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88MG9" data-a="EXPERIMENT: Quantify acyl-ACP and lipid A species after graded..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(fabZ-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88MG9" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: FabZ (3-hydroxyacyl-[acyl-carrier-protein] dehydratase) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">14 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-23T11:31:37.667924</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="fabZ-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="fabZ-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-fabz-3-hydroxyacyl-acyl-carrier-protein-dehydratase-in-pseudomonas-putida-kt2440">Functional Annotation Report: FabZ (3-hydroxyacyl-[acyl-carrier-protein] dehydratase) in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>UniProt:</strong> Q88MG9 · <strong>Gene:</strong> <em>fabZ</em> (PP_1602) · <strong>EC:</strong> 4.2.1.59 · <strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / KT2440)</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p><strong>FabZ (Q88MG9, PP_1602) is the (3R)-hydroxyacyl-[acyl-carrier-protein] dehydratase (EC 4.2.1.59) that catalyzes the third, dehydration step of every elongation cycle in the bacterial type II fatty acid synthase (FAS-II) system of <em>Pseudomonas putida</em> KT2440.</strong> In each turn of the elongation cycle, FabZ removes water from a (3R)-β-hydroxyacyl-ACP intermediate to produce a <em>trans</em>-2-enoyl-ACP, which is then reduced by FabI to complete the two-carbon chain extension. Unlike its paralog FabA, FabZ is a <em>general</em> elongation dehydratase that acts on acyl-ACP substrates across a broad range of chain lengths but <strong>lacks the <em>trans</em>-2 → <em>cis</em>-3 isomerase activity</strong> that commits carbon flux to anaerobic unsaturated fatty acid (UFA) synthesis. This division of labor is confirmed in <em>P. putida</em>, which encodes a separate FabA (Q88FC4, PP_4174) carrying the isomerase function.</p>
+<p>The enzyme is a <strong>soluble, cytoplasmic protein of ~16 kDa (146 aa)</strong> that adopts the characteristic "hot-dog" fold and assembles into a homohexamer (a trimer of dimers), with each of the six active sites formed at a dimer interface. Catalysis proceeds through a strictly conserved active-site histidine — mapped by sequence homology to <strong>His49</strong> in Q88MG9 — that abstracts a proton during the syn dehydration of the ACP-tethered substrate. Structural studies of bacterial and parasite FabZ orthologs reveal a gated substrate tunnel whose length and geometry tune chain-length specificity, and a dynamic "seesaw-like" mechanism by which the hexamer sequentially loads and processes ACP-bound acyl chains.</p>
+<p>Functionally, FabZ sits at the heart of membrane biogenesis. Its product pool of β-hydroxyacyl- and enoyl-ACP intermediates feeds directly into <strong>membrane glycerophospholipid</strong> synthesis and, via the shared (3R)-hydroxyacyl-ACP pool, into <strong>lipid A (LPS) biosynthesis</strong>. In <em>Pseudomonas aeruginosa</em> — a close relative of <em>P. putida</em> — <em>fabZ</em> is <strong>essential for viability</strong>, with conditional loss producing lethality and cell-morphology defects, establishing FabZ as a validated antibacterial drug target. Bioinformatic analysis confirms Q88MG9 is a bona fide, near-canonical FabZ: it is ~59% identical to the experimentally characterized <em>E. coli</em> FabZ, ~86% identical to <em>P. aeruginosa</em> FabZ, carries all hot-dog signature motifs and the catalytic His, and has no signal peptide or transmembrane segment, consistent with cytoplasmic localization.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-fabz-is-the-elongation-cycle-3r-hydroxyacyl-acp-dehydratase-ec-42159">Finding 1 — FabZ is the elongation-cycle (3R)-hydroxyacyl-ACP dehydratase (EC 4.2.1.59)</h3>
+<p>FabZ catalyzes the <strong>third step of each FAS-II elongation cycle</strong>: the dehydration of a (3R)-β-hydroxyacyl-ACP to a <em>trans</em>-2-enoyl-ACP. This assignment is anchored in the original genetic identification of the enzyme in <em>Escherichia coli</em>. Mohan and colleagues demonstrated that overproduction of the <em>orf17</em> gene product raised (3R)-hydroxymyristoyl-ACP dehydrase specific activity <strong>as much as ~170-fold</strong>, establishing <em>orf17</em> (subsequently named <em>fabZ</em>) as the structural gene for the dehydratase (<a href="https://pubmed.ncbi.nlm.nih.gov/7806516/">PMID: 7806516</a>): <em>"Wild-type cells that overproduced the protein encoded by orf17 overproduced (3R)-hydroxymyristoyl-ACP dehydrase activity as much as 170-fold, suggesting that orf17 is the structural gene for the dehydrase."</em></p>
+<p>The biochemical reaction and its position in the pathway were defined through characterization of the <em>Plasmodium falciparum</em> ortholog, which <em>"catalyzes the dehydration of beta-hydroxyacyl-ACP to trans-2-acyl-ACP, the third step in the elongation phase of the FAS cycle"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/12930838/">PMID: 12930838</a>). In in-vitro assays using surrogate substrates, FabZ acts on β-hydroxybutyryl-CoA (Km ≈ 199 µM) and the reverse-direction crotonoyl-CoA (Km ≈ 86 µM). This step is universal to FAS-II and is required in each round of two-carbon chain elongation, making FabZ one of the indispensable "core" enzymes of bacterial fatty acid synthesis.</p>
+<p>The reaction can be summarized as:</p>
+<div class="codehilite"><pre><span></span><code>   (3R)-β-hydroxyacyl-ACP  ── FabZ (EC 4.2.1.59) ──▶  trans-2-enoyl-ACP  +  H₂O
+</code></pre></div>
+
+<h3 id="finding-2-fabz-is-a-hexameric-hot-dog-fold-enzyme-with-a-dynamic-acp-dependent-catalytic-mechanism">Finding 2 — FabZ is a hexameric hot-dog-fold enzyme with a dynamic, ACP-dependent catalytic mechanism</h3>
+<p>FabZ belongs to the <strong>thioester dehydratase (hot-dog fold) family</strong>. Crystallographic studies across multiple organisms consistently show that the hot-dog monomers assemble into a <strong>trimer of dimers (a homohexamer)</strong>, with an active site located at each of the six dimer interfaces. In <em>Helicobacter pylori</em> FabZ, the substrate-binding tunnel is gated: <em>"Residue Tyr-100 at the entrance of the tunnel adopts either an open or closed conformation in the crystal structure"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/18093984/">PMID: 18093984</a>). Aromatic residues lining the tunnel (e.g., Phe-83, Phe-169) switch conformations to reshape the tunnel between "L-" and "U-" shaped geometries, thereby controlling the length of acyl chain that can be accommodated — the structural basis for chain-length specificity. The <em>P. falciparum</em> FabZ structures corroborated this, showing Phe169 toggling between open and closed states to lengthen the tunnel for longer substrates (<a href="https://pubmed.ncbi.nlm.nih.gov/21843645/">PMID: 21843645</a>).</p>
+<p>Crucially, FabZ processes acyl chains that are covalently tethered to <strong>acyl carrier protein (ACP)</strong>, not free acyl-CoAs, in vivo. A landmark 2.55 Å structure of a FabZ–holo-ACP complex revealed <em>"a highly symmetrical FabZ hexamer-ACP"</em> assembly (<a href="https://pubmed.ncbi.nlm.nih.gov/27874013/">PMID: 27874013</a>) and established a <strong>"seesaw-like" alternating catalytic mechanism</strong> in which ACP docking at one active site is coupled to conformational changes across the hexamer. This dynamic model was refined by identifying a <strong>back-door phenylalanine (Phe83)</strong> that <em>"regulates the stepwise hexameric loading of ACP"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/30677439/">PMID: 30677439</a>), working together with a front-door Tyr100 gate. Together these studies portray FabZ not as a static catalyst but as an allosterically coordinated hexameric machine that sequentially engages ACP-delivered substrates.</p>
+<table>
+<thead>
+<tr>
+<th>Structural feature</th>
+<th>Role</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Hot-dog fold monomer</td>
+<td>Basic catalytic unit</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18093984/">PMID: 18093984</a></td>
+</tr>
+<tr>
+<td>Trimer-of-dimers hexamer</td>
+<td>Six active sites at dimer interfaces</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18093984/">PMID: 18093984</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/21843645/">PMID: 21843645</a></td>
+</tr>
+<tr>
+<td>Tyr100 front-door gate</td>
+<td>Open/closed control of tunnel entrance</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18093984/">PMID: 18093984</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/30677439/">PMID: 30677439</a></td>
+</tr>
+<tr>
+<td>Phe83 back-door / Phe169</td>
+<td>Tune tunnel length / chain-length specificity; coordinate ACP loading</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30677439/">PMID: 30677439</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/21843645/">PMID: 21843645</a></td>
+</tr>
+<tr>
+<td>FabZ–holo-ACP hexamer complex</td>
+<td>Seesaw-like alternating catalysis</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27874013/">PMID: 27874013</a></td>
+</tr>
+</tbody>
+</table>
+<h3 id="finding-3-fabz-is-essential-and-supplies-intermediates-for-both-phospholipid-and-lipid-a-lps-biosynthesis-in-pseudomonas">Finding 3 — FabZ is essential and supplies intermediates for both phospholipid and lipid A (LPS) biosynthesis in <em>Pseudomonas</em></h3>
+<p>FabZ activity is required for viability in <em>Pseudomonas</em>. A conditional <em>fabZ</em> mutant of the close relative <em>P. aeruginosa</em> — a chromosomal ΔfabZ complemented only by a temperature-sensitive plasmid copy — is <strong>lethal with cell-morphology defects at the restrictive temperature</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/40294648/">PMID: 40294648</a>): <em>"FabZ, a β-hydroxyacyl-acyl carrier protein dehydratase in the type II fatty acid synthesis pathway, is essential for the viability of Pseudomonas aeruginosa by ensuring proper fatty acid elongation and membrane stability."</em> The same study showed genetic interaction with the lipid A pathway: deletion of <em>lpxA</em> or <em>lpxC</em> failed to rescue lethality, whereas loss of <em>lpxH</em> suppressed it, and the resulting ΔfabZ ΔlpxH strain accumulated <strong>odd-chain fatty acids (C15:0, C17:0)</strong> — a signature of perturbed acyl-ACP flux.</p>
+<p>This connection between FabZ and lipid A was first uncovered genetically in <em>E. coli</em>, where mutations in <em>fabZ</em> (<em>orf17</em>) were isolated as suppressors of a lipid A biosynthesis defect (<em>lpxA2</em>). The mechanism was attributed to a shift in the shared intermediate pool (<a href="https://pubmed.ncbi.nlm.nih.gov/7806516/">PMID: 7806516</a>): <em>"bypass of the lpxA2 phenotype by mutations in orf17 may be due to an increased (3R)-hydroxymyristoyl-ACP pool."</em> Because (3R)-hydroxymyristoyl-ACP is both a FabZ substrate and the acyl donor for the first committed step of lipid A synthesis (LpxA), FabZ activity directly modulates the branch point between membrane phospholipid elongation and outer-membrane LPS assembly. FabZ's essentiality and its position at this metabolic node make it a <strong>validated antibacterial target</strong>.</p>
+<div class="codehilite"><pre><span></span><code>          ┌─────────────────────────────┐
+   Acetyl-CoA ──▶ ... ──▶ │ (3R)-β-hydroxyacyl-ACP pool │
+          └───────────┬─────────────────┘
+                      │
+ ┌────────────────────┼─────────────────────┐
+ │ FabZ (elongation)  │  LpxA (lipid A)      │
+ ▼                    │                      ▼
+trans-2-enoyl-ACP            │              Lipid A / LPS
+ │                    │            (outer membrane)
+ ▼                    ▼
+Membrane glycerophospholipids (inner/outer membrane)
+</code></pre></div>
+
+<h3 id="finding-4-fabz-is-the-general-elongation-dehydratase-and-unlike-faba-lacks-isomerase-activity">Finding 4 — FabZ is the general elongation dehydratase and, unlike FabA, lacks isomerase activity</h3>
+<p>In α- and γ-proteobacteria (the lineage containing <em>P. putida</em>), two functionally distinct dehydratases operate: <strong>FabA and FabZ</strong>. FabA is bifunctional, catalyzing both the dehydration of β-hydroxydecanoyl-ACP and the <strong>isomerization of <em>trans</em>-2-decenoyl-ACP to <em>cis</em>-3-decenoyl-ACP</strong> — the committed step of anaerobic unsaturated fatty acid biosynthesis. FabZ, by contrast, <em>"functions in acyl chain elongation but cannot carry out the isomerization reaction"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/15980063/">PMID: 15980063</a>). This distinction was reinforced by structural/dynamical work confirming that <em>"Fatty acid biosynthesis in α- and γ-proteobacteria requires two functionally distinct dehydratases, FabA and FabZ"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/30872475/">PMID: 30872475</a>).</p>
+<p>The molecular determinant of isomerase potential lies in the <strong>β3/β4 strands</strong> that shape the substrate tunnel: domain-swapping experiments showed that transplanting these strands can convert a FabZ-type enzyme into an isomerase-competent enzyme (<a href="https://pubmed.ncbi.nlm.nih.gov/15980063/">PMID: 15980063</a>). Some bacteria that lack FabA instead deploy a single <strong>bifunctional FabZ/FabN/FabQ</strong> homolog to satisfy both roles — for example, <em>Enterococcus faecalis</em> FabZ1 functionally replaces <em>E. coli</em> FabA (<a href="https://pubmed.ncbi.nlm.nih.gov/15194690/">PMID: 15194690</a>), and <em>Aerococcus viridans</em> FabQ combines dehydratase and isomerase activities (<a href="https://pubmed.ncbi.nlm.nih.gov/23972938/">PMID: 23972938</a>). Because <em>P. putida</em> possesses a dedicated FabA (see Finding 6), its FabZ is confidently assigned the <strong>general, isomerase-negative elongation role</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Enzyme</th>
+<th>Dehydratase</th>
+<th>Isomerase</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>FabZ</strong> (Q88MG9, P. putida)</td>
+<td>✔</td>
+<td>✗</td>
+<td>General chain elongation, all chain lengths</td>
+</tr>
+<tr>
+<td><strong>FabA</strong> (Q88FC4, P. putida)</td>
+<td>✔</td>
+<td>✔</td>
+<td>Commits flux to anaerobic UFA synthesis</td>
+</tr>
+<tr>
+<td>FabN / FabQ (other bacteria)</td>
+<td>✔</td>
+<td>✔</td>
+<td>Bifunctional substitute where FabA is absent</td>
+</tr>
+</tbody>
+</table>
+<h3 id="finding-5-sequence-analysis-confirms-q88mg9-is-a-bona-fide-fabz-with-the-conserved-catalytic-his49">Finding 5 — Sequence analysis confirms Q88MG9 is a bona fide FabZ with the conserved catalytic His49</h3>
+<p>Bioinformatic verification places Q88MG9 squarely within the canonical FabZ family. The <em>P. putida</em> KT2440 protein is <strong>146 aa (~16 kDa)</strong> and shares <strong>59.4% amino-acid identity (85/143 aligned columns)</strong> with the experimentally characterized <em>E. coli</em> FabZ (P0A6Q6) by global Needleman–Wunsch alignment. It carries the hot-dog signature motifs LPHR(Y/F)PF, F(F/Q)xGHFP, and the C-terminal VDGK…C motif.</p>
+<p>The catalytic histidine was mapped by tracing the mechanism-based inhibitor evidence from <em>E. coli</em> FabA. Cronan and colleagues used the specific mechanism-activated inhibitor 3-decynoyl-N-acetylcysteamine to label the active-site residue (<a href="https://pubmed.ncbi.nlm.nih.gov/2832401/">PMID: 2832401</a>): <em>"The active site histidine residue (His-70) has been identified by analysis of the peptides labeled by reaction with 14C-labeled 3-decynoyl-N-acetylcysteamine, a specific mechanism-activated inhibitor. A cysteine residue (Cys-69) adjacent to the active site histidine."</em> Propagating this catalytic His through FabA → FabZ → <em>P. putida</em> FabZ alignments places the conserved catalytic histidine at <strong>His49</strong> of Q88MG9, embedded in the F-F-N-G-<strong>H49</strong>-F-P motif (homologous to <em>E. coli</em> FabZ His54). Finally, the protein has <strong>no signal peptide and no transmembrane segment</strong>, consistent with a soluble, cytoplasmic enzyme — the expected localization for a FAS-II component.</p>
+<h3 id="finding-6-p-putida-encodes-a-separate-faba-pp_4174-and-fabzhis49-are-conserved-across-pseudomonas">Finding 6 — <em>P. putida</em> encodes a separate FabA (PP_4174), and FabZ/His49 are conserved across <em>Pseudomonas</em></h3>
+<p>The genome of <em>P. putida</em> KT2440 encodes a <strong>distinct FabA</strong> (UniProt Q88FC4, gene <em>fabA</em>/PP_4174, 171 aa) annotated with both dehydratase (EC 4.2.1.59) and <em>trans</em>-2-decenoyl-ACP isomerase (EC 5.3.3.14) activities. Its presence confirms that FabZ (Q88MG9/PP_1602) and FabA are physically and functionally separate enzymes in this organism, cementing the division of labor described in Finding 4. Consistent with the general rule that when a dedicated FabA is present the FabZ serves the elongation role (<a href="https://pubmed.ncbi.nlm.nih.gov/15980063/">PMID: 15980063</a>), <em>P. putida</em> FabZ can be assigned the general dehydratase function.</p>
+<p>Conservation analysis across the genus reinforces the annotation: <em>P. putida</em> FabZ is <strong>86.3% identical (126/146)</strong> to <em>P. aeruginosa</em> FabZ (Q9HXY7) and near-identical to <em>P. syringae</em> FabZ orthologs. Both the N-terminal His13 and the catalytic His49 (in the F-F-N-G-H-F-P motif) are strictly conserved across these species, underscoring the functional importance of these residues.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>FabZ operates within the iterative <strong>bacterial type II fatty acid synthase (FAS-II)</strong> cycle. Unlike the mammalian single-polypeptide FAS-I, the bacterial system is a set of discrete, soluble enzymes that act on acyl chains shuttled between them by the small acyl carrier protein (ACP). Each elongation cycle adds two carbons through four sequential steps:</p>
+<div class="codehilite"><pre><span></span><code><span class="w">  </span><span class="n">Acyl</span><span class="o">-</span><span class="n">ACP</span><span class="w"> </span><span class="p">(</span><span class="n">Cn</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">Malonyl</span><span class="o">-</span><span class="n">ACP</span>
+<span class="w">  </span><span class="err">│</span><span class="w">  </span><span class="n">FabB</span><span class="o">/</span><span class="n">FabF</span><span class="w"> </span><span class="p">(</span><span class="n">condensation</span><span class="p">)</span>
+<span class="w">  </span><span class="err">▼</span>
+<span class="w">  </span><span class="err">β</span><span class="o">-</span><span class="n">ketoacyl</span><span class="o">-</span><span class="n">ACP</span><span class="w"> </span><span class="p">(</span><span class="n">Cn</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span>
+<span class="w">  </span><span class="err">│</span><span class="w">  </span><span class="n">FabG</span><span class="w"> </span><span class="p">(</span><span class="n">NADPH</span><span class="w"> </span><span class="n">reduction</span><span class="p">)</span>
+<span class="w">  </span><span class="err">▼</span>
+<span class="w">  </span><span class="p">(</span><span class="mi">3</span><span class="n">R</span><span class="p">)</span><span class="o">-</span><span class="err">β</span><span class="o">-</span><span class="n">hydroxyacyl</span><span class="o">-</span><span class="n">ACP</span><span class="w">  </span><span class="err">◀──</span><span class="w"> </span><span class="n">FabZ</span><span class="w"> </span><span class="n">substrate</span>
+<span class="w">  </span><span class="err">│</span><span class="w">  </span><span class="err">★</span><span class="w"> </span><span class="n">FabZ</span><span class="w"> </span><span class="p">(</span><span class="n">dehydration</span><span class="p">,</span><span class="w"> </span><span class="n">EC</span><span class="w"> </span><span class="mf">4.2</span><span class="o">.</span><span class="mf">1.59</span><span class="p">)</span><span class="w">  </span><span class="err">—</span><span class="w"> </span><span class="n">THIS</span><span class="w"> </span><span class="n">ENZYME</span>
+<span class="w">  </span><span class="err">▼</span>
+<span class="w">  </span><span class="n">trans</span><span class="o">-</span><span class="mi">2</span><span class="o">-</span><span class="n">enoyl</span><span class="o">-</span><span class="n">ACP</span>
+<span class="w">  </span><span class="err">│</span><span class="w">  </span><span class="n">FabI</span><span class="w"> </span><span class="p">(</span><span class="n">NADH</span><span class="w"> </span><span class="n">reduction</span><span class="p">)</span>
+<span class="w">  </span><span class="err">▼</span>
+<span class="w">  </span><span class="n">Acyl</span><span class="o">-</span><span class="n">ACP</span><span class="w"> </span><span class="p">(</span><span class="n">Cn</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span><span class="w">  </span><span class="err">──▶</span><span class="w"> </span><span class="n">next</span><span class="w"> </span><span class="n">cycle</span><span class="p">,</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">exported</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">phospholipid</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">lipid</span><span class="w"> </span><span class="n">A</span><span class="w"> </span><span class="n">synthesis</span>
+</code></pre></div>
+
+<p>FabZ occupies the <strong>third (dehydration) position</strong> in this cycle. Its substrate, the (3R)-β-hydroxyacyl-ACP produced by the FabG reductase, is bound with the acyl chain threaded into the hot-dog tunnel and the ACP phosphopantetheine arm delivering the thioester into the active site. The conserved <strong>His49</strong> acts as the catalytic base/acid that mediates a <em>syn</em> elimination of water across the Cα–Cβ bond, generating the <em>trans</em>-2-enoyl product that FabI subsequently reduces.</p>
+<p>Three layers of structural sophistication distinguish FabZ:</p>
+<ol>
+<li><strong>Quaternary structure</strong> — the hexamer (trimer of dimers) provides six composite active sites, each contributed by two subunits, and enables allosteric coordination.</li>
+<li><strong>Substrate gating</strong> — the Tyr100 front door and Phe83 back door open and close to admit ACP and tune tunnel length, allowing FabZ to process the full spectrum of chain lengths that a growing acyl chain passes through (a <em>general</em> dehydratase, not restricted like the C10-specialized FabA isomerization step).</li>
+<li><strong>Seesaw loading</strong> — ACP molecules dock and undock in a coordinated, stepwise fashion across the hexamer, coupling catalysis at one site to conformational states at neighbors.</li>
+</ol>
+<p>The <strong>biological significance</strong> of FabZ flows from its position as a gatekeeper of the acyl-ACP intermediate pool. Its products are the precursors of all membrane glycerophospholipids and, through the shared (3R)-hydroxymyristoyl-ACP node, of lipid A / LPS. This explains three observations at once: (i) <em>fabZ</em> essentiality (blocking the cycle halts membrane biogenesis and kills the cell); (ii) the genetic interaction with the lipid A (<em>lpx</em>) pathway (perturbing FabZ shifts the shared intermediate pool); and (iii) the accumulation of odd-chain fatty acids when the balance is disrupted. In <em>P. putida</em> specifically — a metabolically versatile, solvent-tolerant soil bacterium whose membrane adaptation (fatty-acid saturation, <em>cis/trans</em> isomerization, cardiolipin content) is central to its stress physiology — FabZ is the workhorse elongation dehydratase feeding this adaptable membrane lipidome, while its paralog FabA handles the committed step toward unsaturated acyl chains.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Study focus</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/7806516/">7806516</a></td>
+<td><em>E. coli fabZ</em> (orf17) genetic identification</td>
+<td>Establishes FabZ as the structural gene for (3R)-hydroxyacyl-ACP dehydrase (~170-fold activity on overexpression); links product pool to lipid A synthesis</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12930838/">12930838</a></td>
+<td><em>P. falciparum</em> FabZ characterization</td>
+<td>Defines the reaction: dehydration of β-hydroxyacyl-ACP to trans-2-acyl-ACP, third step of the elongation cycle; provides kinetic parameters</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27874013/">27874013</a></td>
+<td>FabZ–holo-ACP crystal complex (2.55 Å)</td>
+<td>Documents the hexamer–ACP assembly and the seesaw-like alternating mechanism</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18093984/">18093984</a></td>
+<td><em>H. pylori</em> FabZ structure</td>
+<td>Reveals gated substrate tunnel (Tyr100 open/closed), hot-dog fold, chain-length control</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30677439/">30677439</a></td>
+<td>FabZ ACP-loading mechanism</td>
+<td>Identifies back-door Phe83 regulating stepwise hexameric ACP loading</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21843645/">21843645</a></td>
+<td><em>P. falciparum</em> FabZ + inhibitors</td>
+<td>U-shaped tunnel; Phe169 conformational switch controls accommodated chain length</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/40294648/">40294648</a></td>
+<td><em>P. aeruginosa</em> conditional <em>fabZ</em> mutant</td>
+<td>Directly establishes FabZ essentiality in <em>Pseudomonas</em>; genetic interaction with lipid A pathway; odd-chain FA accumulation</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15980063/">15980063</a></td>
+<td>FabN/FabZ domain swapping</td>
+<td>Defines FabZ as elongation dehydratase lacking isomerase activity; localizes β3/β4 isomerase determinants</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30872475/">30872475</a></td>
+<td>Structural rationale for FA unsaturation</td>
+<td>Confirms FabA and FabZ are two functionally distinct dehydratases in α/γ-proteobacteria</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15194690/">15194690</a></td>
+<td><em>E. faecalis</em> FabZ/FabF</td>
+<td>Shows some FabZ homologs are bifunctional dehydratase/isomerase where FabA is absent (contrast case)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23972938/">23972938</a></td>
+<td><em>A. viridans</em> FabQ</td>
+<td>Single FabA/FabZ homolog with dual dehydratase/isomerase function (contrast case)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/2832401/">2832401</a></td>
+<td><em>E. coli</em> FabA active-site mapping</td>
+<td>Experimentally identifies the catalytic active-site histidine of the FabA/FabZ family (basis for His49 assignment in Q88MG9)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Direct vs. inferred evidence for <em>P. putida</em> Q88MG9.</strong> No study to date has biochemically characterized the <em>P. putida</em> KT2440 FabZ protein itself. The functional annotation rests on: (a) strong, experimentally grounded characterization of orthologs (<em>E. coli</em>, <em>H. pylori</em>, <em>P. falciparum</em>, <em>P. aeruginosa</em>); (b) the demonstrated essentiality of <em>fabZ</em> in the very close relative <em>P. aeruginosa</em>; and (c) sequence/structural bioinformatics establishing that Q88MG9 is a canonical FabZ with the conserved catalytic His49 and no isomerase-associated features, alongside a separate FabA in the same genome. This constitutes a robust, convergent case by homology and orthology, in line with the HAMAP-Rule (MF_00406) annotation.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ul>
+<li><strong>No direct biochemical data on Q88MG9.</strong> The <em>P. putida</em> KT2440 FabZ has not been purified, assayed, or crystallized. Kinetic parameters (kcat, Km), precise chain-length preference, and hexameric assembly are inferred from orthologs rather than measured.</li>
+<li><strong>His49 assignment is homology-based.</strong> The catalytic histidine has been mapped by multiple sequence alignment through FabA→FabZ chains, not by site-directed mutagenesis or structure of the <em>P. putida</em> enzyme. Confidence is high given strict conservation, but experimental confirmation is lacking.</li>
+<li><strong>Chain-length specificity not resolved.</strong> FabZ is a "general" dehydratase, but the exact substrate profile in <em>P. putida</em> (which produces a characteristic membrane lipidome including C16/C18 species and <em>cis/trans</em> isomers) has not been mapped. The tunnel-gating residues that set specificity in other species have not been examined in Q88MG9.</li>
+<li><strong>Essentiality inferred from <em>P. aeruginosa</em>.</strong> While highly likely given ~86% identity and the shared FAS-II architecture, <em>fabZ</em> essentiality has not been formally demonstrated in <em>P. putida</em> KT2440.</li>
+<li><strong>FabZ/FabA functional partitioning not directly tested in <em>P. putida</em>.</strong> The clean division of labor is inferred from genome content and general proteobacterial biology; genetic complementation/knockout experiments in <em>P. putida</em> would confirm it.</li>
+<li><strong>Interaction with FabA and ACP in vivo.</strong> The physical/functional coordination of FabZ with <em>P. putida</em> ACP and FabA (e.g., whether they form transient complexes, or share substrate channeling) is unknown.</li>
+</ul>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li><strong>Recombinant enzymology.</strong> Express and purify <em>P. putida</em> FabZ (Q88MG9) and measure dehydratase activity on a chain-length panel of (3R)-β-hydroxyacyl-ACP substrates to define kcat/Km and confirm the absence of isomerase activity (e.g., no <em>cis</em>-3 product from <em>trans</em>-2-decenoyl-ACP). Consider the fused-dimer construct strategy shown to improve FabZ solubility/activity (<a href="https://pubmed.ncbi.nlm.nih.gov/29520922/">PMID: 29520922</a>).</li>
+<li><strong>Catalytic His49 mutagenesis.</strong> Generate an H49A (or H49Q) variant and demonstrate loss of dehydratase activity to experimentally validate the catalytic residue predicted here.</li>
+<li><strong>Genetic essentiality test.</strong> Attempt a clean <em>fabZ</em> deletion in <em>P. putida</em> KT2440 with a rescue copy (temperature-sensitive or inducible), mirroring the <em>P. aeruginosa</em> design (<a href="https://pubmed.ncbi.nlm.nih.gov/40294648/">PMID: 40294648</a>), to confirm essentiality and characterize morphological/membrane phenotypes.</li>
+<li><strong>Structural determination.</strong> Solve the crystal or cryo-EM structure of <em>P. putida</em> FabZ (apo and, ideally, in complex with <em>P. putida</em> holo-ACP) to verify the hexameric hot-dog architecture, the His49 active site, and the identity of tunnel-gating residues governing chain-length specificity.</li>
+<li><strong>Lipidomic flux analysis.</strong> Perturb <em>fabZ</em> expression (knockdown/overexpression) and quantify membrane glycerophospholipid and LPS/lipid A composition by LC-MS/MS (building on established <em>P. putida</em> lipidomics, <a href="https://pubmed.ncbi.nlm.nih.gov/21895997/">PMID: 21895997</a>) to map how FabZ activity partitions flux between phospholipid elongation and lipid A synthesis, and whether odd-chain FA accumulation recurs.</li>
+<li><strong>FabZ/FabA epistasis.</strong> Test genetic interactions between <em>fabZ</em> (PP_1602) and <em>fabA</em> (PP_4174) in <em>P. putida</em> to confirm the division of labor and probe whether either can compensate for the other.</li>
+<li><strong>Antibacterial target validation.</strong> Given FabZ essentiality, screen known FabZ inhibitor chemotypes (e.g., naphthoquinones/juglone, flavonoid gallates) against purified <em>P. putida</em> FabZ to assess whether it is a tractable target for narrow-spectrum antibacterials.</li>
+</ol>
+<hr />
+<p><em>Report compiled from 6 confirmed findings and 30 reviewed papers over 3 investigation iterations. All functional claims for Q88MG9 are supported by experimentally characterized orthologs and by sequence/structural bioinformatics; no direct biochemical study of the P. putida KT2440 protein currently exists.</em></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="fabZ-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="fabZ-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:7806516</li>
+<li>PMID:12930838</li>
+<li>PMID:18093984</li>
+<li>PMID:21843645</li>
+<li>PMID:27874013</li>
+<li>PMID:30677439</li>
+<li>PMID:40294648</li>
+<li>PMID:15980063</li>
+<li>PMID:30872475</li>
+<li>PMID:15194690</li>
+<li>PMID:23972938</li>
+<li>PMID:2832401</li>
+<li>PMID:29520922</li>
+<li>PMID:21895997</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(fabZ-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88MG9" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="fabz-curation-notes">fabZ curation notes</h1>
+<ul>
+<li>Reviewed UniProt accession Q88MG9 records the general FabZ reaction<br />
+  [file:PSEPK/fabZ/fabZ-uniprot.txt,<br />
+  "Reaction=a (3R)-hydroxyacyl-[ACP] = a (2E)-enoyl-[ACP] + H2O;"].</li>
+<li>The exact ACP dehydratase term, fatty-acid biosynthesis, and cytoplasmic<br />
+  localization are accepted; generic hydro-lyase activity is replaced by the<br />
+  exact term.</li>
+<li>Lipid A biosynthesis is retained as a non-core consequence of FabZ control<br />
+  over hydroxyacyl-ACP pools rather than treated as the enzyme's principal<br />
+  pathway.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88MG9
+gene_symbol: fabZ
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  FabZ is the broad-chain-range cytoplasmic
+  (3R)-hydroxyacyl-ACP dehydratase of Pseudomonas putida KT2440. It converts
+  hydroxyacyl-ACP intermediates to trans-2-enoyl-ACP during type-II
+  fatty-acid elongation and helps partition hydroxyacyl-ACP pools between
+  phospholipid/fatty-acid synthesis and lipid A precursor production.
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Correct localization from the reviewed UniProt record.
+    action: ACCEPT
+    reason: Reviewed UniProt places FabZ in the cytoplasm.
+    supported_by:
+    - reference_id: file:PSEPK/fabZ/fabZ-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0006633
+    label: fatty acid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Correct core pathway assignment.
+    action: ACCEPT
+    reason: FabZ dehydrates FAS-II hydroxyacyl-ACP intermediates.
+    supported_by:
+    - reference_id: file:PSEPK/fabZ/fabZ-uniprot.txt
+      supporting_text: &#39;the dehydration of short chain beta-hydroxyacyl-ACPs and long chain&#39;
+- term:
+    id: GO:0009245
+    label: lipid A biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: Valid secondary pathway assignment for hydroxyacyl-ACP pool control.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      FabZ activity affects the hydroxyacyl-ACP substrates used in lipid A
+      biosynthesis, but its central catalytic role is the general FAS-II
+      dehydration reaction.
+- term:
+    id: GO:0016836
+    label: hydro-lyase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct parent activity but redundant with the ACP-specific term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The substrate-specific (3R)-hydroxyacyl-ACP dehydratase term is available.
+- term:
+    id: GO:0019171
+    label: (3R)-hydroxyacyl-[acyl-carrier-protein] dehydratase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Exact core molecular function for FabZ.
+    action: ACCEPT
+    reason: Reviewed UniProt records dehydration to a trans-2-enoyl-ACP product.
+    supported_by:
+    - reference_id: file:PSEPK/fabZ/fabZ-uniprot.txt
+      supporting_text: &#39;Reaction=a (3R)-hydroxyacyl-[ACP] = a (2E)-enoyl-[ACP] + H2O;&#39;
+references:
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/fabZ/fabZ-uniprot.txt
+  title: UniProtKB entry Q88MG9 for Pseudomonas putida KT2440 fabZ
+  findings:
+  - statement: Reviewed UniProt records the FabZ hydroxyacyl-ACP dehydration reaction.
+    supporting_text: &#39;Reaction=a (3R)-hydroxyacyl-[ACP] = a (2E)-enoyl-[ACP] + H2O;&#39;
+    reference_section_type: RESULTS
+  - statement: UniProt describes broad FabZ hydroxyacyl-ACP chain-length use.
+    supporting_text: &#39;the dehydration of short chain beta-hydroxyacyl-ACPs and long chain&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Reviewed UniProt entry for the exact target accession.
+- id: file:PSEPK/fabZ/fabZ-deep-research-openscientist.md
+  title: OpenScientist deep research for PSEPK fabZ
+  findings:
+  - statement: The report independently supports the core FabZ dehydration step.
+    supporting_text: &gt;-
+      FabZ (Q88MG9, PP_1602) is the
+      (3R)-hydroxyacyl-[acyl-carrier-protein] dehydratase (EC 4.2.1.59) that
+      catalyzes the third, dehydration step of every elongation cycle in the
+      bacterial type II fatty acid synthase (FAS-II) system of *Pseudomonas
+      putida* KT2440.
+    reference_section_type: RESULTS
+  - statement: No direct biochemical or structural study of Q88MG9 was found.
+    supporting_text: &gt;-
+      The *P. putida* KT2440 FabZ has not been purified, assayed, or
+      crystallized.
+    reference_section_type: CONCLUSIONS
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      The exact-target family and reaction assessment agrees with reviewed
+      UniProt. P. aeruginosa essentiality and target-specific hexameric,
+      catalytic-residue, chain-range, and lipid-A mechanism claims were not
+      imported because they are transferred from orthologs.
+core_functions:
+- description: &gt;-
+    Dehydrates (3R)-hydroxyacyl-ACP intermediates to trans-2-enoyl-ACP during
+    type-II fatty-acid elongation.
+  molecular_function:
+    id: GO:0019171
+    label: (3R)-hydroxyacyl-[acyl-carrier-protein] dehydratase activity
+  directly_involved_in:
+  - id: GO:0006633
+    label: fatty acid biosynthetic process
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: file:PSEPK/fabZ/fabZ-uniprot.txt
+    supporting_text: &#39;Reaction=a (3R)-hydroxyacyl-[ACP] = a (2E)-enoyl-[ACP] + H2O;&#39;
+  - reference_id: file:PSEPK/fabZ/fabZ-deep-research-openscientist.md
+    supporting_text: &gt;-
+      FabZ (Q88MG9, PP_1602) is the
+      (3R)-hydroxyacyl-[acyl-carrier-protein] dehydratase (EC 4.2.1.59) that
+      catalyzes the third, dehydration step of every elongation cycle in the
+      bacterial type II fatty acid synthase (FAS-II) system of *Pseudomonas
+      putida* KT2440.
+suggested_questions:
+- question: How does FabZ substrate use partition hydroxyacyl-ACP between membrane fatty acids and lipid A?
+suggested_experiments:
+- description: &gt;-
+    Quantify acyl-ACP and lipid A species after graded FabZ depletion and
+    compare rescue by FabA.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

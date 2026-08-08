@@ -1,0 +1,2671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>murG - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>murG</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88N76" target="_blank" class="term-link">
+                        Q88N76
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "murG";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88N76" data-a="DESCRIPTION: MurG is the peripheral inner-membrane glycosyltran..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>MurG is the peripheral inner-membrane glycosyltransferase that forms lipid II in Pseudomonas putida KT2440. On the cytoplasmic face of the membrane it transfers N-acetylglucosamine from UDP-GlcNAc to lipid I, producing the disaccharide-pentapeptide precursor exported for peptidoglycan polymerization.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N76" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct location at the cytoplasmic face of the bacterial inner membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt identifies MurG as a peripheral inner-membrane protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/murG/murG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cell inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N76" data-a="GO:0005975" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad process annotation that obscures lipid II synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> MurG acts specifically in peptidoglycan biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/murG/murG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Cell wall biogenesis; peptidoglycan biosynthesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009252" target="_blank" class="term-link">
+                                    GO:0009252
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N76" data-a="GO:0009252" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt places Q88N76 in peptidoglycan biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/murG/murG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Cell wall biogenesis; peptidoglycan biosynthesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016757" target="_blank" class="term-link">
+                                    GO:0016757
+                                </a>
+                            </span>
+                            <span class="term-label">glycosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N76" data-a="GO:0016757" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic catalytic parent of the exact MurG activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The Rhea-derived term identifies both the lipid I acceptor and UDP-GlcNAc donor and should replace generic glycosyltransferase activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/murG/murG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FUNCTION: Cell wall formation. Catalyzes the transfer of a GlcNAc</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016758" target="_blank" class="term-link">
+                                    GO:0016758
+                                </a>
+                            </span>
+                            <span class="term-label">hexosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N76" data-a="GO:0016758" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad catalytic parent of the exact MurG activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target reaction is known at substrate level, so generic hexosyltransferase activity is redundant.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/murG/murG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FUNCTION: Cell wall formation. Catalyzes the transfer of a GlcNAc</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050511" target="_blank" class="term-link">
+                                    GO:0050511
+                                </a>
+                            </span>
+                            <span class="term-label">undecaprenyldiphospho-muramoylpentapeptide beta-N-acetylglucosaminyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N76" data-a="GO:0050511" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct MurG activity at a slightly broader substrate-description level.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0051991 captures the exact DAP-containing lipid I substrate recorded for KT2440 and is preferred for the gene-level core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/murG/murG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">muramoyl-L-alanyl-D-glutamyl-meso-2,6-diaminopimeloyl-D-alanyl-D-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051991" target="_blank" class="term-link">
+                                    GO:0051991
+                                </a>
+                            </span>
+                            <span class="term-label">UDP-N-acetyl-D-glucosamine:N-acetylmuramoyl-L-alanyl-D-glutamyl-meso-2,6-diaminopimelyl-D-alanyl-D-alanine-diphosphoundecaprenol 4-beta-N-acetylglucosaminlytransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000116
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N76" data-a="GO:0051991" data-r="GO_REF:0000116" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct substrate-specific core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The Rhea-mapped term matches the recorded transfer of GlcNAc from UDP-GlcNAc to the DAP-containing lipid I precursor.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/murG/murG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=di-trans,octa-cis-undecaprenyl diphospho-N-acetyl-alpha-D-</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/murG/murG-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">MurG is a UDP-GlcNAc:lipid I β-1,4-GlcNAc transferase producing lipid II (EC 2.4.1.227).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901137" target="_blank" class="term-link">
+                                    GO:1901137
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate derivative biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N76" data-a="GO:1901137" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad process annotation that obscures the defined cell-wall pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Peptidoglycan biosynthesis is the direct and informative process for MurG.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/murG/murG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Cell wall biogenesis; peptidoglycan biosynthesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Transfers N-acetylglucosamine from UDP-GlcNAc to DAP-containing lipid I, forming lipid II on the cytoplasmic face of the inner membrane.</h3>
+                <span class="vote-buttons" data-g="Q88N76" data-a="FUNCTION: Transfers N-acetylglucosamine from UDP-GlcNAc to D..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051991" target="_blank" class="term-link">
+                            UDP-N-acetyl-D-glucosamine:N-acetylmuramoyl-L-alanyl-D-glutamyl-meso-2,6-diaminopimelyl-D-alanyl-D-alanine-diphosphoundecaprenol 4-beta-N-acetylglucosaminlytransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009252" target="_blank" class="term-link">
+                                peptidoglycan biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/murG/murG-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">FUNCTION: Cell wall formation. Catalyzes the transfer of a GlcNAc</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/murG/murG-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">MurG is a UDP-GlcNAc:lipid I β-1,4-GlcNAc transferase producing lipid II (EC 2.4.1.227).</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000116.md" target="_blank" class="term-link">
+                            GO_REF:0000116
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic Gene Ontology annotation based on Rhea mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/murG/murG-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88N76 for Pseudomonas putida KT2440 murG</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies transfer of GlcNAc to lipid I.</div>
+
+                        <div class="finding-text">"FUNCTION: Cell wall formation. Catalyzes the transfer of a GlcNAc"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt places MurG on the inner membrane&#39;s cytoplasmic face.</div>
+
+                        <div class="finding-text">"SUBCELLULAR LOCATION: Cell inner membrane"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt places MurG in peptidoglycan synthesis.</div>
+
+                        <div class="finding-text">"PATHWAY: Cell wall biogenesis; peptidoglycan biosynthesis."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/murG/murG-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research for PSEPK murG</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The retrieved evidence supports the exact lipid I glycosyltransferase reaction.</div>
+
+                        <div class="finding-text">"MurG is a UDP-GlcNAc:lipid I β-1,4-GlcNAc transferase producing lipid II (EC 2.4.1.227)."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Detailed biochemical evidence is transferred from bacterial orthologs.</div>
+
+                        <div class="finding-text">"All kinetic, structural, and lipid-preference data derive from *E. coli* (or other bacteria). The *P. putida* KT2440 MurG has not been crystallized, purified, or assayed directly."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How is KT2440 MurG recruited or retained at active peptidoglycan synthesis sites?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88N76" data-a="Q: How is KT2440 MurG recruited or retained at active..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Track functional fluorescent MurG fusions during growth and perturbations, and test interactions with MraY, MurJ, and divisome proteins.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88N76" data-a="EXPERIMENT: Track functional fluorescent MurG fusions during g..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(murG-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88N76" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">MurG (Q88N76, PP_1337) of *Pseudomonas putida* KT2440: Functional Annotation Report</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">13 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-23T12:25:22.347385</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="murG-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="murG-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="murg-q88n76-pp_1337-of-pseudomonas-putida-kt2440-functional-annotation-report">MurG (Q88N76, PP_1337) of <em>Pseudomonas putida</em> KT2440: Functional Annotation Report</h1>
+<p><strong>Gene:</strong> <em>murG</em> — Ordered locus <strong>PP_1337</strong> | <strong>UniProt:</strong> Q88N76 (MURG_PSEPK), 359 aa, PE=3 (inferred from homology)<br />
+<strong>Enzyme:</strong> UDP-N-acetylglucosamine–N-acetylmuramyl-(pentapeptide) pyrophosphoryl-undecaprenol N-acetylglucosamine transferase — <strong>EC 2.4.1.227</strong><br />
+<strong>Family:</strong> Glycosyltransferase 28 (GT28), MurG subfamily; GT-B superfamily (HAMAP rule MF_00033)<br />
+<strong>Domains:</strong> GlcNAc_MurG (IPR006009); Glyco_trans_28_N (IPR004276, PF03033); Glyco_trans_28_C (IPR007235, PF04101)</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p><strong>MurG is the essential, membrane-associated glycosyltransferase that catalyzes the final cytoplasmic step of bacterial peptidoglycan precursor synthesis.</strong> In <em>Pseudomonas putida</em> KT2440, the <em>murG</em> gene (ordered locus PP_1337; UniProt Q88N76) encodes a 359-residue protein of the glycosyltransferase 28 (GT28) family, MurG subfamily, with enzyme classification EC 2.4.1.227. The enzyme transfers <em>N</em>-acetylglucosamine (GlcNAc) from the soluble nucleotide-sugar donor <strong>UDP-GlcNAc</strong> onto the C4 hydroxyl of the <em>N</em>-acetylmuramic acid (MurNAc) moiety of the membrane-anchored acceptor <strong>lipid I</strong> (undecaprenyl-pyrophosphoryl-MurNAc-pentapeptide), producing the β-1,4-linked disaccharide <strong>lipid II</strong>. Lipid II is the complete, minimal repeating subunit of peptidoglycan and the substrate that is subsequently flipped across the inner membrane and polymerized into the cell wall.</p>
+<p>The mechanistic and structural understanding of MurG derives predominantly from precise work on the <em>Escherichia coli</em> ortholog, which is the archetype of a large superfamily of metal-ion–independent, NDP-sugar–utilizing glycosyltransferases. MurG adopts a two-domain <strong>GT-B fold</strong>: the C-terminal domain binds the UDP-GlcNAc donor and the N-terminal domain binds the lipid I acceptor, with catalysis occurring in the interdomain cleft. Kinetically, MurG follows a <strong>compulsory ordered Bi-Bi mechanism</strong> in which UDP-GlcNAc binds before lipid I. As a <strong>peripheral membrane protein</strong>, MurG operates on the cytoplasmic (inner) leaflet of the inner membrane; a hydrophobic patch ringed by basic residues mediates membrane docking, and the anionic phospholipid <strong>cardiolipin</strong> specifically enhances its activity on lipid I.</p>
+<p>Because MurG is essential, universally present in peptidoglycan-synthesizing bacteria, and absent from humans, it is a long-standing target for antibacterial drug discovery. Its function in <em>P. putida</em> KT2440 is assigned by strong sequence homology (HAMAP rule MF_00033; UniProt protein-existence level PE=3, "inferred from homology"); no <em>P. putida</em>-specific enzymological study exists, but the conservation of the catalytic architecture and the essentiality of the pathway make the annotation highly reliable. Identity verification confirms the correct target: the gene symbol <em>murG</em>, the EC number, GT28/MurG family membership, and the InterPro/Pfam domains are all mutually consistent with the UniProt record for Q88N76 in <em>Pseudomonas putida</em> KT2440, and the retrieved 359-aa sequence (<code>MAAEGKNVLIMAGGTGGH…</code>) contains the conserved N-terminal glycine-rich acceptor-binding motif characteristic of the family.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-murg-catalyzes-the-final-cytoplasmic-step-of-lipid-ii-synthesis">Finding 1 — MurG catalyzes the final cytoplasmic step of lipid II synthesis</h3>
+<p>MurG (Q88N76, PP_1337) is the terminal enzyme of the intracellular (cytoplasmic) phase of peptidoglycan biosynthesis. It is a membrane-associated glycosyltransferase that couples <em>N</em>-acetylglucosamine to the <strong>C4 hydroxyl</strong> of the lipid-linked <em>N</em>-acetylmuramic acid derivative (lipid I), forming the β-linked disaccharide (lipid II) that constitutes the minimal repeating subunit of peptidoglycan (<a href="https://pubmed.ncbi.nlm.nih.gov/12022887/">PMID: 12022887</a>). The reaction can be written explicitly as:</p>
+<div class="codehilite"><pre><span></span><code>UDP-GlcNAc  +  lipid I  →  UDP  +  lipid II
+(donor)        (acceptor)
+
+lipid I  = undecaprenyl-PP-MurNAc-pentapeptide
+lipid II = undecaprenyl-PP-MurNAc(-pentapeptide)-β(1→4)-GlcNAc
+</code></pre></div>
+
+<p>The regiochemistry is precise: GlcNAc is joined through a <strong>β-1,4 glycosidic linkage</strong> to the C4-hydroxyl of MurNAc, matching the glycan backbone geometry of mature peptidoglycan. The UniProt annotation for Q88N76 assigns EC 2.4.1.227 with the systematic name "UDP-<em>N</em>-acetylglucosamine—<em>N</em>-acetylmuramyl-(pentapeptide) pyrophosphoryl-undecaprenol <em>N</em>-acetylglucosamine transferase," placing the protein in the GT28 family, MurG subfamily, under HAMAP rule MF_00033. As stated in the primary literature, MurG is "the last enzyme involved in the intracellular phase of peptidoglycan synthesis, [and] is a membrane-associated glycosyltransferase that couples N-acetyl glucosamine to the C4 hydroxyl of a lipid-linked N-acetyl muramic acid derivative (lipid I) to form the beta-linked disaccharide (lipid II) that is the minimal subunit of peptidoglycan" (<a href="https://pubmed.ncbi.nlm.nih.gov/12022887/">PMID: 12022887</a>).</p>
+<p>The lipid intermediates lipid I and lipid II serve as the specific molecular <strong>link between the intracellular synthesis of the peptidoglycan monomer unit and the subsequent extracytoplasmic polymerization reactions</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/18063720/">PMID: 18063720</a>). MurG therefore completes the assembly of the disaccharide-pentapeptide building block on the cytoplasmic face before it is exported and stitched into the sacculus.</p>
+<p><strong>Substrate specificity.</strong> The donor is the soluble nucleotide sugar UDP-GlcNAc; the acceptor is specifically lipid I, with its 55-carbon (C55) undecaprenyl-pyrophosphate anchor and MurNAc-pentapeptide headgroup. Notably, studies with lipid-chain-truncated analogues showed that MurG's intrinsic acceptor preference does not strictly require the full undecaprenyl chain — a shortened lipid acceptor is in fact catalytically preferred in vitro — indicating that the C55 carrier is important for membrane anchoring and downstream pathway steps rather than for MurG catalysis per se (<a href="https://pubmed.ncbi.nlm.nih.gov/12022887/">PMID: 12022887</a>).</p>
+<p><strong>Organism-specific note.</strong> In Gram-negative bacteria such as <em>P. putida</em>, the third residue of the stem pentapeptide is <em>meso</em>-diaminopimelate (mDAP) rather than L-Lys. MurG's chemistry acts on the sugar/lipid portion and is insensitive to the stem-peptide identity, so the DAP-type peptidoglycan of <em>P. putida</em> is fully compatible with the conserved MurG reaction.</p>
+<h3 id="finding-2-two-domain-gt-b-fold-and-ordered-bi-bi-mechanism">Finding 2 — Two-domain GT-B fold and ordered Bi-Bi mechanism</h3>
+<p>The three-dimensional architecture of MurG was established by the 2.5-Å crystal structure of <em>E. coli</em> MurG in complex with its donor substrate UDP-GlcNAc: "Here we present the 2.5-Å crystal structure of <em>Escherichia coli</em> MurG in complex with its donor substrate, UDP-GlcNAc" (<a href="https://pubmed.ncbi.nlm.nih.gov/12538870/">PMID: 12538870</a>). MurG has a <strong>two-domain (GT-B) architecture</strong> typical of a superfamily of metal-ion–independent NDP-glycosyltransferases: the <strong>C-terminal domain binds the UDP-GlcNAc donor</strong>, while the <strong>N-terminal domain binds the lipid I acceptor</strong>, with the catalytic cleft formed between the two domains. This matches the two-domain Pfam architecture of Q88N76 (Glyco_trans_28_N and Glyco_trans_28_C).</p>
+<p>Kinetically, MurG follows a <strong>compulsory ordered Bi-Bi mechanism in which the donor sugar (UDP-GlcNAc) binds first</strong>, before the lipid acceptor (<a href="https://pubmed.ncbi.nlm.nih.gov/12022887/">PMID: 12022887</a>). This ordered binding is mechanistically consistent with the structure: donor binding in the C-terminal domain likely organizes the interdomain cleft for productive acceptor engagement. MurG is regarded as <strong>"a paradigm for a large family of metal ion-independent glycosyltransferases found in both eukaryotes and prokaryotes"</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/12455415/">PMID: 12455415</a>), meaning that lessons learned from MurG generalize across the GT-B superfamily (see also the broader structural survey in <a href="https://pubmed.ncbi.nlm.nih.gov/11042447/">PMID: 11042447</a>).</p>
+<p>The <em>P. putida</em> protein Q88N76 is 359 amino acids long, and its N-terminus (<code>MAAEGKNVLIMAGGTGGH…</code>) contains the conserved glycine-rich motif characteristic of the acceptor-binding N-terminal domain. This sequence conservation with <em>E. coli</em> MurG is the structural basis for the HAMAP MF_00033 annotation transfer and provides confidence that the <em>P. putida</em> enzyme adopts the same GT-B fold and uses the same ordered catalytic mechanism.</p>
+<h3 id="finding-3-peripheral-membrane-protein-acting-at-the-cytoplasmic-face-cardiolipin-preference">Finding 3 — Peripheral membrane protein acting at the cytoplasmic face; cardiolipin preference</h3>
+<p>MurG is not an integral membrane protein but a <strong>peripheral (membrane-associated) glycosyltransferase</strong>. The <em>E. coli</em> crystal structure "contains a hydrophobic patch surrounded by basic residues that may represent a membrane association site" (<a href="https://pubmed.ncbi.nlm.nih.gov/12813070/">PMID: 12813070</a>). This amphipathic surface feature allows MurG to dock onto the inner membrane and reach into the lipid bilayer to access its membrane-embedded acceptor, rather than spanning the membrane via a transmembrane helix.</p>
+<p>Critically, the lipid environment modulates catalytic activity. When lipid I was incorporated into pure lipid vesicles of defined composition, <strong>"the MurG activity is higher for vesicles containing cardiolipin than for vesicles with phosphatidylglycerol"</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/12813070/">PMID: 12813070</a>), indicating a special role for the anionic phospholipid cardiolipin in supporting the enzyme's function. Cardiolipin is enriched at bacterial cell poles and division septa — the very sites of active cell-wall synthesis — so its stimulation of MurG plausibly couples the enzyme's activity to the spatial organization of the growing cell envelope.</p>
+<p>The topology of the reaction is well defined: both the substrate lipid I and the product lipid II are anchored to the membrane by the C55 undecaprenyl chain (<a href="https://pubmed.ncbi.nlm.nih.gov/12022887/">PMID: 12022887</a>); the glycosyl transfer occurs on the <strong>inner (cytoplasmic) leaflet</strong>; and the resulting lipid II is subsequently <strong>translocated across the cytoplasmic membrane</strong> by a flippase before its extracytoplasmic polymerization (<a href="https://pubmed.ncbi.nlm.nih.gov/18063720/">PMID: 18063720</a>). MurG thus performs the last chemical modification of the precursor that is accessible from the cytoplasm.</p>
+<h3 id="finding-4-essential-conserved-enzyme-and-validated-antibacterial-target">Finding 4 — Essential, conserved enzyme and validated antibacterial target</h3>
+<p>MurG is described as <strong>"an essential bacterial glycosyltransferase that is involved in the biosynthesis of peptidoglycan. The enzyme is found in all organisms that synthesize peptidoglycan and is a target for the design of new antibiotics"</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/12455415/">PMID: 12455415</a>). Within the peptidoglycan pathway, the two membrane-linked catalysts <strong>MraY and MurG serve as essential catalysts for lipid I and lipid II formation</strong>, respectively (<a href="https://pubmed.ncbi.nlm.nih.gov/42128180/">PMID: 42128180</a>; see also the comprehensive review <a href="https://pubmed.ncbi.nlm.nih.gov/28201974/">PMID: 28201974</a>). MraY generates lipid I from UDP-MurNAc-pentapeptide and undecaprenyl phosphate; MurG then converts lipid I to lipid II. These are the only two membrane steps of the cytoplasmic pathway, and both are indispensable.</p>
+<p>The essentiality and druggability of MurG have been exploited experimentally. A scintillation proximity assay developed for <em>E. coli</em> MurG inhibitors showed that the lantibiotic <strong>nisin</strong> and the glycopeptide <strong>vancomycin</strong> inhibit the MurG reaction — in these cases by sequestering the lipid II product/substrate rather than by binding the enzyme's active site directly (<a href="https://pubmed.ncbi.nlm.nih.gov/15793120/">PMID: 15793120</a>). By contrast, inhibitors of other peptidoglycan enzymes (penicillin G, moenomycin, bacitracin) had no effect on the MurG step, underscoring the specificity of the assay. Importantly, the antibiotic <strong>ramoplanin</strong>, once proposed to inhibit MurG by binding lipid I, was shown instead to act downstream by binding lipid II as a dimer, inhibiting the transglycosylases rather than MurG directly (<a href="https://pubmed.ncbi.nlm.nih.gov/12862463/">PMID: 12862463</a>) — a useful correction when reasoning about MurG-targeting strategies.</p>
+<p>In <em>P. putida</em> KT2440, <em>murG</em> is annotated as the ordered locus <strong>PP_1337</strong>, consistent with its expected residence within the conserved <strong>division and cell-wall (dcw/mra) gene cluster</strong>, physically adjacent to <em>ftsW</em> and the <em>mur</em> ligases (<em>murC–murF</em>) and <em>mraY</em>. This genomic context — conserved across Gram-negative bacteria — reinforces the functional assignment, because genes in the <em>dcw</em> cluster are co-regulated components of the same peptidoglycan-synthesis and cell-division machine, and MurG's product lipid II is the substrate for the divisome's peptidoglycan synthases during septation and elongation.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>MurG sits at the pivotal junction between the soluble, cytoplasmic assembly of the peptidoglycan monomer and its membrane-embedded export and polymerization. The following schematic places PP_1337 in the <em>P. putida</em> peptidoglycan "lipid cycle":</p>
+<div class="codehilite"><pre><span></span><code> CYTOPLASM
+   UDP-GlcNAc ─► [GlmS/GlmM/GlmU] ─► UDP-MurNAc ─► [MurA–MurF ligases]
+                                          │
+                                          ▼
+                            UDP-MurNAc-pentapeptide
+                                          │
+ INNER MEMBRANE ── MraY (integral) ───────────────────────┤
+ (cytoplasmic        C55-P + UDP-MurNAc-pentapeptide      │
+  leaflet)                 → LIPID I + UMP                 ▼
+                                     ┌──────────┐
+    UDP-GlcNAc (donor) ─────────────►│   MurG   │ ◄── cardiolipin
+                                     │ PP_1337  │     (activity ↑)
+                    LIPID I ────────►│  GT-B    │
+                   (acceptor)        └────┬─────┘
+                                          │ β(1→4) GlcNAc transfer
+                                          ▼
+                                    LIPID II + UDP
+                                          │
+                   ── flippase (MurJ/FtsW) translocation ──►
+ PERIPLASM
+                   transglycosylation / transpeptidation (PBPs)
+                                     → mature PEPTIDOGLYCAN
+</code></pre></div>
+
+<p>Three features integrate the findings into a coherent picture:</p>
+<ol>
+<li>
+<p><strong>Chemistry (Findings 1 &amp; 2).</strong> MurG is a GT-B glycosyltransferase that transfers GlcNAc with formation of a β-1,4 bond to the MurNAc C4-OH. The ordered Bi-Bi kinetics (UDP-GlcNAc first, lipid I second) match the structural logic of donor binding in the C-terminal domain preceding acceptor engagement in the interdomain cleft. The enzyme is metal-ion independent.</p>
+</li>
+<li>
+<p><strong>Location (Finding 3).</strong> The reaction is spatially confined to the cytoplasmic face of the inner membrane. MurG's peripheral association — via a hydrophobic, basic-residue-rimmed patch — lets it capture the membrane-anchored lipid I while drawing soluble UDP-GlcNAc from the cytoplasm. Cardiolipin, enriched at poles and septa, stimulates the enzyme, spatially coupling lipid II production to sites of active envelope growth.</p>
+</li>
+<li>
+<p><strong>Pathway role and essentiality (Finding 4).</strong> MurG and MraY are the two essential membrane catalysts that convert the soluble precursor into the exportable lipid II. Blocking MurG halts peptidoglycan synthesis and is lethal — the basis for its status as an antibacterial target. Its position immediately downstream of MraY and immediately upstream of lipid II flipping makes it a strategic bottleneck.</p>
+</li>
+</ol>
+<p>The following table summarizes the enzyme's defining parameters:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value / Description</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene / locus</td>
+<td><em>murG</em> / PP_1337</td>
+<td>UniProt Q88N76</td>
+</tr>
+<tr>
+<td>Length</td>
+<td>359 aa</td>
+<td>UniProt Q88N76</td>
+</tr>
+<tr>
+<td>Enzyme class</td>
+<td>EC 2.4.1.227</td>
+<td>UniProt; HAMAP MF_00033</td>
+</tr>
+<tr>
+<td>Family / fold</td>
+<td>GT28, MurG subfamily; GT-B two-domain fold</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12538870/">PMID: 12538870</a></td>
+</tr>
+<tr>
+<td>Donor substrate</td>
+<td>UDP-GlcNAc (binds C-terminal domain)</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12538870/">PMID: 12538870</a></td>
+</tr>
+<tr>
+<td>Acceptor substrate</td>
+<td>Lipid I (binds N-terminal domain)</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12022887/">PMID: 12022887</a></td>
+</tr>
+<tr>
+<td>Product</td>
+<td>Lipid II (β-1,4 GlcNAc-MurNAc disaccharide)</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12022887/">PMID: 12022887</a></td>
+</tr>
+<tr>
+<td>Linkage formed</td>
+<td>β-1,4 to MurNAc C4-OH</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12022887/">PMID: 12022887</a></td>
+</tr>
+<tr>
+<td>Kinetic mechanism</td>
+<td>Compulsory ordered Bi-Bi (donor first)</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12022887/">PMID: 12022887</a></td>
+</tr>
+<tr>
+<td>Metal requirement</td>
+<td>None (metal-ion–independent)</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12455415/">PMID: 12455415</a></td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Peripheral membrane, cytoplasmic (inner) leaflet</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12813070/">PMID: 12813070</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/18063720/">PMID: 18063720</a></td>
+</tr>
+<tr>
+<td>Lipid preference</td>
+<td>Cardiolipin &gt; phosphatidylglycerol</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12813070/">PMID: 12813070</a></td>
+</tr>
+<tr>
+<td>Essentiality</td>
+<td>Essential; validated antibacterial target</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12455415/">PMID: 12455415</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/42128180/">PMID: 42128180</a></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<p>The functional annotation rests on a well-developed body of enzymology and structural biology, almost entirely on the <em>E. coli</em> ortholog, transferred to <em>P. putida</em> Q88N76 by strong homology (HAMAP MF_00033; UniProt PE=3).</p>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>Contribution</th>
+<th>Support / caveat</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12022887/">12022887</a></td>
+<td><em>Intrinsic lipid preferences and kinetic mechanism of E. coli MurG</em></td>
+<td>Defines the reaction (GlcNAc → C4-OH of MurNAc, β-linkage), ordered Bi-Bi mechanism, membrane-anchored substrates</td>
+<td>Strong primary evidence; <em>E. coli</em> enzyme</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12538870/">12538870</a></td>
+<td><em>Crystal structure of the MurG:UDP-GlcNAc complex</em></td>
+<td>2.5-Å structure establishing GT-B two-domain fold; donor binds C-terminal domain</td>
+<td>Definitive structural evidence; <em>E. coli</em></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12455415/">12455415</a></td>
+<td><em>E. coli MurG: a paradigm for a superfamily of glycosyltransferases</em></td>
+<td>Establishes essentiality, universal conservation, metal-independence, antibiotic-target status</td>
+<td>Authoritative review/analysis</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12813070/">12813070</a></td>
+<td><em>Membrane interaction of MurG: a special role for cardiolipin</em></td>
+<td>Identifies peripheral-membrane hydrophobic/basic patch; cardiolipin enhances activity over PG</td>
+<td>Primary biochemical evidence; <em>E. coli</em></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18063720/">18063720</a></td>
+<td><em>Lipid intermediates in the biosynthesis of bacterial peptidoglycan</em></td>
+<td>Places lipid I/II as the link between cytoplasmic synthesis and extracytoplasmic polymerization; lipid II made cytoplasmically then translocated</td>
+<td>Authoritative review (van Heijenoort)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15793120/">15793120</a></td>
+<td><em>Scintillation proximity assay for E. coli MurG/MraY inhibitors</em></td>
+<td>Demonstrates assayable MurG reaction; nisin and vancomycin inhibit by sequestering lipid II</td>
+<td>Primary methods/screening paper</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12862463/">12862463</a></td>
+<td><em>Ramoplanin inhibits transglycosylases by binding lipid II</em></td>
+<td>Corrects prior belief that ramoplanin blocks the MurG step; it acts downstream on lipid II</td>
+<td>Primary evidence; refutes a MurG-inhibition model</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/42128180/">42128180</a></td>
+<td><em>Exploiting Mur enzyme characteristics for antibacterial drug design</em></td>
+<td>Confirms MraY and MurG as essential membrane catalysts for lipid I/II</td>
+<td>Recent review</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/28201974/">28201974</a></td>
+<td><em>Mur Ligase Inhibitors as Anti-bacterials</em></td>
+<td>Situates MurG at the end of the cytoplasmic Mur pathway; no human homolog</td>
+<td>Comprehensive review</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11042447/">11042447</a></td>
+<td><em>Glycosyltransferase structure and mechanism</em></td>
+<td>Places MurG among solved GT structures; structural basis of catalysis and classification</td>
+<td>Review; structural context</td>
+</tr>
+</tbody>
+</table>
+<p>Additional structural context comes from related GT-B glycosyltransferases that share MurG's architecture — bacteriophage T4 β-glucosyltransferase, <em>Bacillus subtilis</em> SpsA, and the antibiotic glucosyltransferase GtfB (<a href="https://pubmed.ncbi.nlm.nih.gov/11470430/">PMID: 11470430</a>) — and from family-28 relatives such as <em>Campylobacter jejuni</em> PseG, whose structure is explicitly noted to resemble <em>E. coli</em> MurG (<a href="https://pubmed.ncbi.nlm.nih.gov/19483088/">PMID: 19483088</a>).</p>
+<p><strong>Identity verification.</strong> Every line of evidence is congruent with the target record: the gene symbol <em>murG</em>, EC 2.4.1.227, GT28/MurG family membership, the InterPro (GlcNAc_MurG IPR006009; Glyco_trans_28_C IPR007235; GlycoTrans_28_N IPR004276) and Pfam (PF04101, PF03033) domains, and the <em>P. putida</em> KT2440 organism all agree. No conflicting literature for a different "murG"-symbol gene was encountered. The annotation transfer to <em>P. putida</em> Q88N76 is well justified.</p>
+<hr />
+<h2 id="supported-vs-refuted-hypotheses">Supported vs. Refuted Hypotheses</h2>
+<p><strong>Supported (strong evidence):</strong><br />
+- MurG is a UDP-GlcNAc:lipid I β-1,4-GlcNAc transferase producing lipid II (EC 2.4.1.227). <em>(Direct enzymology + structure in E. coli; homology for Q88N76.)</em><br />
+- Two-domain GT-B fold; ordered Bi-Bi mechanism, donor first; metal-ion independent.<br />
+- Peripheral inner-membrane protein acting on the cytoplasmic face; anionic-lipid/cardiolipin preference.<br />
+- Essential, dcw-cluster gene, validated antibacterial target with no human homolog.</p>
+<p><strong>Refuted / corrected:</strong><br />
+- MurG is <strong>not</strong> the direct target of ramoplanin; that antibiotic binds lipid II downstream of the MurG step (<a href="https://pubmed.ncbi.nlm.nih.gov/12862463/">PMID: 12862463</a>).<br />
+- The natural undecaprenyl (C55) chain is <strong>not</strong> required for MurG catalysis — a shorter lipid acceptor is kinetically preferred in vitro — so the carrier lipid's role is anchoring/downstream processing, not MurG chemistry (<a href="https://pubmed.ncbi.nlm.nih.gov/12022887/">PMID: 12022887</a>).</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No <em>P. putida</em>-specific enzymology.</strong> All kinetic, structural, and lipid-preference data derive from <em>E. coli</em> (or other bacteria). The <em>P. putida</em> KT2440 MurG has not been crystallized, purified, or assayed directly. UniProt lists Q88N76 at protein-existence level PE=3 ("inferred from homology"). Given the high sequence conservation and pathway essentiality, the inference is strong, but species-specific kinetic parameters (Km, kcat), exact lipid preferences, and any <em>Pseudomonas</em>-specific regulation remain unmeasured.</p>
+</li>
+<li>
+<p><strong>Catalytic-residue identity not mapped onto Q88N76.</strong> While the GT-B fold and donor/acceptor domain assignment are established, this report does not pinpoint the exact catalytic base(s) and donor-binding residues in the <em>P. putida</em> sequence. In related GT-B enzymes, conserved acidic residues (e.g., an Asp general base) and Lys/Glu donor-binding residues are identified; mapping the equivalents onto Q88N76 would require alignment and, ideally, mutagenesis.</p>
+</li>
+<li>
+<p><strong>Transition-state chemistry.</strong> The β-linkage stereochemistry is established, but the detailed mechanism (single-displacement vs alternatives) for MurG specifically remains an active question for GT-B enzymes generally.</p>
+</li>
+<li>
+<p><strong>Quaternary state and interactions.</strong> Some literature suggests higher-order functional units for lipid II–synthesizing glycosyltransferases (<a href="https://pubmed.ncbi.nlm.nih.gov/34258006/">PMID: 34258006</a>); the oligomeric state of <em>P. putida</em> MurG in vivo, and its coordination with MraY, MurJ, FtsW, and the elongasome/divisome, are not directly established for this strain.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Direct enzymatic validation in <em>P. putida</em>.</strong> Clone and overexpress PP_1337, reconstitute a lipid I → lipid II assay (e.g., the scintillation-proximity or a fluorescence-based method), and measure Km(UDP-GlcNAc), Km(lipid I), and kcat for the <em>Pseudomonas</em> enzyme; confirm the ordered Bi-Bi mechanism.</p>
+</li>
+<li>
+<p><strong>Structure determination.</strong> Solve the <em>P. putida</em> MurG structure (X-ray, cryo-EM, or a high-confidence AlphaFold model with experimental validation) in apo and UDP-GlcNAc–bound states to confirm the GT-B fold and locate the membrane-association patch and catalytic residues; dock an mDAP-type lipid I.</p>
+</li>
+<li>
+<p><strong>Catalytic-residue mapping.</strong> Align Q88N76 against <em>E. coli</em> MurG and characterized GT-B enzymes to nominate the general base and donor-binding residues, then test by site-directed mutagenesis with activity assays.</p>
+</li>
+<li>
+<p><strong>Membrane/lipid dependence.</strong> Reconstitute <em>P. putida</em> MurG activity in defined vesicles (cardiolipin vs phosphatidylglycerol vs phosphatidylethanolamine) to test whether the cardiolipin preference observed in <em>E. coli</em> holds; use a MurG fluorescent fusion to test pole/septum localization.</p>
+</li>
+<li>
+<p><strong>Essentiality and inhibitor sensitivity.</strong> Confirm <em>murG</em> essentiality in <em>P. putida</em> KT2440 (conditional knockdown/CRISPRi) and test whether nisin, vancomycin, and candidate MurG-targeting compounds inhibit growth and cause lipid II accumulation, exploiting <em>P. putida</em>'s value as a robust chassis organism.</p>
+</li>
+<li>
+<p><strong>Genomic-context confirmation.</strong> Verify the <em>dcw/mra</em> cluster organization around PP_1337 (adjacency to <em>ftsW</em>, <em>murC–murF</em>, <em>mraY</em>) to consolidate the functional and regulatory context in this strain.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>MurG (Q88N76 / PP_1337) of <em>Pseudomonas putida</em> KT2440 is the essential, peripheral-membrane, GT-B–fold glycosyltransferase (GT28 family, EC 2.4.1.227) that carries out the last cytoplasmic reaction of peptidoglycan precursor synthesis: β-1,4 transfer of GlcNAc from UDP-GlcNAc onto the MurNAc C4-hydroxyl of lipid I to form lipid II, via a metal-independent, ordered Bi-Bi mechanism at the cytoplasmic face of the inner membrane, where cardiolipin promotes its activity. The assignment for <em>P. putida</em> is inferred from strong homology to experimentally characterized orthologs (chiefly <em>E. coli</em>), and the enzyme is a validated, universally conserved antibacterial target with no human counterpart.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="murG-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="murG-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:12022887</li>
+<li>PMID:18063720</li>
+<li>PMID:12538870</li>
+<li>PMID:12455415</li>
+<li>PMID:11042447</li>
+<li>PMID:12813070</li>
+<li>PMID:42128180</li>
+<li>PMID:28201974</li>
+<li>PMID:15793120</li>
+<li>PMID:12862463</li>
+<li>PMID:11470430</li>
+<li>PMID:19483088</li>
+<li>PMID:34258006</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(murG-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88N76" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="murg-curation-notes">murG curation notes</h1>
+<p>Q88N76/PP_1337 forms lipid II by transferring GlcNAc to lipid I on the<br />
+cytoplasmic face of the inner membrane<br />
+[UniProtKB:Q88N76, "FUNCTION: Cell wall formation. Catalyzes the transfer of a<br />
+GlcNAc"; "SUBCELLULAR LOCATION: Cell inner membrane"].</p>
+<p>The DAP-specific Rhea term is used for the KT2440 gene-level core function.<br />
+Generic glycosyltransferase terms and broad carbohydrate-process terms are<br />
+modified to the exact reaction or peptidoglycan biosynthesis. The reusable<br />
+module retains the shorter MurG activity term so it is not restricted to one<br />
+stem-peptide chemistry.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88N76
+gene_symbol: murG
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  MurG is the peripheral inner-membrane glycosyltransferase that forms lipid II
+  in Pseudomonas putida KT2440. On the cytoplasmic face of the membrane it
+  transfers N-acetylglucosamine from UDP-GlcNAc to lipid I, producing the
+  disaccharide-pentapeptide precursor exported for peptidoglycan
+  polymerization.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Correct location at the cytoplasmic face of the bacterial inner membrane.
+    action: ACCEPT
+    reason: UniProt identifies MurG as a peripheral inner-membrane protein.
+    supported_by:
+    - reference_id: file:PSEPK/murG/murG-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cell inner membrane&#39;
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Broad process annotation that obscures lipid II synthesis.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: MurG acts specifically in peptidoglycan biosynthesis.
+    supported_by:
+    - reference_id: file:PSEPK/murG/murG-uniprot.txt
+      supporting_text: &#39;PATHWAY: Cell wall biogenesis; peptidoglycan biosynthesis.&#39;
+- term:
+    id: GO:0009252
+    label: peptidoglycan biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Correct core biological process.
+    action: ACCEPT
+    reason: UniProt places Q88N76 in peptidoglycan biosynthesis.
+    supported_by:
+    - reference_id: file:PSEPK/murG/murG-uniprot.txt
+      supporting_text: &#39;PATHWAY: Cell wall biogenesis; peptidoglycan biosynthesis.&#39;
+- term:
+    id: GO:0016757
+    label: glycosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: Generic catalytic parent of the exact MurG activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The Rhea-derived term identifies both the lipid I acceptor and UDP-GlcNAc
+      donor and should replace generic glycosyltransferase activity.
+    supported_by:
+    - reference_id: file:PSEPK/murG/murG-uniprot.txt
+      supporting_text: &#39;FUNCTION: Cell wall formation. Catalyzes the transfer of a GlcNAc&#39;
+- term:
+    id: GO:0016758
+    label: hexosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Broad catalytic parent of the exact MurG activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The target reaction is known at substrate level, so generic
+      hexosyltransferase activity is redundant.
+    supported_by:
+    - reference_id: file:PSEPK/murG/murG-uniprot.txt
+      supporting_text: &#39;FUNCTION: Cell wall formation. Catalyzes the transfer of a GlcNAc&#39;
+- term:
+    id: GO:0050511
+    label: undecaprenyldiphospho-muramoylpentapeptide beta-N-acetylglucosaminyltransferase
+      activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct MurG activity at a slightly broader substrate-description level.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0051991 captures the exact DAP-containing lipid I substrate recorded
+      for KT2440 and is preferred for the gene-level core function.
+    supported_by:
+    - reference_id: file:PSEPK/murG/murG-uniprot.txt
+      supporting_text: &#39;muramoyl-L-alanyl-D-glutamyl-meso-2,6-diaminopimeloyl-D-alanyl-D-&#39;
+- term:
+    id: GO:0051991
+    label: UDP-N-acetyl-D-glucosamine:N-acetylmuramoyl-L-alanyl-D-glutamyl-meso-2,6-diaminopimelyl-D-alanyl-D-alanine-diphosphoundecaprenol
+      4-beta-N-acetylglucosaminlytransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000116
+  qualifier: enables
+  review:
+    summary: Correct substrate-specific core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      The Rhea-mapped term matches the recorded transfer of GlcNAc from
+      UDP-GlcNAc to the DAP-containing lipid I precursor.
+    supported_by:
+    - reference_id: file:PSEPK/murG/murG-uniprot.txt
+      supporting_text: &#39;Reaction=di-trans,octa-cis-undecaprenyl diphospho-N-acetyl-alpha-D-&#39;
+    - reference_id: file:PSEPK/murG/murG-deep-research-openscientist.md
+      supporting_text: &gt;-
+        MurG is a UDP-GlcNAc:lipid I β-1,4-GlcNAc transferase producing lipid II
+        (EC 2.4.1.227).
+- term:
+    id: GO:1901137
+    label: carbohydrate derivative biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: Broad process annotation that obscures the defined cell-wall pathway.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Peptidoglycan biosynthesis is the direct and informative process for MurG.
+    supported_by:
+    - reference_id: file:PSEPK/murG/murG-uniprot.txt
+      supporting_text: &#39;PATHWAY: Cell wall biogenesis; peptidoglycan biosynthesis.&#39;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000116
+  title: Automatic Gene Ontology annotation based on Rhea mapping
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/murG/murG-uniprot.txt
+  title: UniProtKB entry Q88N76 for Pseudomonas putida KT2440 murG
+  findings:
+  - statement: UniProt identifies transfer of GlcNAc to lipid I.
+    supporting_text: &#39;FUNCTION: Cell wall formation. Catalyzes the transfer of a GlcNAc&#39;
+    reference_section_type: RESULTS
+  - statement: UniProt places MurG on the inner membrane&#39;s cytoplasmic face.
+    supporting_text: &#39;SUBCELLULAR LOCATION: Cell inner membrane&#39;
+    reference_section_type: RESULTS
+  - statement: UniProt places MurG in peptidoglycan synthesis.
+    supporting_text: &#39;PATHWAY: Cell wall biogenesis; peptidoglycan biosynthesis.&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Exact target accession with a specific HAMAP MurG assignment; reaction,
+      membrane topology, and pathway are mutually consistent.
+- id: file:PSEPK/murG/murG-deep-research-openscientist.md
+  title: OpenScientist deep research for PSEPK murG
+  findings:
+  - statement: The retrieved evidence supports the exact lipid I glycosyltransferase reaction.
+    supporting_text: &gt;-
+      MurG is a UDP-GlcNAc:lipid I β-1,4-GlcNAc transferase producing lipid II
+      (EC 2.4.1.227).
+    reference_section_type: RESULTS
+  - statement: Detailed biochemical evidence is transferred from bacterial orthologs.
+    supporting_text: &gt;-
+      All kinetic, structural, and lipid-preference data derive from *E. coli*
+      (or other bacteria). The *P. putida* KT2440 MurG has not been crystallized,
+      purified, or assayed directly.
+    reference_section_type: CONCLUSIONS
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      The exact-target family, EC, and domain assignments agree with UniProt.
+      Species-specific kinetic, membrane-lipid, essentiality, and structural
+      claims were not imported from ortholog studies.
+core_functions:
+- description: &gt;-
+    Transfers N-acetylglucosamine from UDP-GlcNAc to DAP-containing lipid I,
+    forming lipid II on the cytoplasmic face of the inner membrane.
+  molecular_function:
+    id: GO:0051991
+    label: UDP-N-acetyl-D-glucosamine:N-acetylmuramoyl-L-alanyl-D-glutamyl-meso-2,6-diaminopimelyl-D-alanyl-D-alanine-diphosphoundecaprenol 4-beta-N-acetylglucosaminlytransferase activity
+  directly_involved_in:
+  - id: GO:0009252
+    label: peptidoglycan biosynthetic process
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: file:PSEPK/murG/murG-uniprot.txt
+    supporting_text: &#39;FUNCTION: Cell wall formation. Catalyzes the transfer of a GlcNAc&#39;
+  - reference_id: file:PSEPK/murG/murG-deep-research-openscientist.md
+    supporting_text: &gt;-
+      MurG is a UDP-GlcNAc:lipid I β-1,4-GlcNAc transferase producing lipid II
+      (EC 2.4.1.227).
+suggested_questions:
+- question: How is KT2440 MurG recruited or retained at active peptidoglycan synthesis sites?
+suggested_experiments:
+- description: &gt;-
+    Track functional fluorescent MurG fusions during growth and perturbations,
+    and test interactions with MraY, MurJ, and divisome proteins.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

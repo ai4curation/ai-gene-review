@@ -1,0 +1,3614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PNPO - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PNPO</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9NVS9" target="_blank" class="term-link">
+                        Q9NVS9
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PNPO";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9NVS9" data-a="DESCRIPTION: PNPO is pyridoxine-5&#39;-phosphate oxidase (pyridoxin..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PNPO is pyridoxine-5&#39;-phosphate oxidase (pyridoxine/pyridoxamine 5&#39;-phosphate oxidase; EC 1.4.3.5), an FMN-dependent flavoenzyme that catalyzes the terminal, rate-limiting step in the biosynthesis of pyridoxal 5&#39;-phosphate (PLP), the catalytically active form of vitamin B6. It oxidizes either pyridoxine 5&#39;-phosphate (PNP) or pyridoxamine 5&#39;-phosphate (PMP) to PLP, using molecular oxygen and generating hydrogen peroxide. The enzyme binds one FMN cofactor per subunit and functions as a homodimer, with each subunit binding one molecule of the product PLP tightly, giving product inhibition. PNPO acts in the cytosol and is broadly (housekeeping) expressed, with highest levels in liver, skeletal muscle and kidney. Because PLP is the essential cofactor for dozens of enzymes, including those of neurotransmitter metabolism, PNPO is critical for maintaining PLP supply; loss-of-function variants cause pyridoxal-5&#39;-phosphate-responsive neonatal/early-infantile epileptic encephalopathy (PNPO deficiency).</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004733" target="_blank" class="term-link">
+                                    GO:0004733
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxamine phosphate oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVS9" data-a="GO:0004733" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core catalytic molecular function of PNPO. The IBA propagation across the pyridoxamine 5&#39;-phosphate oxidase family is correct and matches the experimentally established human activity (EC 1.4.3.5). The GO term definition explicitly covers oxidation of both pyridoxamine 5&#39;-phosphate and pyridoxine 5&#39;-phosphate to PLP.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PNPO/PNPO-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the oxidation of either pyridoxine 5&#39;-phosphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVS9" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mitochondrial localization is not supported for human PNPO, which is a soluble cytosolic enzyme (Reactome places both reactions in the cytosol). This IBA call is driven by a subset of family members with divergent localization and represents an over-annotation for the human protein. Not removed (IBA can reflect genuine biology in some orthologs), but flagged.
+                        </div>
+
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">COMPARTMENT OR COMPLEX MISMATCH</span>
+
+                            </div>
+
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042823" target="_blank" class="term-link">
+                                    GO:0042823
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxal 5&#39;-phosphate biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVS9" data-a="GO:0042823" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core biological process. PNPO catalyzes the terminal step of PLP (active vitamin B6) formation. Consistent with the UniProt PLP-salvage pathway annotation and with the experimental IDA annotation of the same term.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PNPO/PNPO-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">5&#39;-phosphate from pyridoxamine 5&#39;-phosphate: step 1/1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004733" target="_blank" class="term-link">
+                                    GO:0004733
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxamine phosphate oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVS9" data-a="GO:0004733" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA/InterPro/EC/RHEA) assignment of the correct core catalytic activity. Redundant with the experimental IDA/EXP annotations of the same term, which are the stronger evidence.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PNPO/PNPO-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the oxidation of either pyridoxine 5&#39;-phosphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008615" target="_blank" class="term-link">
+                                    GO:0008615
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVS9" data-a="GO:0008615" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This InterPro2GO/keyword-derived term mislabels the process. PNPO does not synthesize pyridoxine (vitamin B6); it oxidizes the already-phosphorylated B6 vitamers PNP and PMP to the active cofactor PLP. The specific, correct process term for this reaction is pyridoxal 5&#39;-phosphate biosynthetic process. Suggest replacing with GO:0042823.
+                        </div>
+
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042823" target="_blank" class="term-link">
+                                    pyridoxal 5&#39;-phosphate biosynthetic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PNPO/PNPO-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the oxidation of either pyridoxine 5&#39;-phosphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010181" target="_blank" class="term-link">
+                                    GO:0010181
+                                </a>
+                            </span>
+                            <span class="term-label">FMN binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVS9" data-a="GO:0010181" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct and core. PNPO is a flavoprotein that binds one FMN per subunit as its redox cofactor. Supported experimentally (IDA, PMID:12824491) and by the crystal structure. Redundant with the IDA annotation of the same term.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PNPO/PNPO-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Binds 1 FMN per subunit.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016638" target="_blank" class="term-link">
+                                    GO:0016638
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on the CH-NH2 group of donors</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVS9" data-a="GO:0016638" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but overly general parent-type oxidoreductase term (relevant to the pyridoxamine-phosphate half-reaction, which acts on the CH-NH2 group of PMP). The specific child term GO:0004733 (pyridoxamine phosphate oxidase activity) is already annotated with experimental evidence and fully captures the activity, so this general term is redundant/over-general.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25910212" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25910212
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Widespread macromolecular interaction perturbations in human...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVS9" data-a="GO:0005515" data-r="PMID:25910212" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a proteome-scale interactome screen (partner AGTRAP, Q6RW13-2). Non-informative for PNPO function - it identifies no specific molecular activity or biologically meaningful complex for this metabolic enzyme. Retained per policy (IPI not removed) but flagged as an over-annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28514442
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of the human interactome defines protein commun...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVS9" data-a="GO:0005515" data-r="PMID:28514442" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a high-throughput interactome map (partner MTERF1, Q99551). Uninformative for the enzyme&#39;s function; kept but marked over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVS9" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a binary interactome reference map (partners AGTRAP Q6RW13-2 and LIME1 Q9H400). Uninformative; kept but marked over-annotated per curation policy on GO:0005515 IPI.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVS9" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a proteome-scale interaction network (partner MTERF1, Q99551). Uninformative for PNPO function; kept but marked over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004733" target="_blank" class="term-link">
+                                    GO:0004733
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxamine phosphate oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15182361" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15182361
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genomic organization, tissue distribution and deletion mutat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVS9" data-a="GO:0004733" data-r="PMID:15182361" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental support for the core catalytic activity. Human brain PNPO was expressed in E. coli and its pyridox(am)ine 5&#39;-phosphate oxidase activity assayed, including via N-/C-terminal truncation mutants. Core function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15182361" target="_blank" class="term-link">
+                                        PMID:15182361
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">affects neither the binding of coenzyme nor catalytic activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVS9" data-a="GO:0005739" data-r="PMID:34800366" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mitochondrial location from a high-throughput proteome dataset. PNPO is a canonical soluble cytosolic enzyme (Reactome localizes both catalyzed reactions to the cytosol), and the cited high-throughput mitochondrial proteome study does not specifically establish PNPO as a mitochondrial resident. Likely reflects cytosolic contamination of the mitochondrial preparation. Retained (HTP experimental-derived) but flagged as an over-annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004733" target="_blank" class="term-link">
+                                    GO:0004733
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxamine phosphate oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15772097" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15772097
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Neonatal epileptic encephalopathy caused by mutations in the...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVS9" data-a="GO:0004733" data-r="PMID:15772097" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental support for the core activity. Human PNPO variants expressed in CHO cells; the disease variant R229W markedly reduced pyridox(am)ine phosphate oxidase activity while splice/stop mutations were null, directly demonstrating the enzyme&#39;s catalytic function. Core function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15772097" target="_blank" class="term-link">
+                                        PMID:15772097
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the missense mutation (R229W) markedly reduced pyridox(am)ine phosphate oxidase activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004733" target="_blank" class="term-link">
+                                    GO:0004733
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxamine phosphate oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12824491" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12824491
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure and properties of recombinant human pyridoxine 5&#39;-...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVS9" data-a="GO:0004733" data-r="PMID:12824491" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental support for the core catalytic activity. Recombinant human PNPO was characterized kinetically (low turnover, low-micromolar KM for both PNP and PMP) and structurally. Core function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12824491" target="_blank" class="term-link">
+                                        PMID:12824491
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">K(m) values in the low micromolar range for both pyridoxine 5&#39;phosphate and pyridoxamine 5&#39;-phosphate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010181" target="_blank" class="term-link">
+                                    GO:0010181
+                                </a>
+                            </span>
+                            <span class="term-label">FMN binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12824491" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12824491
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure and properties of recombinant human pyridoxine 5&#39;-...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVS9" data-a="GO:0010181" data-r="PMID:12824491" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct and core. The crystal structure and biochemistry establish that human PNPO tightly binds one FMN per subunit as its flavin cofactor.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12824491" target="_blank" class="term-link">
+                                        PMID:12824491
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the binding sites for the tightly bound FMN and substrate are highly conserved.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                                    GO:0030170
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxal phosphate binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12824491" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12824491
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure and properties of recombinant human pyridoxine 5&#39;-...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVS9" data-a="GO:0030170" data-r="PMID:12824491" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally supported - each subunit binds one molecule of the product pyridoxal 5&#39;-phosphate tightly (product inhibition). This is a genuine ligand-binding property but is a consequence of the catalytic mechanism (PLP is the reaction product), not an independent core function; kept as non-core supporting evidence.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12824491" target="_blank" class="term-link">
+                                        PMID:12824491
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">binds one molecule of pyridoxal 5&#39;-phosphate tightly on each subunit.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                                    GO:0042803
+                                </a>
+                            </span>
+                            <span class="term-label">protein homodimerization activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12824491" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12824491
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure and properties of recombinant human pyridoxine 5&#39;-...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVS9" data-a="GO:0042803" data-r="PMID:12824491" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally supported - the purified human enzyme is a homodimer, the catalytically active quaternary form. A real structural property but supportive rather than the enzyme&#39;s core catalytic function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12824491" target="_blank" class="term-link">
+                                        PMID:12824491
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The purified human enzyme is a homodimer</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042823" target="_blank" class="term-link">
+                                    GO:0042823
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxal 5&#39;-phosphate biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12824491" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12824491
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure and properties of recombinant human pyridoxine 5&#39;-...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVS9" data-a="GO:0042823" data-r="PMID:12824491" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core biological process, experimentally supported. PNPO catalyzes the terminal step in PLP synthesis.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12824491" target="_blank" class="term-link">
+                                        PMID:12824491
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Pyridoxine 5&#39;-phosphate oxidase catalyzes the terminal step in the synthesis of pyridoxal 5&#39;-phosphate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-965019
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVS9" data-a="GO:0005829" data-r="Reactome:R-HSA-965019" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct subcellular localization. PNPO is a soluble cytosolic enzyme; Reactome localizes the PNP-to-PLP oxidation reaction to the cytosol. Core location.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-965079
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVS9" data-a="GO:0005829" data-r="Reactome:R-HSA-965079" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct subcellular localization (Reactome reaction for the PMP-to-PLP oxidation, cytosol). Consistent with the companion cytosol annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FMN-dependent oxidation of pyridoxine 5&#39;-phosphate and pyridoxamine 5&#39;-phosphate to pyridoxal 5&#39;-phosphate (active vitamin B6), the terminal, rate-limiting step of PLP biosynthesis/salvage.</h3>
+                <span class="vote-buttons" data-g="Q9NVS9" data-a="FUNCTION: FMN-dependent oxidation of pyridoxine 5&#39;-phosphate..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004733" target="_blank" class="term-link">
+                            pyridoxamine phosphate oxidase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12824491" target="_blank" class="term-link">
+                                PMID:12824491
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Pyridoxine 5&#39;-phosphate oxidase catalyzes the terminal step in the synthesis of pyridoxal 5&#39;-phosphate.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15772097" target="_blank" class="term-link">
+                                PMID:15772097
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the missense mutation (R229W) markedly reduced pyridox(am)ine phosphate oxidase activity.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds FMN as its redox prosthetic group (one FMN per subunit), required for the oxidase catalytic mechanism.</h3>
+                <span class="vote-buttons" data-g="Q9NVS9" data-a="FUNCTION: Binds FMN as its redox prosthetic group (one FMN p..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010181" target="_blank" class="term-link">
+                            FMN binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12824491" target="_blank" class="term-link">
+                                PMID:12824491
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the binding sites for the tightly bound FMN and substrate</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PNPO/PNPO-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Binds 1 FMN per subunit.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12824491" target="_blank" class="term-link">
+                            PMID:12824491
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structure and properties of recombinant human pyridoxine 5&#39;-phosphate oxidase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human PNPO catalyzes the terminal step of PLP synthesis; the purified recombinant enzyme is an FMN-containing homodimer with low turnover and low-micromolar KM for both PNP and PMP, and binds one PLP product molecule tightly per subunit (product inhibition).</div>
+
+                        <div class="finding-text">"The purified human enzyme is a homodimer that exhibits a low catalytic rate constant of approximately 0.2 sec(-1)"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15182361" target="_blank" class="term-link">
+                            PMID:15182361
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genomic organization, tissue distribution and deletion mutation of human pyridoxine 5&#39;-phosphate oxidase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human brain PNPO expressed in E. coli; N-terminal 56-residue deletion does not affect coenzyme binding or activity; ubiquitous housekeeping-type expression highest in liver, skeletal muscle and kidney.</div>
+
+                        <div class="finding-text">"deletion of the N-terminal 56 residues affects neither the binding of coenzyme nor catalytic activity."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15772097" target="_blank" class="term-link">
+                            PMID:15772097
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Neonatal epileptic encephalopathy caused by mutations in the PNPO gene encoding pyridox(am)ine 5&#39;-phosphate oxidase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Biallelic PNPO mutations cause PLP-responsive, pyridoxine-resistant neonatal epileptic encephalopathy; expression of human variants in CHO cells showed R229W markedly reduces oxidase activity and splice/stop mutations are null.</div>
+
+                        <div class="finding-text">"having been resistant to treatment with pyridoxine,"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25910212" target="_blank" class="term-link">
+                            PMID:25910212
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Widespread macromolecular interaction perturbations in human genetic disorders.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                            PMID:28514442
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Architecture of the human interactome defines protein communities and disease networks.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-965019
+
+                    </span>
+                </div>
+
+                <div class="reference-title">2xPNPO:2xFMN oxidizes PDXP to PXLP</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-965079
+
+                    </span>
+                </div>
+
+                <div class="reference-title">2xPNPO:2xFMN oxidizes PXAP to PXLP</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PNPO-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9NVS9" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pnpo-human-gene-review-notes">PNPO (human) — gene review notes</h1>
+<h2 id="identity">Identity</h2>
+<ul>
+<li>UniProt: Q9NVS9 (PNPO_HUMAN), 261 aa, chromosome 17. HGNC:30260.</li>
+<li>RecName: Pyridoxine-5'-phosphate oxidase; AltName: Pyridoxamine-phosphate oxidase. EC 1.4.3.5.<br />
+  [file:human/PNPO/PNPO-uniprot.txt "RecName: Full=Pyridoxine-5'-phosphate oxidase"]<br />
+  [file:human/PNPO/PNPO-uniprot.txt "AltName: Full=Pyridoxamine-phosphate oxidase"]</li>
+</ul>
+<h2 id="core-molecular-function-fmn-dependent-oxidase">Core molecular function — FMN-dependent oxidase</h2>
+<ul>
+<li>Catalyzes the terminal, rate-limiting step of pyridoxal 5'-phosphate (PLP, active vitamin B6) synthesis:<br />
+  oxidation of pyridoxine 5'-phosphate (PNP) OR pyridoxamine 5'-phosphate (PMP) to PLP.<br />
+  [file:human/PNPO/PNPO-uniprot.txt "Catalyzes the oxidation of either pyridoxine 5'-phosphate"]</li>
+<li>Reaction 1: PNP + O2 = PLP + H2O2 (Rhea:15149; EC 1.4.3.5).<br />
+  [file:human/PNPO/PNPO-uniprot.txt "pyridoxine 5'-phosphate + O2 = pyridoxal 5'-phosphate + H2O2"]</li>
+<li>Reaction 2: PMP + O2 + H2O = PLP + H2O2 + NH4(+) (Rhea:15817).<br />
+  [file:human/PNPO/PNPO-uniprot.txt "pyridoxamine 5'-phosphate + O2 + H2O = pyridoxal 5'-phosphate"]</li>
+<li>Cofactor: FMN, 1 per subunit (flavoprotein).<br />
+  [file:human/PNPO/PNPO-uniprot.txt "Binds 1 FMN per subunit"]</li>
+<li>GO:0004733 "pyridoxamine phosphate oxidase activity" is the correct catalytic MF; the GO definition<br />
+  explicitly covers BOTH PNP and PMP oxidation ("This activity can also oxidize pyridoxine 5'-phosphate<br />
+  to pyridoxal 5'-phosphate + H2O2") — verified via OLS. So the single GO term captures both UniProt reactions.</li>
+<li>Kinetics: KM 2.1 uM (PNP), 6.2 uM (PMP); low turnover (~0.2 s^-1).<br />
+  [file:human/PNPO/PNPO-uniprot.txt "KM=2.1 uM for pyridoxine 5'-phosphate"]<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/12824491" title="exhibits a low catalytic rate constant of approximately 0.2 sec(-1)">PMID:12824491</a></li>
+</ul>
+<h2 id="structure-quaternary">Structure / quaternary</h2>
+<ul>
+<li>Homodimer; binds one PLP tightly per subunit (product inhibition).<br />
+  [file:human/PNPO/PNPO-uniprot.txt "SUBUNIT: Homodimer"]<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/12824491" title="The purified human enzyme is a homodimer">PMID:12824491</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/12824491" title="the human enzyme binds one molecule of pyridoxal 5'-phosphate tightly on each subunit">PMID:12824491</a></li>
+<li>Crystal structure 1.95 A of residues 49-161 in complex with FMN and PLP (PDB 1NRG), plus later<br />
+  structures (6H00, 8ROS, etc.). Fold = FMN-binding split barrel; PNPOx family.<br />
+  [file:human/PNPO/PNPO-uniprot.txt "SIMILARITY: Belongs to the pyridoxamine 5'-phosphate oxidase family"]</li>
+<li>Product inhibition by PLP: "Pyridoxal 5'-phosphate is an effective product inhibitor."<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/12824491" title="Pyridoxal 5'-phosphate is an effective product inhibitor">PMID:12824491</a></li>
+</ul>
+<h2 id="domain-truncation-biology-pmid15182361">Domain / truncation biology (PMID:15182361)</h2>
+<ul>
+<li>Human brain PNPO expressed in E. coli; N- and C-terminal truncation series.</li>
+<li>Deletion of N-terminal 56 residues does NOT affect coenzyme binding or catalysis (so the N-terminal<br />
+  ~56 aa is dispensable), whereas deletion of residues 1-72 or the C-terminal 238-261 abolishes activity.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/15182361" title="deletion of the N-terminal 56 residues affects neither the binding of coenzyme nor catalytic activity">PMID:15182361</a><br />
+  [file:human/PNPO/PNPO-uniprot.txt "1..56 ... Missing: Has no effect on the catalytic activity"]<br />
+  [file:human/PNPO/PNPO-uniprot.txt "238..261 ... Missing: Loss of catalytic activity"]</li>
+<li>Tissue distribution: ubiquitous ("housekeeping"), highest in liver, skeletal muscle, kidney.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/15182361" title="The major sites of PNPO expression are liver, skeletal muscle and kidneys">PMID:15182361</a></li>
+</ul>
+<h2 id="pathway-localization">Pathway / localization</h2>
+<ul>
+<li>Pathway: cofactor metabolism; PLP salvage — PLP from PMP (step 1/1) and PLP from PNP (step 1/1).<br />
+  [file:human/PNPO/PNPO-uniprot.txt "Cofactor metabolism; pyridoxal 5'-phosphate salvage"]</li>
+<li>Reactome: Vitamin B6 activation to pyridoxal phosphate (R-HSA-964975); reactions R-HSA-965019<br />
+  (PDXP-&gt;PXLP) and R-HSA-965079 (PXAP-&gt;PXLP), both localized to cytosol.<br />
+  [file:human/PNPO/PNPO-uniprot.txt "Reactome; R-HSA-964975; Vitamin B6 activation to pyridoxal phosphate"]</li>
+<li>Localization: cytosol (Reactome TAS; consistent with a soluble metabolic enzyme). A mitochondrion<br />
+  call exists via IBA (GO_Central) and HTP (FlyBase, PMID:34800366) but PNPO is canonically cytosolic;<br />
+  the cached PMID:34800366 (mouse mitochondrial proteome, Cell Metab 2021) does not mention PNPO in its<br />
+  extracted text. Treated as over-annotation, not removed (HTP is experimental-derived; IBA propagated).</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>PNPO deficiency (PNPOD, MIM:610090): neonatal/early-infantile epileptic encephalopathy; seizures<br />
+  respond to PLP but are resistant to pyridoxine.<br />
+  [file:human/PNPO/PNPO-uniprot.txt "onset within hours of birth of a severe seizure disorder"]<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/15772097" title="Seizures ceased with the administration of PLP, having been resistant to treatment with pyridoxine">PMID:15772097</a></li>
+<li>Pathogenic variants R229W (strong activity decrease), R229Q, R225H; expression studies confirmed<br />
+  R229W markedly reduces oxidase activity, splice/stop mutations null.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/15772097" title="the missense mutation (R229W) markedly reduced pyridox(am)ine phosphate oxidase activity">PMID:15772097</a><br />
+  [file:human/PNPO/PNPO-uniprot.txt "R -&gt; W (in PNPOD; strong activity decrease"]</li>
+</ul>
+<h2 id="interactions-goa-go0005515-ipi">Interactions (GOA GO:0005515 IPI)</h2>
+<ul>
+<li>Six bare "protein binding" IPI annotations from proteome-scale interactome / IntAct screens<br />
+  (PMID:25910212, 28514442, 32296183, 33961781) with partners AGTRAP(Q6RW13-2), CMTM5(Q96DZ9-2),<br />
+  LIME1(Q9H400), MTERF1(Q99551). UniProt lists the same IntAct partners.<br />
+  [file:human/PNPO/PNPO-uniprot.txt "AGTRAP; NbExp=6"]</li>
+<li>These are non-informative "protein binding" (GO:0005515) with no functional/complex interpretation for<br />
+  a metabolic enzyme; kept but MARK_AS_OVER_ANNOTATED per curation policy (do not REMOVE IPI).</li>
+</ul>
+<h2 id="review-decisions-summary">Review decisions summary</h2>
+<ul>
+<li>Core MF: GO:0004733 (pyridoxamine phosphate oxidase activity, covers PNP+PMP) + GO:0010181 (FMN binding).</li>
+<li>Core BP: GO:0042823 (PLP biosynthetic process). GO:0008615 (pyridoxine biosynthetic process, IEA-KW) is<br />
+  a mislabel of the pathway (PNPO makes PLP from already-phosphorylated B6 vitamers, it does not synthesize<br />
+  pyridoxine) -&gt; MODIFY to GO:0042823 / KEEP as vitamin B6 biosynthesis context.</li>
+<li>Cofactor-binding MFs GO:0030170 (PLP binding) and GO:0042803 (homodimerization) are real (structure)<br />
+  but supportive, not the core catalytic function -&gt; ACCEPT / KEEP_AS_NON_CORE.</li>
+<li>Location cytosol (Reactome TAS) ACCEPT; mitochondrion (IBA + HTP) MARK_AS_OVER_ANNOTATED.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9NVS9
+gene_symbol: PNPO
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  PNPO is pyridoxine-5&#39;-phosphate oxidase (pyridoxine/pyridoxamine 5&#39;-phosphate
+  oxidase; EC 1.4.3.5), an FMN-dependent flavoenzyme that catalyzes the terminal,
+  rate-limiting step in the biosynthesis of pyridoxal 5&#39;-phosphate (PLP), the
+  catalytically active form of vitamin B6. It oxidizes either pyridoxine
+  5&#39;-phosphate (PNP) or pyridoxamine 5&#39;-phosphate (PMP) to PLP, using molecular
+  oxygen and generating hydrogen peroxide. The enzyme binds one FMN cofactor per
+  subunit and functions as a homodimer, with each subunit binding one molecule of
+  the product PLP tightly, giving product inhibition. PNPO acts in the cytosol and
+  is broadly (housekeeping) expressed, with highest levels in liver, skeletal
+  muscle and kidney. Because PLP is the essential cofactor for dozens of enzymes,
+  including those of neurotransmitter metabolism, PNPO is critical for maintaining
+  PLP supply; loss-of-function variants cause pyridoxal-5&#39;-phosphate-responsive
+  neonatal/early-infantile epileptic encephalopathy (PNPO deficiency).
+alternative_products:
+- name: &#39;1&#39;
+  id: Q9NVS9-1
+- name: &#39;2&#39;
+  id: Q9NVS9-2
+  sequence_note: VSP_058769, VSP_058770
+- name: &#39;3&#39;
+  id: Q9NVS9-3
+  sequence_note: VSP_056410
+- name: &#39;4&#39;
+  id: Q9NVS9-4
+  sequence_note: VSP_056411
+existing_annotations:
+- term:
+    id: GO:0004733
+    label: pyridoxamine phosphate oxidase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core catalytic molecular function of PNPO. The IBA propagation across the
+      pyridoxamine 5&#39;-phosphate oxidase family is correct and matches the
+      experimentally established human activity (EC 1.4.3.5). The GO term
+      definition explicitly covers oxidation of both pyridoxamine 5&#39;-phosphate
+      and pyridoxine 5&#39;-phosphate to PLP.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PNPO/PNPO-uniprot.txt
+      supporting_text: &gt;-
+        Catalyzes the oxidation of either pyridoxine 5&#39;-phosphate
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Mitochondrial localization is not supported for human PNPO, which is a
+      soluble cytosolic enzyme (Reactome places both reactions in the cytosol).
+      This IBA call is driven by a subset of family members with divergent
+      localization and represents an over-annotation for the human protein. Not
+      removed (IBA can reflect genuine biology in some orthologs), but flagged.
+    action: MARK_AS_OVER_ANNOTATED
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - COMPARTMENT_OR_COMPLEX_MISMATCH
+- term:
+    id: GO:0042823
+    label: pyridoxal 5&#39;-phosphate biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Correct core biological process. PNPO catalyzes the terminal step of PLP
+      (active vitamin B6) formation. Consistent with the UniProt PLP-salvage
+      pathway annotation and with the experimental IDA annotation of the same
+      term.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PNPO/PNPO-uniprot.txt
+      supporting_text: &gt;-
+        5&#39;-phosphate from pyridoxamine 5&#39;-phosphate: step 1/1.
+- term:
+    id: GO:0004733
+    label: pyridoxamine phosphate oxidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (ARBA/InterPro/EC/RHEA) assignment of the correct core catalytic
+      activity. Redundant with the experimental IDA/EXP annotations of the same
+      term, which are the stronger evidence.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PNPO/PNPO-uniprot.txt
+      supporting_text: &gt;-
+        Catalyzes the oxidation of either pyridoxine 5&#39;-phosphate
+- term:
+    id: GO:0008615
+    label: pyridoxine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      This InterPro2GO/keyword-derived term mislabels the process. PNPO does not
+      synthesize pyridoxine (vitamin B6); it oxidizes the already-phosphorylated
+      B6 vitamers PNP and PMP to the active cofactor PLP. The specific, correct
+      process term for this reaction is pyridoxal 5&#39;-phosphate biosynthetic
+      process. Suggest replacing with GO:0042823.
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0042823
+      label: pyridoxal 5&#39;-phosphate biosynthetic process
+    supported_by:
+    - reference_id: file:human/PNPO/PNPO-uniprot.txt
+      supporting_text: &gt;-
+        Catalyzes the oxidation of either pyridoxine 5&#39;-phosphate
+- term:
+    id: GO:0010181
+    label: FMN binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct and core. PNPO is a flavoprotein that binds one FMN per subunit as
+      its redox cofactor. Supported experimentally (IDA, PMID:12824491) and by
+      the crystal structure. Redundant with the IDA annotation of the same term.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PNPO/PNPO-uniprot.txt
+      supporting_text: &#39;Binds 1 FMN per subunit.&#39;
+- term:
+    id: GO:0016638
+    label: oxidoreductase activity, acting on the CH-NH2 group of donors
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct but overly general parent-type oxidoreductase term (relevant to the
+      pyridoxamine-phosphate half-reaction, which acts on the CH-NH2 group of
+      PMP). The specific child term GO:0004733 (pyridoxamine phosphate oxidase
+      activity) is already annotated with experimental evidence and fully
+      captures the activity, so this general term is redundant/over-general.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25910212
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a proteome-scale interactome screen (partner
+      AGTRAP, Q6RW13-2). Non-informative for PNPO function - it identifies no
+      specific molecular activity or biologically meaningful complex for this
+      metabolic enzyme. Retained per policy (IPI not removed) but flagged as an
+      over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28514442
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a high-throughput interactome map (partner
+      MTERF1, Q99551). Uninformative for the enzyme&#39;s function; kept but marked
+      over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a binary interactome reference map (partners
+      AGTRAP Q6RW13-2 and LIME1 Q9H400). Uninformative; kept but marked
+      over-annotated per curation policy on GO:0005515 IPI.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a proteome-scale interaction network (partner
+      MTERF1, Q99551). Uninformative for PNPO function; kept but marked
+      over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0004733
+    label: pyridoxamine phosphate oxidase activity
+  evidence_type: EXP
+  original_reference_id: PMID:15182361
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental support for the core catalytic activity. Human brain
+      PNPO was expressed in E. coli and its pyridox(am)ine 5&#39;-phosphate oxidase
+      activity assayed, including via N-/C-terminal truncation mutants. Core
+      function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:15182361
+      supporting_text: &gt;-
+        affects neither the binding of coenzyme nor catalytic activity.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Mitochondrial location from a high-throughput proteome dataset. PNPO is a
+      canonical soluble cytosolic enzyme (Reactome localizes both catalyzed
+      reactions to the cytosol), and the cited high-throughput mitochondrial
+      proteome study does not specifically establish PNPO as a mitochondrial
+      resident. Likely reflects cytosolic contamination of the mitochondrial
+      preparation. Retained (HTP experimental-derived) but flagged as an
+      over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0004733
+    label: pyridoxamine phosphate oxidase activity
+  evidence_type: IDA
+  original_reference_id: PMID:15772097
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental support for the core activity. Human PNPO variants
+      expressed in CHO cells; the disease variant R229W markedly reduced
+      pyridox(am)ine phosphate oxidase activity while splice/stop mutations were
+      null, directly demonstrating the enzyme&#39;s catalytic function. Core
+      function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:15772097
+      supporting_text: &gt;-
+        the missense mutation (R229W) markedly reduced pyridox(am)ine phosphate
+        oxidase activity.
+- term:
+    id: GO:0004733
+    label: pyridoxamine phosphate oxidase activity
+  evidence_type: IDA
+  original_reference_id: PMID:12824491
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental support for the core catalytic activity. Recombinant
+      human PNPO was characterized kinetically (low turnover, low-micromolar KM
+      for both PNP and PMP) and structurally. Core function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:12824491
+      supporting_text: &gt;-
+        K(m) values in the low micromolar range for both pyridoxine 5&#39;phosphate
+        and pyridoxamine 5&#39;-phosphate.
+- term:
+    id: GO:0010181
+    label: FMN binding
+  evidence_type: IDA
+  original_reference_id: PMID:12824491
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct and core. The crystal structure and biochemistry establish that
+      human PNPO tightly binds one FMN per subunit as its flavin cofactor.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:12824491
+      supporting_text: &gt;-
+        the binding sites for the tightly bound FMN and substrate are highly
+        conserved.
+- term:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  evidence_type: IDA
+  original_reference_id: PMID:12824491
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimentally supported - each subunit binds one molecule of the product
+      pyridoxal 5&#39;-phosphate tightly (product inhibition). This is a genuine
+      ligand-binding property but is a consequence of the catalytic mechanism
+      (PLP is the reaction product), not an independent core function; kept as
+      non-core supporting evidence.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:12824491
+      supporting_text: &gt;-
+        binds one molecule of pyridoxal 5&#39;-phosphate tightly on each subunit.
+- term:
+    id: GO:0042803
+    label: protein homodimerization activity
+  evidence_type: IDA
+  original_reference_id: PMID:12824491
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimentally supported - the purified human enzyme is a homodimer, the
+      catalytically active quaternary form. A real structural property but
+      supportive rather than the enzyme&#39;s core catalytic function.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:12824491
+      supporting_text: &#39;The purified human enzyme is a homodimer&#39;
+- term:
+    id: GO:0042823
+    label: pyridoxal 5&#39;-phosphate biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:12824491
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Correct core biological process, experimentally supported. PNPO catalyzes
+      the terminal step in PLP synthesis.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:12824491
+      supporting_text: &gt;-
+        Pyridoxine 5&#39;-phosphate oxidase catalyzes the terminal step in the
+        synthesis of pyridoxal 5&#39;-phosphate.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-965019
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Correct subcellular localization. PNPO is a soluble cytosolic enzyme;
+      Reactome localizes the PNP-to-PLP oxidation reaction to the cytosol. Core
+      location.
+    action: ACCEPT
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-965079
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Correct subcellular localization (Reactome reaction for the PMP-to-PLP
+      oxidation, cytosol). Consistent with the companion cytosol annotation.
+    action: ACCEPT
+core_functions:
+- description: &gt;-
+    FMN-dependent oxidation of pyridoxine 5&#39;-phosphate and pyridoxamine
+    5&#39;-phosphate to pyridoxal 5&#39;-phosphate (active vitamin B6), the terminal,
+    rate-limiting step of PLP biosynthesis/salvage.
+  molecular_function:
+    id: GO:0004733
+    label: pyridoxamine phosphate oxidase activity
+  supported_by:
+  - reference_id: PMID:12824491
+    supporting_text: &gt;-
+      Pyridoxine 5&#39;-phosphate oxidase catalyzes the terminal step in the
+      synthesis of pyridoxal 5&#39;-phosphate.
+  - reference_id: PMID:15772097
+    supporting_text: &gt;-
+      the missense mutation (R229W) markedly reduced pyridox(am)ine phosphate
+      oxidase activity.
+- description: &gt;-
+    Binds FMN as its redox prosthetic group (one FMN per subunit), required for
+    the oxidase catalytic mechanism.
+  molecular_function:
+    id: GO:0010181
+    label: FMN binding
+  supported_by:
+  - reference_id: PMID:12824491
+    supporting_text: &gt;-
+      the binding sites for the tightly bound FMN and substrate
+  - reference_id: file:human/PNPO/PNPO-uniprot.txt
+    supporting_text: &#39;Binds 1 FMN per subunit.&#39;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12824491
+  title: Structure and properties of recombinant human pyridoxine 5&#39;-phosphate oxidase.
+  findings:
+  - statement: &gt;-
+      Human PNPO catalyzes the terminal step of PLP synthesis; the purified
+      recombinant enzyme is an FMN-containing homodimer with low turnover and
+      low-micromolar KM for both PNP and PMP, and binds one PLP product molecule
+      tightly per subunit (product inhibition).
+    supporting_text: &gt;-
+      The purified human enzyme is a homodimer that exhibits a low catalytic
+      rate constant of approximately 0.2 sec(-1)
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache; abstract directly supports catalytic activity, FMN
+      cofactor, homodimer and PLP-binding claims. PDB 1NRG derives from this work.
+- id: PMID:15182361
+  title: Genomic organization, tissue distribution and deletion mutation of human
+    pyridoxine 5&#39;-phosphate oxidase.
+  findings:
+  - statement: &gt;-
+      Human brain PNPO expressed in E. coli; N-terminal 56-residue deletion does
+      not affect coenzyme binding or activity; ubiquitous housekeeping-type
+      expression highest in liver, skeletal muscle and kidney.
+    supporting_text: &gt;-
+      deletion of the N-terminal 56 residues affects neither the binding of
+      coenzyme nor catalytic activity.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache; supports the EXP catalytic-activity annotation and the
+      N-terminal-dispensable truncation biology.
+- id: PMID:15772097
+  title: Neonatal epileptic encephalopathy caused by mutations in the PNPO gene encoding
+    pyridox(am)ine 5&#39;-phosphate oxidase.
+  findings:
+  - statement: &gt;-
+      Biallelic PNPO mutations cause PLP-responsive, pyridoxine-resistant
+      neonatal epileptic encephalopathy; expression of human variants in CHO
+      cells showed R229W markedly reduces oxidase activity and splice/stop
+      mutations are null.
+    supporting_text: &gt;-
+      having been resistant to treatment with pyridoxine,
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache; establishes disease mechanism and directly supports
+      the IDA catalytic-activity annotation via human-variant expression assays.
+- id: PMID:25910212
+  title: Widespread macromolecular interaction perturbations in human genetic disorders.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Proteome-scale interactome screen; source of a bare GO:0005515 IPI
+      (partner AGTRAP). Not informative for PNPO&#39;s molecular function.
+- id: PMID:28514442
+  title: Architecture of the human interactome defines protein communities and disease
+    networks.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput interactome map; source of a bare GO:0005515 IPI (partner
+      MTERF1). Not informative for function.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Binary interactome reference map; source of bare GO:0005515 IPI (partners
+      AGTRAP, LIME1). Not informative for function.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Proteome-scale interaction network; source of bare GO:0005515 IPI (partner
+      MTERF1). Not informative for function.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: MISCITED
+    review_notes: &gt;-
+      Large-scale mitochondrial proteome study; used to support a mitochondrion
+      localization for PNPO, but PNPO is a canonical cytosolic enzyme and the
+      cached full text does not specifically establish PNPO as a mitochondrial
+      resident. Likely reflects cytosolic contamination; annotation flagged as
+      over-annotation.
+- id: Reactome:R-HSA-965019
+  title: 2xPNPO:2xFMN oxidizes PDXP to PXLP
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction for PNP to PLP oxidation, localized to cytosol; supports
+      the cytosol and PLP-biosynthesis annotations.
+- id: Reactome:R-HSA-965079
+  title: 2xPNPO:2xFMN oxidizes PXAP to PXLP
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction for PMP to PLP oxidation, localized to cytosol; supports
+      the cytosol and PLP-biosynthesis annotations.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

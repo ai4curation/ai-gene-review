@@ -1,0 +1,2549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>gcl - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>gcl</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88F03" target="_blank" class="term-link">
+                        Q88F03
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "gcl";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88F03" data-a="DESCRIPTION: gcl encodes glyoxylate carboligase, a thiamine-dip..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>gcl encodes glyoxylate carboligase, a thiamine-diphosphate enzyme in the glyoxylate/tartronate semialdehyde branch. It condenses two glyoxylate molecules to 2-hydroxy-3-oxopropanoate (tartronate semialdehyde), linking glyoxylate catabolism to downstream glycerate formation in KT2440.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                                    GO:0000287
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F03" data-a="GO:0000287" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Magnesium binding is consistent with the TPP-dependent glyoxylate carboligase enzyme family.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The UniProt record lists a magnesium cofactor and InterPro supports the TPP-enzyme domain architecture.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/gcl/gcl-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88F03	gcl	enables	GO:0000287	magnesium ion binding</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F03" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Catalytic activity is true but too broad for this enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Tartronate-semialdehyde synthase activity captures the specific reaction catalyzed by Gcl.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/gcl/gcl-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88F03	gcl	enables	GO:0009028	tartronate-semialdehyde synthase activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005948" target="_blank" class="term-link">
+                                    GO:0005948
+                                </a>
+                            </span>
+                            <span class="term-label">acetolactate synthase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F03" data-a="GO:0005948" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This TreeGrafter complex annotation appears to be over-propagated from related TPP enzymes and is not appropriate for glyoxylate carboligase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Gcl is annotated and described as glyoxylate carboligase, not as an acetolactate synthase complex subunit.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/gcl/gcl-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   RecName: Full=Glyoxylate carboligase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/gcl/gcl-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- FUNCTION: Catalyzes the condensation of two molecules of glyoxylate to</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009028" target="_blank" class="term-link">
+                                    GO:0009028
+                                </a>
+                            </span>
+                            <span class="term-label">tartronate-semialdehyde synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F03" data-a="GO:0009028" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the specific core catalytic activity of Gcl.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt describes the exact glyoxylate condensation reaction and GOA carries Rhea/EC-supported tartronate-semialdehyde synthase activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/gcl/gcl-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC       Reaction=2 glyoxylate + H(+) = 2-hydroxy-3-oxopropanoate + CO2;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/gcl/gcl-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88F03	gcl	enables	GO:0009028	tartronate-semialdehyde synthase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/gcl/gcl-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">The **primary function** of the Gcl gene product is to catalyze the decarboxylative condensation of **two molecules of glyoxylate** into **tartronate semialdehyde**</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009099" target="_blank" class="term-link">
+                                    GO:0009099
+                                </a>
+                            </span>
+                            <span class="term-label">L-valine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F03" data-a="GO:0009099" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The valine biosynthesis annotation is not supported for this glyoxylate carboligase and likely reflects TPP-enzyme family over-propagation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The gene product is glyoxylate carboligase in glyoxylate catabolism, not acetolactate synthase or a valine-biosynthetic enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/gcl/gcl-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   RecName: Full=Glyoxylate carboligase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/gcl/gcl-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88F03	gcl	involved_in	GO:0009436	glyoxylate catabolic process</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009436" target="_blank" class="term-link">
+                                    GO:0009436
+                                </a>
+                            </span>
+                            <span class="term-label">glyoxylate catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F03" data-a="GO:0009436" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Gcl directly consumes glyoxylate in the glyoxylate carboligase branch.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The specific reaction condenses two glyoxylate molecules to tartronate semialdehyde and CO2.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/gcl/gcl-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC       Reaction=2 glyoxylate + H(+) = 2-hydroxy-3-oxopropanoate + CO2;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/gcl/gcl-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88F03	gcl	involved_in	GO:0009436	glyoxylate catabolic process</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/gcl/gcl-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">This is the classic &#34;glycerate pathway&#34; of glyoxylate assimilation, and Gcl is its gatekeeper.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030976" target="_blank" class="term-link">
+                                    GO:0030976
+                                </a>
+                            </span>
+                            <span class="term-label">thiamine pyrophosphate binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F03" data-a="GO:0030976" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TPP binding is expected for this glyoxylate carboligase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The protein is a TPP-enzyme family member and the catalytic reaction is TPP-dependent.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/gcl/gcl-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR045229; TPP_enz.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/gcl/gcl-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88F03	gcl	enables	GO:0030976	thiamine pyrophosphate binding</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050660" target="_blank" class="term-link">
+                                    GO:0050660
+                                </a>
+                            </span>
+                            <span class="term-label">flavin adenine dinucleotide binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F03" data-a="GO:0050660" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FAD binding is plausible cofactor context for glyoxylate carboligase, but the catalytic role is better captured by tartronate-semialdehyde synthase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> OpenScientist and family evidence support Gcl as a ThDP/TPP-family enzyme with FAD binding; FAD is retained as cofactor context rather than treated as the core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/gcl/gcl-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR029035; DHS-like_NAD/FAD-binding_dom.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/gcl/gcl-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">The Gcl enzyme is a thiamine-pyrophosphate (TPP)- and FAD-dependent enzyme.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>TPP-dependent condensation of two glyoxylate molecules to tartronate semialdehyde and carbon dioxide.</h3>
+                <span class="vote-buttons" data-g="Q88F03" data-a="FUNCTION: TPP-dependent condensation of two glyoxylate molec..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009028" target="_blank" class="term-link">
+                            tartronate-semialdehyde synthase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009436" target="_blank" class="term-link">
+                                glyoxylate catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/gcl/gcl-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">CC       Reaction=2 glyoxylate + H(+) = 2-hydroxy-3-oxopropanoate + CO2;</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/gcl/gcl-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">UniProtKB	Q88F03	gcl	enables	GO:0009028	tartronate-semialdehyde synthase activity</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/gcl/gcl-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">Gcl is the first, committed, C-C-bond-forming step of a linear pathway encoded in one operon.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">TreeGrafter supplied acetolactate/valine annotations that do not fit the specific glyoxylate carboligase role; the FAD-binding annotation is retained as non-core cofactor context.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/gcl/gcl-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for gcl</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt describes Gcl as glyoxylate carboligase with the glyoxylate-to-tartronate-semialdehyde reaction.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/gcl/gcl-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GOA annotations for gcl</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GOA includes tartronate-semialdehyde synthase activity and glyoxylate catabolic process.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/gcl/gcl-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report for gcl</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OpenScientist supported Gcl as a cytosolic glyoxylate carboligase/tartronate-semialdehyde synthase and corrected the earlier interpretation of FAD binding as plausible cofactor context.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(gcl-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88F03" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of *gcl* (Glyoxylate Carboligase, PP_4297, UniProt Q88F03) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">4 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-15T17:22:27.980718</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="gcl-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="gcl-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-gcl-glyoxylate-carboligase-pp_4297-uniprot-q88f03-in-pseudomonas-putida-kt2440">Functional Annotation of <em>gcl</em> (Glyoxylate Carboligase, PP_4297, UniProt Q88F03) in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Gene:</strong> gcl (OrderedLocusName PP_4297)<br />
+<strong>Protein:</strong> Glyoxylate carboligase (Gcl); AltName tartronate-semialdehyde synthase<br />
+<strong>UniProt:</strong> Q88F03 · <strong>EC:</strong> 4.1.1.47 · <strong>Organism:</strong> <em>Pseudomonas putida</em> KT2440 (PSEPK)</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>gcl</strong> (ordered locus <strong>PP_4297</strong>; UniProt accession <strong>Q88F03</strong>) of <em>Pseudomonas putida</em> KT2440 encodes <strong>glyoxylate carboligase</strong> (EC 4.1.1.47), also known as <strong>tartronate-semialdehyde synthase</strong>. The gene symbol, EC number, protein family (thiamine-pyrophosphate/TPP enzyme family), and domain architecture reported by UniProt are fully consistent with the primary literature. This report confirms — through direct biochemical precedent, comparative genomics, sequence analysis, and curated pathway databases — that Q88F03 is a genuine, catalytically intact glyoxylate carboligase. There is <strong>no ambiguity in the gene identification</strong>: the "gcl" symbol maps unambiguously to glyoxylate carboligase in bacteria, and the <em>P. putida</em> protein is a close ortholog (74.8% identity) of the biochemically characterized <em>Escherichia coli</em> enzyme.</p>
+<p>The <strong>primary function</strong> of the Gcl gene product is to catalyze the decarboxylative condensation of <strong>two molecules of glyoxylate</strong> into <strong>tartronate semialdehyde</strong> (2-hydroxy-3-oxopropanoate) plus <strong>CO₂</strong>. This is a thiamine-pyrophosphate (TPP)- and FAD-dependent reaction, placing Gcl mechanistically in the acetohydroxyacid synthase (AHAS)/pyruvate oxidase family of ThDP enzymes. The reaction is the <strong>committed, carbon–carbon-bond-forming entry step of the glycerate (tartronate-semialdehyde) pathway</strong>, the metabolic route by which cells assimilate two-carbon (C2) units arriving as glyoxylate — for example, during the catabolism of glycolate and ethylene glycol.</p>
+<p>In terms of <strong>localization</strong>, Gcl is a <strong>soluble cytoplasmic enzyme</strong>: it carries no signal peptide and no membrane-spanning segments, consistent with its role in central carbon metabolism. In terms of <strong>pathway context</strong>, <em>gcl</em> is the first gene of a five-gene operon (<em>gcl-hyi-glxR-ttuD-pykF</em>, PP_4297–PP_4301) encoding the complete downstream glycerate pathway, converting the tartronate semialdehyde product through D-glycerate and 2-phosphoglycerate into pyruvate/lower glycolysis. The operon is under negative transcriptional control by the regulator <strong>GclR</strong>, and its de-repression is the key adaptive event enabling <em>P. putida</em> KT2440 to grow on ethylene glycol as a sole carbon source. The functional assignment rests on multiple independent lines of evidence: <em>E. coli</em> biochemistry, <em>P. putida</em> proteomics and genetics, comparative sequence analysis with perfectly conserved cofactor-binding motifs, and curated KEGG pathway reconstruction.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-gcl-catalyzes-the-condensation-of-two-glyoxylate-molecules-into-tartronate-semialdehyde-co2-ec-41147">Finding 1 — Gcl catalyzes the condensation of two glyoxylate molecules into tartronate semialdehyde + CO₂ (EC 4.1.1.47)</h3>
+<p>The defining catalytic activity of the Gcl protein is the condensation of <strong>two molecules of glyoxylate</strong> to yield <strong>tartronic (tartronate) semialdehyde</strong> and carbon dioxide. This reaction was established directly by the biochemical characterization of the cloned <em>E. coli</em> gcl gene product (Chang, Wang &amp; Cronan, 1993; <a href="https://pubmed.ncbi.nlm.nih.gov/8440684/">PMID: 8440684</a>), which states verbatim that "<em>Glyoxylate carboligase (Gcl) (EC 4.1.1.47) of Escherichia coli catalyzes the condensation of two molecules of glyoxylate to give tartronic semialdehyde, a key intermediate in glyoxylate catabolism.</em>"</p>
+<p>The <em>P. putida</em> Q88F03 protein is annotated identically in UniProt: it carries the same recommended name (glyoxylate carboligase), the same EC number (4.1.1.47), and the same alternative name (tartronate-semialdehyde synthase). It belongs to the same TPP enzyme family and displays matching domain architecture: <strong>Glyox_carbo_lig (IPR006397)</strong>, <strong>THDP-binding (IPR029061)</strong>, and the TPP-binding central and C-terminal domains (<strong>IPR012000 / IPR012001</strong>). The tartronate semialdehyde product is described in the literature as "a key intermediate in glyoxylate catabolism," underscoring that this reaction is the entry point into a defined assimilatory pathway rather than an isolated transformation.</p>
+<h3 id="finding-2-gcl-is-a-tpp-and-fad-dependent-enzyme-of-the-acetohydroxyacid-synthase-pyruvate-oxidase-family">Finding 2 — Gcl is a TPP- and FAD-dependent enzyme of the acetohydroxyacid synthase / pyruvate oxidase family</h3>
+<p>The Gcl enzyme is a thiamine-pyrophosphate (TPP)- and FAD-dependent enzyme. The <em>E. coli</em> enzyme is a 593-residue protein (~64.7 kDa) that displays <strong>30% sequence similarity to the acetohydroxy acid synthases (AHAS)</strong> of the branched-chain amino acid biosynthesis pathway and <strong>26% identity to pyruvate oxidase</strong>, and it contains binding sites for <strong>thiamine pyrophosphate, FAD, and a quinone</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/8440684/">PMID: 8440684</a>). The paper states that "<em>Gcl contains a quinone binding site as well as binding site for thiamine pyrophosphate and FAD,</em>" and it notes the "<em>high level (30%) of sequence similarity to the acetohydroxy acid synthases (AHAS) of branched chain amino acid synthetic pathway.</em>"</p>
+<p>These cofactor requirements are mechanistically important. TPP (thiamine diphosphate) is the catalytic cofactor that stabilizes the acyl-carbanion ("active aldehyde") intermediate needed to form the new C–C bond between the two glyoxylate-derived units, exactly as in other ThDP enzymes. The FAD in this family is structural rather than net-redox-active in the balanced overall reaction, a feature shared with AHAS. The UniProt domain architecture of Q88F03 — including the <strong>DHS-like NAD/FAD-binding domain (IPR029035)</strong>, the THDP-binding domain, and the TPP-binding domains — matches this enzyme family precisely, confirming that the <em>P. putida</em> protein shares the same cofactor-dependent mechanistic class.</p>
+<h3 id="finding-3-q88f03-is-a-true-glyoxylate-carboligase-ortholog-748-identity-to-characterized-e-coli-gcl-and-is-cytoplasmic">Finding 3 — Q88F03 is a true glyoxylate carboligase ortholog (74.8% identity to characterized <em>E. coli</em> Gcl) and is cytoplasmic</h3>
+<p>Comparative sequence analysis places Q88F03 unambiguously as an ortholog of the biochemically validated <em>E. coli</em> enzyme. A global Needleman–Wunsch alignment of <em>P. putida</em> KT2440 Gcl (Q88F03, 591 aa) against the characterized <em>E. coli</em> Gcl (P0AEP7 / GCL_ECOLI, 593 aa) yields <strong>449/600 identical positions = 74.8% identity</strong> over the full-length alignment (76.0% over the <em>P. putida</em> length). The two proteins are nearly identical in length (591 vs 593 aa), consistent with a one-to-one orthologous relationship rather than a distant paralog or a mis-annotated family member.</p>
+<p>This level of identity — well above the ~40% threshold often used to transfer enzymatic function with confidence, and comfortably above the ~30% AHAS-family similarity that already implies a shared fold — provides strong evidence that Q88F03 catalyzes the same reaction as the <em>E. coli</em> enzyme.</p>
+<p>Regarding <strong>localization</strong>, the protein has no N-terminal secretion signal. N-terminal Kyte–Doolittle hydropathy analysis (window 19) peaks at only <strong>0.89</strong> across the first 30 residues, well below the ~1.6 value characteristic of Sec-dependent signal peptides, and the mature N-terminus (MSKMRAIDAAVLVMRRE…) is hydrophilic and charged. Together with the absence of transmembrane segments, this indicates that Gcl is a <strong>soluble cytoplasmic enzyme</strong>, the expected compartment for an enzyme of central carbon/glyoxylate metabolism.</p>
+<h3 id="finding-4-catalytic-and-tppfad-cofactor-binding-regions-are-perfectly-conserved-between-the-p-putida-and-e-coli-orthologs">Finding 4 — Catalytic and TPP/FAD cofactor-binding regions are perfectly conserved between the <em>P. putida</em> and <em>E. coli</em> orthologs</h3>
+<p>Beyond the high overall identity, the functionally critical regions of Gcl are perfectly conserved between <em>P. putida</em> and <em>E. coli</em>. The full-length pairwise alignment (74.8% overall identity) contains several long, 100%-identical blocks concentrated in the domains that build and bind the cofactors and substrate:</p>
+<table>
+<thead>
+<tr>
+<th>Conserved block (P. putida position)</th>
+<th>Sequence</th>
+<th>Functional domain</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>~res 87 (33 residues)</td>
+<td><code>LYSASADSIPILCITGQAPRARLHKEDFQAVDI</code></td>
+<td>N-terminal pyrimidine-binding (PYR) domain</td>
+</tr>
+<tr>
+<td>~res 410 (22 residues)</td>
+<td><code>RHWINCGQAGPLGWTIPAALGV</code></td>
+<td>Central transketolase-like domain</td>
+</tr>
+<tr>
+<td>~res 468 (14 residues)</td>
+<td><code>HVLVNNAYLGLIRQ</code></td>
+<td>C-terminal TPP-binding domain (contains conserved "NN" of the ThDP diphosphate-binding fingerprint)</td>
+</tr>
+</tbody>
+</table>
+<p>Nine non-overlapping 25-residue windows are 100% identical between the two orthologs. Critically, the C-terminal block containing the "<strong>NN</strong>" motif corresponds to the canonical thiamine-diphosphate diphosphate-binding fingerprint of the InterPro TPP-binding domain (IPR012001), and the N-terminal block sits within the pyrimidine-binding portion of the ThDP cofactor pocket. The fact that these substrate- and cofactor-contacting regions are perfectly (not just highly) conserved provides strong structural/evolutionary evidence that Q88F03 retains a fully functional active site and is a <strong>catalytically intact</strong> glyoxylate carboligase, not a degenerate pseudoenzyme.</p>
+<h3 id="finding-5-kegg-confirms-the-reaction-and-a-complete-downstream-glycerate-pathway-operon-at-pp_4297pp_4301">Finding 5 — KEGG confirms the reaction and a complete downstream glycerate-pathway operon at PP_4297–PP_4301</h3>
+<p>Curated pathway data corroborate the biochemical assignment and place <em>gcl</em> at the head of a complete metabolic module. KEGG assigns <strong>PP_4297/gcl to KO K01608</strong> (tartronate-semialdehyde synthase, EC 4.1.1.47) within pathway <strong>ppu00630 (Glyoxylate and dicarboxylate metabolism)</strong>, and annotates the protein with Pfam TPP_enzyme_N/M/C domains. The EC 4.1.1.47 reaction is formally written as "<strong>2 glyoxylate = 2-hydroxy-3-oxopropanoate + CO₂</strong>" (KEGG reaction R00013; systematic name <em>glyoxylate carboxy-lyase (dimerizing; 2-hydroxy-3-oxopropanoate-forming)</em>).</p>
+<p>The genomic context is especially informative. Gene <em>gcl</em> (coordinates 4,886,942–4,888,717, + strand) is immediately followed on the same strand by a contiguous set of glycerate-pathway genes:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Gene</th>
+<th>KO</th>
+<th>Enzyme</th>
+<th>EC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_4297</td>
+<td><em>gcl</em></td>
+<td>K01608</td>
+<td>Glyoxylate carboligase / tartronate-semialdehyde synthase</td>
+<td>4.1.1.47</td>
+</tr>
+<tr>
+<td>PP_4298</td>
+<td><em>hyi</em></td>
+<td>K01816</td>
+<td>Hydroxypyruvate isomerase</td>
+<td>5.3.1.22</td>
+</tr>
+<tr>
+<td>PP_4299</td>
+<td><em>glxR</em></td>
+<td>K00042</td>
+<td>2-hydroxy-3-oxopropionate (tartronate semialdehyde) reductase</td>
+<td>1.1.1.60</td>
+</tr>
+<tr>
+<td>PP_4300</td>
+<td><em>ttuD</em></td>
+<td>K11529</td>
+<td>Glycerate 2-kinase</td>
+<td>2.7.1.165</td>
+</tr>
+<tr>
+<td>PP_4301</td>
+<td><em>pykF</em></td>
+<td>K00873</td>
+<td>Pyruvate kinase</td>
+<td>2.7.1.40</td>
+</tr>
+</tbody>
+</table>
+<p>PP_4296 is divergently transcribed on the complementary strand. This arrangement encodes the enzymatic steps needed to convert tartronate semialdehyde all the way to pyruvate: reduction to D-glycerate (GlxR), phosphorylation to 2-phosphoglycerate (TtuD glycerate 2-kinase), and entry into lower glycolysis, with the isomerase Hyi handling hydroxypyruvate/tartronate-semialdehyde interconversions. The colocalization of the entire pathway in one operon is powerful genomic evidence that Gcl's biological role is to feed C2 (glyoxylate) carbon into central metabolism.</p>
+<h3 id="finding-6-in-p-putida-gcl-is-the-key-glyoxylate-assimilation-enzyme-induced-during-glycolateethylene-glycol-catabolism">Finding 6 — In <em>P. putida</em>, Gcl is the key glyoxylate-assimilation enzyme induced during glycolate/ethylene-glycol catabolism</h3>
+<p>Physiological, proteomic, and genetic studies in <em>P. putida</em> directly demonstrate that Gcl functions in glyoxylate assimilation. Comparative proteomics of <em>P. putida</em> JM37 showed that <strong>tartronate semialdehyde synthase (Gcl), malate synthase (GlcB), and isocitrate lyase (AceA) are specifically induced when cells are grown on ethylene glycol or glyoxylic acid</strong> (Mückschel et al., 2012; <a href="https://pubmed.ncbi.nlm.nih.gov/23023748/">PMID: 23023748</a>). The paper states that "<em>tartronate semialdehyde synthase (Gcl), malate synthase (GlcB), and isocitrate lyase (AceA) were found to be induced in the presence of ethylene glycol or glyoxylic acid,</em>" defining the physiological trigger for Gcl expression.</p>
+<p>In KT2440, <strong>adaptive laboratory evolution for growth on ethylene glycol converged on de-repression of the glyoxylate carboligase pathway</strong> (Li et al., 2019; <a href="https://pubmed.ncbi.nlm.nih.gov/31166064/">PMID: 31166064</a>), which identifies "<em>a central role of the transcriptional regulator GclR, which represses the glyoxylate carboligase pathway.</em>" This establishes the Gcl (glyoxylate carboligase) pathway as the metabolic route that enables ethylene-glycol utilization once the block imposed by the regulator is lifted.</p>
+<h3 id="finding-7-gcl-pp_4297-is-an-operonic-gene-repressed-by-gclr-acting-with-glxr-in-the-glycerate-pathway">Finding 7 — <em>gcl</em> (PP_4297) is an operonic gene repressed by GclR, acting with GlxR in the glycerate pathway</h3>
+<p>The regulation and functional partnership of <em>gcl</em> are well defined. In KT2440, <em>gcl</em> and its four neighboring genes (<em>hyi, glxR, ttuD, pykF</em>) are co-transcribed as a single operon: Franden et al. (2018; <a href="https://pubmed.ncbi.nlm.nih.gov/29885475/">PMID: 29885475</a>) report that "<em>all of the four genes in genomic proximity to gcl (hyi, glxR, ttuD, and pykF) are transcribed as an operon.</em>" Functionally, expression of just two of these genes is the minimal requirement to unlock ethylene-glycol growth — "<em>the expression of only two genes (gcl and glxR) resulted in growth in ethylene glycol</em>" — showing that Gcl (glyoxylate carboligase) acts immediately upstream of GlxR (tartronate semialdehyde reductase) in the glycerate pathway, with full operon expression further improving growth.</p>
+<p>Transcriptional control is provided by <strong>GclR</strong>, a repressor. Adaptive laboratory evolution independently and repeatedly selected loss-of-function mutations in GclR as the primary route to derepress the pathway (Li et al., 2019; <a href="https://pubmed.ncbi.nlm.nih.gov/31166064/">PMID: 31166064</a>), which describes "<em>the transcriptional regulator GclR, which represses the glyoxylate carboligase pathway as part of a larger metabolic context of purine and allantoin metabolism.</em>" This ties the pathway not only to C2 (glycolate/ethylene glycol) catabolism but also to the broader glyoxylate flux generated by purine/allantoin degradation.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>Integrating the seven findings yields a coherent mechanistic and physiological model of Gcl (PP_4297) in <em>P. putida</em> KT2440.</p>
+<p><strong>The catalyzed reaction.</strong> Gcl is a ThDP-dependent lyase/carboligase that performs a decarboxylative carboligation. Using its TPP cofactor to generate an active-aldehyde (thiamine-bound carbanion) intermediate from one glyoxylate, it forms a new carbon–carbon bond to a second glyoxylate and releases CO₂, producing the three-carbon product tartronate semialdehyde:</p>
+<div class="codehilite"><pre><span></span><code>      Glyoxylate  +  Glyoxylate
+(C2)          (C2)
+   \           /
+    \         /   [ Gcl: TPP, FAD ]
+     \       /
+      v     v
+     Tartronate semialdehyde (C3, 2-hydroxy-3-oxopropanoate)  +  CO2
+</code></pre></div>
+
+<p><strong>The glycerate (tartronate-semialdehyde) pathway.</strong> Gcl is the first, committed, C–C-bond-forming step of a linear pathway encoded in one operon. The downstream steps, all encoded adjacent to <em>gcl</em>, convert the product to central-metabolic intermediates:</p>
+<div class="codehilite"><pre><span></span><code><span class="w"> </span><span class="n">Glycolate</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">Ethylene</span><span class="w"> </span><span class="n">glycol</span>
+<span class="o">|</span><span class="w">  </span><span class="p">(</span><span class="n">upstream</span><span class="w"> </span><span class="n">oxidation</span><span class="p">)</span>
+<span class="n">v</span>
+<span class="w">   </span><span class="mi">2</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="n">Glyoxylate</span>
+<span class="o">|</span><span class="w">  </span><span class="n">gcl</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">PP_4297</span><span class="w">   </span><span class="p">(</span><span class="n">Glyoxylate</span><span class="w"> </span><span class="n">carboligase</span><span class="p">,</span><span class="w"> </span><span class="n">EC</span><span class="w"> </span><span class="mf">4.1.1.47</span><span class="p">)</span><span class="w">   </span><span class="o">&lt;--</span><span class="w"> </span><span class="n">committed</span><span class="w"> </span><span class="n">step</span>
+<span class="n">v</span>
+<span class="w"> </span><span class="n">Tartronate</span><span class="w"> </span><span class="n">semialdehyde</span><span class="w">  </span><span class="p">(</span><span class="o">+</span><span class="w"> </span><span class="n">CO2</span><span class="p">)</span>
+<span class="o">|</span><span class="w">  </span><span class="n">glxR</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">PP_4299</span><span class="w">  </span><span class="p">(</span><span class="n">Tartronate</span><span class="o">-</span><span class="n">semialdehyde</span><span class="w"> </span><span class="n">reductase</span><span class="p">,</span><span class="w"> </span><span class="n">EC</span><span class="w"> </span><span class="mf">1.1.1.60</span><span class="p">;</span><span class="w"> </span><span class="n">NAD</span><span class="p">(</span><span class="n">P</span><span class="p">)</span><span class="n">H</span><span class="p">)</span>
+<span class="n">v</span>
+<span class="w">   </span><span class="n">D</span><span class="o">-</span><span class="n">Glycerate</span>
+<span class="o">|</span><span class="w">  </span><span class="n">ttuD</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">PP_4300</span><span class="w">  </span><span class="p">(</span><span class="n">Glycerate</span><span class="w"> </span><span class="mi">2</span><span class="o">-</span><span class="n">kinase</span><span class="p">,</span><span class="w"> </span><span class="n">EC</span><span class="w"> </span><span class="mf">2.7.1.165</span><span class="p">)</span>
+<span class="n">v</span>
+<span class="w">   </span><span class="mi">2</span><span class="o">-</span><span class="n">Phosphoglycerate</span>
+<span class="o">|</span><span class="w">  </span><span class="p">(</span><span class="n">enolase</span><span class="p">;</span><span class="w"> </span><span class="n">then</span><span class="w"> </span><span class="n">pykF</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">PP_4301</span><span class="w"> </span><span class="n">pyruvate</span><span class="w"> </span><span class="n">kinase</span><span class="p">,</span><span class="w"> </span><span class="n">EC</span><span class="w"> </span><span class="mf">2.7.1.40</span><span class="p">)</span>
+<span class="n">v</span>
+<span class="w">   </span><span class="n">Pyruvate</span><span class="w">  </span><span class="o">-&gt;</span><span class="w">  </span><span class="n">Lower</span><span class="w"> </span><span class="n">glycolysis</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">TCA</span><span class="w"> </span><span class="n">cycle</span>
+</code></pre></div>
+
+<p>The isomerase <em>hyi</em> (PP_4298, hydroxypyruvate isomerase) participates in interconversion of tartronate semialdehyde/hydroxypyruvate species within this module. The net effect of the pathway is to assimilate two C2 glyoxylate units (four carbons in, one lost as CO₂) into a single three-carbon glycerate that can be phosphorylated and fed into gluconeogenesis/glycolysis and the TCA cycle. This is the classic "glycerate pathway" of glyoxylate assimilation, and Gcl is its gatekeeper.</p>
+<p><strong>Physiological role and regulation.</strong> Under standard conditions the operon is silenced by the repressor GclR. The pathway becomes physiologically relevant when the cell must metabolize substrates that funnel carbon through glyoxylate — most prominently <strong>ethylene glycol</strong> and <strong>glycolate</strong>, but also glyoxylate generated by <strong>purine/allantoin</strong> catabolism. Proteomics shows Gcl (with GlcB malate synthase and AceA isocitrate lyase) is induced on ethylene glycol/glyoxylate, and laboratory evolution shows that lifting GclR repression is the decisive adaptive event permitting growth on ethylene glycol. Notably, cells appear to have two possible fates for glyoxylate: (i) the <strong>glyoxylate shunt</strong> (isocitrate lyase/malate synthase) for anaplerosis, and (ii) the <strong>glycerate pathway</strong> (Gcl) for net C2 assimilation into glycolytic carbon. Co-induction of both routes on ethylene glycol suggests they operate together to balance anaplerotic and assimilatory demands.</p>
+<p><strong>Localization.</strong> All evidence — the absence of a signal peptide, low N-terminal hydropathy, lack of transmembrane segments, and the enzyme's role in central carbon metabolism — indicates that Gcl performs its function in the <strong>cytoplasm</strong> as a soluble enzyme.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Study</th>
+<th>Relevance to Gcl (Q88F03)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/8440684/">8440684</a></td>
+<td><em>Molecular cloning, DNA sequencing, and biochemical analyses of E. coli glyoxylate carboligase</em> (Chang, Wang &amp; Cronan, 1993)</td>
+<td><strong>Primary biochemical reference.</strong> Directly establishes the catalyzed reaction (2 glyoxylate → tartronic semialdehyde), the EC number (4.1.1.47), the cofactors (TPP, FAD, quinone site), and family membership (AHAS/pyruvate oxidase). Q88F03 is a 74.8%-identical ortholog of this enzyme.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23023748/">23023748</a></td>
+<td><em>Ethylene glycol metabolism by Pseudomonas putida</em> (Mückschel et al., 2012)</td>
+<td>Proteomic evidence that Gcl (tartronate semialdehyde synthase) is specifically induced on ethylene glycol/glyoxylate in <em>P. putida</em>, defining its physiological role in C2/glyoxylate catabolism.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29885475/">29885475</a></td>
+<td><em>Engineering Pseudomonas putida KT2440 for efficient ethylene glycol utilization</em> (Franden et al., 2018)</td>
+<td>Defines the <em>gcl-hyi-glxR-ttuD-pykF</em> operon; shows <em>gcl</em> + <em>glxR</em> are the minimal pair sufficient for ethylene-glycol growth, placing Gcl upstream of tartronate-semialdehyde reductase (GlxR).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31166064/">31166064</a></td>
+<td><em>Laboratory evolution reveals the metabolic and regulatory basis of ethylene glycol metabolism by P. putida KT2440</em> (Li et al., 2019)</td>
+<td>Identifies GclR as the repressor of the glyoxylate carboligase pathway and links its de-repression to ethylene-glycol growth and to purine/allantoin metabolism.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21751162/">21751162</a></td>
+<td><em>Plasmid construction for a glycolate-oxidizing pathway in plants</em> (2011)</td>
+<td>Uses glyoxylate carboligase and tartronic semialdehyde reductase as engineering tools, corroborating the pathway partnership and the functional annotation of Gcl.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/14342490/">14342490</a></td>
+<td><em>The utilization of glycollate by Micrococcus denitrificans: the beta-hydroxyaspartate pathway</em> (1965)</td>
+<td>Provides classical context: an organism that assimilates glyoxylate via an <strong>alternative</strong> (β-hydroxyaspartate) route with "negligible glyoxylate-carboligase activity," highlighting by contrast that Gcl defines the glycerate pathway.</td>
+</tr>
+</tbody>
+</table>
+<p>The convergence of these independent evidence types — direct enzymology, comparative proteomics, operon genetics, adaptive-evolution regulatory mapping, and curated KEGG pathway reconstruction — makes the functional assignment of Q88F03 as glyoxylate carboligase highly robust.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct biochemistry on the <em>P. putida</em> protein.</strong> The catalytic assignment for Q88F03 rests on strong homology (74.8% identity, perfectly conserved active-site motifs) to the <em>E. coli</em> enzyme and on proteomic/genetic association, but the purified <em>P. putida</em> KT2440 protein has not, to our knowledge, been kinetically characterized (kcat, Km for glyoxylate, cofactor stoichiometry). Substrate specificity is inferred, not directly measured, in this organism.</p>
+</li>
+<li>
+<p><strong>Localization is predicted, not experimentally verified.</strong> The cytoplasmic assignment is based on bioinformatic signal-peptide and hydropathy analysis plus the enzyme's metabolic role. No fractionation or microscopy data specific to <em>P. putida</em> Gcl were examined.</p>
+</li>
+<li>
+<p><strong>Quaternary structure and cofactor loading unconfirmed.</strong> Family members (AHAS, pyruvate oxidase) are typically oligomeric with tightly bound TPP/FAD/Mg²⁺; the oligomeric state and exact cofactor content of the <em>P. putida</em> enzyme are inferred from homology only. No experimental structure of Q88F03 was analyzed.</p>
+</li>
+<li>
+<p><strong>Regulatory details in KT2440 are partly indirect.</strong> GclR-mediated repression and operon structure are well supported, but the precise GclR operator sequence, inducer molecule, and quantitative regulatory logic in the native (non-evolved) strain remain incompletely defined.</p>
+</li>
+<li>
+<p><strong>Relative flux between glyoxylate shunt and glycerate pathway.</strong> The quantitative partitioning of glyoxylate between anaplerosis (glyoxylate shunt) and assimilation (Gcl/glycerate pathway) under different growth conditions has not been resolved here.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Enzymatic characterization of purified Q88F03.</strong> Overexpress and purify the <em>P. putida</em> KT2440 Gcl, confirm TPP/FAD/Mg²⁺ dependence, and measure kinetic constants for glyoxylate and possible alternative 2-oxo-acid substrates to test substrate specificity directly.</p>
+</li>
+<li>
+<p><strong>Structural determination.</strong> Solve the crystal or cryo-EM structure (or generate/validate an AlphaFold model) to confirm the ThDP/FAD binding-pocket architecture and the oligomeric state, and to validate that the perfectly conserved motifs form the active site.</p>
+</li>
+<li>
+<p><strong>Targeted gene deletion and complementation.</strong> Construct a clean Δ<em>gcl</em> mutant in KT2440 and test growth on ethylene glycol, glycolate, and glyoxylate; complement with Q88F03 to demonstrate that this specific gene is necessary for the glycerate-pathway phenotype.</p>
+</li>
+<li>
+<p><strong>Localization confirmation.</strong> Use cell fractionation and/or a fluorescent fusion to verify cytoplasmic localization experimentally.</p>
+</li>
+<li>
+<p><strong>Regulatory mapping of GclR.</strong> Perform ChIP-seq/EMSA to define the GclR operator upstream of PP_4297 and identify the physiological inducer, clarifying the native regulatory circuit and its link to purine/allantoin metabolism.</p>
+</li>
+<li>
+<p><strong>¹³C metabolic flux analysis.</strong> Trace ¹³C-labeled ethylene glycol/glycolate to quantify flux partitioning between the Gcl/glycerate pathway and the glyoxylate shunt under different carbon regimes.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>The gene identity is confirmed and unambiguous: <strong>gcl (PP_4297, UniProt Q88F03) of <em>Pseudomonas putida</em> KT2440 encodes glyoxylate carboligase / tartronate-semialdehyde synthase (EC 4.1.1.47)</strong>, a soluble cytoplasmic, TPP- and FAD-dependent enzyme of the AHAS/pyruvate-oxidase (TPP enzyme) family. Its primary function is the decarboxylative condensation of two glyoxylate molecules into tartronate semialdehyde plus CO₂ — the committed first step of the glycerate pathway that assimilates C2 carbon (from glycolate, ethylene glycol, and purine/allantoin-derived glyoxylate) into lower glycolysis. This assignment is supported by direct <em>E. coli</em> biochemistry, 74.8% sequence identity with perfectly conserved active-site motifs, <em>P. putida</em> proteomics and genetics, operon structure (<em>gcl-hyi-glxR-ttuD-pykF</em>, PP_4297–PP_4301), GclR-mediated regulation, and curated KEGG pathway data.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="gcl-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="gcl-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:8440684</li>
+<li>PMID:23023748</li>
+<li>PMID:31166064</li>
+<li>PMID:29885475</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88F03
+gene_symbol: gcl
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  gcl encodes glyoxylate carboligase, a thiamine-diphosphate enzyme in the
+  glyoxylate/tartronate semialdehyde branch. It condenses two glyoxylate
+  molecules to 2-hydroxy-3-oxopropanoate (tartronate semialdehyde), linking
+  glyoxylate catabolism to downstream glycerate formation in KT2440.
+existing_annotations:
+- term:
+    id: GO:0000287
+    label: magnesium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Magnesium binding is consistent with the TPP-dependent glyoxylate carboligase enzyme family.
+    action: ACCEPT
+    reason: The UniProt record lists a magnesium cofactor and InterPro supports the TPP-enzyme domain architecture.
+    supported_by:
+    - reference_id: file:PSEPK/gcl/gcl-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88F03\tgcl\tenables\tGO:0000287\tmagnesium ion binding&#34;
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Catalytic activity is true but too broad for this enzyme.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Tartronate-semialdehyde synthase activity captures the specific reaction catalyzed by Gcl.
+    supported_by:
+    - reference_id: file:PSEPK/gcl/gcl-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88F03\tgcl\tenables\tGO:0009028\ttartronate-semialdehyde synthase activity&#34;
+- term:
+    id: GO:0005948
+    label: acetolactate synthase complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: part_of
+  review:
+    summary: This TreeGrafter complex annotation appears to be over-propagated from related TPP enzymes and is not appropriate for glyoxylate carboligase.
+    action: REMOVE
+    reason: Gcl is annotated and described as glyoxylate carboligase, not as an acetolactate synthase complex subunit.
+    supported_by:
+    - reference_id: file:PSEPK/gcl/gcl-uniprot.txt
+      supporting_text: &#34;DE   RecName: Full=Glyoxylate carboligase&#34;
+    - reference_id: file:PSEPK/gcl/gcl-uniprot.txt
+      supporting_text: &#34;CC   -!- FUNCTION: Catalyzes the condensation of two molecules of glyoxylate to&#34;
+- term:
+    id: GO:0009028
+    label: tartronate-semialdehyde synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the specific core catalytic activity of Gcl.
+    action: ACCEPT
+    reason: UniProt describes the exact glyoxylate condensation reaction and GOA carries Rhea/EC-supported tartronate-semialdehyde synthase activity.
+    supported_by:
+    - reference_id: file:PSEPK/gcl/gcl-uniprot.txt
+      supporting_text: &#34;CC       Reaction=2 glyoxylate + H(+) = 2-hydroxy-3-oxopropanoate + CO2;&#34;
+    - reference_id: file:PSEPK/gcl/gcl-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88F03\tgcl\tenables\tGO:0009028\ttartronate-semialdehyde synthase activity&#34;
+    - reference_id: file:PSEPK/gcl/gcl-deep-research-openscientist.md
+      supporting_text: &#34;The **primary function** of the Gcl gene product is to catalyze the decarboxylative condensation of **two molecules of glyoxylate** into **tartronate semialdehyde**&#34;
+- term:
+    id: GO:0009099
+    label: L-valine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: The valine biosynthesis annotation is not supported for this glyoxylate carboligase and likely reflects TPP-enzyme family over-propagation.
+    action: REMOVE
+    reason: The gene product is glyoxylate carboligase in glyoxylate catabolism, not acetolactate synthase or a valine-biosynthetic enzyme.
+    supported_by:
+    - reference_id: file:PSEPK/gcl/gcl-uniprot.txt
+      supporting_text: &#34;DE   RecName: Full=Glyoxylate carboligase&#34;
+    - reference_id: file:PSEPK/gcl/gcl-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88F03\tgcl\tinvolved_in\tGO:0009436\tglyoxylate catabolic process&#34;
+- term:
+    id: GO:0009436
+    label: glyoxylate catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Gcl directly consumes glyoxylate in the glyoxylate carboligase branch.
+    action: ACCEPT
+    reason: The specific reaction condenses two glyoxylate molecules to tartronate semialdehyde and CO2.
+    supported_by:
+    - reference_id: file:PSEPK/gcl/gcl-uniprot.txt
+      supporting_text: &#34;CC       Reaction=2 glyoxylate + H(+) = 2-hydroxy-3-oxopropanoate + CO2;&#34;
+    - reference_id: file:PSEPK/gcl/gcl-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88F03\tgcl\tinvolved_in\tGO:0009436\tglyoxylate catabolic process&#34;
+    - reference_id: file:PSEPK/gcl/gcl-deep-research-openscientist.md
+      supporting_text: &#34;This is the classic \&#34;glycerate pathway\&#34; of glyoxylate assimilation, and Gcl is its gatekeeper.&#34;
+- term:
+    id: GO:0030976
+    label: thiamine pyrophosphate binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: TPP binding is expected for this glyoxylate carboligase.
+    action: ACCEPT
+    reason: The protein is a TPP-enzyme family member and the catalytic reaction is TPP-dependent.
+    supported_by:
+    - reference_id: file:PSEPK/gcl/gcl-uniprot.txt
+      supporting_text: &#34;DR   InterPro; IPR045229; TPP_enz.&#34;
+    - reference_id: file:PSEPK/gcl/gcl-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88F03\tgcl\tenables\tGO:0030976\tthiamine pyrophosphate binding&#34;
+- term:
+    id: GO:0050660
+    label: flavin adenine dinucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: FAD binding is plausible cofactor context for glyoxylate carboligase, but the catalytic role is better captured by tartronate-semialdehyde synthase activity.
+    action: KEEP_AS_NON_CORE
+    reason: OpenScientist and family evidence support Gcl as a ThDP/TPP-family enzyme with FAD binding; FAD is retained as cofactor context rather than treated as the core function.
+    supported_by:
+    - reference_id: file:PSEPK/gcl/gcl-uniprot.txt
+      supporting_text: &#34;DR   InterPro; IPR029035; DHS-like_NAD/FAD-binding_dom.&#34;
+    - reference_id: file:PSEPK/gcl/gcl-deep-research-openscientist.md
+      supporting_text: &#34;The Gcl enzyme is a thiamine-pyrophosphate (TPP)- and FAD-dependent enzyme.&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings:
+  - statement: TreeGrafter supplied acetolactate/valine annotations that do not fit the specific glyoxylate carboligase role; the FAD-binding annotation is retained as non-core cofactor context.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/gcl/gcl-uniprot.txt
+  title: UniProtKB entry for gcl
+  findings:
+  - statement: UniProt describes Gcl as glyoxylate carboligase with the glyoxylate-to-tartronate-semialdehyde reaction.
+- id: file:PSEPK/gcl/gcl-goa.tsv
+  title: GOA annotations for gcl
+  findings:
+  - statement: GOA includes tartronate-semialdehyde synthase activity and glyoxylate catabolic process.
+- id: file:PSEPK/gcl/gcl-deep-research-openscientist.md
+  title: OpenScientist deep research report for gcl
+  findings:
+  - statement: OpenScientist supported Gcl as a cytosolic glyoxylate carboligase/tartronate-semialdehyde synthase and corrected the earlier interpretation of FAD binding as plausible cofactor context.
+core_functions:
+- description: TPP-dependent condensation of two glyoxylate molecules to tartronate semialdehyde and carbon dioxide.
+  molecular_function:
+    id: GO:0009028
+    label: tartronate-semialdehyde synthase activity
+  directly_involved_in:
+  - id: GO:0009436
+    label: glyoxylate catabolic process
+  supported_by:
+  - reference_id: file:PSEPK/gcl/gcl-uniprot.txt
+    supporting_text: &#34;CC       Reaction=2 glyoxylate + H(+) = 2-hydroxy-3-oxopropanoate + CO2;&#34;
+  - reference_id: file:PSEPK/gcl/gcl-goa.tsv
+    supporting_text: &#34;UniProtKB\tQ88F03\tgcl\tenables\tGO:0009028\ttartronate-semialdehyde synthase activity&#34;
+  - reference_id: file:PSEPK/gcl/gcl-deep-research-openscientist.md
+    supporting_text: &#34;Gcl is the first, committed, C-C-bond-forming step of a linear pathway encoded in one operon.&#34;
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

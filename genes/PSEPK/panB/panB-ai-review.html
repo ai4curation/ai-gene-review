@@ -1,0 +1,2292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>panB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>panB</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88DW9" target="_blank" class="term-link">
+                        Q88DW9
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "panB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88DW9" data-a="DESCRIPTION: panB (PP_4699) encodes a soluble 3-methyl-2-oxobut..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>panB (PP_4699) encodes a soluble 3-methyl-2-oxobutanoate hydroxymethyltransferase, also called ketopantoate hydroxymethyltransferase. The enzyme transfers a hydroxymethyl group from 5,10-methylenetetrahydrofolate to 3-methyl-2-oxobutanoate, producing 2-dehydropantoate for pantothenate biosynthesis. Q88DW9 is a magnesium-dependent PanB-family protein with the expected conserved active site and substrate-binding residues. Direct KT2440 enzymology has not been reported.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                                    GO:0000287
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DW9" data-a="GO:0000287" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Magnesium binding supports the PanB reaction but is not the core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reviewed UniProt record specifies one magnesium ion per subunit and maps conserved magnesium-binding residues, consistent with the metal-dependent PanB family.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/panB/panB-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0000287	magnesium ion binding</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/panB/panB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=Mg(2+)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003864" target="_blank" class="term-link">
+                                    GO:0003864
+                                </a>
+                            </span>
+                            <span class="term-label">3-methyl-2-oxobutanoate hydroxymethyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DW9" data-a="GO:0003864" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This hydroxymethyltransferase reaction is the core molecular function of PanB.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HAMAP, InterPro, PANTHER, NCBIfam, and the exact Rhea reaction all support the PanB-family assignment, and the reviewed record contains the expected catalytic and substrate-binding features.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/panB/panB-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0003864	3-methyl-2-oxobutanoate hydroxymethyltransferase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/panB/panB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=3-methyl-2-oxobutanoate hydroxymethyltransferase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/panB/panB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR003700; Pantoate_hydroxy_MeTrfase.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/panB/panB-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">59.4% identity (155/261 aligned residues) to the *E. coli* ortholog</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DW9" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization is consistent with this soluble biosynthetic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt explicitly assigns Q88DW9 to the cytoplasm, and the sequence has no signal peptide or transmembrane segment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/panB/panB-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0005737	cytoplasm</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/panB/panB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015940" target="_blank" class="term-link">
+                                    GO:0015940
+                                </a>
+                            </span>
+                            <span class="term-label">pantothenate biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DW9" data-a="GO:0015940" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PanB supplies 2-dehydropantoate to the pantoate arm of pantothenate synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The annotated reaction is the first of two steps from 3-methyl-2-oxobutanoate to pantoate, which PanC subsequently condenses with beta-alanine to form pantothenate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/panB/panB-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0015940	pantothenate biosynthetic process</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/panB/panB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">pantoate from 3-methyl-2-oxobutanoate: step 1/2.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">| Ketopantoate hydroxymethyltransferase (KPHMT) | 2.1.2.11 | panB | PP_4699 / Q88DW9 | Present, high confidence |</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Magnesium-dependent 3-methyl-2-oxobutanoate hydroxymethyltransferase that forms 2-dehydropantoate in the pantoate arm of pantothenate biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88DW9" data-a="FUNCTION: Magnesium-dependent 3-methyl-2-oxobutanoate hydrox..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003864" target="_blank" class="term-link">
+                            3-methyl-2-oxobutanoate hydroxymethyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015940" target="_blank" class="term-link">
+                                pantothenate biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/panB/panB-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">RecName: Full=3-methyl-2-oxobutanoate hydroxymethyltransferase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/panB/panB-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">GO:0003864	3-methyl-2-oxobutanoate hydroxymethyltransferase activity</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/panB/panB-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">59.4% identity (155/261 aligned residues) to the *E. coli* ortholog</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/panB/panB-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for panB</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The reviewed Q88DW9 record assigns the exact PanB reaction, magnesium cofactor, pantothenate-pathway position, oligomeric state, and cytoplasmic localization.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/panB/panB-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for panB</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the four annotations reviewed for panB.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/panB/panB-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for panB</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report supports the PanB reaction and conserved active-site architecture through close orthologs while identifying the lack of a direct biochemical experiment on Q88DW9.</div>
+
+                        <div class="finding-text">"No direct experimental characterization of the *P. putida* enzyme."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist pathway research for PSEPK pantothenate and CoA biosynthesis</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The pathway report identifies panB as the high-confidence enzyme for 2-dehydropantoate formation.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Do the kinetic properties and oligomeric state predicted from the PanB family hold for the KT2440 Q88DW9 protein?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88DW9" data-a="Q: Do the kinetic properties and oligomeric state pre..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify Q88DW9 and measure hydroxymethyl transfer with 3-methyl-2-oxobutanoate and 5,10-methylenetetrahydrofolate, including its magnesium dependence and oligomeric state.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: biochemical enzyme assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88DW9" data-a="EXPERIMENT: Purify Q88DW9 and measure hydroxymethyl transfer w..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(panB-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88DW9" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *panB* (PP_4699, UniProt Q88DW9) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">8 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-18T14:44:27.433264</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="panB-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="panB-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-panb-pp_4699-uniprot-q88dw9-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>panB</em> (PP_4699, UniProt Q88DW9) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>panB</strong> (ordered locus <strong>PP_4699</strong>; UniProt accession <strong>Q88DW9</strong>) of <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / KT2440) encodes <strong>ketopantoate hydroxymethyltransferase (KPHMT; EC 2.1.2.11)</strong>, also systematically named <strong>3-methyl-2-oxobutanoate hydroxymethyltransferase</strong>. This enzyme catalyzes the <strong>first committed step of the <em>de novo</em> pantothenate (vitamin B5) biosynthetic pathway</strong>, which ultimately produces coenzyme A (CoA). The reaction transfers a one-carbon hydroxymethyl unit from the folate cofactor <strong>5,10-methylene-tetrahydrofolate</strong> onto the branched-chain keto acid <strong>3-methyl-2-oxobutanoate (α-ketoisovalerate)</strong>, yielding <strong>2-dehydropantoate (ketopantoate)</strong> and <strong>tetrahydrofolate</strong>. All gene-symbol, organism, protein-family, and domain criteria from the UniProt reference were verified during this investigation, and the identification is unambiguous: twelve independent signature databases concordantly classify Q88DW9 as a member of the PanB/KPHMT family, and the <em>P. putida</em> protein is a bona fide ortholog of the structurally and biochemically characterized <em>Escherichia coli</em> and <em>Mycobacterium tuberculosis</em> KPHMT enzymes (59.4% and 45% sequence identity, respectively).</p>
+<p>Mechanistically, PanB is a <strong>Mg²⁺-dependent, Class II aldolase-type one-carbon transferase</strong>. It adopts the <strong>(β/α)₈ TIM-barrel fold</strong> of the phosphoenolpyruvate/pyruvate superfamily and assembles into a <strong>homodecamer</strong> — a pentamer of dimers built by domain-swapping of C-terminal α-helices between two opposing pentameric rings. The active site coordinates the substrate keto acid to a catalytic magnesium ion, orienting its C3 carbon for deprotonation and subsequent condensation with the folate-derived one-carbon unit. A high-confidence AlphaFold model of the <em>P. putida</em> protein (global mean pLDDT = 97.5) recapitulates this fold and shows every catalytic and metal/substrate-binding residue ordered at very high confidence, corroborating the KPHMT assignment.</p>
+<p>Functionally, PanB operates in the <strong>cytoplasm</strong> and sits at a key metabolic <strong>branch point</strong>: its acceptor substrate, α-ketoisovalerate, is the immediate precursor of valine in branched-chain amino-acid biosynthesis, so PanB commits carbon flux out of that pathway and into pantothenate/CoA production. In <em>P. putida</em> KT2440, <em>panB</em> (PP_4699) is genomically clustered with <strong>panC</strong> (PP_4700, pantothenate synthetase), and the remaining pathway genes needed to complete pantothenate → CoA synthesis are all present in the genome (panE ketopantoate reductase, coaBC, coaD, coaE). PanB is therefore the entry-point enzyme of an intact, essential cofactor-biosynthesis pathway.</p>
+<hr />
+<h2 id="geneprotein-identity-verified">Gene/Protein Identity — Verified</h2>
+<p>The target is unambiguously the correct protein. Every line of evidence converges on one assignment, satisfying all mandatory verification criteria:</p>
+<ul>
+<li><strong>Gene symbol</strong> <em>panB</em> matches the protein description (3-methyl-2-oxobutanoate hydroxymethyltransferase / ketopantoate hydroxymethyltransferase / KPHMT).</li>
+<li><strong>Organism</strong> is confirmed as <em>Pseudomonas putida</em> KT2440 (KEGG ppu:PP_4699).</li>
+<li><strong>Protein family and domains</strong> align with the literature: PanB family, Pantoate_transf (PF02548), IPR003700, and the pyruvate-kinase-like (β/α)₈ domain superfamily (IPR015813/IPR040442).</li>
+<li><strong>Twelve independent signature databases</strong> (HAMAP, Pfam, InterPro, two NCBIfam models, PIRSF, PANTHER, CDD, CATH-Gene3D, SCOP, and InterPro homologous superfamilies) unanimously return KPHMT/PanB with no conflicting assignment (see finding F006).</li>
+</ul>
+<p>No literature for a different gene with the same symbol was mistakenly adopted; all cited primary studies concern the KPHMT/PanB enzyme family in <em>E. coli</em>, <em>M. tuberculosis</em>, and the broader bacterial pathway.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="f001-panb-catalyzes-the-first-committed-step-of-pantothenatecoa-biosynthesis">F001 — PanB catalyzes the first committed step of pantothenate/CoA biosynthesis</h3>
+<p>The primary function of Q88DW9 is enzymatic. UniProt annotation, the Rhea reaction database, and the enzyme classification all agree that PanB is <strong>ketopantoate hydroxymethyltransferase, EC 2.1.2.11</strong>. The catalyzed reaction (Rhea RHEA:11824) is:</p>
+<blockquote>
+<p>(6R)-5,10-methylene-tetrahydrofolate + 3-methyl-2-oxobutanoate (α-ketoisovalerate) + H₂O → 2-dehydropantoate (ketopantoate) + (6S)-tetrahydrofolate</p>
+</blockquote>
+<p>This is annotated as step 1 of 2 in the sub-pathway "(R)-pantoate from 3-methyl-2-oxobutanoate," which itself is the opening segment of (R)-pantothenate biosynthesis. The reaction is a <strong>hydroxymethyl (one-carbon) transfer</strong> in which methylene-tetrahydrofolate serves as the C1 donor and α-ketoisovalerate as the acceptor.</p>
+<p>The role of the KPHMT/PanB family is firmly established in the literature. Work on the <em>E. coli</em> enzyme states plainly that "<em>Escherichia coli</em> ketopantoate hydroxymethyltransferase (KPHMT) catalyzes the first step in the biosynthesis pathway of pantothenate (vitamin B5), the transfer of a hydroxymethyl group onto alpha-ketoisovalerate" (<a href="https://pubmed.ncbi.nlm.nih.gov/12837791/">PMID: 12837791</a>). Structural work on the <em>M. tuberculosis</em> enzyme adds that "Ketopantoate hydroxymethyltransferase (KPHMT) catalyzes the first committed step in the biosynthesis of pantothenate, which is a precursor to coenzyme A" (<a href="https://pubmed.ncbi.nlm.nih.gov/12842039/">PMID: 12842039</a>). The four-enzyme architecture of the bacterial pathway — "ketopantoate hydroxymethyltransferase (KPHMT), L-aspartate-alpha-decarboxylase (ADC), pantothenate synthetase (PS) and ketopantoate reductase (KPR) encoded by <em>panB</em>, <em>panD</em>, <em>panC</em> and <em>panE</em> genes, respectively" — places PanB unambiguously first (<a href="https://pubmed.ncbi.nlm.nih.gov/18726075/">PMID: 18726075</a>).</p>
+<p><strong>Substrate specificity</strong> was measured directly in the classic biochemical characterization of the <em>E. coli</em> enzyme (Powers &amp; Snell, 1976), which reported "apparent Km values are 0.18, 1.1 and 5.9 mM for tetrahydrofolate, alpha-ketoisovalerate, and formaldehyde" (<a href="https://pubmed.ncbi.nlm.nih.gov/6463/">PMID: 6463</a>). These kinetics identify the folate C1-donor and the α-ketoisovalerate acceptor as the physiological substrates (the enzyme can also use free formaldehyde as an alternative one-carbon source <em>in vitro</em>, but with much lower affinity). The <em>P. putida</em> enzyme is expected to share this specificity given its 59.4% identity (155/261 aligned residues) to the <em>E. coli</em> ortholog.</p>
+<h3 id="f002-panb-is-a-mg2-dependent-class-ii-aldolase-type-enzyme-with-a-conserved-8-barrel-active-site">F002 — PanB is a Mg²⁺-dependent Class II aldolase-type enzyme with a conserved (β/α)₈-barrel active site</h3>
+<p>Q88DW9 is annotated with an <strong>Mg²⁺ cofactor</strong> and conserved metal/substrate-binding residues <strong>Asp45, Asp84, Glu114</strong>, plus the catalytic general base <strong>Glu181</strong> (proton acceptor). All four residues are present at the expected positions in the <em>P. putida</em> sequence. The enzyme belongs to the <strong>PanB / Pantoate_transf (Pfam PF02548)</strong> family, InterPro IPR003700, and its fold is the pyruvate-kinase-like (β/α)₈ barrel.</p>
+<p>The catalytic chemistry is illuminated by the 1.9 Å <em>E. coli</em> KPHMT crystal structure solved in complex with ketopantoate and Mg²⁺: "The active site contains a ketopantoate bidentately coordinated to Mg(2+). Similar binding is likely for the substrate, alpha-ketoisovalerate, orienting the C3 for deprotonation" (<a href="https://pubmed.ncbi.nlm.nih.gov/12906829/">PMID: 12906829</a>). The metal ion therefore does double duty — anchoring the substrate and polarizing it so that the C3 carbon can be deprotonated to generate the nucleophilic enolate that attacks the folate-derived one-carbon unit. The same structural study confirms the fold: "KPHMT adopts the (betaalpha)(8) barrel fold and is a member of the phosphoenolpyruvate/pyruvate superfamily" (<a href="https://pubmed.ncbi.nlm.nih.gov/12906829/">PMID: 12906829</a>), consistent with the InterPro and Pfam domain signatures of Q88DW9.</p>
+<p>The mechanistic class was pinned down biochemically. The enzyme "requires Mg²⁺ for activity; Mn²⁺, Co²⁺, Zn²⁺ are progressively less active" (<a href="https://pubmed.ncbi.nlm.nih.gov/6463/">PMID: 6463</a>), and critically, it "is not inactivated by borohydride reduction in the presence of excess substrates, i.e. it is a Class II aldolase" (<a href="https://pubmed.ncbi.nlm.nih.gov/6463/">PMID: 6463</a>). The lack of borohydride inactivation rules out a Schiff-base (Class I) mechanism and confirms a <strong>metal-dependent (Class II) aldol-type condensation</strong>. The reported pH optimum is 7.0–7.6.</p>
+<h3 id="f003-panb-acts-in-the-cytoplasm-as-a-homodecamer-built-by-c-terminal-domain-swapping">F003 — PanB acts in the cytoplasm as a homodecamer built by C-terminal domain swapping</h3>
+<p>UniProt localizes Q88DW9 to the <strong>cytoplasm</strong> and annotates its quaternary structure as a <strong>homodecamer (pentamer of dimers)</strong>. This oligomeric state is a deeply conserved feature of the family. In the <em>E. coli</em> enzyme, biochemical sizing found a ~255 kDa particle composed of "10 identical subunits" of ~27 kDa each (<a href="https://pubmed.ncbi.nlm.nih.gov/6463/">PMID: 6463</a>). The structural basis of assembly was resolved in the <em>M. tuberculosis</em> enzyme: "The protein forms a decameric complex, with subunits in opposing pentameric rings held together by a swapping of their C-terminal alpha helices" (<a href="https://pubmed.ncbi.nlm.nih.gov/12842039/">PMID: 12842039</a>). The <em>E. coli</em> crystal structure independently confirmed the decamer, being solved by locating "160 selenomethionine sites and phase 560 kDa of protein" in the asymmetric unit (<a href="https://pubmed.ncbi.nlm.nih.gov/12906829/">PMID: 12906829</a>). The <em>P. putida</em> monomer (266 aa, ~29 kDa) is fully consistent with this same decameric architecture.</p>
+<h3 id="f004-panb-pp_4699-sits-in-a-panbpanc-gene-cluster-and-feeds-the-intact-p-putida-pantothenate-coa-pathway-its-acceptor-substrate-branches-from-valine-biosynthesis">F004 — PanB (PP_4699) sits in a panB–panC gene cluster and feeds the intact P. putida pantothenate → CoA pathway; its acceptor substrate branches from valine biosynthesis</h3>
+<p>Genomic context reinforces the functional assignment. In KEGG, <strong>ppu:PP_4699 = panB</strong>, orthology <strong>K00606</strong> (EC 2.1.2.11), mapped to pathway <strong>ppu00770 "Pantothenate and CoA biosynthesis"</strong> and <strong>ppu01240 "Biosynthesis of cofactors."</strong> The gene occupies genomic coordinates 5,340,894–5,341,694. Its immediate neighbor, <strong>PP_4700 = panC</strong> (pantothenate synthetase, K01918), forms a <strong>panB–panC cluster</strong>, while the other flanking gene <strong>PP_4698 = folK</strong> participates in folate biosynthesis — notably relevant because folate provides PanB's one-carbon donor.</p>
+<p>The downstream pathway is complete in KT2440: ketopantoate reductase (<strong>panE</strong>, K00077; candidate loci PP_1351/PP_2325/PP_2998), <strong>panC</strong> (PP_4700), and the CoA-synthesis genes <strong>coaBC</strong> (PP_5285, K13038), <strong>coaD</strong> (PP_5123, K00954), and <strong>coaE</strong> (PP_0631, K00859). The acceptor substrate 3-methyl-2-oxobutanoate (α-ketoisovalerate) is the <strong>branch-point intermediate of branched-chain (valine) amino-acid biosynthesis</strong>, linking PanB to that pathway (KEGG links α-ketoisovalerate via <em>ilvE</em>/K00826 = PP_3511). This establishes PanB as the enzyme that diverts carbon from valine precursor supply into cofactor biosynthesis.</p>
+<p>The literature confirms the four-enzyme framework into which PanB feeds: the pathway comprises "four enzymic reactions catalysed by ketopantoate hydroxymethyltransferase (KPHMT), L-aspartate-alpha-decarboxylase (ADC), pantothenate synthetase (PS) and ketopantoate reductase (KPR) encoded by <em>panB</em>, <em>panD</em>, <em>panC</em> and <em>panE</em> genes" (<a href="https://pubmed.ncbi.nlm.nih.gov/18726075/">PMID: 18726075</a>), and that PanB "catalyzes the first committed step in the biosynthesis of pantothenate, which is a precursor to coenzyme A" (<a href="https://pubmed.ncbi.nlm.nih.gov/12842039/">PMID: 12842039</a>). One caveat: a canonical <em>panD</em> (aspartate 1-decarboxylase, K01579) was not recovered by KEGG orthology linkage in <em>ppu</em>, implying that β-alanine (the second substrate of PanC) may be supplied by an alternative route in <em>P. putida</em> — but this concerns a downstream step, not PanB itself.</p>
+<h3 id="f005-the-alphafold-model-is-very-high-confidence-with-a-well-ordered-conserved-active-site">F005 — The AlphaFold model is very high confidence with a well-ordered, conserved active site</h3>
+<p>The AlphaFold DB model <strong>AF-Q88DW9-F1 (v6)</strong> has a <strong>global mean pLDDT of 97.5</strong> across all 266 residues: 97% of residues are modeled at very high confidence (pLDDT &gt; 90), 3% at 70–90, and none below 70 (minimum 63.4 at a terminus). Every annotated catalytic and metal/substrate-binding residue is modeled at very high confidence: Asp45 (98.7), Asp84 (98.9), Lys112 (98.9), Glu114 (98.6), and the general base Glu181 (98.5). These positions are conserved relative to the <em>E. coli</em> enzyme (59% overall identity), whose crystal structure shows the equivalent residues coordinating Mg²⁺ and ketopantoate in a (β/α)₈ barrel (<a href="https://pubmed.ncbi.nlm.nih.gov/12906829/">PMID: 12906829</a>). The model thus provides independent structural corroboration that the <em>P. putida</em> protein possesses an intact, canonical KPHMT active site.</p>
+<h3 id="f006-twelve-independent-signature-databases-unanimously-classify-q88dw9-as-panbkphmt">F006 — Twelve independent signature databases unanimously classify Q88DW9 as PanB/KPHMT</h3>
+<p>InterPro member-database analysis of Q88DW9 returns concordant KPHMT/PanB assignments from all signatures examined: <strong>HAMAP MF_00156, Pfam PF02548, InterPro family IPR003700, NCBIfam TIGR00222 and NF001452, PIRSF000388, PANTHER PTHR20881, CDD cd06557 (KPHMT-like)</strong>, plus fold-level signatures <strong>CATH-Gene3D G3DSA:3.20.20.60</strong> and <strong>SCOP SSF51621</strong> (phosphoenolpyruvate/pyruvate domain) and InterPro homologous superfamilies <strong>IPR015813/IPR040442</strong> (pyruvate-kinase-like domain). No conflicting family assignment exists. Combined with the ortholog-level sequence identities to characterized enzymes, this makes the identity of Q88DW9 as PanB/KPHMT effectively certain.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="the-reaction-and-its-position-in-metabolism">The reaction and its position in metabolism</h3>
+<p>PanB catalyzes a magnesium-dependent aldol-type one-carbon transfer. In the enzyme's active site, α-ketoisovalerate is chelated bidentately by the catalytic Mg²⁺; the metal polarizes the substrate and the general base (Glu181) abstracts a proton from the C3 methyl-adjacent position, generating a nucleophilic enolate. This carbanion attacks the reactive one-carbon unit carried by 5,10-methylene-tetrahydrofolate, installing the hydroxymethyl group and releasing tetrahydrofolate. The product, ketopantoate (2-dehydropantoate), carries the hallmark hydroxymethyl group that defines the pantoate/pantothenate moiety.</p>
+<div class="codehilite"><pre><span></span><code>   Branched-chain amino-acid (valine) biosynthesis
+     │
+     ▼
+3-methyl-2-oxobutanoate  (α-ketoisovalerate)
+     │
+     5,10-CH2-THF ──►│  ◄── PanB / KPHMT  (EC 2.1.2.11)   [PP_4699, Q88DW9]
+ THF   ◄─────│      Mg2+-dependent Class II aldolase
+     ▼
+      2-dehydropantoate  (ketopantoate)
+     │  ◄── PanE / ketopantoate reductase (NADPH)
+     ▼
+ (R)-pantoate
+     │  ◄── PanC / pantothenate synthetase (+ β-alanine)
+     ▼
+      (R)-pantothenate  (vitamin B5)
+     │  ◄── CoaBC → CoaD → CoaE
+     ▼
+Coenzyme A (CoA)
+</code></pre></div>
+
+<h3 id="structurefunction-synthesis">Structure–function synthesis</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value / description</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Enzyme</td>
+<td>Ketopantoate hydroxymethyltransferase (KPHMT), EC 2.1.2.11</td>
+<td>UniProt; <a href="https://pubmed.ncbi.nlm.nih.gov/12837791/">PMID: 12837791</a></td>
+</tr>
+<tr>
+<td>Reaction</td>
+<td>5,10-CH₂-THF + α-ketoisovalerate + H₂O → ketopantoate + THF</td>
+<td>Rhea RHEA:11824</td>
+</tr>
+<tr>
+<td>Cofactor</td>
+<td>Mg²⁺ (Mn²⁺/Co²⁺/Zn²⁺ less active)</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/6463/">PMID: 6463</a></td>
+</tr>
+<tr>
+<td>Mechanism</td>
+<td>Class II (metal-dependent) aldolase; no Schiff base</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/6463/">PMID: 6463</a></td>
+</tr>
+<tr>
+<td>Catalytic residues</td>
+<td>Asp45, Asp84, Glu114 (metal/substrate); Glu181 (general base); Lys112</td>
+<td>UniProt; AlphaFold model</td>
+</tr>
+<tr>
+<td>Fold</td>
+<td>(β/α)₈ TIM-barrel, PEP/pyruvate superfamily</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12906829/">PMID: 12906829</a></td>
+</tr>
+<tr>
+<td>Quaternary structure</td>
+<td>Homodecamer (pentamer of dimers); C-terminal helix swap</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12842039/">PMID: 12842039</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/6463/">PMID: 6463</a></td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Cytoplasm</td>
+<td>UniProt</td>
+</tr>
+<tr>
+<td>Monomer size</td>
+<td>266 aa, ~29 kDa</td>
+<td>UniProt / sequence</td>
+</tr>
+<tr>
+<td>Gene context</td>
+<td>panB–panC cluster (PP_4699–PP_4700); folK neighbor</td>
+<td>KEGG ppu</td>
+</tr>
+<tr>
+<td>Model confidence</td>
+<td>AlphaFold pLDDT 97.5 (97% &gt; 90)</td>
+<td>AF-Q88DW9-F1 v6</td>
+</tr>
+</tbody>
+</table>
+<h3 id="biological-significance">Biological significance</h3>
+<p>Coenzyme A is an essential, universal cofactor for acyl-group transfer, fatty-acid metabolism, and central carbon metabolism (TCA cycle). Because <em>P. putida</em> KT2440 encodes the complete pantothenate → CoA route and PanB is the committed entry point, PanB is expected to be metabolically essential (or conditionally essential in pantothenate-free media). Its position at the valine/branched-chain branch point also means PanB competes for α-ketoisovalerate flux with valine biosynthesis, giving it a regulatory role in balancing amino-acid versus cofactor demands. The absence of a canonical <em>panD</em> in the KEGG orthology set suggests <em>P. putida</em> obtains β-alanine (needed downstream by PanC) via an alternative route — a downstream detail that does not affect PanB's own function but is worth noting for full pathway reconstruction.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>Contribution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12837791/">12837791</a></td>
+<td><em>Comparative analysis of the E. coli KPHMT crystal structure … (βα)₈ PEP/pyruvate superfamily</em></td>
+<td>Defines the KPHMT reaction (hydroxymethyl transfer onto α-ketoisovalerate) and superfamily membership</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/6463/">6463</a></td>
+<td><em>Ketopantoate hydroxymethyltransferase II. Physical, catalytic, regulatory properties</em> (Powers &amp; Snell)</td>
+<td>Direct kinetics (Km values), Mg²⁺ dependence, Class II aldolase classification, decamer of 10 subunits, pH optimum</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12906829/">12906829</a></td>
+<td><em>Structure of E. coli KPHMT complexed with ketopantoate and Mg²⁺</em></td>
+<td>Active-site Mg²⁺ coordination and C3 orientation; (βα)₈ fold; 560 kDa decamer</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12842039/">12842039</a></td>
+<td><em>Crystal structure of KPHMT from M. tuberculosis</em></td>
+<td>First committed step; CoA precursor; decamer via C-terminal helix swapping</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18726075/">18726075</a></td>
+<td><em>Towards engineering increased pantothenate (vitamin B5) levels in plants</em></td>
+<td>Four-enzyme pathway definition (panB/panD/panC/panE); PanB is first</td>
+</tr>
+</tbody>
+</table>
+<p>Supporting/contextual literature reviewed but not directly used for core claims includes reviews on CoA-biosynthesis as an antimicrobial/antiparasitic/antifungal drug target (<a href="https://pubmed.ncbi.nlm.nih.gov/41967290/">PMID: 41967290</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/41914741/">PMID: 41914741</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/40801835/">PMID: 40801835</a>), which underscore the pathway's essentiality and therapeutic relevance, and a <em>B. thuringiensis</em> expression study that identifies a PanB homolog among development-related transcripts (<a href="https://pubmed.ncbi.nlm.nih.gov/26191639/">PMID: 26191639</a>).</p>
+<p><strong>Cross-species consistency.</strong> The three independently characterized orthologs — <em>E. coli</em> (biochemistry + structure), <em>M. tuberculosis</em> (structure), and by inference <em>P. putida</em> (sequence + AlphaFold) — agree on reaction, cofactor, mechanism, fold, and oligomeric state. No paper challenges the assignment. The main gap is that all direct experimental data derive from orthologs rather than the <em>P. putida</em> protein itself.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct experimental characterization of the <em>P. putida</em> enzyme.</strong> All kinetic, mechanistic, and structural data come from <em>E. coli</em> and <em>M. tuberculosis</em> orthologs. The <em>P. putida</em> assignment rests on strong homology (59.4% identity to <em>E. coli</em>), conserved catalytic residues, and a high-confidence AlphaFold model — robust but inferential.</p>
+</li>
+<li>
+<p><strong>Substrate-specificity numbers are borrowed.</strong> The reported Km values (0.18/1.1/5.9 mM for THF/α-ketoisovalerate/formaldehyde) are <em>E. coli</em> values (<a href="https://pubmed.ncbi.nlm.nih.gov/6463/">PMID: 6463</a>); <em>P. putida</em>-specific kinetics have not been measured here.</p>
+</li>
+<li>
+<p><strong>β-alanine supply route unresolved.</strong> A canonical <em>panD</em> (aspartate-1-decarboxylase) was not retrieved by KEGG orthology in <em>ppu</em>, leaving the source of β-alanine (needed by PanC downstream) unclear. This is a pathway-level gap, not a PanB-level one.</p>
+</li>
+<li>
+<p><strong>panE assignment is ambiguous.</strong> Three candidate ketopantoate reductase loci (PP_1351/PP_2325/PP_2998) were flagged; the physiologically relevant one is not pinned down.</p>
+</li>
+<li>
+<p><strong>Essentiality not experimentally confirmed</strong> in <em>P. putida</em> KT2440; it is inferred from pathway completeness and the essential nature of CoA.</p>
+</li>
+<li>
+<p><strong>The AlphaFold model is a monomer.</strong> It does not directly validate the decameric assembly or the domain-swapped inter-subunit interface, which are inferred from orthologous crystal structures.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant expression and enzymatic assay.</strong> Clone PP_4699, purify the His-tagged protein, and measure KPHMT activity spectrophotometrically (or by coupled assay), determining <em>P. putida</em>-specific Km/kcat for methylene-THF and α-ketoisovalerate and confirming the Mg²⁺ requirement.</p>
+</li>
+<li>
+<p><strong>Confirm quaternary structure.</strong> Use size-exclusion chromatography with multi-angle light scattering (SEC-MALS) or native mass spectrometry to verify the ~290 kDa homodecamer, and consider cryo-EM/crystallography to confirm the domain-swapped assembly.</p>
+</li>
+<li>
+<p><strong>Site-directed mutagenesis</strong> of Asp45, Asp84, Glu114, and Glu181 to validate their predicted roles in Mg²⁺/substrate binding and general-base catalysis.</p>
+</li>
+<li>
+<p><strong>Gene-essentiality test.</strong> Attempt markerless deletion of PP_4699 and test for pantothenate auxotrophy (rescue by exogenous pantothenate or β-alanine) to confirm the committed-step, essential role.</p>
+</li>
+<li>
+<p><strong>Resolve the β-alanine and panE gaps.</strong> Use transcriptomics/metabolomics or targeted knockouts to identify the β-alanine source and the operative ketopantoate reductase among PP_1351/PP_2325/PP_2998.</p>
+</li>
+<li>
+<p><strong>Structural biology on the native protein.</strong> Determine an experimental structure of the <em>P. putida</em> enzyme, ideally with bound Mg²⁺ and ketopantoate, to directly validate the AlphaFold active-site model.</p>
+</li>
+</ol>
+<hr />
+<p><em>Report compiled from 5 investigation iterations, 6 confirmed findings, and 12 reviewed papers. Gene identity verified against UniProt Q88DW9 and 12 concordant signature databases; no conflicting family assignment was found.</em></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="panB-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="panB-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:12837791</li>
+<li>PMID:12842039</li>
+<li>PMID:18726075</li>
+<li>PMID:12906829</li>
+<li>PMID:41967290</li>
+<li>PMID:41914741</li>
+<li>PMID:40801835</li>
+<li>PMID:26191639</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88DW9
+gene_symbol: panB
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  panB (PP_4699) encodes a soluble 3-methyl-2-oxobutanoate
+  hydroxymethyltransferase, also called ketopantoate hydroxymethyltransferase.
+  The enzyme transfers a hydroxymethyl group from
+  5,10-methylenetetrahydrofolate to 3-methyl-2-oxobutanoate, producing
+  2-dehydropantoate for pantothenate biosynthesis. Q88DW9 is a
+  magnesium-dependent PanB-family protein with the expected conserved active
+  site and substrate-binding residues. Direct KT2440 enzymology has not been
+  reported.
+existing_annotations:
+- term:
+    id: GO:0000287
+    label: magnesium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: Magnesium binding supports the PanB reaction but is not the core function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The reviewed UniProt record specifies one magnesium ion per subunit and
+      maps conserved magnesium-binding residues, consistent with the
+      metal-dependent PanB family.
+    supported_by:
+    - reference_id: file:PSEPK/panB/panB-goa.tsv
+      supporting_text: &#34;GO:0000287\tmagnesium ion binding&#34;
+    - reference_id: file:PSEPK/panB/panB-uniprot.txt
+      supporting_text: &#34;Name=Mg(2+)&#34;
+- term:
+    id: GO:0003864
+    label: 3-methyl-2-oxobutanoate hydroxymethyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This hydroxymethyltransferase reaction is the core molecular function of PanB.
+    action: ACCEPT
+    reason: &gt;-
+      HAMAP, InterPro, PANTHER, NCBIfam, and the exact Rhea reaction all support
+      the PanB-family assignment, and the reviewed record contains the expected
+      catalytic and substrate-binding features.
+    supported_by:
+    - reference_id: file:PSEPK/panB/panB-goa.tsv
+      supporting_text: &#34;GO:0003864\t3-methyl-2-oxobutanoate hydroxymethyltransferase activity&#34;
+    - reference_id: file:PSEPK/panB/panB-uniprot.txt
+      supporting_text: &#34;RecName: Full=3-methyl-2-oxobutanoate hydroxymethyltransferase&#34;
+    - reference_id: file:PSEPK/panB/panB-uniprot.txt
+      supporting_text: &#34;DR   InterPro; IPR003700; Pantoate_hydroxy_MeTrfase.&#34;
+    - reference_id: file:PSEPK/panB/panB-deep-research-openscientist.md
+      supporting_text: &#34;59.4% identity (155/261 aligned residues) to the *E. coli* ortholog&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Cytoplasmic localization is consistent with this soluble biosynthetic enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt explicitly assigns Q88DW9 to the cytoplasm, and the sequence has
+      no signal peptide or transmembrane segment.
+    supported_by:
+    - reference_id: file:PSEPK/panB/panB-goa.tsv
+      supporting_text: &#34;GO:0005737\tcytoplasm&#34;
+    - reference_id: file:PSEPK/panB/panB-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+- term:
+    id: GO:0015940
+    label: pantothenate biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: PanB supplies 2-dehydropantoate to the pantoate arm of pantothenate synthesis.
+    action: ACCEPT
+    reason: &gt;-
+      The annotated reaction is the first of two steps from
+      3-methyl-2-oxobutanoate to pantoate, which PanC subsequently condenses
+      with beta-alanine to form pantothenate.
+    supported_by:
+    - reference_id: file:PSEPK/panB/panB-goa.tsv
+      supporting_text: &#34;GO:0015940\tpantothenate biosynthetic process&#34;
+    - reference_id: file:PSEPK/panB/panB-uniprot.txt
+      supporting_text: &#34;pantoate from 3-methyl-2-oxobutanoate: step 1/2.&#34;
+    - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md
+      supporting_text: &#34;| Ketopantoate hydroxymethyltransferase (KPHMT) | 2.1.2.11 | panB | PP_4699 / Q88DW9 | Present, high confidence |&#34;
+references:
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/panB/panB-uniprot.txt
+  title: UniProtKB entry for panB
+  findings:
+  - statement: &gt;-
+      The reviewed Q88DW9 record assigns the exact PanB reaction, magnesium
+      cofactor, pantothenate-pathway position, oligomeric state, and
+      cytoplasmic localization.
+- id: file:PSEPK/panB/panB-goa.tsv
+  title: QuickGO GOA annotations for panB
+  findings:
+  - statement: The fetched GOA table contains the four annotations reviewed for panB.
+- id: file:PSEPK/panB/panB-deep-research-openscientist.md
+  title: OpenScientist gene research for panB
+  findings:
+  - statement: &gt;-
+      The report supports the PanB reaction and conserved active-site
+      architecture through close orthologs while identifying the lack of a
+      direct biochemical experiment on Q88DW9.
+    supporting_text: &#34;No direct experimental characterization of the *P. putida* enzyme.&#34;
+- id: file:projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md
+  title: OpenScientist pathway research for PSEPK pantothenate and CoA biosynthesis
+  findings:
+  - statement: The pathway report identifies panB as the high-confidence enzyme for 2-dehydropantoate formation.
+core_functions:
+- description: &gt;-
+    Magnesium-dependent 3-methyl-2-oxobutanoate hydroxymethyltransferase that
+    forms 2-dehydropantoate in the pantoate arm of pantothenate biosynthesis.
+  molecular_function:
+    id: GO:0003864
+    label: 3-methyl-2-oxobutanoate hydroxymethyltransferase activity
+  directly_involved_in:
+  - id: GO:0015940
+    label: pantothenate biosynthetic process
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: file:PSEPK/panB/panB-uniprot.txt
+    supporting_text: &#34;RecName: Full=3-methyl-2-oxobutanoate hydroxymethyltransferase&#34;
+  - reference_id: file:PSEPK/panB/panB-goa.tsv
+    supporting_text: &#34;GO:0003864\t3-methyl-2-oxobutanoate hydroxymethyltransferase activity&#34;
+  - reference_id: file:PSEPK/panB/panB-deep-research-openscientist.md
+    supporting_text: &#34;59.4% identity (155/261 aligned residues) to the *E. coli* ortholog&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Do the kinetic properties and oligomeric state predicted from the PanB
+    family hold for the KT2440 Q88DW9 protein?
+suggested_experiments:
+- description: &gt;-
+    Purify Q88DW9 and measure hydroxymethyl transfer with
+    3-methyl-2-oxobutanoate and 5,10-methylenetetrahydrofolate, including its
+    magnesium dependence and oligomeric state.
+  experiment_type: biochemical enzyme assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

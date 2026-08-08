@@ -1,0 +1,2531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hemB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>hemB</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88IT6" target="_blank" class="term-link">
+                        Q88IT6
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+
+                    <span class="badge">PP_2913</span>
+
+                </div>
+            </div>
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "hemB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88IT6" data-a="DESCRIPTION: HemB is one of two KT2440 delta-aminolevulinate de..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>HemB is one of two KT2440 delta-aminolevulinate dehydratase paralogs. It is an ALAD-family enzyme predicted to condense two 5-aminolevulinate molecules into porphobilinogen. Sequence-based site annotation identifies catalytic zinc ligands, a magnesium-binding site, and the conserved lysines that form Schiff-base intermediates, supporting a metal-dependent porphobilinogen synthase role in heme-b precursor synthesis.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004655" target="_blank" class="term-link">
+                                    GO:0004655
+                                </a>
+                            </span>
+                            <span class="term-label">porphobilinogen synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88IT6" data-a="GO:0004655" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the specific predicted catalytic function of HemB.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns EC 4.2.1.24, the ALAD family, conserved catalytic Schiff-base sites, and metal-binding residues consistent with porphobilinogen synthase activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemB/hemB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=Delta-aminolevulinic acid dehydratase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88IT6" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A soluble cytosolic location is consistent with the ALAD-family architecture.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> No signal peptide or transmembrane segment is predicted, and UniProt retains the TreeGrafter cytosol cross-reference.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemB/hemB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">GO; GO:0005829; C:cytosol;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006779" target="_blank" class="term-link">
+                                    GO:0006779
+                                </a>
+                            </span>
+                            <span class="term-label">porphyrin-containing compound biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88IT6" data-a="GO:0006779" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a correct broad pathway assignment for an early shared tetrapyrrole step.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Porphobilinogen formation supplies the common tetrapyrrole trunk. The annotation is biologically correct, but the catalytic activity and direct tetrapyrrole-biosynthesis role are more informative core claims.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemB/hemB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Porphyrin-containing compound metabolism; protoporphyrin-IX</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006783" target="_blank" class="term-link">
+                                    GO:0006783
+                                </a>
+                            </span>
+                            <span class="term-label">heme biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88IT6" data-a="GO:0006783" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ALAD activity supplies porphobilinogen to the shared heme-b pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reaction is required upstream of hydroxymethylbilane, uroporphyrinogen III, and all subsequent heme-b intermediates.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemB/hemB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">KW   Heme biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88IT6" data-a="GO:0008270" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HemB contains a predicted catalytic zinc site characteristic of one ALAD lineage.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Three residues are annotated as catalytic Zn2+ ligands, and the sequence contains the corresponding cysteine-rich region. This architecture is absent from the KT2440 HemBB paralog.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemB/hemB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">ligand_note=&#34;catalytic&#34;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033014" target="_blank" class="term-link">
+                                    GO:0033014
+                                </a>
+                            </span>
+                            <span class="term-label">tetrapyrrole biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88IT6" data-a="GO:0033014" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HemB directly participates in tetrapyrrole biosynthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ALAD produces porphobilinogen for the shared tetrapyrrole trunk, so the broad process term is accurate and does not force a single downstream tetrapyrrole endpoint.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemB/hemB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Porphyrin-containing compound metabolism; protoporphyrin-IX</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88IT6" data-a="GO:0046872" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The broad metal call can be replaced by the additional predicted magnesium site.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Zinc binding is already represented by GO:0008270, while UniProt also identifies a distinct Mg2+-binding residue. GO:0000287 records that second metal requirement without retaining a generic parent term.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                                    magnesium ion binding
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemB/hemB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">ligand=&#34;Mg(2+)&#34;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Condenses two 5-aminolevulinate molecules to porphobilinogen as a metal-dependent ALAD-family enzyme in tetrapyrrole precursor synthesis.</h3>
+                <span class="vote-buttons" data-g="Q88IT6" data-a="FUNCTION: Condenses two 5-aminolevulinate molecules to porph..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004655" target="_blank" class="term-link">
+                            porphobilinogen synthase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033014" target="_blank" class="term-link">
+                                tetrapyrrole biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/hemB/hemB-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">RecName: Full=Delta-aminolevulinic acid dehydratase</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/hemB/hemB-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PSEPK hemB</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HemB is an ALAD-family delta-aminolevulinate dehydratase.</div>
+
+                        <div class="finding-text">"RecName: Full=Delta-aminolevulinic acid dehydratase"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HemB has predicted catalytic zinc and magnesium sites.</div>
+
+                        <div class="finding-text">"ligand_note=&#34;catalytic&#34;"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HemB also has a predicted Mg2+-binding site.</div>
+
+                        <div class="finding-text">"ligand=&#34;Mg(2+)&#34;"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/hemB/hemB-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist research report for PSEPK hemB</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report identifies the ALAD-family reaction but acknowledges that Q88IT6 has not been directly characterized experimentally.</div>
+
+                        <div class="finding-text">"No direct experimental characterization of the *P. putida* enzyme."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is HemB the principal aerobic ALAD isozyme, and how does its zinc site affect activity relative to HemBB?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88IT6" data-a="Q: Is HemB the principal aerobic ALAD isozyme, and ho..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify both proteins and compare kinetics, oligomerization, and metal dependence, then phenotype single and double mutants with ALA rescue.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: HemB and HemBB are active ALAD paralogs with different metal dependence.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88IT6" data-a="EXPERIMENT: Purify both proteins and compare kinetics, oligome..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hemB-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88IT6" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">hemB (Q88IT6, PP_2913) in *Pseudomonas putida* KT2440: Functional Annotation Report</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">10 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-20T17:14:43.233469</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="hemB-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="hemB-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="hemb-q88it6-pp_2913-in-pseudomonas-putida-kt2440-functional-annotation-report">hemB (Q88IT6, PP_2913) in <em>Pseudomonas putida</em> KT2440: Functional Annotation Report</h1>
+<p><strong>Gene:</strong> hemB (OrderedLocusName PP_2913)<br />
+<strong>Protein:</strong> Delta-aminolevulinic acid dehydratase / Porphobilinogen synthase (ALAD / PBGS)<br />
+<strong>UniProt:</strong> Q88IT6<br />
+<strong>EC number:</strong> 4.2.1.24<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / KT2440), taxon "PSEPK"<br />
+<strong>Protein family:</strong> ALAD family (Pfam PF00490; InterPro IPR001731 ALAD, IPR030656 ALAD_AS, IPR013785 Aldolase_TIM)</p>
+<hr />
+<h2 id="identity-verification">Identity Verification</h2>
+<p>Before presenting findings, the gene/protein identity was confirmed. The gene symbol <strong>hemB</strong>, the EC number <strong>4.2.1.24</strong>, the ALAD-family Pfam/InterPro domain architecture, and the conserved active-site sequence signatures are all mutually consistent. In this organism "hemB" unambiguously denotes the heme-biosynthetic enzyme <strong>5-aminolevulinate dehydratase / porphobilinogen synthase</strong>, and not any unrelated similarly named gene. All analyses below refer to this specific 324-residue protein (Q88IT6 / PP_2913). No literature ambiguity was encountered; the ortholog literature (<em>E. coli</em>, human, <em>P. aeruginosa</em>, <em>Chlorobium</em>, <em>Pyrobaculum</em>) is directly relevant.</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>hemB</strong> in <em>Pseudomonas putida</em> KT2440 (UniProt <strong>Q88IT6</strong>, locus <strong>PP_2913</strong>) encodes <strong>porphobilinogen synthase (PBGS)</strong>, also known as <strong>5‑aminolevulinic acid dehydratase (ALAD)</strong>, EC 4.2.1.24. This enzyme catalyzes the <strong>second step and the first committed common step of tetrapyrrole (heme) biosynthesis</strong>: the asymmetric condensation of two molecules of 5‑aminolevulinic acid (ALA) into the monopyrrole <strong>porphobilinogen (PBG)</strong>, releasing two molecules of water. Porphobilinogen is the universal building block from which all tetrapyrroles — heme, siroheme, cobalamin (vitamin B12), and (in phototrophs) chlorophyll and bacteriochlorophyll — are subsequently assembled. The identification is secure: UniProt annotation, EC assignment, ALAD-family domain architecture, and conserved active-site signatures all converge, and the reaction has been directly demonstrated for the close <em>Pseudomonas aeruginosa</em> ortholog by functional complementation and enzymatic assay.</p>
+<p>The most mechanistically informative result of this investigation is that the <em>P. putida</em> enzyme is predicted to be a <strong>zinc‑dependent PBGS</strong>, in contrast to its taxonomically closer relative in <em>P. aeruginosa</em>, which is experimentally confirmed to be <strong>magnesium‑dependent</strong>. This assignment rests on a diagnostic sequence feature: Q88IT6 retains the catalytic zinc‑binding <strong>cysteine triad Cys122/Cys124/Cys132</strong>, embedded in a His/Cys‑rich metal pocket essentially identical to that of the zinc-type <em>Escherichia coli</em> and human enzymes. The <em>P. aeruginosa</em> ortholog instead replaces these three cysteines with Ala/Leu/Asp — the hallmark of the magnesium-type subfamily. Quantitative global alignments reinforce this: Q88IT6 is <strong>77% identical to <em>E. coli</em> ALAD (zinc-type)</strong> but only <strong>55% identical to <em>P. aeruginosa</em> HEM2 (Mg-type)</strong>, despite <em>P. aeruginosa</em> being phylogenetically nearer. Metal-ion class in PBGS therefore does not track species relatedness, a phenomenon well documented across the ALAD family.</p>
+<p>Beyond the metal center, Q88IT6 conserves every catalytic determinant of a functional PBGS: the two mechanistically essential active-site lysines (<strong>Lys249</strong>, the A-side Schiff-base lysine; <strong>Lys197</strong>, the P-side "perturbing" lysine), the substrate-carboxylate-binding lid arginines, and the histidines flanking the metal site. The protein has no signal peptide or transmembrane segment, consistent with a <strong>soluble cytoplasmic localization</strong>, where tetrapyrrole biosynthesis occurs. In summary, hemB/PP_2913 is a cytoplasmic, zinc-dependent, TIM-barrel homo-oligomeric metalloenzyme performing the first committed step of heme biosynthesis in <em>P. putida</em>.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-hemb-encodes-porphobilinogen-synthase-catalyzing-the-condensation-of-two-5ala-into-porphobilinogen">Finding 1 — hemB encodes porphobilinogen synthase, catalyzing the condensation of two 5‑ALA into porphobilinogen</h3>
+<p>Q88IT6 is annotated in UniProt as <strong>Delta‑aminolevulinic acid dehydratase, EC 4.2.1.24</strong>, and belongs to the ALAD family (Pfam <strong>PF00490</strong>; InterPro <strong>IPR001731</strong> ALAD, <strong>IPR030656</strong> ALAD_AS active-site signature, <strong>IPR013785</strong> Aldolase_TIM barrel). The 324‑residue sequence retains the diagnostic ALAD active-site signature. The enzyme catalyzes:</p>
+<div class="codehilite"><pre><span></span><code><span class="mf">2</span><span class="w"> </span><span class="err">×</span><span class="w"> </span><span class="mf">5</span><span class="o">-</span><span class="n">aminolevulinate</span><span class="w">  </span><span class="err">→</span><span class="w">  </span><span class="n">porphobilinogen</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2</span><span class="w"> </span><span class="n">H2O</span>
+</code></pre></div>
+
+<p>This is a Knorr/aldol-type <strong>asymmetric condensation</strong> that forms the pyrrole ring of porphobilinogen. It is the <strong>second step of the heme pathway</strong> and the <strong>first committed step common to all tetrapyrroles</strong> (heme, siroheme, cobalamin, chlorophyll). The reaction was directly demonstrated for the close <em>Pseudomonas aeruginosa</em> ortholog by functional complementation of an <em>E. coli</em> hemB mutant coupled with enzymatic assay (<a href="https://pubmed.ncbi.nlm.nih.gov/9529530/">PMID: 9529530</a>), which describes ALAD as catalyzing "the condensation of two molecules of 5-aminolevulinic acid (ALA) to form one molecule of the pyrrole derivative porphobilinogen." An authoritative review confirms PBGS "is an essential enzyme in the biosynthesis of all tetrapyrroles, which function in respiration, photosynthesis, and methanogenesis" (<a href="https://pubmed.ncbi.nlm.nih.gov/27783504/">PMID: 27783504</a>).</p>
+<p><strong>Substrate specificity:</strong> The single physiological substrate is <strong>5‑aminolevulinic acid (ALA)</strong>. Two ALA molecules are bound in two distinct sub-sites — the "A-side" (which contributes the ring nitrogen and the aminomethyl/acetyl side) and the "P-side" (which contributes the propionyl side) — and joined asymmetrically. Porphobilinogen is the sole product besides water. The substrate specificity is corroborated by the fact that ALA-mimicking molecules act as potent active-site-directed inhibitors: the antibiotic <strong>alaremycin</strong> and the intermediate-analog <strong>4,7-dioxosebacic acid</strong>.</p>
+<h3 id="finding-2-the-enzyme-is-predicted-zincdependent-retaining-the-cys122124132-triad-absent-in-its-mg-dependent-p-aeruginosa-relative">Finding 2 — The enzyme is predicted zinc‑dependent, retaining the Cys122/124/132 triad absent in its Mg-dependent <em>P. aeruginosa</em> relative</h3>
+<p>PBGS enzymes fall into two mechanistic classes distinguished by the catalytic A-site metal: <strong>zinc-dependent</strong> enzymes (e.g., human, <em>E. coli</em>) that use a triple-cysteine ligand set, and <strong>magnesium-dependent / zinc-independent</strong> enzymes (e.g., plants, some bacteria including <em>P. aeruginosa</em>) in which those cysteines are replaced by neutral/acidic residues.</p>
+<p>Direct alignment of the metal-binding loop places Q88IT6 firmly in the <strong>zinc-dependent</strong> class. The <em>P. putida</em> loop (residues 118–136) reads <strong><code>VVMSDTCFCEYTSHGHCGVLH</code></strong>, containing the intact cysteine triad <strong>Cys122, Cys124, Cys132</strong>. This is essentially identical to the zinc-dependent <em>E. coli</em> ALAD motif (<code>VMSDTCFCEYTSHGHCGVL</code>) and matches the human zinc-coordinating triad Cys122/124/132 identified by quantum-biochemistry and evolutionary analysis (<a href="https://pubmed.ncbi.nlm.nih.gov/33791795/">PMID: 33791795</a>). By contrast, the closely related <strong>Mg‑dependent <em>P. aeruginosa</em></strong> ortholog (Q59643 / HEM2_PSEAE) carries the loop <code>IITDVALDPFTTHGQDGIL</code>, in which all three cysteines are replaced by Ala/Leu/Asp — the magnesium-type signature. That the <em>P. aeruginosa</em> enzyme is Mg2+-dependent was established directly: "Alignment of the amino acid sequences deduced from hemB revealed a potential metal-binding site and indicated that the enzyme is Mg(2+)-dependent" (<a href="https://pubmed.ncbi.nlm.nih.gov/9529530/">PMID: 9529530</a>).</p>
+<p>The functional relevance of the Zn/Mg distinction is documented structurally: the two classes differ in inhibitor sensitivity — "the structure suggests why 4,7-dioxosebacic acid is a better inhibitor of the zinc-dependent ALADs than of the zinc-independent ALADs" (<a href="https://pubmed.ncbi.nlm.nih.gov/16304458/">PMID: 16304458</a>). More broadly, PBGS "evolved to use an unusual variety of metal ions both for catalytic function and to control protein multimerization" (<a href="https://pubmed.ncbi.nlm.nih.gov/27783504/">PMID: 27783504</a>), which is precisely why two <em>Pseudomonas</em> species diverge in metal usage.</p>
+<h3 id="finding-3-the-two-catalytic-schiff-base-lysines-and-the-tim-barrel-fold-are-conserved-consistent-with-a-cytoplasmic-homo-oligomer">Finding 3 — The two catalytic Schiff-base lysines and the TIM-barrel fold are conserved, consistent with a cytoplasmic homo-oligomer</h3>
+<p>The PBGS catalytic mechanism requires <strong>two adjacent active-site lysines</strong>, each forming a Schiff base (imine) with one of the two ALA substrates. Mapping Q88IT6 against <em>E. coli</em> ALAD identifies both:</p>
+<ul>
+<li><strong>A-side / Schiff-base lysine:</strong> in the conserved motif <code>...LMVKPAGAY...</code>, <em>E. coli</em> Lys247 → <em>P. putida</em> <strong>Lys249</strong>.</li>
+<li><strong>P-side / "perturbing" lysine:</strong> in the conserved motif <code>...MAYSTKFASS...</code>, <em>E. coli</em> Lys195 → <em>P. putida</em> <strong>Lys197</strong>.</li>
+</ul>
+<p>These correspond to the two lysines described mechanistically as "one to the normal Schiff base-forming Lys-246 and the other to a universally conserved 'perturbing' Lys-194 (E. coli numbering)" (<a href="https://pubmed.ncbi.nlm.nih.gov/11444968/">PMID: 11444968</a>). The two-Schiff-base mechanism — "two covalent Schiff base linkages between adjacent active site lysine residues and each of the two substrate molecules" — is well established (<a href="https://pubmed.ncbi.nlm.nih.gov/15381398/">PMID: 15381398</a>), and inhibitor co-crystal structures confirm both lysines engage substrate: "the inhibitor binds by forming Schiff-base linkages with lysines 200 and 253 at the active site" (<a href="https://pubmed.ncbi.nlm.nih.gov/16304458/">PMID: 16304458</a>). The alaremycin co-crystal with <em>P. aeruginosa</em> PBGS likewise shows the antibiotic "covalently bound by the catalytically important active-site lysine residue 260" (<a href="https://pubmed.ncbi.nlm.nih.gov/19822707/">PMID: 19822707</a>).</p>
+<p>Structurally, "monomers of all ALADs adopt the TIM-barrel fold" (<a href="https://pubmed.ncbi.nlm.nih.gov/28045381/">PMID: 28045381</a>) — the (α/β)8 barrel encoded by the Aldolase_TIM InterPro signature (IPR013785). ALAD monomers assemble into <strong>homo-oligomers</strong>, canonically homooctamers. <strong>Localization:</strong> Q88IT6 begins <code>MSNQFPSVRPRR...</code> with no signal peptide and no predicted transmembrane segment, consistent with a <strong>soluble cytoplasmic</strong> enzyme, the compartment where tetrapyrrole biosynthesis takes place.</p>
+<h3 id="finding-4-quantitative-phylogenetic-evidence-places-p-putida-alad-with-the-zinc-type-enzymes">Finding 4 — Quantitative phylogenetic evidence places <em>P. putida</em> ALAD with the zinc-type enzymes</h3>
+<p>Global (Needleman–Wunsch) pairwise identity comparisons quantify the divergence:</p>
+<table>
+<thead>
+<tr>
+<th>Pair</th>
+<th>% identity</th>
+<th>Metal class of comparator</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Q88IT6 (<em>P. putida</em>) vs <em>E. coli</em> ALAD</td>
+<td><strong>77.4%</strong></td>
+<td>Zinc-dependent</td>
+</tr>
+<tr>
+<td>Q88IT6 (<em>P. putida</em>) vs <em>P. aeruginosa</em> HEM2</td>
+<td><strong>55.0%</strong></td>
+<td>Magnesium-dependent</td>
+</tr>
+<tr>
+<td><em>E. coli</em> ALAD vs <em>P. aeruginosa</em> HEM2</td>
+<td>51.0%</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>Despite <em>P. aeruginosa</em> being taxonomically closer to <em>P. putida</em> than <em>E. coli</em> is, the <em>P. putida</em> enzyme is markedly more similar to the <strong>zinc-type</strong> <em>E. coli</em> enzyme. Q88IT6 conserves every zinc/catalytic determinant: the metal loop Ser119–Asp120 plus the Cys122/Cys124/Cys132 triad, the perturbing Lys197, the Schiff-base Lys249, and the substrate-carboxylate-binding lid motif <code>NPMNRR</code> (Arg228/Arg229). The <em>P. aeruginosa</em> enzyme instead carries the Mg-type loop. A practical corollary is that <strong>the <em>E. coli</em> enzyme — not the available <em>P. aeruginosa</em> crystal structure — is the most appropriate mechanistic/structural model</strong> for Q88IT6. This pattern is consistent with the general principle that "phylogenetic variation in PBGS multimerization equilibria provides insight into how Nature has harnessed oligomeric variation in the control of protein function" (<a href="https://pubmed.ncbi.nlm.nih.gov/27783504/">PMID: 27783504</a>) — metal and quaternary-structure properties vary across the family and do not strictly follow species phylogeny.</p>
+<h3 id="finding-5-the-hiscys-rich-zinc-binding-pocket-is-fully-conserved-indicating-a-bona-fide-zinc-metalloenzyme">Finding 5 — The His/Cys-rich zinc-binding pocket is fully conserved, indicating a bona fide zinc metalloenzyme</h3>
+<p>Q88IT6 conserves the histidine- and cysteine-rich metal region. The motif <code>...EYTSHGHCG...</code> places <strong>His129 and His131</strong> immediately adjacent to the Cys122/124/132 triad, corresponding to <em>E. coli</em> <strong>His126 and His128</strong>. Site-directed mutagenesis in <em>E. coli</em> PBGS established that this region forms the zinc-binding pocket: single and double His→Ala mutants remain catalytically active (Vmax ~44–75 vs ~50 U/mg wild type), but H128A raises the apparent Kd for Zn(II) roughly ten-fold — "His128 is part of a histidine- and cysteine-rich region of the sequence that is implicated in metal binding. The apparent Kd for Zn(II) binding to H128A is about an order of magnitude higher than for the wild type protein" (<a href="https://pubmed.ncbi.nlm.nih.gov/7592604/">PMID: 7592604</a>). That same study confirms "Porphobilinogen synthase (PBGS) is a metalloenzyme that catalyzes the first common step of tetrapyrrole biosynthesis, the asymmetric condensation of two molecules of 5-aminolevulinic acid (ALA) to form porphobilinogen." Full conservation of this pocket in Q88IT6 supports a functional Zn2+ site. The quantum-biochemistry study of human PBGS independently identifies Cys122/Cys124/Cys132 as the highest-energy zinc contacts and His131/Asp120/Ser168/Arg209 as co-conserved metal-site residues (<a href="https://pubmed.ncbi.nlm.nih.gov/33791795/">PMID: 33791795</a>) — all conserved in Q88IT6.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="position-in-the-heme-biosynthetic-pathway">Position in the heme biosynthetic pathway</h3>
+<p>hemB catalyzes the <strong>second step</strong> of the universal heme pathway, immediately downstream of ALA synthesis. <em>Pseudomonas</em> uses the <strong>C5 / glutamate pathway</strong> to make ALA:</p>
+<div class="codehilite"><pre><span></span><code>Glutamate
+   │  glutamyl-tRNA synthetase (gltX)
+   ▼
+Glutamyl-tRNA
+   │  hemA (glutamyl-tRNA reductase), hemL (GSA aminomutase)
+   ▼
+5-Aminolevulinic acid (ALA)
+   │
+   │  ★ hemB / PBGS (Q88IT6)  ← THIS ENZYME
+   │     2 ALA → porphobilinogen + 2 H2O   (Zn2+-dependent)
+   ▼
+Porphobilinogen (PBG)
+   │  hemC (PBG deaminase) → hydroxymethylbilane
+   │  hemD → uroporphyrinogen III
+   │  hemE → hemF/hemN → hemG/hemY → hemH (ferrochelatase)
+   ▼
+Protoporphyrin IX → Heme (Fe insertion)
+   │
+   └──► also feeds siroheme, cobalamin (B12); chlorophyll in phototrophs
+</code></pre></div>
+
+<p>Because porphobilinogen is the monopyrrole precursor for <strong>all</strong> tetrapyrroles, hemB sits at a metabolic bottleneck: loss of function blocks heme, cytochromes, catalases/peroxidases, siroheme-dependent assimilatory reductases, and respiration. This is why PBGS is a validated antibacterial target — the antibiotic <strong>alaremycin</strong>, an ALA mimic, inhibits PBGS and uncouples heme biosynthesis from bacterial growth (<a href="https://pubmed.ncbi.nlm.nih.gov/19822707/">PMID: 19822707</a>).</p>
+<h3 id="catalytic-mechanism">Catalytic mechanism</h3>
+<p>The reaction proceeds through a well-characterized two-Schiff-base mechanism within a single active site of the TIM barrel:</p>
+<div class="codehilite"><pre><span></span><code>       A-side                                  P-side
+   ┌──────────┐                            ┌──────────┐
+   │  Lys249  │= N─(ALA-A)                  │  Lys197  │  perturbing
+   │ (Schiff  │                            │  lysine  │
+   │  base)   │        Zn2+ ──[Cys122/Cys124/Cys132 + His129/His131]
+   └──────────┘                            └──────────┘
+│                                        │
+   ALA-A amine forms C–N bond ◄──── aldol/Knorr ──► ALA-P
+│                                        │
+└──────────► Porphobilinogen ◄───────────┘
+               + 2 H2O
+</code></pre></div>
+
+<ol>
+<li>The first ALA ("A-side" substrate) forms a <strong>Schiff base with Lys249</strong>.</li>
+<li>The second ALA ("P-side") binds adjacent to <strong>Lys197</strong>, the universally conserved "perturbing" lysine.</li>
+<li>The catalytic <strong>Zn2+</strong>, ligated by the Cys122/124/132 triad in the His/Cys-rich pocket, positions/activates the substrates.</li>
+<li>Asymmetric <strong>C–N bond formation</strong> followed by an <strong>aldol-type C–C condensation</strong> joins the two units and cyclizes to the pyrrole, releasing two waters and porphobilinogen.</li>
+</ol>
+<p>Substrate carboxylates are anchored by conserved lid arginines (Arg228/Arg229 in the <code>NPMNRR</code> motif). The A-side and P-side chemistry is distinct, giving the reaction its characteristic asymmetry.</p>
+<h3 id="quaternary-structure-and-allostery">Quaternary structure and allostery</h3>
+<p>PBGS is the archetypal <strong>"morpheein"</strong>: human PBGS interconverts among a high-activity octamer, a low-activity hexamer, and a dimer, providing a quaternary-structure basis for allostery and, in humans, for disease-causing variants and drug side effects (<a href="https://pubmed.ncbi.nlm.nih.gov/31952692/">PMID: 31952692</a>). Whether <em>P. putida</em> hemB exhibits comparable morpheein dynamics is unknown, but the conserved TIM-barrel/oligomerization architecture makes it plausible.</p>
+<h3 id="zinc-vs-magnesium-the-key-species-specific-insight">Zinc vs magnesium: the key species-specific insight</h3>
+<p>The single most notable mechanistic feature of <em>P. putida</em> hemB is its predicted <strong>zinc dependence</strong>, diverging from the experimentally confirmed <strong>magnesium dependence</strong> of the <em>P. aeruginosa</em> ortholog. The determinant is the metal-loop sequence:</p>
+<table>
+<thead>
+<tr>
+<th>Enzyme</th>
+<th>Metal loop (res ~118–136)</th>
+<th>Metal class</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>P. putida</em> Q88IT6</td>
+<td><code>VVMSDT</code><strong><code>C</code></strong><code>F</code><strong><code>C</code></strong><code>EYTSHGH</code><strong><code>C</code></strong><code>GVLH</code></td>
+<td><strong>Zinc</strong> (Cys triad intact)</td>
+</tr>
+<tr>
+<td><em>E. coli</em> ALAD</td>
+<td><code>VMSDT</code><strong><code>C</code></strong><code>F</code><strong><code>C</code></strong><code>EYTSHGH</code><strong><code>C</code></strong><code>GVL</code></td>
+<td>Zinc</td>
+</tr>
+<tr>
+<td><em>P. aeruginosa</em> HEM2</td>
+<td><code>IITDV</code><strong><code>A</code></strong><code>L</code><strong><code>D</code></strong><code>PFTTHGQ</code><strong><code>D</code></strong><code>GIL</code></td>
+<td>Magnesium (cysteines replaced)</td>
+</tr>
+</tbody>
+</table>
+<p>This places <em>P. putida</em> hemB with the <em>E. coli</em>/human zinc-type enzymes and predicts corresponding functional properties: dependence on Zn2+ for catalysis, sensitivity to zinc chelators, susceptibility to lead (Pb2+ displaces catalytic Zn2+ — the basis for ALAD's role as a biomarker of lead exposure in humans), and greater sensitivity to zinc-selective inhibitors such as 4,7-dioxosebacic acid (<a href="https://pubmed.ncbi.nlm.nih.gov/16304458/">PMID: 16304458</a>). Many bacterial zinc-ALADs additionally possess a separate allosteric magnesium ("Mg arm") site, which may also apply here.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbreviated)</th>
+<th>How it supports this report</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9529530/">9529530</a></td>
+<td><em>Cloning… hemB of P. aeruginosa, a Mg-dependent ALAD</em></td>
+<td>Directly demonstrates the ALAD reaction (2 ALA → PBG) for the closest ortholog and establishes it is <strong>Mg-dependent</strong> — the comparison point highlighting <em>P. putida</em>'s zinc-type identity.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27783504/">27783504</a></td>
+<td><em>The Remarkable Character of Porphobilinogen Synthase</em></td>
+<td>Confirms PBGS as the essential first committed enzyme of tetrapyrrole biosynthesis and documents the family's varied metal-ion usage.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/7592604/">7592604</a></td>
+<td><em>Conserved histidines of E. coli PBGS not required for catalysis</em></td>
+<td>Maps the His/Cys-rich <strong>zinc-binding pocket</strong> (His128 ↔ <em>P. putida</em> His131); H128A raises Zn Kd ~10-fold, confirming metalloenzyme status.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/33791795/">33791795</a></td>
+<td><em>Human PBGS metalloprotein by quantum biochemistry &amp; evolution</em></td>
+<td>Identifies Cys122/124/132 as the strongest zinc contacts and His131/Asp120/Ser168/Arg209 as co-conserved — all present in Q88IT6.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11444968/">11444968</a></td>
+<td><em>Suicide inactivation by 4,7-dioxosebacic acid</em></td>
+<td>Identifies the two catalytic lysines (Schiff-base Lys246 and perturbing Lys194, <em>E. coli</em> numbering) → <em>P. putida</em> Lys249/Lys197.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15381398/">15381398</a></td>
+<td><em>The PBGS catalyzed reaction mechanism</em></td>
+<td>Establishes the two-Schiff-base mechanism binding both ALA substrates.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16304458/">16304458</a></td>
+<td><em>Chlorobium ALAD with diacid inhibitor</em></td>
+<td>Confirms both active-site lysines form Schiff bases and defines zinc-dependent vs -independent inhibitor selectivity.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/28045381/">28045381</a></td>
+<td><em>Structural studies of ALAD substrate/product complexes</em></td>
+<td>Establishes the universal <strong>TIM-barrel fold</strong> of ALAD monomers.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19822707/">19822707</a></td>
+<td><em>P. aeruginosa PBGS with alaremycin</em></td>
+<td>Shows the active-site catalytic lysine covalently binds an ALA-mimic antibiotic; validates PBGS as an antibacterial target.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31952692/">31952692</a></td>
+<td><em>PBGS: an equilibrium of different assemblies</em></td>
+<td>Documents PBGS quaternary-structure dynamics (morpheein octamer/hexamer/dimer equilibrium).</td>
+</tr>
+</tbody>
+</table>
+<p>The human lead-toxicity literature (PMIDs <a href="https://pubmed.ncbi.nlm.nih.gov/35969329/">35969329</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/35805621/">35805621</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/32554272/">32554272</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/32004562/">32004562</a>) concerns the human ALAD ortholog as a biomarker of lead exposure; it is not directly about <em>P. putida</em> but corroborates the general principle that zinc-type ALADs are inhibited when Pb2+ displaces the catalytic zinc.</p>
+<hr />
+<h2 id="supported-and-refuted-hypotheses">Supported and Refuted Hypotheses</h2>
+<p><strong>Supported</strong><br />
+- <strong>H1</strong> — Q88IT6 catalyzes 2 ALA → porphobilinogen + 2 H2O (EC 4.2.1.24). <em>(Family/EC annotation + direct evidence for the ortholog.)</em><br />
+- <strong>H2</strong> — The two catalytic lysines (Lys249 Schiff-base, Lys197 perturbing) are conserved. <em>(Alignment to E. coli.)</em><br />
+- <strong>H3</strong> — Q88IT6 is a <strong>zinc-dependent</strong> PBGS. <em>(Retention of the Cys122/124/132 triad, matching E. coli/human Zn enzymes; conserved His/Cys pocket.)</em><br />
+- <strong>H4</strong> — The enzyme is cytoplasmic and adopts a homo-oligomeric TIM-barrel architecture.</p>
+<p><strong>Refuted / revised</strong><br />
+- The assumption (extrapolated from the <em>P. aeruginosa</em> literature) that all <em>Pseudomonas</em> PBGS are Mg2+-dependent does <strong>not</strong> hold for <em>P. putida</em>, whose enzyme retains the zinc triad.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li><strong>No direct experimental characterization of the <em>P. putida</em> enzyme.</strong> All functional conclusions rest on (a) database annotation, (b) sequence homology and conserved-residue mapping, and (c) direct experiments on orthologs. The Q88IT6 protein itself has not, to our knowledge, been purified, assayed, or crystallized.</li>
+<li><strong>Zinc dependence is a strong prediction, not a measurement.</strong> The Cys122/124/132 triad is diagnostic and reliable, but metal content, metal Km/Kd, Pb2+ sensitivity, and any allosteric magnesium requirement of the <em>P. putida</em> enzyme have not been measured.</li>
+<li><strong>Oligomeric state and morpheein behavior unknown.</strong> Whether <em>P. putida</em> hemB shows the octamer/hexamer/dimer equilibrium seen for human PBGS is untested.</li>
+<li><strong>Localization inferred, not demonstrated.</strong> The absence of a signal peptide/TM segment strongly implies cytoplasmic localization, but this has not been shown experimentally in <em>P. putida</em>.</li>
+<li><strong>Regulation uncharacterized.</strong> hemB expression/regulation in <em>P. putida</em> was not investigated; in <em>P. aeruginosa</em>, no strong O2/heme/iron regulation of hemB was observed.</li>
+<li><strong>No structural model validated.</strong> Conclusions are sequence-based; no AlphaFold/homology model was quantitatively validated here.</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li><strong>Recombinant expression and metal analysis.</strong> Clone PP_2913, express in <em>E. coli</em>, purify, and determine catalytic metal identity by ICP-MS/atomic absorption and by activity assays ± Zn2+/Mg2+ and ± chelators (EDTA, 1,10-phenanthroline) to directly test zinc dependence.</li>
+<li><strong>Steady-state kinetics.</strong> Measure Km for ALA, kcat, and pH optimum; benchmark against zinc-type (<em>E. coli</em>, human) and Mg-type (<em>P. aeruginosa</em>) enzymes.</li>
+<li><strong>Lead-inhibition assay.</strong> Because zinc-type ALADs are Pb2+-sensitive, test Pb2+ inhibition to functionally confirm a catalytic zinc site.</li>
+<li><strong>Structure determination / modeling.</strong> Solve the crystal structure or build and validate an AlphaFold model (e.g., via Phenix) to confirm the TIM-barrel fold, Cys122/124/132 zinc geometry, and Lys197/Lys249 arrangement.</li>
+<li><strong>Inhibitor selectivity.</strong> Test 4,7-dioxosebacic acid and alaremycin; zinc-type enzymes are predicted to be more sensitive to the former.</li>
+<li><strong>Oligomeric-state analysis.</strong> Use size-exclusion chromatography / native MS / analytical ultracentrifugation to determine oligomeric state and test for morpheein-type equilibria.</li>
+<li><strong>Genetic essentiality.</strong> Attempt a PP_2913 knockout in <em>P. putida</em> KT2440; expect heme auxotrophy (rescuable by exogenous heme), confirming its committed pathway role.</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>hemB / PP_2913 (Q88IT6) in <em>Pseudomonas putida</em> KT2440 encodes <strong>porphobilinogen synthase (5‑aminolevulinate dehydratase, ALAD; EC 4.2.1.24)</strong>, a <strong>cytoplasmic, TIM‑barrel, homo‑oligomeric metalloenzyme</strong> that catalyzes the <strong>first committed common step of heme/tetrapyrrole biosynthesis</strong> — the asymmetric condensation of two 5‑aminolevulinate molecules into porphobilinogen plus two water, using two conserved active-site lysines (Lys249 Schiff-base/A-side and Lys197 perturbing/P-side). Unlike its magnesium-dependent <em>P. aeruginosa</em> ortholog, the <em>P. putida</em> enzyme retains the canonical <strong>zinc-binding cysteine triad Cys122/124/132</strong> and the flanking His/Cys pocket identical to the <em>E. coli</em> and human enzymes, and is therefore predicted to be a <strong>zinc-dependent PBGS</strong>. The gene identity is verified and unambiguous; all conclusions are consistent with the UniProt annotation, domain architecture, and the primary ALAD literature.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="hemB-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="hemB-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:9529530</li>
+<li>PMID:27783504</li>
+<li>PMID:33791795</li>
+<li>PMID:16304458</li>
+<li>PMID:11444968</li>
+<li>PMID:15381398</li>
+<li>PMID:19822707</li>
+<li>PMID:28045381</li>
+<li>PMID:7592604</li>
+<li>PMID:31952692</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hemB-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88IT6" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="hemb-assessment-notes">hemB assessment notes</h1>
+<h2 id="identity-and-core-reaction">Identity and core reaction</h2>
+<p>Q88IT6 (PP_2913) is one of two KT2440 ALAD-family proteins assigned EC 4.2.1.24.<br />
+UniProt supports porphobilinogen synthase activity, two predicted Schiff-base<br />
+lysines, a predicted catalytic zinc triad, and a separate magnesium-binding site<br />
+[file:PSEPK/hemB/hemB-uniprot.txt "RecName: Full=Delta-aminolevulinic acid dehydratase"]<br />
+[file:PSEPK/hemB/hemB-uniprot.txt 'ligand_note="catalytic"']<br />
+[file:PSEPK/hemB/hemB-uniprot.txt 'ligand="Mg(2+)"'].<br />
+These are sequence/rule-based assignments rather than direct KT2440 biochemistry.</p>
+<h2 id="openscientist-assessment">OpenScientist assessment</h2>
+<p>The OpenScientist report correctly identifies the ALAD reaction and recognizes<br />
+that direct characterization of Q88IT6 was not found. Its main zinc-site call is<br />
+already supported more directly by the UniProt feature table. The report does<br />
+not discuss the second KT2440 ALAD-family paralog, HemBB/PP_3322, and therefore<br />
+cannot establish which paralog carries native pathway flux. It also provides<br />
+unsaved pairwise identities, exact cross-species residue mappings, and<br />
+ortholog-derived oligomer, inhibitor, and metal behavior. Those calculations and<br />
+transfers were not used as target-specific evidence.</p>
+<h2 id="curation-decisions">Curation decisions</h2>
+<p>GO:0004655 is accepted as the predicted core molecular function. The zinc row is<br />
+retained because UniProt predicts three catalytic Zn2+ ligands, while the broad<br />
+metal-binding row is refined to the additional predicted Mg2+ site. The module<br />
+allows an active ALAD-family enzyme and does not require HemB over HemBB.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88IT6
+gene_symbol: hemB
+product_type: PROTEIN
+aliases:
+  - PP_2913
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  HemB is one of two KT2440 delta-aminolevulinate dehydratase paralogs. It is an
+  ALAD-family enzyme predicted to condense two 5-aminolevulinate molecules into
+  porphobilinogen. Sequence-based site annotation identifies catalytic zinc
+  ligands, a magnesium-binding site, and the conserved lysines that form
+  Schiff-base intermediates, supporting a metal-dependent porphobilinogen
+  synthase role in heme-b precursor synthesis.
+existing_annotations:
+  - term:
+      id: GO:0004655
+      label: porphobilinogen synthase activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: enables
+    review:
+      summary: This is the specific predicted catalytic function of HemB.
+      action: ACCEPT
+      reason: &gt;-
+        UniProt assigns EC 4.2.1.24, the ALAD family, conserved catalytic
+        Schiff-base sites, and metal-binding residues consistent with
+        porphobilinogen synthase activity.
+      supported_by:
+        - reference_id: file:PSEPK/hemB/hemB-uniprot.txt
+          supporting_text: &#34;RecName: Full=Delta-aminolevulinic acid dehydratase&#34;
+  - term:
+      id: GO:0005829
+      label: cytosol
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000118
+    qualifier: located_in
+    review:
+      summary: A soluble cytosolic location is consistent with the ALAD-family architecture.
+      action: ACCEPT
+      reason: &gt;-
+        No signal peptide or transmembrane segment is predicted, and UniProt
+        retains the TreeGrafter cytosol cross-reference.
+      supported_by:
+        - reference_id: file:PSEPK/hemB/hemB-uniprot.txt
+          supporting_text: &#34;GO; GO:0005829; C:cytosol;&#34;
+  - term:
+      id: GO:0006779
+      label: porphyrin-containing compound biosynthetic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000117
+    qualifier: involved_in
+    review:
+      summary: This is a correct broad pathway assignment for an early shared tetrapyrrole step.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Porphobilinogen formation supplies the common tetrapyrrole trunk. The
+        annotation is biologically correct, but the catalytic activity and
+        direct tetrapyrrole-biosynthesis role are more informative core claims.
+      supported_by:
+        - reference_id: file:PSEPK/hemB/hemB-uniprot.txt
+          supporting_text: &#34;PATHWAY: Porphyrin-containing compound metabolism; protoporphyrin-IX&#34;
+  - term:
+      id: GO:0006783
+      label: heme biosynthetic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000118
+    qualifier: involved_in
+    review:
+      summary: ALAD activity supplies porphobilinogen to the shared heme-b pathway.
+      action: ACCEPT
+      reason: &gt;-
+        The reaction is required upstream of hydroxymethylbilane,
+        uroporphyrinogen III, and all subsequent heme-b intermediates.
+      supported_by:
+        - reference_id: file:PSEPK/hemB/hemB-uniprot.txt
+          supporting_text: &#34;KW   Heme biosynthesis&#34;
+  - term:
+      id: GO:0008270
+      label: zinc ion binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000118
+    qualifier: enables
+    review:
+      summary: HemB contains a predicted catalytic zinc site characteristic of one ALAD lineage.
+      action: ACCEPT
+      reason: &gt;-
+        Three residues are annotated as catalytic Zn2+ ligands, and the sequence
+        contains the corresponding cysteine-rich region. This architecture is
+        absent from the KT2440 HemBB paralog.
+      supported_by:
+        - reference_id: file:PSEPK/hemB/hemB-uniprot.txt
+          supporting_text: &#39;ligand_note=&#34;catalytic&#34;&#39;
+  - term:
+      id: GO:0033014
+      label: tetrapyrrole biosynthetic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: HemB directly participates in tetrapyrrole biosynthesis.
+      action: ACCEPT
+      reason: &gt;-
+        ALAD produces porphobilinogen for the shared tetrapyrrole trunk, so the
+        broad process term is accurate and does not force a single downstream
+        tetrapyrrole endpoint.
+      supported_by:
+        - reference_id: file:PSEPK/hemB/hemB-uniprot.txt
+          supporting_text: &#34;PATHWAY: Porphyrin-containing compound metabolism; protoporphyrin-IX&#34;
+  - term:
+      id: GO:0046872
+      label: metal ion binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: The broad metal call can be replaced by the additional predicted magnesium site.
+      action: MODIFY
+      reason: &gt;-
+        Zinc binding is already represented by GO:0008270, while UniProt also
+        identifies a distinct Mg2+-binding residue. GO:0000287 records that
+        second metal requirement without retaining a generic parent term.
+      proposed_replacement_terms:
+        - id: GO:0000287
+          label: magnesium ion binding
+      supported_by:
+        - reference_id: file:PSEPK/hemB/hemB-uniprot.txt
+          supporting_text: &#39;ligand=&#34;Mg(2+)&#34;&#39;
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings: []
+  - id: GO_REF:0000117
+    title: Electronic Gene Ontology annotations created by ARBA machine learning models
+    findings: []
+  - id: GO_REF:0000118
+    title: TreeGrafter-generated GO annotations
+    findings: []
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings: []
+  - id: file:PSEPK/hemB/hemB-uniprot.txt
+    title: UniProtKB entry for PSEPK hemB
+    findings:
+      - statement: HemB is an ALAD-family delta-aminolevulinate dehydratase.
+        supporting_text: &#34;RecName: Full=Delta-aminolevulinic acid dehydratase&#34;
+      - statement: HemB has predicted catalytic zinc and magnesium sites.
+        supporting_text: &#39;ligand_note=&#34;catalytic&#34;&#39;
+      - statement: HemB also has a predicted Mg2+-binding site.
+        supporting_text: &#39;ligand=&#34;Mg(2+)&#34;&#39;
+  - id: file:PSEPK/hemB/hemB-deep-research-openscientist.md
+    title: OpenScientist research report for PSEPK hemB
+    findings:
+      - statement: &gt;-
+          The report identifies the ALAD-family reaction but acknowledges that
+          Q88IT6 has not been directly characterized experimentally.
+        supporting_text: &#34;No direct experimental characterization of the *P. putida* enzyme.&#34;
+    reference_review:
+      relevance: HIGH
+      correctness: MISCITED
+      review_notes: &gt;-
+        The report recovers the correct reaction and a zinc-site prediction that
+        is independently present in UniProt. It does not account for the KT2440
+        hemBB paralog, calls a P. aeruginosa protein the close ortholog without
+        resolving paralogy, and presents unsaved global alignments, exact residue
+        maps, and ortholog-derived metal, oligomer, and inhibitor behavior as
+        target-specific conclusions. Only the UniProt-supported ALAD reaction and
+        predicted Zn/Mg sites were retained; physiological dominance is unresolved.
+core_functions:
+  - description: &gt;-
+      Condenses two 5-aminolevulinate molecules to porphobilinogen as a
+      metal-dependent ALAD-family enzyme in tetrapyrrole precursor synthesis.
+    molecular_function:
+      id: GO:0004655
+      label: porphobilinogen synthase activity
+    directly_involved_in:
+      - id: GO:0033014
+        label: tetrapyrrole biosynthetic process
+    locations:
+      - id: GO:0005829
+        label: cytosol
+    supported_by:
+      - reference_id: file:PSEPK/hemB/hemB-uniprot.txt
+        supporting_text: &#34;RecName: Full=Delta-aminolevulinic acid dehydratase&#34;
+suggested_questions:
+  - question: &gt;-
+      Is HemB the principal aerobic ALAD isozyme, and how does its zinc site
+      affect activity relative to HemBB?
+suggested_experiments:
+  - hypothesis: HemB and HemBB are active ALAD paralogs with different metal dependence.
+    description: &gt;-
+      Purify both proteins and compare kinetics, oligomerization, and metal
+      dependence, then phenotype single and double mutants with ALA rescue.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

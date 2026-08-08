@@ -1,0 +1,3795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>carB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>carB</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P34907" target="_blank" class="term-link">
+                        P34907
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Dictyostelium discoideum</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "carB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P34907" data-a="DESCRIPTION: Cyclic AMP receptor 2 (cAR2/carB) is one of four s..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Cyclic AMP receptor 2 (cAR2/carB) is one of four serpentine (seven-transmembrane) G protein-coupled receptors for extracellular cAMP in the social amoeba Dictyostelium discoideum. It is a lower-affinity cAMP receptor that is expressed later than cAR1, appearing only after cells have aggregated and then preferentially in prestalk cells at the mound-to-slug stage. Signaling through heterotrimeric G proteins, cAR2 couples extracellular cAMP to downstream responses including adenylyl cyclase activation and developmentally regulated gene expression. It is required for cAMP-directed sorting/patterning of prestalk cells, for normal tip formation, and for progression through late multicellular development; cells lacking cAR2 arrest at the tight-mound stage and over-express prespore markers. cAR2 belongs to the Dictyostelium cAR family (cAR1-cAR4), whose members are deployed sequentially during development and differ in cAMP affinity and C-terminal sequence.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004930" target="_blank" class="term-link">
+                                    GO:0004930
+                                </a>
+                            </span>
+                            <span class="term-label">G protein-coupled receptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P34907" data-a="GO:0004930" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cAR2 is a bona fide seven-transmembrane G protein-coupled receptor for cAMP whose responses are mediated by heterotrimeric G proteins. This is a core molecular function and the phylogenetic inference is well supported by direct characterization of the Dictyostelium cAR family.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> cAR2 belongs to the cAMP receptor GPCR family, has seven predicted transmembrane helices, and signals via G proteins, consistent with GPCR activity as a core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8436297" target="_blank" class="term-link">
+                                        PMID:8436297
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The receptors for cAMP are members of the family of cell-surface receptors that are linked to G proteins and characterized by seven putative transmembrane domains.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P34907" data-a="GO:0005886" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> As a cell-surface cAMP receptor with seven transmembrane domains, cAR2 is active in the plasma membrane. This is a core localization for the receptor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> cAR2 is a multi-pass cell-surface receptor; plasma membrane is where it binds extracellular cAMP and transduces signal.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8436297" target="_blank" class="term-link">
+                                        PMID:8436297
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The receptors for cAMP are members of the family of cell-surface receptors that are linked to G proteins and characterized by seven putative transmembrane domains.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007189" target="_blank" class="term-link">
+                                    GO:0007189
+                                </a>
+                            </span>
+                            <span class="term-label">adenylate cyclase-activating G protein-coupled receptor signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P34907" data-a="GO:0007189" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> When expressed, cAR2 can mediate activation of adenylyl cyclase, so participation in an adenylate cyclase-activating GPCR signaling pathway is supported experimentally and by phylogenetic inference from the cAR family.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> cAR2 couples cAMP binding to adenylyl cyclase activation via G proteins, as directly shown for the receptor subtype.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9578623" target="_blank" class="term-link">
+                                        PMID:9578623
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">assessed the capacity of each to mediate chemotaxis, activation of adenylyl cyclase and actin polymerization</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004888" target="_blank" class="term-link">
+                                    GO:0004888
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane signaling receptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P34907" data-a="GO:0004888" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a correct but non-specific parent of G protein-coupled receptor activity. A more informative, already-curated child term (GO:0004930) captures the same function more precisely.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The general transmembrane signaling receptor activity term is subsumed by the more specific GPCR activity that is separately annotated; replace with the specific term.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004930" target="_blank" class="term-link">
+                                    G protein-coupled receptor activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8436297" target="_blank" class="term-link">
+                                        PMID:8436297
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The receptors for cAMP are members of the family of cell-surface receptors that are linked to G proteins and characterized by seven putative transmembrane domains.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004930" target="_blank" class="term-link">
+                                    GO:0004930
+                                </a>
+                            </span>
+                            <span class="term-label">G protein-coupled receptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P34907" data-a="GO:0004930" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based electronic annotation of GPCR activity from the cAMP receptor domain signature. This agrees with the IBA and experimental evidence and is a core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> cAR2 is a member of the Dictyostelium cAMP receptor GPCR family; GPCR activity is correct and core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8436297" target="_blank" class="term-link">
+                                        PMID:8436297
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The receptors for cAMP are members of the family of cell-surface receptors that are linked to G proteins and characterized by seven putative transmembrane domains.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007165" target="_blank" class="term-link">
+                                    GO:0007165
+                                </a>
+                            </span>
+                            <span class="term-label">signal transduction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P34907" data-a="GO:0007165" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but very general. cAR2 does participate in signal transduction, but a more specific GPCR signaling pathway term better captures its role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Signal transduction is a high-level parent of the specific GPCR signaling pathway annotations; retain as non-core context.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8436297" target="_blank" class="term-link">
+                                        PMID:8436297
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The receptors for cAMP are members of the family of cell-surface receptors that are linked to G proteins and characterized by seven putative transmembrane domains.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007166" target="_blank" class="term-link">
+                                    GO:0007166
+                                </a>
+                            </span>
+                            <span class="term-label">cell surface receptor signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P34907" data-a="GO:0007166" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but a general parent of G protein-coupled receptor signaling pathway, which is the more precise annotation for cAR2.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> cAR2 is a cell-surface receptor, but the more specific GPCR signaling pathway term is preferred; retain this as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8436297" target="_blank" class="term-link">
+                                        PMID:8436297
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The receptors for cAMP are members of the family of cell-surface receptors that are linked to G proteins and characterized by seven putative transmembrane domains.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007186" target="_blank" class="term-link">
+                                    GO:0007186
+                                </a>
+                            </span>
+                            <span class="term-label">G protein-coupled receptor signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P34907" data-a="GO:0007186" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cAR2 transduces extracellular cAMP through a G protein-coupled receptor signaling pathway. This is a core biological process for the receptor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> cAR2 signaling is mediated by G proteins, placing it squarely in the GPCR signaling pathway.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8436297" target="_blank" class="term-link">
+                                        PMID:8436297
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The receptors for cAMP are members of the family of cell-surface receptors that are linked to G proteins and characterized by seven putative transmembrane domains.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P34907" data-a="GO:0016020" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but non-specific. cAR2 is a plasma membrane cell-surface receptor; the more specific plasma membrane term is preferred.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Generic membrane localization should be replaced by the specific plasma membrane term appropriate for a cell-surface receptor.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    plasma membrane
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8436297" target="_blank" class="term-link">
+                                        PMID:8436297
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The receptors for cAMP are members of the family of cell-surface receptors that are linked to G proteins and characterized by seven putative transmembrane domains.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030552" target="_blank" class="term-link">
+                                    GO:0030552
+                                </a>
+                            </span>
+                            <span class="term-label">cAMP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P34907" data-a="GO:0030552" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cAR2 binds cAMP as its ligand. This InterPro-based electronic annotation is consistent with direct binding measurements and is a core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct [3H]cAMP binding to cAR2 has been demonstrated; cAMP binding is the defining ligand-recognition activity of the receptor.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1537842" target="_blank" class="term-link">
+                                        PMID:1537842
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We have expressed three receptor subtypes, cAR1, cAR2, and cAR3, in growing cells and have investigated their affinity and pharmacological specificity in a series of [3H]cAMP binding studies.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035589" target="_blank" class="term-link">
+                                    GO:0035589
+                                </a>
+                            </span>
+                            <span class="term-label">G protein-coupled purinergic nucleotide receptor signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000108
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P34907" data-a="GO:0035589" data-r="GO_REF:0000108" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This term was assigned by an automated inter-ontology logical inference from cAMP receptor activity. The Dictyostelium cAR receptors are cyclic-AMP chemoattractant receptors, not purinergic (ATP/ADP/adenosine) nucleotide receptors in the sense captured by this term. The mapping mischaracterizes the receptor&#39;s signaling pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is an over-propagated electronic inference. cAR2 responds to the diffusible second messenger cAMP as a developmental chemoattractant; it is not a purinergic nucleotide receptor. The GPCR signaling pathway term already captures its role correctly without the misleading purinergic classification.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2722797" target="_blank" class="term-link">
+                                        PMID:2722797
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the cell surface receptors participate in the transduction of the cAMP signal during chemotaxis and cell differentiation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009642" target="_blank" class="term-link">
+                                    GO:0009642
+                                </a>
+                            </span>
+                            <span class="term-label">response to light intensity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HEP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/41057014" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:41057014
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Transcriptomic and metabolomic insights into light-mediated ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P34907" data-a="GO:0009642" data-r="PMID:41057014" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A high-throughput expression annotation. carB transcript is down-regulated under dark relative to light in a transcriptomic study of the light-mediated unicellular-to-multicellular transition. This reflects transcriptional responsiveness rather than a core molecular function of the receptor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The evidence is expression-level (HEP), showing carB is among genes down-regulated in the dark; it is a peripheral developmental/environmental response, not a core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/41057014" target="_blank" class="term-link">
+                                        PMID:41057014
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">some downregulated genes including adenylate cyclase (acrA) and cyclic AMP receptor (CarB) could reduce the cell aggregation during dark incubation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010854" target="_blank" class="term-link">
+                                    GO:0010854
+                                </a>
+                            </span>
+                            <span class="term-label">adenylate cyclase regulator activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9578623" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9578623
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Switching of chemoattractant receptors programs development ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P34907" data-a="GO:0010854" data-r="PMID:9578623" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Functional expression experiments showed cAR2 can mediate activation of adenylyl cyclase, consistent with the receptor acting as an upstream regulator of adenylyl cyclase through its G protein coupling. Supported by experimental (IMP) evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> cAR2 was directly shown to mediate adenylyl cyclase activation when expressed, supporting an adenylate cyclase regulator activity as part of its signaling output.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9578623" target="_blank" class="term-link">
+                                        PMID:9578623
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">assessed the capacity of each to mediate chemotaxis, activation of adenylyl cyclase and actin polymerization</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15473840" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15473840
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Chemoattractant signaling in dictyostelium discoideum.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P34907" data-a="GO:0005886" data-r="PMID:15473840" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cAR2 is a cell-surface cAMP receptor located in the plasma membrane. This is a core localization and is consistent with its multi-pass membrane architecture.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> As a seven-transmembrane cell-surface receptor, cAR2 resides in the plasma membrane where it binds extracellular cAMP.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8436297" target="_blank" class="term-link">
+                                        PMID:8436297
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The receptors for cAMP are members of the family of cell-surface receptors that are linked to G proteins and characterized by seven putative transmembrane domains.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007165" target="_blank" class="term-link">
+                                    GO:0007165
+                                </a>
+                            </span>
+                            <span class="term-label">signal transduction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15473840" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15473840
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Chemoattractant signaling in dictyostelium discoideum.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P34907" data-a="GO:0007165" data-r="PMID:15473840" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but very general. cAR2 participates in signal transduction, more precisely as a GPCR signaling pathway component.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> High-level parent term; retained as non-core context alongside the specific GPCR signaling pathway annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2722797" target="_blank" class="term-link">
+                                        PMID:2722797
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the cell surface receptors participate in the transduction of the cAMP signal during chemotaxis and cell differentiation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030552" target="_blank" class="term-link">
+                                    GO:0030552
+                                </a>
+                            </span>
+                            <span class="term-label">cAMP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2722797" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2722797
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The cyclic nucleotide specificity of eight cAMP-binding prot...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P34907" data-a="GO:0030552" data-r="PMID:2722797" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct biochemical analysis of Dictyostelium cell-surface cAMP receptors (including cAR2) demonstrated cAMP binding and characterized their nucleotide specificity. cAMP binding is the defining ligand-recognition activity of cAR2.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental (IDA) evidence for cAMP binding by the cell-surface receptor family; this is a core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2722797" target="_blank" class="term-link">
+                                        PMID:2722797
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Eight forms of cAMP-binding proteins have been described in this organism: four forms of a cell surface receptor</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010628" target="_blank" class="term-link">
+                                    GO:0010628
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of gene expression</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8436297" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8436297
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CAR2, a prestalk cAMP receptor required for normal tip forma...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P34907" data-a="GO:0010628" data-r="PMID:8436297" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cAR2 signaling influences the developmental gene-expression program. Loss of cAR2 alters cell-type gene expression (over-expression of prespore markers), indicating cAR2 acts upstream of developmental gene regulation. This is a downstream developmental consequence rather than a core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The receptor regulates expression of developmentally regulated genes as a downstream effect of signaling; retain as non-core developmental context.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8436297" target="_blank" class="term-link">
+                                        PMID:8436297
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">they exhibit an enhanced expression of prespore-specific mRNA</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010629" target="_blank" class="term-link">
+                                    GO:0010629
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of gene expression</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8436297" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8436297
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CAR2, a prestalk cAMP receptor required for normal tip forma...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P34907" data-a="GO:0010629" data-r="PMID:8436297" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> In wild-type aggregates cAR2 normally restrains prespore-specific gene expression; the enhanced prespore mRNA in cAR2-null cells indicates cAR2 acts upstream of negative regulation of these genes. A downstream developmental effect, not a core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Derepression of prespore markers in the mutant implies cAR2 normally contributes to negative regulation of that gene set; retain as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8436297" target="_blank" class="term-link">
+                                        PMID:8436297
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">they exhibit an enhanced expression of prespore-specific mRNA</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030552" target="_blank" class="term-link">
+                                    GO:0030552
+                                </a>
+                            </span>
+                            <span class="term-label">cAMP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1537842" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1537842
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The cyclic nucleotide specificity of three cAMP receptors in...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P34907" data-a="GO:0030552" data-r="PMID:1537842" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct [3H]cAMP binding studies of expressed cAR2 demonstrated cAMP binding, with cAR2 showing much lower/less-detectable affinity than cAR1 in physiological buffer (measurable only in ammonium sulfate). cAMP binding is a core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental (IDA) demonstration of cAMP binding by cAR2; the low apparent affinity distinguishes it from cAR1 but binding is genuine and core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1537842" target="_blank" class="term-link">
+                                        PMID:1537842
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">there was one affinity state of 4 nM for cAR1 and 11 nM for cAR2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031154" target="_blank" class="term-link">
+                                    GO:0031154
+                                </a>
+                            </span>
+                            <span class="term-label">culmination involved in sorocarp development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8436297" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8436297
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CAR2, a prestalk cAMP receptor required for normal tip forma...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P34907" data-a="GO:0031154" data-r="PMID:8436297" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cAR2-null cells arrest at the tight-mound stage and fail normal tip formation and late development, so cAR2 is required for progression toward culmination and fruiting-body (sorocarp) formation. This is a multicellular developmental role rather than a core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Loss-of-function experimental evidence links cAR2 to late multicellular morphogenesis/culmination; retained as a non-core developmental process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8436297" target="_blank" class="term-link">
+                                        PMID:8436297
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">detained at the tight mound stage</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001646" target="_blank" class="term-link">
+                                    GO:0001646
+                                </a>
+                            </span>
+                            <span class="term-label">cAMP receptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15473840" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15473840
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Chemoattractant signaling in dictyostelium discoideum.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P34907" data-a="GO:0001646" data-r="PMID:15473840" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cAMP receptor activity is the most precise molecular-function description of cAR2 as a cell-surface receptor that binds extracellular cAMP and transduces the signal via G proteins. This is the primary core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> cAR2 is a defining member of the Dictyostelium cAMP receptor family; cAMP receptor activity is the correct, specific core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2722797" target="_blank" class="term-link">
+                                        PMID:2722797
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the cell surface receptors participate in the transduction of the cAMP signal during chemotaxis and cell differentiation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>cAR2 is a cell-surface, seven-transmembrane G protein-coupled receptor that binds extracellular cAMP and transduces the signal through heterotrimeric G proteins at the plasma membrane. It is a comparatively low/atypical-affinity member of the cAR family expressed after aggregation in prestalk cells.</h3>
+                <span class="vote-buttons" data-g="P34907" data-a="FUNCTION: cAR2 is a cell-surface, seven-transmembrane G prot..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001646" target="_blank" class="term-link">
+                            cAMP receptor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007186" target="_blank" class="term-link">
+                                G protein-coupled receptor signaling pathway
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8436297" target="_blank" class="term-link">
+                                PMID:8436297
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The receptors for cAMP are members of the family of cell-surface receptors that are linked to G proteins and characterized by seven putative transmembrane domains.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2722797" target="_blank" class="term-link">
+                                PMID:2722797
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the cell surface receptors participate in the transduction of the cAMP signal during chemotaxis and cell differentiation</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Through its G protein coupling, cAR2 acts upstream as a regulator of adenylyl cyclase, mediating cAMP-triggered adenylyl cyclase activation as part of the developmental signaling relay.</h3>
+                <span class="vote-buttons" data-g="P34907" data-a="FUNCTION: Through its G protein coupling, cAR2 acts upstream..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010854" target="_blank" class="term-link">
+                            adenylate cyclase regulator activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007189" target="_blank" class="term-link">
+                                adenylate cyclase-activating G protein-coupled receptor signaling pathway
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9578623" target="_blank" class="term-link">
+                                PMID:9578623
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">assessed the capacity of each to mediate chemotaxis, activation of adenylyl cyclase and actin polymerization</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1537842" target="_blank" class="term-link">
+                            PMID:1537842
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The cyclic nucleotide specificity of three cAMP receptors in Dictyostelium.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">cAR2 was expressed and assayed by [3H]cAMP binding; unlike cAR1 and cAR3 it showed no detectable affinity in phosphate buffer and only an 11 nM affinity state in ammonium sulfate, marking cAR2 as a comparatively low/atypical-affinity cAMP receptor.</div>
+
+                        <div class="finding-text">"In phosphate buffer, there were two affinity states of about 30 and 300 nM for cAR1 and 20 and 500 nM for cAR3 but no detectable affinity for cAR2."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15473840" target="_blank" class="term-link">
+                            PMID:15473840
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Chemoattractant signaling in dictyostelium discoideum.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/2722797" target="_blank" class="term-link">
+                            PMID:2722797
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The cyclic nucleotide specificity of eight cAMP-binding proteins in Dictyostelium discoideum is correlated into three groups.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The four cell-surface cAMP receptors (including cAR2) form one pharmacological group and bind cAMP to transduce the signal during chemotaxis and cell differentiation.</div>
+
+                        <div class="finding-text">"the cell surface receptors participate in the transduction of the cAMP signal during chemotaxis and cell differentiation"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/41057014" target="_blank" class="term-link">
+                            PMID:41057014
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Transcriptomic and metabolomic insights into light-mediated unicellular-to-multicellular transition in Dictyostelium discoideum.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">carB (CarB) is among genes down-regulated under dark relative to light during the unicellular-to-multicellular transition, linking cAR2 expression to light-modulated development.</div>
+
+                        <div class="finding-text">"some downregulated genes including adenylate cyclase (acrA) and cyclic AMP receptor (CarB) could reduce the cell aggregation during dark incubation"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8436297" target="_blank" class="term-link">
+                            PMID:8436297
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">CAR2, a prestalk cAMP receptor required for normal tip formation and late development of Dictyostelium discoideum.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">cAR2 is a G protein-linked, seven-transmembrane cell-surface receptor for cAMP.</div>
+
+                        <div class="finding-text">"The receptors for cAMP are members of the family of cell-surface receptors that are linked to G proteins and characterized by seven putative transmembrane domains."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">cAR2 is expressed only after aggregation and preferentially in prestalk cells.</div>
+
+                        <div class="finding-text">"CAR2 is expressed only after cells have aggregated and, then, preferentially in prestalk cells."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">cAR2-null cells arrest at the tight-mound stage and over-express prespore markers, and cAR2 is required for cAMP-directed prestalk sorting.</div>
+
+                        <div class="finding-text">"CAR2 may be required for cAMP-directed sorting of prestalk cells during pattern formation within the aggregation mound."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9578623" target="_blank" class="term-link">
+                            PMID:9578623
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Switching of chemoattractant receptors programs development and morphogenesis in Dictyostelium: receptor subtypes activate common responses at different agonist concentrations.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">cAR2, when expressed, can mediate chemotaxis, adenylyl cyclase activation and actin polymerization, and cAR subtypes activate common responses at different cAMP concentrations.</div>
+
+                        <div class="finding-text">"assessed the capacity of each to mediate chemotaxis, activation of adenylyl cyclase and actin polymerization"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P34907
+gene_symbol: carB
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:44689
+  label: Dictyostelium discoideum
+description: Cyclic AMP receptor 2 (cAR2/carB) is one of four serpentine
+  (seven-transmembrane) G protein-coupled receptors for extracellular cAMP in the
+  social amoeba Dictyostelium discoideum. It is a lower-affinity cAMP receptor that
+  is expressed later than cAR1, appearing only after cells have aggregated and then
+  preferentially in prestalk cells at the mound-to-slug stage. Signaling through
+  heterotrimeric G proteins, cAR2 couples extracellular cAMP to downstream responses
+  including adenylyl cyclase activation and developmentally regulated gene
+  expression. It is required for cAMP-directed sorting/patterning of prestalk cells,
+  for normal tip formation, and for progression through late multicellular
+  development; cells lacking cAR2 arrest at the tight-mound stage and over-express
+  prespore markers. cAR2 belongs to the Dictyostelium cAR family (cAR1-cAR4), whose
+  members are deployed sequentially during development and differ in cAMP affinity
+  and C-terminal sequence.
+existing_annotations:
+- term:
+    id: GO:0004930
+    label: G protein-coupled receptor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: cAR2 is a bona fide seven-transmembrane G protein-coupled receptor for
+      cAMP whose responses are mediated by heterotrimeric G proteins. This is a core
+      molecular function and the phylogenetic inference is well supported by direct
+      characterization of the Dictyostelium cAR family.
+    action: ACCEPT
+    reason: cAR2 belongs to the cAMP receptor GPCR family, has seven predicted
+      transmembrane helices, and signals via G proteins, consistent with GPCR
+      activity as a core function.
+    supported_by:
+    - reference_id: PMID:8436297
+      supporting_text: The receptors for cAMP are members of the family of
+        cell-surface receptors that are linked to G proteins and characterized by
+        seven putative transmembrane domains.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: As a cell-surface cAMP receptor with seven transmembrane domains, cAR2
+      is active in the plasma membrane. This is a core localization for the receptor.
+    action: ACCEPT
+    reason: cAR2 is a multi-pass cell-surface receptor; plasma membrane is where it
+      binds extracellular cAMP and transduces signal.
+    supported_by:
+    - reference_id: PMID:8436297
+      supporting_text: The receptors for cAMP are members of the family of
+        cell-surface receptors that are linked to G proteins and characterized by
+        seven putative transmembrane domains.
+- term:
+    id: GO:0007189
+    label: adenylate cyclase-activating G protein-coupled receptor signaling pathway
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: When expressed, cAR2 can mediate activation of adenylyl cyclase, so
+      participation in an adenylate cyclase-activating GPCR signaling pathway is
+      supported experimentally and by phylogenetic inference from the cAR family.
+    action: ACCEPT
+    reason: cAR2 couples cAMP binding to adenylyl cyclase activation via G proteins,
+      as directly shown for the receptor subtype.
+    supported_by:
+    - reference_id: PMID:9578623
+      supporting_text: assessed the capacity of each to mediate chemotaxis,
+        activation of adenylyl cyclase and actin polymerization
+- term:
+    id: GO:0004888
+    label: transmembrane signaling receptor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: This is a correct but non-specific parent of G protein-coupled receptor
+      activity. A more informative, already-curated child term (GO:0004930) captures
+      the same function more precisely.
+    action: MODIFY
+    reason: The general transmembrane signaling receptor activity term is subsumed by
+      the more specific GPCR activity that is separately annotated; replace with the
+      specific term.
+    proposed_replacement_terms:
+    - id: GO:0004930
+      label: G protein-coupled receptor activity
+    supported_by:
+    - reference_id: PMID:8436297
+      supporting_text: The receptors for cAMP are members of the family of
+        cell-surface receptors that are linked to G proteins and characterized by
+        seven putative transmembrane domains.
+- term:
+    id: GO:0004930
+    label: G protein-coupled receptor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: InterPro-based electronic annotation of GPCR activity from the cAMP
+      receptor domain signature. This agrees with the IBA and experimental evidence
+      and is a core molecular function.
+    action: ACCEPT
+    reason: cAR2 is a member of the Dictyostelium cAMP receptor GPCR family; GPCR
+      activity is correct and core.
+    supported_by:
+    - reference_id: PMID:8436297
+      supporting_text: The receptors for cAMP are members of the family of
+        cell-surface receptors that are linked to G proteins and characterized by
+        seven putative transmembrane domains.
+- term:
+    id: GO:0007165
+    label: signal transduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: Correct but very general. cAR2 does participate in signal transduction,
+      but a more specific GPCR signaling pathway term better captures its role.
+    action: KEEP_AS_NON_CORE
+    reason: Signal transduction is a high-level parent of the specific GPCR signaling
+      pathway annotations; retain as non-core context.
+    supported_by:
+    - reference_id: PMID:8436297
+      supporting_text: The receptors for cAMP are members of the family of
+        cell-surface receptors that are linked to G proteins and characterized by
+        seven putative transmembrane domains.
+- term:
+    id: GO:0007166
+    label: cell surface receptor signaling pathway
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Correct but a general parent of G protein-coupled receptor signaling
+      pathway, which is the more precise annotation for cAR2.
+    action: KEEP_AS_NON_CORE
+    reason: cAR2 is a cell-surface receptor, but the more specific GPCR signaling
+      pathway term is preferred; retain this as non-core.
+    supported_by:
+    - reference_id: PMID:8436297
+      supporting_text: The receptors for cAMP are members of the family of
+        cell-surface receptors that are linked to G proteins and characterized by
+        seven putative transmembrane domains.
+- term:
+    id: GO:0007186
+    label: G protein-coupled receptor signaling pathway
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: cAR2 transduces extracellular cAMP through a G protein-coupled receptor
+      signaling pathway. This is a core biological process for the receptor.
+    action: ACCEPT
+    reason: cAR2 signaling is mediated by G proteins, placing it squarely in the GPCR
+      signaling pathway.
+    supported_by:
+    - reference_id: PMID:8436297
+      supporting_text: The receptors for cAMP are members of the family of
+        cell-surface receptors that are linked to G proteins and characterized by
+        seven putative transmembrane domains.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Correct but non-specific. cAR2 is a plasma membrane cell-surface
+      receptor; the more specific plasma membrane term is preferred.
+    action: MODIFY
+    reason: Generic membrane localization should be replaced by the specific plasma
+      membrane term appropriate for a cell-surface receptor.
+    proposed_replacement_terms:
+    - id: GO:0005886
+      label: plasma membrane
+    supported_by:
+    - reference_id: PMID:8436297
+      supporting_text: The receptors for cAMP are members of the family of
+        cell-surface receptors that are linked to G proteins and characterized by
+        seven putative transmembrane domains.
+- term:
+    id: GO:0030552
+    label: cAMP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: cAR2 binds cAMP as its ligand. This InterPro-based electronic annotation
+      is consistent with direct binding measurements and is a core molecular
+      function.
+    action: ACCEPT
+    reason: Direct [3H]cAMP binding to cAR2 has been demonstrated; cAMP binding is the
+      defining ligand-recognition activity of the receptor.
+    supported_by:
+    - reference_id: PMID:1537842
+      supporting_text: We have expressed three receptor subtypes, cAR1, cAR2, and
+        cAR3, in growing cells and have investigated their affinity and
+        pharmacological specificity in a series of [3H]cAMP binding studies.
+- term:
+    id: GO:0035589
+    label: G protein-coupled purinergic nucleotide receptor signaling pathway
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: involved_in
+  review:
+    summary: This term was assigned by an automated inter-ontology logical inference
+      from cAMP receptor activity. The Dictyostelium cAR receptors are cyclic-AMP
+      chemoattractant receptors, not purinergic (ATP/ADP/adenosine) nucleotide
+      receptors in the sense captured by this term. The mapping mischaracterizes the
+      receptor&#39;s signaling pathway.
+    action: REMOVE
+    reason: This is an over-propagated electronic inference. cAR2 responds to the
+      diffusible second messenger cAMP as a developmental chemoattractant; it is not a
+      purinergic nucleotide receptor. The GPCR signaling pathway term already captures
+      its role correctly without the misleading purinergic classification.
+    supported_by:
+    - reference_id: PMID:2722797
+      supporting_text: the cell surface receptors participate in the transduction of
+        the cAMP signal during chemotaxis and cell differentiation
+- term:
+    id: GO:0009642
+    label: response to light intensity
+  evidence_type: HEP
+  original_reference_id: PMID:41057014
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: A high-throughput expression annotation. carB transcript is
+      down-regulated under dark relative to light in a transcriptomic study of the
+      light-mediated unicellular-to-multicellular transition. This reflects
+      transcriptional responsiveness rather than a core molecular function of the
+      receptor.
+    action: KEEP_AS_NON_CORE
+    reason: The evidence is expression-level (HEP), showing carB is among genes
+      down-regulated in the dark; it is a peripheral developmental/environmental
+      response, not a core function.
+    supported_by:
+    - reference_id: PMID:41057014
+      supporting_text: some downregulated genes including adenylate cyclase (acrA) and
+        cyclic AMP receptor (CarB) could reduce the cell aggregation during dark
+        incubation
+- term:
+    id: GO:0010854
+    label: adenylate cyclase regulator activity
+  evidence_type: IMP
+  original_reference_id: PMID:9578623
+  qualifier: enables
+  review:
+    summary: Functional expression experiments showed cAR2 can mediate activation of
+      adenylyl cyclase, consistent with the receptor acting as an upstream regulator
+      of adenylyl cyclase through its G protein coupling. Supported by experimental
+      (IMP) evidence.
+    action: ACCEPT
+    reason: cAR2 was directly shown to mediate adenylyl cyclase activation when
+      expressed, supporting an adenylate cyclase regulator activity as part of its
+      signaling output.
+    supported_by:
+    - reference_id: PMID:9578623
+      supporting_text: assessed the capacity of each to mediate chemotaxis,
+        activation of adenylyl cyclase and actin polymerization
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: PMID:15473840
+  qualifier: located_in
+  review:
+    summary: cAR2 is a cell-surface cAMP receptor located in the plasma membrane. This
+      is a core localization and is consistent with its multi-pass membrane
+      architecture.
+    action: ACCEPT
+    reason: As a seven-transmembrane cell-surface receptor, cAR2 resides in the plasma
+      membrane where it binds extracellular cAMP.
+    supported_by:
+    - reference_id: PMID:8436297
+      supporting_text: The receptors for cAMP are members of the family of
+        cell-surface receptors that are linked to G proteins and characterized by
+        seven putative transmembrane domains.
+- term:
+    id: GO:0007165
+    label: signal transduction
+  evidence_type: TAS
+  original_reference_id: PMID:15473840
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: Correct but very general. cAR2 participates in signal transduction, more
+      precisely as a GPCR signaling pathway component.
+    action: KEEP_AS_NON_CORE
+    reason: High-level parent term; retained as non-core context alongside the
+      specific GPCR signaling pathway annotation.
+    supported_by:
+    - reference_id: PMID:2722797
+      supporting_text: the cell surface receptors participate in the transduction of
+        the cAMP signal during chemotaxis and cell differentiation
+- term:
+    id: GO:0030552
+    label: cAMP binding
+  evidence_type: IDA
+  original_reference_id: PMID:2722797
+  qualifier: enables
+  review:
+    summary: Direct biochemical analysis of Dictyostelium cell-surface cAMP receptors
+      (including cAR2) demonstrated cAMP binding and characterized their nucleotide
+      specificity. cAMP binding is the defining ligand-recognition activity of cAR2.
+    action: ACCEPT
+    reason: Experimental (IDA) evidence for cAMP binding by the cell-surface receptor
+      family; this is a core molecular function.
+    supported_by:
+    - reference_id: PMID:2722797
+      supporting_text: &#39;Eight forms of cAMP-binding proteins have been described in
+        this organism: four forms of a cell surface receptor&#39;
+- term:
+    id: GO:0010628
+    label: positive regulation of gene expression
+  evidence_type: IEP
+  original_reference_id: PMID:8436297
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: cAR2 signaling influences the developmental gene-expression program.
+      Loss of cAR2 alters cell-type gene expression (over-expression of prespore
+      markers), indicating cAR2 acts upstream of developmental gene regulation. This
+      is a downstream developmental consequence rather than a core molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: The receptor regulates expression of developmentally regulated genes as a
+      downstream effect of signaling; retain as non-core developmental context.
+    supported_by:
+    - reference_id: PMID:8436297
+      supporting_text: they exhibit an enhanced expression of prespore-specific mRNA
+- term:
+    id: GO:0010629
+    label: negative regulation of gene expression
+  evidence_type: IEP
+  original_reference_id: PMID:8436297
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: In wild-type aggregates cAR2 normally restrains prespore-specific gene
+      expression; the enhanced prespore mRNA in cAR2-null cells indicates cAR2 acts
+      upstream of negative regulation of these genes. A downstream developmental
+      effect, not a core molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: Derepression of prespore markers in the mutant implies cAR2 normally
+      contributes to negative regulation of that gene set; retain as non-core.
+    supported_by:
+    - reference_id: PMID:8436297
+      supporting_text: they exhibit an enhanced expression of prespore-specific mRNA
+- term:
+    id: GO:0030552
+    label: cAMP binding
+  evidence_type: IDA
+  original_reference_id: PMID:1537842
+  qualifier: enables
+  review:
+    summary: Direct [3H]cAMP binding studies of expressed cAR2 demonstrated cAMP
+      binding, with cAR2 showing much lower/less-detectable affinity than cAR1 in
+      physiological buffer (measurable only in ammonium sulfate). cAMP binding is a
+      core molecular function.
+    action: ACCEPT
+    reason: Experimental (IDA) demonstration of cAMP binding by cAR2; the low
+      apparent affinity distinguishes it from cAR1 but binding is genuine and core.
+    supported_by:
+    - reference_id: PMID:1537842
+      supporting_text: there was one affinity state of 4 nM for cAR1 and 11 nM for
+        cAR2
+- term:
+    id: GO:0031154
+    label: culmination involved in sorocarp development
+  evidence_type: IMP
+  original_reference_id: PMID:8436297
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: cAR2-null cells arrest at the tight-mound stage and fail normal tip
+      formation and late development, so cAR2 is required for progression toward
+      culmination and fruiting-body (sorocarp) formation. This is a multicellular
+      developmental role rather than a core molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: Loss-of-function experimental evidence links cAR2 to late multicellular
+      morphogenesis/culmination; retained as a non-core developmental process.
+    supported_by:
+    - reference_id: PMID:8436297
+      supporting_text: detained at the tight mound stage
+- term:
+    id: GO:0001646
+    label: cAMP receptor activity
+  evidence_type: TAS
+  original_reference_id: PMID:15473840
+  qualifier: enables
+  review:
+    summary: cAMP receptor activity is the most precise molecular-function
+      description of cAR2 as a cell-surface receptor that binds extracellular cAMP and
+      transduces the signal via G proteins. This is the primary core function.
+    action: ACCEPT
+    reason: cAR2 is a defining member of the Dictyostelium cAMP receptor family; cAMP
+      receptor activity is the correct, specific core molecular function.
+    supported_by:
+    - reference_id: PMID:2722797
+      supporting_text: the cell surface receptors participate in the transduction of
+        the cAMP signal during chemotaxis and cell differentiation
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology
+    links
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:1537842
+  title: The cyclic nucleotide specificity of three cAMP receptors in Dictyostelium.
+  findings:
+  - statement: cAR2 was expressed and assayed by [3H]cAMP binding; unlike cAR1 and
+      cAR3 it showed no detectable affinity in phosphate buffer and only an 11 nM
+      affinity state in ammonium sulfate, marking cAR2 as a comparatively
+      low/atypical-affinity cAMP receptor.
+    supporting_text: In phosphate buffer, there were two affinity states of about 30
+      and 300 nM for cAR1 and 20 and 500 nM for cAR3 but no detectable affinity for
+      cAR2.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified J Biol Chem 1992 paper; directly measures cAR2 cAMP
+      binding affinity and specificity, supporting the cAMP binding molecular
+      function.
+- id: PMID:15473840
+  title: Chemoattractant signaling in dictyostelium discoideum.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Review of Dictyostelium chemoattractant (cAMP receptor) signaling;
+      abstract-only in cache, cited for the well-established plasma-membrane
+      localization, cAMP receptor activity and signal transduction annotations.
+- id: PMID:2722797
+  title: The cyclic nucleotide specificity of eight cAMP-binding proteins in Dictyostelium
+    discoideum is correlated into three groups.
+  findings:
+  - statement: The four cell-surface cAMP receptors (including cAR2) form one
+      pharmacological group and bind cAMP to transduce the signal during chemotaxis
+      and cell differentiation.
+    supporting_text: the cell surface receptors participate in the transduction of the
+      cAMP signal during chemotaxis and cell differentiation
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified J Biol Chem 1989 paper; characterizes cAMP binding
+      and specificity of the cell-surface receptor group that includes cAR2.
+- id: PMID:41057014
+  title: Transcriptomic and metabolomic insights into light-mediated unicellular-to-multicellular
+    transition in Dictyostelium discoideum.
+  findings:
+  - statement: carB (CarB) is among genes down-regulated under dark relative to light
+      during the unicellular-to-multicellular transition, linking cAR2 expression to
+      light-modulated development.
+    supporting_text: some downregulated genes including adenylate cyclase (acrA) and
+      cyclic AMP receptor (CarB) could reduce the cell aggregation during dark
+      incubation
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Full-text available; supports the HEP response-to-light-intensity
+      annotation via transcriptomic down-regulation of carB in the dark.
+- id: PMID:8436297
+  title: CAR2, a prestalk cAMP receptor required for normal tip formation and late
+    development of Dictyostelium discoideum.
+  findings:
+  - statement: cAR2 is a G protein-linked, seven-transmembrane cell-surface receptor
+      for cAMP.
+    supporting_text: The receptors for cAMP are members of the family of cell-surface
+      receptors that are linked to G proteins and characterized by seven putative
+      transmembrane domains.
+  - statement: cAR2 is expressed only after aggregation and preferentially in prestalk
+      cells.
+    supporting_text: CAR2 is expressed only after cells have aggregated and, then,
+      preferentially in prestalk cells.
+  - statement: cAR2-null cells arrest at the tight-mound stage and over-express
+      prespore markers, and cAR2 is required for cAMP-directed prestalk sorting.
+    supporting_text: CAR2 may be required for cAMP-directed sorting of prestalk cells
+      during pattern formation within the aggregation mound.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified Genes Dev 1993 primary paper defining cAR2; the
+      knockout phenotype and prestalk expression underpin the developmental
+      annotations. Abstract-only in cache but title and abstract directly support the
+      cited claims.
+- id: PMID:9578623
+  title: &#39;Switching of chemoattractant receptors programs development and morphogenesis
+    in Dictyostelium: receptor subtypes activate common responses at different agonist
+    concentrations.&#39;
+  findings:
+  - statement: cAR2, when expressed, can mediate chemotaxis, adenylyl cyclase
+      activation and actin polymerization, and cAR subtypes activate common responses
+      at different cAMP concentrations.
+    supporting_text: assessed the capacity of each to mediate chemotaxis, activation
+      of adenylyl cyclase and actin polymerization
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified Dev Biol 1998 paper; provides the IMP evidence that
+      cAR2 can activate adenylyl cyclase, supporting the adenylate cyclase regulator
+      activity annotation.
+core_functions:
+- description: cAR2 is a cell-surface, seven-transmembrane G protein-coupled receptor
+    that binds extracellular cAMP and transduces the signal through heterotrimeric G
+    proteins at the plasma membrane. It is a comparatively low/atypical-affinity
+    member of the cAR family expressed after aggregation in prestalk cells.
+  molecular_function:
+    id: GO:0001646
+    label: cAMP receptor activity
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  directly_involved_in:
+  - id: GO:0007186
+    label: G protein-coupled receptor signaling pathway
+  supported_by:
+  - reference_id: PMID:8436297
+    supporting_text: The receptors for cAMP are members of the family of cell-surface
+      receptors that are linked to G proteins and characterized by seven putative
+      transmembrane domains.
+  - reference_id: PMID:2722797
+    supporting_text: the cell surface receptors participate in the transduction of the
+      cAMP signal during chemotaxis and cell differentiation
+- description: Through its G protein coupling, cAR2 acts upstream as a regulator of
+    adenylyl cyclase, mediating cAMP-triggered adenylyl cyclase activation as part of
+    the developmental signaling relay.
+  molecular_function:
+    id: GO:0010854
+    label: adenylate cyclase regulator activity
+  directly_involved_in:
+  - id: GO:0007189
+    label: adenylate cyclase-activating G protein-coupled receptor signaling pathway
+  supported_by:
+  - reference_id: PMID:9578623
+    supporting_text: assessed the capacity of each to mediate chemotaxis, activation
+      of adenylyl cyclase and actin polymerization
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

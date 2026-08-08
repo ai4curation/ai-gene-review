@@ -41,6 +41,12 @@ test-full: test pytest-integration test-examples
 pytest:
   uv run pytest tests
 
+# Run the Node tests for the GitHub Actions guard scripts (.github/scripts/).
+# Kept out of `just test` so a missing node does not break the Python workflow;
+# CI runs it whenever tests/ or .github/scripts/ change.
+test-js:
+  node --test tests/js/*.test.mjs
+
 # Run integration tests (replays VCR cassettes)
 pytest-integration:
 	uv run pytest -m integration --vcr-record=none
@@ -62,6 +68,15 @@ mypy:
 format:
 	uv run ruff check .
 
+# Check the committed term-validator caches are sorted by CURIE and deduplicated
+# (drift makes git merges silently duplicate rows). Use `just fix-caches` to repair.
+lint-caches:
+	uv run python -m ai_gene_review.tools.cache_lint
+
+# Re-sort + dedup any drifted term-validator caches in place.
+fix-caches:
+	uv run python -m ai_gene_review.tools.cache_lint --fix
+
 # Validate SSSOM mapping files: (1) structural validation against the SSSOM schema, and
 # (2) ontology term validation (every ARO/GO CURIE resolves and its label matches) via
 # linkml-term-validator on the regenerated nested term-tuple file.
@@ -76,6 +91,20 @@ validate-rhea-mappings:
 	uv run linkml-validate -s "$(uv run python -c 'import sssom_schema,os;print(os.path.join(os.path.dirname(sssom_schema.__file__),"schema","sssom_schema.yaml"))')" -C "mapping set" projects/RHEA/*.sssom.yaml
 	uv run python projects/RHEA/sssom_to_terms.py projects/RHEA/rhea2go.sssom.yaml -o projects/RHEA/rhea2go.terms.yaml
 	uv run linkml-term-validator validate-data projects/RHEA/rhea2go.terms.yaml -s src/ai_gene_review/schema/rhea_go_mapping.yaml -t RHEAGOMappingSet --labels -c conf/oak_config.yaml
+
+# Validate the TCDB->GO mapping sets (projects/TCDB/tc2go*.sssom.yaml):
+# (1) SSSOM structural validation of all three sets, then (2) GO term/label validation on the
+# regenerated nested files (GO's own xrefs + machine-generated candidates + curated seed).
+validate-tcdb-mappings:
+	uv run linkml-validate -s "$(uv run python -c 'import sssom_schema,os;print(os.path.join(os.path.dirname(sssom_schema.__file__),"schema","sssom_schema.yaml"))')" -C "mapping set" projects/TCDB/tc2go.from_go.sssom.yaml projects/TCDB/tc2go.propagation.sssom.yaml projects/TCDB/tc2go.sssom.yaml projects/TCDB/tc2go.generated.sssom.yaml
+	uv run python projects/TCDB/sssom_to_terms.py projects/TCDB/tc2go.from_go.sssom.yaml -o projects/TCDB/tc2go.from_go.terms.yaml
+	uv run python projects/TCDB/sssom_to_terms.py projects/TCDB/tc2go.propagation.sssom.yaml -o projects/TCDB/tc2go.propagation.terms.yaml
+	uv run python projects/TCDB/sssom_to_terms.py projects/TCDB/tc2go.sssom.yaml -o projects/TCDB/tc2go.terms.yaml
+	uv run python projects/TCDB/sssom_to_terms.py projects/TCDB/tc2go.generated.sssom.yaml -o projects/TCDB/tc2go.generated.terms.yaml
+	uv run linkml-term-validator validate-data projects/TCDB/tc2go.from_go.terms.yaml -s src/ai_gene_review/schema/tcdb_go_mapping.yaml -t TCDBGOMappingSet --labels -c conf/oak_config.yaml
+	uv run linkml-term-validator validate-data projects/TCDB/tc2go.propagation.terms.yaml -s src/ai_gene_review/schema/tcdb_go_mapping.yaml -t TCDBGOMappingSet --labels -c conf/oak_config.yaml
+	uv run linkml-term-validator validate-data projects/TCDB/tc2go.terms.yaml -s src/ai_gene_review/schema/tcdb_go_mapping.yaml -t TCDBGOMappingSet --labels -c conf/oak_config.yaml
+	uv run linkml-term-validator validate-data projects/TCDB/tc2go.generated.terms.yaml -s src/ai_gene_review/schema/tcdb_go_mapping.yaml -t TCDBGOMappingSet --labels -c conf/oak_config.yaml
 
 # Validate the CAZy->GO mapping sets (projects/GLYCOBIOLOGY/cazy2go*.sssom.yaml):
 # (1) SSSOM structural validation of all three sets, then (2) GO term/label validation on the
@@ -171,15 +200,15 @@ _ai-instructions: goosehints copilot-instructions
 gh-add-topics:
   gh repo edit --add-topic "ai-gene-review,monarchinitiative,linkml"
 
+# PAT_FOR_PR is deliberately absent: the agentic workflows authenticate with
+# short-lived ai4c-agent / ai4c-reviewer GitHub App tokens, and the PAT this
+# recipe used to install was the credential exposed in the dragon-ai-agent
+# incident. Do not reintroduce it.
 gh-add-secrets:
-  gh secret set PAT_FOR_PR --body "$PAT_FOR_PR"
   gh secret set ANTHROPIC_API_KEY --body "$ANTHROPIC_API_KEY"
   gh secret set OPENAI_API_KEY --body "$OPENAI_API_KEY"
   gh secret set CBORG_API_KEY --body "$CBORG_API_KEY"
   gh secret set CLAUDE_CODE_OATH_TOKEN --body "$CLAUDE_CODE_OATH_TOKEN"
-
-gh-invite-the-dragon:
-  gh api repos/monarch-initiative/ai-gene-review/collaborators/dragon-ai-agent -X PUT -f permission=push
 
 # ============== Include project-specific recipes ==============
 

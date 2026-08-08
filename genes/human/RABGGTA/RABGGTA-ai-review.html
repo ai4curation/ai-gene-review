@@ -1,0 +1,4639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RABGGTA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>RABGGTA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q92696" target="_blank" class="term-link">
+                        Q92696
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "RABGGTA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q92696" data-a="DESCRIPTION: RABGGTA encodes the alpha subunit of Rab geranylge..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>RABGGTA encodes the alpha subunit of Rab geranylgeranyltransferase (RabGGTase, also called geranylgeranyltransferase type II or GGTase-II; EC 2.5.1.60). Together with the beta subunit RABGGTB it forms the catalytic heterodimer that transfers geranylgeranyl groups from geranylgeranyl diphosphate onto C-terminal cysteine(s) of Rab GTPases bearing -XXCC, -XCXC or -CCXX motifs (e.g. RAB1A, RAB3A, RAB5A, RAB7A). Most Rab substrates are doubly geranylgeranylated. Unlike protein farnesyltransferase and geranylgeranyltransferase type I, RabGGTase does not bind its substrate directly; the Rab GTPase must first be presented by a Rab escort protein (REP1/CHM or REP2/CHML). This double geranylgeranylation provides the lipid anchor that allows Rab proteins to associate with membranes and regulate vesicular trafficking. The alpha subunit is a soluble cytosolic protein built from prenyltransferase alpha-subunit (PFTA) repeats and a C-terminal leucine-rich-repeat region, and belongs to the protein prenyltransferase subunit alpha family.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004663" target="_blank" class="term-link">
+                                    GO:0004663
+                                </a>
+                            </span>
+                            <span class="term-label">Rab geranylgeranyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0004663" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function of RABGGTA, propagated across the PANTHER family. RABGGTA is the alpha subunit that, with RABGGTB, forms the Rab geranylgeranyltransferase heterodimer; the contributes_to qualifier correctly reflects that catalysis is a property of the complex rather than the isolated subunit.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RABGGTA/RABGGTA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the transfer of a geranylgeranyl moiety from</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RabGGTase is a soluble cytosolic enzyme, so a cytoplasm/cytosol localization is correct. The more specific GO:0005829 (cytosol) from Reactome TAS is the preferred term; keeping this broader IBA as a correct but general localization.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006888" target="_blank" class="term-link">
+                                    GO:0006888
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum to Golgi vesicle-mediated transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0006888" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This reflects a downstream consequence of Rab prenylation (prenylated Rabs such as RAB1A drive ER-to-Golgi transport), propagated across the PANTHER family. RABGGTA does not itself carry out vesicle transport; its direct role is the geranylgeranylation modification. Retained as a non-core, indirect process.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005968" target="_blank" class="term-link">
+                                    GO:0005968
+                                </a>
+                            </span>
+                            <span class="term-label">Rab-protein geranylgeranyltransferase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0005968" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core cellular component. RABGGTA is a constituent subunit of the Rab-protein geranylgeranyltransferase complex (with RABGGTB).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RABGGTA/RABGGTA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Heterotrimer composed of RABGGTA, RABGGTB and CHM; within this</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004661" target="_blank" class="term-link">
+                                    GO:0004661
+                                </a>
+                            </span>
+                            <span class="term-label">protein geranylgeranyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000116
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0004661" data-r="GO_REF:0000116" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but less specific than the precise function. GO:0004661 (protein geranylgeranyltransferase activity) is a parent of GO:0004663 (Rab geranylgeranyltransferase activity), which is the specific activity of the RabGGTase enzyme. This Rhea-derived IEA should be refined to the Rab-specific term.
+                        </div>
+
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004663" target="_blank" class="term-link">
+                                    Rab geranylgeranyltransferase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004663" target="_blank" class="term-link">
+                                    GO:0004663
+                                </a>
+                            </span>
+                            <span class="term-label">Rab geranylgeranyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0004663" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core molecular function, supported by electronic inference from the rat ortholog, InterPro signatures, and EC 2.5.1.60. Consistent with experimental and manual annotations to the same term.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RABGGTA/RABGGTA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the transfer of a geranylgeranyl moiety from</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0005737" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but general localization (ARBA electronic annotation). RabGGTase is cytosolic; the more specific GO:0005829 (cytosol) is preferred. Retained as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0008270" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RabGGTase has a catalytic zinc in its active site, but structural and biochemical evidence places the catalytic zinc coordination on the beta subunit (RABGGTB), not on the alpha subunit. This InterPro-based IEA maps to the alpha-subunit insert domain and likely over-attributes zinc binding to RABGGTA. Marked as over-annotated rather than removed given the electronic family-level signature.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008318" target="_blank" class="term-link">
+                                    GO:0008318
+                                </a>
+                            </span>
+                            <span class="term-label">protein prenyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0008318" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but a high-level parent of the specific function. GO:0008318 (protein prenyltransferase activity) is an ancestor of GO:0004663 (Rab geranylgeranyltransferase activity). Refine to the Rab-specific term.
+                        </div>
+
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004663" target="_blank" class="term-link">
+                                    Rab geranylgeranyltransferase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21905166" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21905166
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Comprehensive mutation analysis (20 families) of the choroid...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0005515" data-r="PMID:21905166" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding, uninformative as a molecular function. The interactor (WITH/FROM UniProtKB:P24386, CHM/REP1) is physiologically meaningful; this choroideremia study shows a REP1 missense variant prevents REP1 binding to RabGGTase. The functional content (escort-protein-mediated substrate presentation) is captured in core_functions; keep the annotation but mark as over-annotated per policy for bare GO:0005515.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21905166" target="_blank" class="term-link">
+                                        PMID:21905166
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a missense variant that prevents the binding of REP1 with Rab geranylgeranyl transferase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28514442
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of the human interactome defines protein commun...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0005515" data-r="PMID:28514442" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding from a high-throughput AP-MS interactome (BioPlex). Interactors captured are CHM (P24386) and RABGGTB (P53611), the physiological escort protein and catalytic beta subunit. Uninformative as a stand-alone MF; the specific relationships are recorded in core_functions. Over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31209342" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31209342
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    GGTase3 is a newly identified geranylgeranyltransferase targ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0005515" data-r="PMID:31209342" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding; WITH/FROM is RABGGTB (P53611). This paper characterizes GGTase3 (PTAR1 + RABGGTB); RABGGTB is the beta subunit shared with RabGGTase, so the captured interaction reflects the RABGGTA-RABGGTB dimer context. Uninformative as a stand-alone MF. Over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding from the HuRI binary (Y2H) interactome; WITH/FROM is RABGGTB (P53611), the catalytic beta subunit that dimerizes with RABGGTA. Uninformative as a stand-alone MF. Over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding from the BioPlex 3.0 AP-MS interactome; WITH/FROM interactors are CHM (P24386) and RABGGTB (P53611), the physiological escort protein and beta subunit. Uninformative as a stand-alone MF; relationships captured in core_functions. Over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35271311" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:35271311
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    OpenCell: Endogenous tagging for the cartography of human ce...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0005515" data-r="PMID:35271311" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding from the OpenCell endogenous-tagging IP-MS dataset; WITH/FROM interactors are CHM (P24386) and RABGGTB (P53611). Uninformative as a stand-alone MF. Over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40205054" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40205054
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Multimodal cell maps as a foundation for structural and func...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0005515" data-r="PMID:40205054" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding from a multimodal cell-map interactome; WITH/FROM interactors are CHM (P24386) and RABGGTB (P53611), the physiological escort protein and beta subunit. Uninformative as a stand-alone MF. Over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005968" target="_blank" class="term-link">
+                                    GO:0005968
+                                </a>
+                            </span>
+                            <span class="term-label">Rab-protein geranylgeranyltransferase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0005968" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core cellular component, electronically transferred from the rat ortholog (Q08602). Consistent with the IBA and ISS annotations to the same complex term.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RABGGTA/RABGGTA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Heterotrimer composed of RABGGTA, RABGGTB and CHM; within this</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031267" target="_blank" class="term-link">
+                                    GO:0031267
+                                </a>
+                            </span>
+                            <span class="term-label">small GTPase binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0031267" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Rab GTPases are the substrates of RabGGTase, so binding of small GTPases is biologically apt. Importantly, RABGGTA does not recognize the Rab directly; the substrate is presented by a Rab escort protein (CHM/CHML). The binding is real in the context of the enzyme-escort-substrate complex. Retained; captured in core_functions as a substrate-recognition function of the complex.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RABGGTA/RABGGTA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">The enzymatic reaction requires the aid of a Rab</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004661" target="_blank" class="term-link">
+                                    GO:0004661
+                                </a>
+                            </span>
+                            <span class="term-label">protein geranylgeranyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7991565" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7991565
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Rab geranylgeranyl transferase catalyzes the geranylgeranyla...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0004661" data-r="PMID:7991565" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental annotation (Farnsworth et al. 1994) demonstrating that RabGGTase geranylgeranylates both adjacent C-terminal cysteines of Rab1A, Rab3A and Rab5A. The essence is correct but the term is a less specific parent; the precise activity is GO:0004663 (Rab geranylgeranyltransferase activity). Refine (do not remove an experimental annotation).
+                        </div>
+
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004663" target="_blank" class="term-link">
+                                    Rab geranylgeranyltransferase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7991565" target="_blank" class="term-link">
+                                        PMID:7991565
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">found that for each protein both C-terminal adjacent cysteines</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-8870461
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0005829" data-r="Reactome:R-HSA-8870461" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct and specific localization for a soluble RabGGTase subunit (Reactome pathway reaction: RABGGTA and RABGGTB bind). This is the preferred, most specific location term.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-8870465
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0005829" data-r="Reactome:R-HSA-8870465" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct cytosolic localization (Reactome reaction: RGGT binds the RAB-binding subunit). Duplicate of the other cytosol TAS annotations from Reactome.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-8870466
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0005829" data-r="Reactome:R-HSA-8870466" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct cytosolic localization (Reactome reaction: RGGT:CHM binds RABs). Duplicate of the other cytosol TAS annotations from Reactome.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-8870469
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0005829" data-r="Reactome:R-HSA-8870469" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct cytosolic localization (Reactome reaction: RGGT geranylgeranylates RAB proteins). RabGGTase acts in the cytosol before the modified Rab associates with membranes.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6801089
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0005886" data-r="Reactome:R-HSA-6801089" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RABGGTA is a soluble cytosolic enzyme, not a plasma-membrane protein. This TAS location derives from a Reactome regulatory reaction (TP53 stimulates RABGGTA expression) rather than a demonstrated plasma-membrane localization. Over-annotation of subcellular location.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6801101
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0005886" data-r="Reactome:R-HSA-6801101" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RABGGTA is cytosolic; this plasma-membrane location derives from a Reactome reaction (RABGGTA binds RABGGTB) and does not reflect a genuine plasma-membrane localization of the enzyme. Over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6801109
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0005886" data-r="Reactome:R-HSA-6801109" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RABGGTA is cytosolic; this plasma-membrane location derives from a Reactome reaction (CHM binds RGGT). The enzyme delivers the lipid anchor that lets Rab GTPases reach membranes, but the enzyme itself is not a plasma-membrane resident. Over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004663" target="_blank" class="term-link">
+                                    GO:0004663
+                                </a>
+                            </span>
+                            <span class="term-label">Rab geranylgeranyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0004663" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function, inferred by sequence similarity from the rat ortholog (Q08602). Consistent with experimental (PMID:7991565) and manual evidence for the same Rab-specific activity.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RABGGTA/RABGGTA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the transfer of a geranylgeranyl moiety from</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005968" target="_blank" class="term-link">
+                                    GO:0005968
+                                </a>
+                            </span>
+                            <span class="term-label">Rab-protein geranylgeranyltransferase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0005968" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core cellular component, inferred by similarity from the rat ortholog. Consistent with the IBA and IEA complex annotations.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RABGGTA/RABGGTA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Heterotrimer composed of RABGGTA, RABGGTB and CHM; within this</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0018344" target="_blank" class="term-link">
+                                    GO:0018344
+                                </a>
+                            </span>
+                            <span class="term-label">protein geranylgeranylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0018344" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core biological process. RabGGTase catalyzes protein (Rab) geranylgeranylation. Inferred by similarity from the rat ortholog and supported by experimental data on the double geranylgeranylation of Rab cysteines.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7991565" target="_blank" class="term-link">
+                                        PMID:7991565
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">found that for each protein both C-terminal adjacent cysteines</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031267" target="_blank" class="term-link">
+                                    GO:0031267
+                                </a>
+                            </span>
+                            <span class="term-label">small GTPase binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0031267" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Rab small GTPases are the substrates of the enzyme; binding occurs in the context of the escort-protein mediated complex. Inferred by similarity from the rat ortholog. Retained; captured in core_functions.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RABGGTA/RABGGTA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">The enzymatic reaction requires the aid of a Rab</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004663" target="_blank" class="term-link">
+                                    GO:0004663
+                                </a>
+                            </span>
+                            <span class="term-label">Rab geranylgeranyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2018975" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2018975
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Protein farnesyltransferase and geranylgeranyltransferase sh...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0004663" data-r="PMID:2018975" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-stated (TAS) core molecular function. Seabra et al. 1991 established the shared alpha-subunit basis of the prenyltransferases and the distinct geranylgeranyltransferase activity. Consistent with the Rab-specific activity assigned to RABGGTA.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2018975" target="_blank" class="term-link">
+                                        PMID:2018975
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">shared with another prenyltransferase that attaches 20 carbon</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007601" target="_blank" class="term-link">
+                                    GO:0007601
+                                </a>
+                            </span>
+                            <span class="term-label">visual perception</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8380507" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8380507
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Retinal degeneration in choroideremia: deficiency of rab ger...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0007601" data-r="PMID:8380507" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation traces to the choroideremia paper (Seabra et al. 1993), which attributes the retinal disease to deficiency of component A (REP1/CHM), not of RABGGTA (component B). Visual perception is not a molecular function of RABGGTA; it is an indirect, disease-context process assigned to the wrong subunit of the enzyme. Over-annotation (TAS, so not removed).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8380507" target="_blank" class="term-link">
+                                        PMID:8380507
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">not component B, of Rab GG transferase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036211" target="_blank" class="term-link">
+                                    GO:0036211
+                                </a>
+                            </span>
+                            <span class="term-label">protein modification process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2018975" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2018975
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Protein farnesyltransferase and geranylgeranyltransferase sh...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0036211" data-r="PMID:2018975" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but very general. Geranylgeranylation is a protein modification, but the specific process GO:0018344 (protein geranylgeranylation) is already annotated and far more informative. Retained as a non-core, high-level parent.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036211" target="_blank" class="term-link">
+                                    GO:0036211
+                                </a>
+                            </span>
+                            <span class="term-label">protein modification process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8380507" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8380507
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Retinal degeneration in choroideremia: deficiency of rab ger...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q92696" data-a="GO:0036211" data-r="PMID:8380507" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but very general, and derived from the choroideremia paper (about REP1/CHM). Prenylation is a protein modification; the specific term GO:0018344 (protein geranylgeranylation) is preferred. Retained as a non-core high-level parent.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Alpha subunit of Rab geranylgeranyltransferase (RabGGTase), which with the beta subunit RABGGTB transfers geranylgeranyl groups from geranylgeranyl diphosphate onto C-terminal cysteines of Rab GTPases. Modeled as contributes_to because catalysis is a property of the heterodimeric complex.</h3>
+                <span class="vote-buttons" data-g="Q92696" data-a="FUNCTION: Alpha subunit of Rab geranylgeranyltransferase (Ra..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004663" target="_blank" class="term-link">
+                            Rab geranylgeranyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0018344" target="_blank" class="term-link">
+                                protein geranylgeranylation
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005968" target="_blank" class="term-link">
+                            Rab-protein geranylgeranyltransferase complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7991565" target="_blank" class="term-link">
+                                PMID:7991565
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">found that for each protein both C-terminal adjacent cysteines</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/RABGGTA/RABGGTA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Catalyzes the transfer of a geranylgeranyl moiety from</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Substrate recognition function: the RabGGTase complex binds Rab small GTPases as substrates, but only when the Rab is presented by a Rab escort protein (CHM/REP1 or CHML/REP2); RABGGTA/RABGGTB do not recognize the Rab directly.</h3>
+                <span class="vote-buttons" data-g="Q92696" data-a="FUNCTION: Substrate recognition function: the RabGGTase comp..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031267" target="_blank" class="term-link">
+                            small GTPase binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005968" target="_blank" class="term-link">
+                            Rab-protein geranylgeranyltransferase complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/RABGGTA/RABGGTA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">The enzymatic reaction requires the aid of a Rab</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000116.md" target="_blank" class="term-link">
+                            GO_REF:0000116
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic Gene Ontology annotation based on Rhea mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/2018975" target="_blank" class="term-link">
+                            PMID:2018975
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Protein farnesyltransferase and geranylgeranyltransferase share a common alpha subunit.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Farnesyltransferase and geranylgeranyltransferase were shown to share a common alpha subunit, with distinct beta subunits; the geranylgeranyltransferase attaches 20-carbon geranylgeranyl to Ras-related proteins.</div>
+
+                        <div class="finding-text">"another prenyltransferase that attaches 20 carbon geranylgeranyl to Ras-related proteins"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21905166" target="_blank" class="term-link">
+                            PMID:21905166
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Comprehensive mutation analysis (20 families) of the choroideremia gene reveals a missense variant that prevents the binding of REP1 with Rab geranylgeranyl transferase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A choroideremia-associated REP1 (CHM) missense variant p.H507R prevents the binding of REP1 to Rab geranylgeranyl transferase, impairing REP1-mediated Rab prenylation.</div>
+
+                        <div class="finding-text">"a missense variant that prevents the binding of REP1 with Rab geranylgeranyl transferase"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                            PMID:28514442
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Architecture of the human interactome defines protein communities and disease networks.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31209342" target="_blank" class="term-link">
+                            PMID:31209342
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GGTase3 is a newly identified geranylgeranyltransferase targeting a ubiquitin ligase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Describes GGTase3, a prenyltransferase composed of the orphan alpha subunit PTAR1 and the beta subunit RABGGTB (the beta subunit shared with RabGGTase/GGTase2).</div>
+
+                        <div class="finding-text">"PTAR1, and the catalytic β-subunit of GGTase2,"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/35271311" target="_blank" class="term-link">
+                            PMID:35271311
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenCell: Endogenous tagging for the cartography of human cellular organization.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40205054" target="_blank" class="term-link">
+                            PMID:40205054
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Multimodal cell maps as a foundation for structural and functional genomics.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7991565" target="_blank" class="term-link">
+                            PMID:7991565
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Rab geranylgeranyl transferase catalyzes the geranylgeranylation of adjacent cysteines in the small GTPases Rab1A, Rab3A, and Rab5A.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Using recombinant Rab geranylgeranyltransferase, Rab escort protein and [3H]geranylgeranyl-PP on Rab1A (-XXCC), Rab3A (-XCXC) and Rab5A (-CCXX), both C-terminal adjacent cysteines were geranylgeranylated in each Rab, establishing double geranylgeranylation.</div>
+
+                        <div class="finding-text">"found that for each protein both C-terminal adjacent cysteines"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8380507" target="_blank" class="term-link">
+                            PMID:8380507
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Retinal degeneration in choroideremia: deficiency of rab geranylgeranyl transferase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Choroideremia is caused by deficiency of component A (REP1) of Rab GG transferase, not component B; the disease affects the escort protein rather than the catalytic RABGGTA/RABGGTB subunits.</div>
+
+                        <div class="finding-text">"not component B, of Rab GG transferase"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6801089
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TP53 stimulates RABGGTA expression</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6801101
+
+                    </span>
+                </div>
+
+                <div class="reference-title">RABGGTA binds RABGGTB</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6801109
+
+                    </span>
+                </div>
+
+                <div class="reference-title">CHM binds RGGT</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-8870461
+
+                    </span>
+                </div>
+
+                <div class="reference-title">RABGGTA and RABGGTB bind</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-8870465
+
+                    </span>
+                </div>
+
+                <div class="reference-title">RGGT binds the RAB-binding subunit</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-8870466
+
+                    </span>
+                </div>
+
+                <div class="reference-title">RGGT:CHM binds RABs</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-8870469
+
+                    </span>
+                </div>
+
+                <div class="reference-title">RGGT geranylgeranylates RAB proteins</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RABGGTA-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q92696" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="rabggta-q92696-review-notes">RABGGTA (Q92696) review notes</h1>
+<h2 id="identity-and-family">Identity and family</h2>
+<p>RABGGTA encodes the alpha subunit of Rab geranylgeranyltransferase (RabGGTase / geranylgeranyltransferase<br />
+type II / GGTase-II). UniProt recommended name: "Geranylgeranyl transferase type-2 subunit alpha", EC 2.5.1.60<br />
+[file:human/RABGGTA/RABGGTA-uniprot.txt "RecName: Full=Geranylgeranyl transferase type-2 subunit alpha; EC=2.5.1.60"].</p>
+<p>The protein belongs to the protein prenyltransferase subunit alpha family<br />
+[file:human/RABGGTA/RABGGTA-uniprot.txt "Belongs to the protein prenyltransferase subunit alpha family"].<br />
+It contains six PFTA (prenyltransferase alpha-subunit) repeats and five leucine-rich repeats (LRRs)<br />
+per the UniProt feature table (REPEAT features 44-241, 363-397 PFTA; 442-555 LRR), consistent with the<br />
+Pfam PPTA (PF01239, x5), LRR_1 (PF00560), and RabGGT_insert (PF07711) domains listed in the UniProt<br />
+cross-references.</p>
+<h2 id="core-molecular-function-rab-geranylgeranyltransferase-heterodimer-with-rabggtb">Core molecular function: Rab geranylgeranyltransferase (heterodimer with RABGGTB)</h2>
+<p>RabGGTase is a heterodimer; the alpha subunit (RABGGTA) pairs with the beta subunit RABGGTB (P53611) to<br />
+form the catalytic "component B" of the enzyme. Historically, Seabra et al. 1991 established that protein<br />
+farnesyltransferase (FTase) and (at the time) "geranylgeranyltransferase" share a common alpha subunit<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/2018975" title="We show here that the alpha subunit is shared with another prenyltransferase that attaches 20 carbon geranylgeranyl to Ras-related proteins.">PMID:2018975</a>. Note that the FTase/GGTase-I shared alpha subunit is FNTA;<br />
+RABGGTA is the distinct alpha subunit of the Rab-specific (type II) enzyme. The 1991 Cell paper predates<br />
+the molecular cloning distinction, and its GO annotations were curated to RABGGTA by PINC (see below).</p>
+<p>The reaction transfers a geranylgeranyl moiety from geranylgeranyl diphosphate to cysteine(s) of Rab<br />
+substrates [file:human/RABGGTA/RABGGTA-uniprot.txt "Catalyzes the transfer of a geranylgeranyl moiety from"]; the CATALYTIC ACTIVITY block gives Rhea:RHEA:21240 and EC 2.5.1.60<br />
+[file:human/RABGGTA/RABGGTA-uniprot.txt "ChEBI:CHEBI:86021; EC=2.5.1.60;"].</p>
+<p>Unlike FTase and GGTase-I, RabGGTase does NOT recognize its Rab substrate directly. The Rab must first be<br />
+presented to the enzyme by a Rab escort protein (REP; component A), CHM (REP1, P24386) or CHML (REP2). The<br />
+UniProt ACTIVITY REGULATION states this explicitly<br />
+[file:human/RABGGTA/RABGGTA-uniprot.txt "The enzymatic reaction requires the aid of a Rab"] and the SUBUNIT block describes the CHM:RGGT:Rab heterotrimer<br />
+[file:human/RABGGTA/RABGGTA-uniprot.txt "Heterotrimer composed of RABGGTA, RABGGTB and CHM; within this"].</p>
+<h2 id="double-geranylgeranylation-of-rab-c-terminal-cysteines-experimental">Double geranylgeranylation of Rab C-terminal cysteines (experimental)</h2>
+<p>Farnsworth et al. 1994 (PMID:7991565) is the primary experimental reference (UniProt EXP/IDA for the<br />
+catalytic activity). Using recombinant RabGGTase + REP + [3H]GGpp on Rab1A (-XXCC), Rab3A (-XCXC) and<br />
+Rab5A (-CCXX), they showed both C-terminal adjacent cysteines are geranylgeranylated<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/7991565" title="found that for each protein both C-terminal adjacent cysteines were geranylgeranylated">PMID:7991565</a>.<br />
+The Rab-specific enzyme was already recognized as distinct<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/7991565" title="Rab proteins are substrates of a unique Rab-specific geranylgeranyltransferase">PMID:7991565</a>.<br />
+Substrate motifs -XXCC / -XCXC / -CCXX match the UniProt FUNCTION statement (RAB1A, RAB3A, RAB5A, RAB7A).</p>
+<h2 id="location">Location</h2>
+<p>RabGGTase is a soluble cytosolic enzyme. UniProt/GOA place it in cytoplasm (IBA) and cytosol (Reactome TAS).<br />
+The Reactome "plasma membrane" TAS annotations (R-HSA-6801089/6801101/6801109) come from pathway reactions<br />
+in which RABGGTA participates (e.g. p53 -&gt; RABGGTA transcription; RGGT/CHM binding); RABGGTA itself is not a<br />
+plasma-membrane protein. The catalytic action delivers the geranylgeranyl anchor that lets Rab GTPases<br />
+localize to membranes, but the enzyme is cytosolic.</p>
+<h2 id="biological-process">Biological process</h2>
+<p>Rab protein geranylgeranylation / protein prenylation is the direct process (GO:0018344 protein<br />
+geranylgeranylation, ISS from rat ortholog Q08602). This modification anchors Rab GTPases to membranes and<br />
+is required for vesicular trafficking. The IBA "ER to Golgi vesicle-mediated transport" (GO:0006888) reflects<br />
+the downstream trafficking role that prenylated Rabs (e.g. Rab1A) support, propagated across the PANTHER<br />
+family; it is a downstream/pleiotropic consequence rather than the direct enzymatic function of RABGGTA.</p>
+<h2 id="disease-link-choroideremia">Disease link: choroideremia</h2>
+<p>Choroideremia (X-linked retinal degeneration) is caused by loss of the Rab escort protein REP1 (CHM gene),<br />
+i.e. deficiency of "component A" of Rab GGtransferase, NOT of RABGGTA (which is component B)<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/8380507" title="The mutant gene in human choroideremia ... encodes a protein that resembles component A of rat Rab GG transferase.">PMID:8380507</a>,<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/8380507" title="Lymphoblasts from choroideremia subjects showed a marked deficiency in the activity of component A, but not component B, of Rab GG transferase.">PMID:8380507</a>.<br />
+The "visual perception" (GO:0007601) TAS annotation on RABGGTA derives from this choroideremia paper<br />
+(PMID:8380507), which is about REP1/CHM function; visual perception is not a function of RABGGTA and this is<br />
+best treated as an over-annotation (indirect/disease-context, curated by PINC in 2003).</p>
+<h2 id="interactions-ipi-annotations">Interactions (IPI annotations)</h2>
+<p>The IPI "protein binding" annotations (GO:0005515) come from focused and high-throughput interaction studies.<br />
+The GOA WITH/FROM interactors are CHM/REP1 (P24386) and RABGGTB (P53611) — i.e. the two physiological<br />
+partners of RABGGTA (escort protein and catalytic beta subunit), consistent with the UniProt INTERACTION<br />
+block [file:human/RABGGTA/RABGGTA-uniprot.txt "Q92696; P24386: CHM; NbExp=7; IntAct=EBI-9104196, EBI-2515129;"],<br />
+[file:human/RABGGTA/RABGGTA-uniprot.txt "Q92696; P53611: RABGGTB; NbExp=10; IntAct=EBI-9104196, EBI-536715;"].<br />
+- PMID:21905166 (Esposito 2011): CHM/REP1 (P24386) — a choroideremia REP1 missense variant p.H507R prevents<br />
+  REP1 binding to RabGGTase <a href="https://pubmed.ncbi.nlm.nih.gov/21905166" title="a missense variant that prevents the binding of REP1 with Rab geranylgeranyl transferase">PMID:21905166</a>.<br />
+- PMID:28514442 (BioPlex/Huttlin 2017): CHM (P24386) and RABGGTB (P53611), AP-MS.<br />
+- PMID:31209342 (Kuchay 2019, GGTase3): WITH RABGGTB (P53611). This paper is about a NEW prenyltransferase<br />
+  GGTase3 = PTAR1 + RabGGTB; RABGGTB is the shared beta subunit. The interaction captured here is the<br />
+  RABGGTA-RABGGTB dimer context <a href="https://pubmed.ncbi.nlm.nih.gov/31209342" title="an orphan prenyltransferase α-subunit, PTAR1, and the catalytic β-subunit of GGTase2, RabGGTB">PMID:31209342</a>.<br />
+- PMID:32296183 (HuRI/Luck 2020): RABGGTB (P53611), Y2H binary interactome.<br />
+- PMID:33961781 (BioPlex 3.0/Huttlin 2021): CHM (P24386) and RABGGTB (P53611).<br />
+- PMID:35271311 (OpenCell 2022): CHM (P24386) and RABGGTB (P53611), endogenous tagging + IP-MS.<br />
+- PMID:40205054 (Schaffer 2025, multimodal cell maps): CHM (P24386) and RABGGTB (P53611).</p>
+<p>All are physiologically meaningful (escort protein + beta subunit), but bare "protein binding" is<br />
+uninformative. These are MARK_AS_OVER_ANNOTATED per curation policy for bare GO:0005515 IPI; the informative<br />
+functional content (heterodimer with RABGGTB; escort-protein-mediated substrate presentation via CHM) is<br />
+captured in core_functions via in_complex GO:0005968 and small GTPase binding.</p>
+<h2 id="other-annotations">Other annotations</h2>
+<ul>
+<li>GO:0008270 zinc ion binding (IEA InterPro, IPR009087/IPR036254). The RabGGTase active site does contain a<br />
+  catalytic zinc, but structural/biochemical data place the catalytic zinc coordination on the beta subunit<br />
+  (RABGGTB), not the alpha subunit. The InterPro signature here maps to the alpha-subunit insert domain, so<br />
+  a zinc-binding MF on RABGGTA is questionable. Marked as over-annotated (not removed; leave IEA in place but<br />
+  flag). Kept conservative.</li>
+<li>GO:0004661 (protein geranylgeranyltransferase activity) and GO:0008318 (protein prenyltransferase activity)<br />
+  are correct but LESS SPECIFIC parents of GO:0004663 (Rab geranylgeranyltransferase activity), which is the<br />
+  precise MF. GO:0004661 IEA (Rhea GO_REF:0000116) and IEA InterPro GO:0008318 -&gt; MODIFY toward GO:0004663.<br />
+  The EXP annotation to GO:0004661 (PMID:7991565) -&gt; MODIFY to GO:0004663 (experimental, cannot REMOVE).</li>
+</ul>
+<h2 id="core-function-summary">Core function summary</h2>
+<p>Molecular function: contributes_to Rab geranylgeranyltransferase activity (GO:0004663) as the alpha subunit<br />
+of the Rab-protein geranylgeranyltransferase complex (GO:0005968); presents/binds Rab small GTPases<br />
+indirectly via the escort protein CHM (small GTPase binding GO:0031267).<br />
+Biological process: protein geranylgeranylation (GO:0018344) of Rab GTPases, anchoring them to membranes for<br />
+vesicular transport.<br />
+Location: cytosol (GO:0005829).</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q92696
+gene_symbol: RABGGTA
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  RABGGTA encodes the alpha subunit of Rab geranylgeranyltransferase (RabGGTase, also called
+  geranylgeranyltransferase type II or GGTase-II; EC 2.5.1.60). Together with the beta subunit RABGGTB it
+  forms the catalytic heterodimer that transfers geranylgeranyl groups from geranylgeranyl diphosphate onto
+  C-terminal cysteine(s) of Rab GTPases bearing -XXCC, -XCXC or -CCXX motifs (e.g. RAB1A, RAB3A, RAB5A,
+  RAB7A). Most Rab substrates are doubly geranylgeranylated. Unlike protein farnesyltransferase and
+  geranylgeranyltransferase type I, RabGGTase does not bind its substrate directly; the Rab GTPase must first
+  be presented by a Rab escort protein (REP1/CHM or REP2/CHML). This double geranylgeranylation provides the
+  lipid anchor that allows Rab proteins to associate with membranes and regulate vesicular trafficking. The
+  alpha subunit is a soluble cytosolic protein built from prenyltransferase alpha-subunit (PFTA) repeats and
+  a C-terminal leucine-rich-repeat region, and belongs to the protein prenyltransferase subunit alpha family.
+existing_annotations:
+- term:
+    id: GO:0004663
+    label: Rab geranylgeranyltransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: contributes_to
+  review:
+    summary: &gt;-
+      Core molecular function of RABGGTA, propagated across the PANTHER family. RABGGTA is the alpha subunit
+      that, with RABGGTB, forms the Rab geranylgeranyltransferase heterodimer; the contributes_to qualifier
+      correctly reflects that catalysis is a property of the complex rather than the isolated subunit.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/RABGGTA/RABGGTA-uniprot.txt
+      supporting_text: &#34;Catalyzes the transfer of a geranylgeranyl moiety from&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      RabGGTase is a soluble cytosolic enzyme, so a cytoplasm/cytosol localization is correct. The more
+      specific GO:0005829 (cytosol) from Reactome TAS is the preferred term; keeping this broader IBA as a
+      correct but general localization.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0006888
+    label: endoplasmic reticulum to Golgi vesicle-mediated transport
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      This reflects a downstream consequence of Rab prenylation (prenylated Rabs such as RAB1A drive ER-to-Golgi
+      transport), propagated across the PANTHER family. RABGGTA does not itself carry out vesicle transport;
+      its direct role is the geranylgeranylation modification. Retained as a non-core, indirect process.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005968
+    label: Rab-protein geranylgeranyltransferase complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Correct core cellular component. RABGGTA is a constituent subunit of the Rab-protein
+      geranylgeranyltransferase complex (with RABGGTB).
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/RABGGTA/RABGGTA-uniprot.txt
+      supporting_text: &#34;Heterotrimer composed of RABGGTA, RABGGTB and CHM; within this&#34;
+- term:
+    id: GO:0004661
+    label: protein geranylgeranyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000116
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct but less specific than the precise function. GO:0004661 (protein geranylgeranyltransferase
+      activity) is a parent of GO:0004663 (Rab geranylgeranyltransferase activity), which is the specific
+      activity of the RabGGTase enzyme. This Rhea-derived IEA should be refined to the Rab-specific term.
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0004663
+      label: Rab geranylgeranyltransferase activity
+- term:
+    id: GO:0004663
+    label: Rab geranylgeranyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct core molecular function, supported by electronic inference from the rat ortholog, InterPro
+      signatures, and EC 2.5.1.60. Consistent with experimental and manual annotations to the same term.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/RABGGTA/RABGGTA-uniprot.txt
+      supporting_text: &#34;Catalyzes the transfer of a geranylgeranyl moiety from&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Correct but general localization (ARBA electronic annotation). RabGGTase is cytosolic; the more specific
+      GO:0005829 (cytosol) is preferred. Retained as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      RabGGTase has a catalytic zinc in its active site, but structural and biochemical evidence places the
+      catalytic zinc coordination on the beta subunit (RABGGTB), not on the alpha subunit. This InterPro-based
+      IEA maps to the alpha-subunit insert domain and likely over-attributes zinc binding to RABGGTA. Marked
+      as over-annotated rather than removed given the electronic family-level signature.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0008318
+    label: protein prenyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct but a high-level parent of the specific function. GO:0008318 (protein prenyltransferase activity)
+      is an ancestor of GO:0004663 (Rab geranylgeranyltransferase activity). Refine to the Rab-specific term.
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0004663
+      label: Rab geranylgeranyltransferase activity
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:21905166
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein binding, uninformative as a molecular function. The interactor (WITH/FROM UniProtKB:P24386,
+      CHM/REP1) is physiologically meaningful; this choroideremia study shows a REP1 missense variant prevents
+      REP1 binding to RabGGTase. The functional content (escort-protein-mediated substrate presentation) is
+      captured in core_functions; keep the annotation but mark as over-annotated per policy for bare GO:0005515.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:21905166
+      supporting_text: &#34;a missense variant that prevents the binding of REP1 with Rab geranylgeranyl transferase&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28514442
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein binding from a high-throughput AP-MS interactome (BioPlex). Interactors captured are CHM
+      (P24386) and RABGGTB (P53611), the physiological escort protein and catalytic beta subunit. Uninformative
+      as a stand-alone MF; the specific relationships are recorded in core_functions. Over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:31209342
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein binding; WITH/FROM is RABGGTB (P53611). This paper characterizes GGTase3 (PTAR1 + RABGGTB);
+      RABGGTB is the beta subunit shared with RabGGTase, so the captured interaction reflects the
+      RABGGTA-RABGGTB dimer context. Uninformative as a stand-alone MF. Over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein binding from the HuRI binary (Y2H) interactome; WITH/FROM is RABGGTB (P53611), the catalytic
+      beta subunit that dimerizes with RABGGTA. Uninformative as a stand-alone MF. Over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein binding from the BioPlex 3.0 AP-MS interactome; WITH/FROM interactors are CHM (P24386) and
+      RABGGTB (P53611), the physiological escort protein and beta subunit. Uninformative as a stand-alone MF;
+      relationships captured in core_functions. Over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:35271311
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein binding from the OpenCell endogenous-tagging IP-MS dataset; WITH/FROM interactors are CHM
+      (P24386) and RABGGTB (P53611). Uninformative as a stand-alone MF. Over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:40205054
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein binding from a multimodal cell-map interactome; WITH/FROM interactors are CHM (P24386) and
+      RABGGTB (P53611), the physiological escort protein and beta subunit. Uninformative as a stand-alone MF.
+      Over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005968
+    label: Rab-protein geranylgeranyltransferase complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Correct core cellular component, electronically transferred from the rat ortholog (Q08602). Consistent
+      with the IBA and ISS annotations to the same complex term.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/RABGGTA/RABGGTA-uniprot.txt
+      supporting_text: &#34;Heterotrimer composed of RABGGTA, RABGGTB and CHM; within this&#34;
+- term:
+    id: GO:0031267
+    label: small GTPase binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Rab GTPases are the substrates of RabGGTase, so binding of small GTPases is biologically apt. Importantly,
+      RABGGTA does not recognize the Rab directly; the substrate is presented by a Rab escort protein (CHM/CHML).
+      The binding is real in the context of the enzyme-escort-substrate complex. Retained; captured in
+      core_functions as a substrate-recognition function of the complex.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/RABGGTA/RABGGTA-uniprot.txt
+      supporting_text: &#34;The enzymatic reaction requires the aid of a Rab&#34;
+- term:
+    id: GO:0004661
+    label: protein geranylgeranyltransferase activity
+  evidence_type: EXP
+  original_reference_id: PMID:7991565
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental annotation (Farnsworth et al. 1994) demonstrating that RabGGTase geranylgeranylates both
+      adjacent C-terminal cysteines of Rab1A, Rab3A and Rab5A. The essence is correct but the term is a less
+      specific parent; the precise activity is GO:0004663 (Rab geranylgeranyltransferase activity). Refine
+      (do not remove an experimental annotation).
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0004663
+      label: Rab geranylgeranyltransferase activity
+    supported_by:
+    - reference_id: PMID:7991565
+      supporting_text: &#34;found that for each protein both C-terminal adjacent cysteines&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-8870461
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Correct and specific localization for a soluble RabGGTase subunit (Reactome pathway reaction: RABGGTA and
+      RABGGTB bind). This is the preferred, most specific location term.
+    action: ACCEPT
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-8870465
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Correct cytosolic localization (Reactome reaction: RGGT binds the RAB-binding subunit). Duplicate of the
+      other cytosol TAS annotations from Reactome.
+    action: ACCEPT
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-8870466
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Correct cytosolic localization (Reactome reaction: RGGT:CHM binds RABs). Duplicate of the other cytosol
+      TAS annotations from Reactome.
+    action: ACCEPT
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-8870469
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Correct cytosolic localization (Reactome reaction: RGGT geranylgeranylates RAB proteins). RabGGTase acts
+      in the cytosol before the modified Rab associates with membranes.
+    action: ACCEPT
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6801089
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      RABGGTA is a soluble cytosolic enzyme, not a plasma-membrane protein. This TAS location derives from a
+      Reactome regulatory reaction (TP53 stimulates RABGGTA expression) rather than a demonstrated
+      plasma-membrane localization. Over-annotation of subcellular location.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6801101
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      RABGGTA is cytosolic; this plasma-membrane location derives from a Reactome reaction (RABGGTA binds
+      RABGGTB) and does not reflect a genuine plasma-membrane localization of the enzyme. Over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6801109
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      RABGGTA is cytosolic; this plasma-membrane location derives from a Reactome reaction (CHM binds RGGT).
+      The enzyme delivers the lipid anchor that lets Rab GTPases reach membranes, but the enzyme itself is not
+      a plasma-membrane resident. Over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0004663
+    label: Rab geranylgeranyltransferase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function, inferred by sequence similarity from the rat ortholog (Q08602). Consistent with
+      experimental (PMID:7991565) and manual evidence for the same Rab-specific activity.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/RABGGTA/RABGGTA-uniprot.txt
+      supporting_text: &#34;Catalyzes the transfer of a geranylgeranyl moiety from&#34;
+- term:
+    id: GO:0005968
+    label: Rab-protein geranylgeranyltransferase complex
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Correct core cellular component, inferred by similarity from the rat ortholog. Consistent with the IBA
+      and IEA complex annotations.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/RABGGTA/RABGGTA-uniprot.txt
+      supporting_text: &#34;Heterotrimer composed of RABGGTA, RABGGTB and CHM; within this&#34;
+- term:
+    id: GO:0018344
+    label: protein geranylgeranylation
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Correct core biological process. RabGGTase catalyzes protein (Rab) geranylgeranylation. Inferred by
+      similarity from the rat ortholog and supported by experimental data on the double geranylgeranylation of
+      Rab cysteines.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:7991565
+      supporting_text: &#34;found that for each protein both C-terminal adjacent cysteines&#34;
+- term:
+    id: GO:0031267
+    label: small GTPase binding
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Rab small GTPases are the substrates of the enzyme; binding occurs in the context of the escort-protein
+      mediated complex. Inferred by similarity from the rat ortholog. Retained; captured in core_functions.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/RABGGTA/RABGGTA-uniprot.txt
+      supporting_text: &#34;The enzymatic reaction requires the aid of a Rab&#34;
+- term:
+    id: GO:0004663
+    label: Rab geranylgeranyltransferase activity
+  evidence_type: TAS
+  original_reference_id: PMID:2018975
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Author-stated (TAS) core molecular function. Seabra et al. 1991 established the shared alpha-subunit
+      basis of the prenyltransferases and the distinct geranylgeranyltransferase activity. Consistent with the
+      Rab-specific activity assigned to RABGGTA.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:2018975
+      supporting_text: &#34;shared with another prenyltransferase that attaches 20 carbon&#34;
+- term:
+    id: GO:0007601
+    label: visual perception
+  evidence_type: TAS
+  original_reference_id: PMID:8380507
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      This annotation traces to the choroideremia paper (Seabra et al. 1993), which attributes the retinal
+      disease to deficiency of component A (REP1/CHM), not of RABGGTA (component B). Visual perception is not a
+      molecular function of RABGGTA; it is an indirect, disease-context process assigned to the wrong subunit
+      of the enzyme. Over-annotation (TAS, so not removed).
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:8380507
+      supporting_text: &#34;not component B, of Rab GG transferase&#34;
+- term:
+    id: GO:0036211
+    label: protein modification process
+  evidence_type: TAS
+  original_reference_id: PMID:2018975
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Correct but very general. Geranylgeranylation is a protein modification, but the specific process
+      GO:0018344 (protein geranylgeranylation) is already annotated and far more informative. Retained as a
+      non-core, high-level parent.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0036211
+    label: protein modification process
+  evidence_type: TAS
+  original_reference_id: PMID:8380507
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Correct but very general, and derived from the choroideremia paper (about REP1/CHM). Prenylation is a
+      protein modification; the specific term GO:0018344 (protein geranylgeranylation) is preferred. Retained
+      as a non-core high-level parent.
+    action: KEEP_AS_NON_CORE
+core_functions:
+- description: &gt;-
+    Alpha subunit of Rab geranylgeranyltransferase (RabGGTase), which with the beta subunit RABGGTB
+    transfers geranylgeranyl groups from geranylgeranyl diphosphate onto C-terminal cysteines of Rab GTPases.
+    Modeled as contributes_to because catalysis is a property of the heterodimeric complex.
+  molecular_function:
+    id: GO:0004663
+    label: Rab geranylgeranyltransferase activity
+  directly_involved_in:
+  - id: GO:0018344
+    label: protein geranylgeranylation
+  in_complex:
+    id: GO:0005968
+    label: Rab-protein geranylgeranyltransferase complex
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:7991565
+    supporting_text: &#34;found that for each protein both C-terminal adjacent cysteines&#34;
+  - reference_id: file:human/RABGGTA/RABGGTA-uniprot.txt
+    supporting_text: &#34;Catalyzes the transfer of a geranylgeranyl moiety from&#34;
+- description: &gt;-
+    Substrate recognition function: the RabGGTase complex binds Rab small GTPases as substrates, but only when
+    the Rab is presented by a Rab escort protein (CHM/REP1 or CHML/REP2); RABGGTA/RABGGTB do not recognize the
+    Rab directly.
+  molecular_function:
+    id: GO:0031267
+    label: small GTPase binding
+  in_complex:
+    id: GO:0005968
+    label: Rab-protein geranylgeranyltransferase complex
+  supported_by:
+  - reference_id: file:human/RABGGTA/RABGGTA-uniprot.txt
+    supporting_text: &#34;The enzymatic reaction requires the aid of a Rab&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000116
+  title: Automatic Gene Ontology annotation based on Rhea mapping
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:2018975
+  title: Protein farnesyltransferase and geranylgeranyltransferase share a common
+    alpha subunit.
+  findings:
+  - statement: &gt;-
+      Farnesyltransferase and geranylgeranyltransferase were shown to share a common alpha subunit, with
+      distinct beta subunits; the geranylgeranyltransferase attaches 20-carbon geranylgeranyl to Ras-related
+      proteins.
+    reference_section_type: ABSTRACT
+    supporting_text: &#34;another prenyltransferase that attaches 20 carbon geranylgeranyl to Ras-related proteins&#34;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Foundational paper on the shared prenyltransferase alpha subunit. Note that the
+      FTase/GGTase-I shared alpha is FNTA; RABGGTA is the distinct Rab (type II) alpha subunit. The TAS
+      annotations were curated to RABGGTA by PINC.
+- id: PMID:21905166
+  title: Comprehensive mutation analysis (20 families) of the choroideremia gene reveals
+    a missense variant that prevents the binding of REP1 with Rab geranylgeranyl transferase.
+  findings:
+  - statement: &gt;-
+      A choroideremia-associated REP1 (CHM) missense variant p.H507R prevents the binding of REP1 to Rab
+      geranylgeranyl transferase, impairing REP1-mediated Rab prenylation.
+    reference_section_type: ABSTRACT
+    supporting_text: &#34;a missense variant that prevents the binding of REP1 with Rab geranylgeranyl transferase&#34;
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Supports the physiological RABGGTA-CHM/REP1 interaction (GOA IPI WITH P24386), though
+      the paper&#39;s focus is the REP1/CHM side.
+- id: PMID:28514442
+  title: Architecture of the human interactome defines protein communities and disease
+    networks.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput AP-MS interactome (BioPlex). Source of bare protein-binding IPI annotations with CHM
+      (P24386) and RABGGTB (P53611); interactors are physiologically plausible but the annotation is
+      uninformative as a stand-alone MF.
+- id: PMID:31209342
+  title: GGTase3 is a newly identified geranylgeranyltransferase targeting a ubiquitin
+    ligase.
+  findings:
+  - statement: &gt;-
+      Describes GGTase3, a prenyltransferase composed of the orphan alpha subunit PTAR1 and the beta subunit
+      RABGGTB (the beta subunit shared with RabGGTase/GGTase2).
+    reference_section_type: ABSTRACT
+    supporting_text: &#34;PTAR1, and the catalytic β-subunit of GGTase2,&#34;
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. The IPI WITH/FROM is RABGGTB (P53611), the beta subunit that dimerizes with RABGGTA; the
+      paper itself is primarily about the GGTase3 = PTAR1 + RABGGTB complex.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      HuRI binary (Y2H) interactome. Source of a bare protein-binding IPI with RABGGTB (P53611), the catalytic
+      beta subunit. Uninformative as a stand-alone MF.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      BioPlex 3.0 AP-MS interactome. Source of bare protein-binding IPI annotations with CHM (P24386) and
+      RABGGTB (P53611). Physiologically plausible interactors; uninformative as a stand-alone MF.
+- id: PMID:35271311
+  title: &#39;OpenCell: Endogenous tagging for the cartography of human cellular organization.&#39;
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      OpenCell endogenous-tagging IP-MS. Source of bare protein-binding IPI annotations with CHM (P24386) and
+      RABGGTB (P53611). Uninformative as a stand-alone MF.
+- id: PMID:40205054
+  title: Multimodal cell maps as a foundation for structural and functional genomics.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Multimodal cell-map interactome. Source of bare protein-binding IPI annotations with CHM (P24386) and
+      RABGGTB (P53611). Uninformative as a stand-alone MF.
+- id: PMID:7991565
+  title: Rab geranylgeranyl transferase catalyzes the geranylgeranylation of adjacent
+    cysteines in the small GTPases Rab1A, Rab3A, and Rab5A.
+  findings:
+  - statement: &gt;-
+      Using recombinant Rab geranylgeranyltransferase, Rab escort protein and [3H]geranylgeranyl-PP on Rab1A
+      (-XXCC), Rab3A (-XCXC) and Rab5A (-CCXX), both C-terminal adjacent cysteines were geranylgeranylated in
+      each Rab, establishing double geranylgeranylation.
+    reference_section_type: ABSTRACT
+    supporting_text: &#34;found that for each protein both C-terminal adjacent cysteines&#34;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Primary experimental reference for the catalytic activity (UniProt EXP). Directly
+      supports the core Rab geranylgeranyltransferase function.
+- id: PMID:8380507
+  title: &#39;Retinal degeneration in choroideremia: deficiency of rab geranylgeranyl
+    transferase.&#39;
+  findings:
+  - statement: &gt;-
+      Choroideremia is caused by deficiency of component A (REP1) of Rab GG transferase, not component B;
+      the disease affects the escort protein rather than the catalytic RABGGTA/RABGGTB subunits.
+    reference_section_type: ABSTRACT
+    supporting_text: &#34;not component B, of Rab GG transferase&#34;
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Establishes the choroideremia link, but attributes the defect to component A
+      (REP1/CHM). The RABGGTA visual-perception and protein-modification TAS annotations derived from this
+      paper are best treated as over-annotations of the wrong subunit.
+- id: Reactome:R-HSA-6801089
+  title: TP53 stimulates RABGGTA expression
+  findings: []
+- id: Reactome:R-HSA-6801101
+  title: RABGGTA binds RABGGTB
+  findings: []
+- id: Reactome:R-HSA-6801109
+  title: CHM binds RGGT
+  findings: []
+- id: Reactome:R-HSA-8870461
+  title: RABGGTA and RABGGTB bind
+  findings: []
+- id: Reactome:R-HSA-8870465
+  title: RGGT binds the RAB-binding subunit
+  findings: []
+- id: Reactome:R-HSA-8870466
+  title: RGGT:CHM binds RABs
+  findings: []
+- id: Reactome:R-HSA-8870469
+  title: RGGT geranylgeranylates RAB proteins
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

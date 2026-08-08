@@ -1,0 +1,3005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PPCS - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PPCS</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9HAB8" target="_blank" class="term-link">
+                        Q9HAB8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PPCS";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9HAB8" data-a="DESCRIPTION: PPCS (phosphopantothenate--cysteine ligase, also k..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PPCS (phosphopantothenate--cysteine ligase, also known as phosphopantothenoylcysteine synthetase or PPC synthetase; gene synonym COAB) catalyzes the second of the five steps of de novo coenzyme A (CoA) biosynthesis from vitamin B5 (pantothenate). It conjugates L-cysteine to (R)-4&#39;-phosphopantothenate, in a reaction that hydrolyzes a nucleoside triphosphate (via a phosphopantothenoyl-nucleotide intermediate), to form N-[(R)-4-phosphopantothenoyl]-L-cysteine, releasing the nucleoside monophosphate and diphosphate. Unlike its bacterial CoaB counterpart, the mammalian enzyme prefers ATP over CTP as the nucleotide cosubstrate. The human enzyme is a cytosolic homodimer with a CoaB-like fold. Biallelic loss-of-function variants in PPCS reduce cellular CoA levels and cause autosomal-recessive dilated cardiomyopathy (CMD2C), a form of CoA biosynthesis disorder distinct from the neurodegeneration-with-brain-iron-accumulation phenotypes associated with other CoA pathway genes.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004632" target="_blank" class="term-link">
+                                    GO:0004632
+                                </a>
+                            </span>
+                            <span class="term-label">phosphopantothenate--cysteine ligase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HAB8" data-a="GO:0004632" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. Phylogenetic (IBA) propagation of the phosphopantothenate--cysteine ligase activity, which is the experimentally established catalytic function of PPCS and is directly supported for the human enzyme by IDA and IMP evidence.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HAB8" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PPCS is a cytosolic CoA-biosynthesis enzyme; the second step of CoA biosynthesis occurs in the cytosol. Nuclear localization is an ancestral phylogenetic call not supported by the human data (Reactome/UniProt place the enzyme in the cytosol, and the CoA pathway is cytosolic/mitochondrial-intermembrane-space). This IBA nucleus term is an over-annotation for the human protein.
+                        </div>
+
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">COMPARTMENT OR COMPLEX MISMATCH</span>
+
+                            </div>
+
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HAB8" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Consistent with the enzyme&#39;s cytosolic localization, but general. The more specific cytosol (GO:0005829) term is separately annotated (TAS:Reactome) and captures the location precisely.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                    GO:0015937
+                                </a>
+                            </span>
+                            <span class="term-label">coenzyme A biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HAB8" data-a="GO:0015937" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process. PPCS catalyzes step 2 of CoA biosynthesis; this is directly supported by IDA and IMP evidence for the human enzyme.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004632" target="_blank" class="term-link">
+                                    GO:0004632
+                                </a>
+                            </span>
+                            <span class="term-label">phosphopantothenate--cysteine ligase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HAB8" data-a="GO:0004632" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA/RHEA) assignment of the core catalytic function, concordant with the experimental IDA/IMP evidence.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HAB8" data-a="GO:0042802" data-r="PMID:32296183" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct/HuRI binary interactome self-interaction, consistent with the enzyme forming a homodimer as shown crystallographically (PMID:12906824) and functionally (PMID:29754768). The specific homodimerization activity (GO:0042803) is the more informative term and is captured as a core function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                    GO:0015937
+                                </a>
+                            </span>
+                            <span class="term-label">coenzyme A biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HAB8" data-a="GO:0015937" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment (ARBA/UniPathway UPA00241) of the core CoA biosynthetic process, concordant with experimental evidence.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                    GO:0015937
+                                </a>
+                            </span>
+                            <span class="term-label">coenzyme A biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29754768" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29754768
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in PPCS, Encoding Phosphopantothenoylcysteine Synt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HAB8" data-a="GO:0015937" data-r="PMID:29754768" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-statement (ComplexPortal) assignment of the core CoA biosynthetic process, concordant with the experimental evidence in the same paper.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902494" target="_blank" class="term-link">
+                                    GO:1902494
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29754768" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29754768
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in PPCS, Encoding Phosphopantothenoylcysteine Synt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HAB8" data-a="GO:1902494" data-r="PMID:29754768" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PPCS functions as a homodimer (PMID:12906824, PMID:29754768), so it is part of a catalytic homodimeric complex. Correct but generic; the homodimerization activity (GO:0042803) and the specific ligase activity are the more informative terms.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004632" target="_blank" class="term-link">
+                                    GO:0004632
+                                </a>
+                            </span>
+                            <span class="term-label">phosphopantothenate--cysteine ligase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29754768" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29754768
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in PPCS, Encoding Phosphopantothenoylcysteine Synt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HAB8" data-a="GO:0004632" data-r="PMID:29754768" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. Disease-associated variants (107-111del, A180P, E233V) reduce or abolish phosphopantothenate--cysteine ligase activity, directly implicating this function for the human enzyme.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003015" target="_blank" class="term-link">
+                                    GO:0003015
+                                </a>
+                            </span>
+                            <span class="term-label">heart process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29754768" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29754768
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in PPCS, Encoding Phosphopantothenoylcysteine Synt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HAB8" data-a="GO:0003015" data-r="PMID:29754768" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reflects the dilated-cardiomyopathy disease phenotype from biallelic PPCS variants rather than a direct molecular role of the enzyme in cardiac physiology; the cardiac effect is a downstream consequence of impaired CoA synthesis. Retain as a non-core phenotype-derived annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006085" target="_blank" class="term-link">
+                                    GO:0006085
+                                </a>
+                            </span>
+                            <span class="term-label">acetyl-CoA biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29754768" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29754768
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in PPCS, Encoding Phosphopantothenoylcysteine Synt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HAB8" data-a="GO:0006085" data-r="PMID:29754768" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PPCS acts several steps upstream of CoA itself and does not participate directly in acetyl-CoA biosynthesis; acetyl-CoA formation is a downstream consequence of the CoA pool that PPCS helps produce. This is an over-annotation propagated from reduced CoA in patient cells; the accurate process term is coenzyme A biosynthetic process (GO:0015937).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                    GO:0015937
+                                </a>
+                            </span>
+                            <span class="term-label">coenzyme A biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29754768" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29754768
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in PPCS, Encoding Phosphopantothenoylcysteine Synt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HAB8" data-a="GO:0015937" data-r="PMID:29754768" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process, directly supported: PPCS variants decrease cellular CoA levels in patient fibroblasts, and CoA can be restored via a PPCS-independent pantethine route.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                                    GO:0042803
+                                </a>
+                            </span>
+                            <span class="term-label">protein homodimerization activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29754768" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29754768
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in PPCS, Encoding Phosphopantothenoylcysteine Synt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HAB8" data-a="GO:0042803" data-r="PMID:29754768" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PPCS is an obligate homodimer, with the active site formed at the dimer interface (PMID:12906824, PMID:29754768). Homodimerization is intrinsic to catalytic function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004632" target="_blank" class="term-link">
+                                    GO:0004632
+                                </a>
+                            </span>
+                            <span class="term-label">phosphopantothenate--cysteine ligase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11923312" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11923312
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Complete reconstitution of the human coenzyme A biosynthetic...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HAB8" data-a="GO:0004632" data-r="PMID:11923312" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function directly demonstrated: the human enzyme was overexpressed, purified, and its phosphopantothenoylcysteine synthetase activity experimentally verified as part of in vitro reconstitution of the human CoA pathway.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                    GO:0015937
+                                </a>
+                            </span>
+                            <span class="term-label">coenzyme A biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11923312" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11923312
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Complete reconstitution of the human coenzyme A biosynthetic...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HAB8" data-a="GO:0015937" data-r="PMID:11923312" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process, directly demonstrated: PPCS was shown to catalyze step 2 of the human CoA biosynthetic pathway reconstituted in vitro from purified recombinant enzymes.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-196753
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HAB8" data-a="GO:0005829" data-r="Reactome:R-HSA-196753" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core localization. The second step of CoA biosynthesis is catalyzed by cytosolic PPCS (Reactome), consistent with the cytosolic/mitochondrial-intermembrane-space localization of the CoA pathway.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Second step of coenzyme A biosynthesis: cytosolic ATP-preferring ligation of L-cysteine to (R)-4&#39;-phosphopantothenate to form N-[(R)-4-phosphopantothenoyl]-L-cysteine.</h3>
+                <span class="vote-buttons" data-g="Q9HAB8" data-a="FUNCTION: Second step of coenzyme A biosynthesis: cytosolic ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004632" target="_blank" class="term-link">
+                            phosphopantothenate--cysteine ligase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                coenzyme A biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11923312" target="_blank" class="term-link">
+                                PMID:11923312
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The individual human enzymes were overexpressed in E. coli and purified, and the corresponding activities were experimentally verified.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PPCS/PPCS-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Catalyzes the second step in the biosynthesis of coenzyme A</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Assembly into an obligate catalytic homodimer, with the active site formed at the dimer interface, required for ligase activity.</h3>
+                <span class="vote-buttons" data-g="Q9HAB8" data-a="FUNCTION: Assembly into an obligate catalytic homodimer, wit..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                            protein homodimerization activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PPCS/PPCS-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">SUBUNIT: Homodimer.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11923312" target="_blank" class="term-link">
+                            PMID:11923312
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Complete reconstitution of the human coenzyme A biosynthetic pathway via comparative genomics.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The human CoA biosynthetic pathway, including phosphopantothenoylcysteine synthetase (PPCS), was reconstituted in vitro from purified recombinant enzymes and the individual activities experimentally verified.</div>
+
+                        <div class="finding-text">"the entire pathway from phosphopantothenate to CoA was successfully reconstituted in vitro using a mixture of purified recombinant enzymes"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29754768" target="_blank" class="term-link">
+                            PMID:29754768
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mutations in PPCS, Encoding Phosphopantothenoylcysteine Synthetase, Cause Autosomal-Recessive Dilated Cardiomyopathy.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Biallelic PPCS variants decrease cellular CoA levels and cause autosomal-recessive dilated cardiomyopathy; PPCS catalyzes the second step of CoA biosynthesis.</div>
+
+                        <div class="finding-text">"Phosphopantothenoylcysteine synthetase (PPCS) catalyzes the second step of the pathway during which phosphopantothenate reacts with ATP and cysteine to form phosphopantothenoylcysteine."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HuRI binary interactome mapping recorded a PPCS self-interaction (identical protein binding), consistent with the known homodimer.</div>
+
+                        <div class="finding-text">"we present a human &#39;all-by-all&#39; reference interactome map of human binary protein interactions, or &#39;HuRI&#39;."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12906824" target="_blank" class="term-link">
+                            PMID:12906824
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structure of human phosphopantothenoylcysteine synthetase at 2.3 A resolution.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Crystal structure of human PPCS at 2.3 A shows a homodimeric enzyme, supporting the homodimerization activity and catalytic-complex annotations.</div>
+
+                        <div class="finding-text">"Structure of human phosphopantothenoylcysteine synthetase at 2.3 A resolution."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-196753
+
+                    </span>
+                </div>
+
+                <div class="reference-title">2xPPCS ligates PPanK with Cys</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cytosolic PPCS (as a homodimer) ligates cysteine to 4&#39;-phosphopantothenate; mammalian PPCS prefers ATP to CTP unlike the E. coli ortholog.</div>
+
+                        <div class="finding-text">"is catalyzed by cytosolic phosphopantothenate-cysteine ligase (PPCS aka Phosphopantothenoylcysteine synthase or PPC synthase). Mammalian PPCS prefers ATP to CTP"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What determines the mammalian PPCS preference for ATP over CTP relative to the CTP-dependent bacterial CoaB enzyme, and is CTP used physiologically in any human tissue?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9HAB8" data-a="Q: What determines the mammalian PPCS preference for ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Why does loss of PPCS produce a dilated-cardiomyopathy phenotype (CMD2C) rather than the neurodegeneration-with-brain-iron-accumulation seen with other CoA-pathway defects?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9HAB8" data-a="Q: Why does loss of PPCS produce a dilated-cardiomyop..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Quantify tissue-specific CoA and downstream acyl-CoA pools in PPCS-deficient models to test whether the cardiac phenotype reflects a tissue-selective CoA threshold.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9HAB8" data-a="EXPERIMENT: Quantify tissue-specific CoA and downstream acyl-C..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Structure-guided kinetic characterization of the ATP- vs CTP-dependent reactions of human PPCS to define the nucleotide-selectivity determinants.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9HAB8" data-a="EXPERIMENT: Structure-guided kinetic characterization of the A..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PPCS-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9HAB8" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ppcs-human-q9hab8-gene-review-notes">PPCS (human, Q9HAB8) — gene review notes</h1>
+<h2 id="identity">Identity</h2>
+<ul>
+<li>Gene: <strong>PPCS</strong> (HGNC:25686); synonym <strong>COAB</strong>. UniProt <strong>Q9HAB8</strong> (PPCS_HUMAN), 311 aa.</li>
+<li>Name: <strong>Phosphopantothenate--cysteine ligase</strong> (RecName); AltName <strong>Phosphopantothenoylcysteine synthetase / PPC synthetase</strong>. EC <strong>6.3.2.51</strong>.<br />
+  [file:human/PPCS/PPCS-uniprot.txt "RecName: Full=Phosphopantothenate--cysteine ligase"], [file:human/PPCS/PPCS-uniprot.txt "AltName: Full=Phosphopantothenoylcysteine synthetase"]</li>
+<li>Evidence at protein level (PE 1). Two isoforms by alternative splicing (isoform 2 = Q9HAB8-2, VSP_045796 lacks residues 1-173).</li>
+</ul>
+<h2 id="function-core">Function (core)</h2>
+<ul>
+<li><strong>Second step of CoA biosynthesis from vitamin B5 (pantothenate).</strong> Conjugates L-cysteine to 4'-phosphopantothenate to form 4-phosphopantothenoylcysteine.<br />
+  [file:human/PPCS/PPCS-uniprot.txt "Catalyzes the second step in the biosynthesis of coenzyme A"], <a href="https://pubmed.ncbi.nlm.nih.gov/29754768" title="Phosphopantothenoylcysteine synthetase (PPCS) catalyzes the second step of the pathway during which phosphopantothenate reacts with ATP and cysteine to form phosphopantothenoylcysteine.">PMID:29754768</a></li>
+<li><strong>Prefers ATP over CTP</strong> as the nucleotide cosubstrate (mammalian enzyme differs from the CTP-dependent bacterial CoaB).<br />
+  [file:human/PPCS/PPCS-uniprot.txt "Has a preference for ATP over CTP as"], [reactome:R-HSA-196753 "Mammalian PPCS prefers ATP to CTP, unlike the E. coli ortholog"]</li>
+<li>Two catalytic-activity entries in UniProt: ATP-dependent (RHEA:25156, canonical for EC 6.3.2.51) and CTP-dependent (RHEA:19397). Both give N-[(R)-4-phosphopantothenoyl]-L-cysteine + NMP + diphosphate + H+.</li>
+<li>Pathway: <strong>Cofactor biosynthesis; coenzyme A biosynthesis; CoA from (R)-pantothenate: step 2/5</strong> (UniPathway UPA00241, UER00353).<br />
+  [file:human/PPCS/PPCS-uniprot.txt "coenzyme A biosynthesis; CoA from (R)-"]</li>
+</ul>
+<h3 id="direct-experimental-support">Direct experimental support</h3>
+<ul>
+<li><strong>PMID:11923312 (Daugherty et al. 2002, J Biol Chem)</strong> — reconstituted the human CoA pathway; PPCS overexpressed/purified and activity verified. Basis for the IDA on GO:0004632 and GO:0015937. Abstract-only cache (<code>full_text_available: false</code>).<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/11923312" title="The individual human enzymes were overexpressed in E. coli and purified, and the corresponding activities were experimentally verified.">PMID:11923312</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/11923312" title="the entire pathway from phosphopantothenate to CoA was successfully reconstituted in vitro using a mixture of purified recombinant enzymes">PMID:11923312</a></li>
+<li><strong>PMID:12906824 (Manoj et al. 2003, Structure)</strong> — 2.3 Å crystal structure of human PPCS; homodimer. Cited in UniProt RN [9] (FUNCTION, HOMODIMERIZATION). Not separately in GOA but underpins the homodimer/catalytic-complex annotations. (Referenced via UniProt; cache not present, title taken verbatim from UniProt reference record.)</li>
+</ul>
+<h2 id="structure-subunit">Structure / subunit</h2>
+<ul>
+<li><strong>Homodimer</strong>; active site at the dimer interface. CoaB-like fold (Gene3D 3.40.50.10300; SUPFAM SSF102645).<br />
+  [file:human/PPCS/PPCS-uniprot.txt "SUBUNIT: Homodimer."]</li>
+<li>Self-interaction also captured in the HuRI binary interactome map (PMID:32296183, IntAct) → GO:0042802 identical protein binding.</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li><strong>Cytosol</strong> (Reactome TAS, R-HSA-196753). CoA pathway steps occur in cytosol / mitochondrial intermembrane space.<br />
+  [reactome:R-HSA-196753 "is catalyzed by cytosolic phosphopantothenate-cysteine ligase (PPCS aka Phosphopantothenoylcysteine synthase or PPC synthase)"]</li>
+<li>IBA nucleus (GO:0005634) is an ancestral phylogenetic call not supported by the human data → marked over-annotated.</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li><strong>CMD2C = dilated cardiomyopathy, autosomal recessive</strong> (MIM:618189), caused by biallelic PPCS variants (107-111del, A180P, E233V), which reduce/abolish ligase activity and decrease protein abundance and cellular CoA.<br />
+  [file:human/PPCS/PPCS-uniprot.txt "A form of\nCC       dilated cardiomyopathy"] (paraphrase; see UniProt DISEASE block), <a href="https://pubmed.ncbi.nlm.nih.gov/29754768" title="biallelic mutations in PPCS, linking CoA synthesis with a cardiac phenotype">PMID:29754768</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/29754768" title="Biochemical analysis revealed a decrease in CoA levels in fibroblasts of all affected individuals.">PMID:29754768</a></li>
+<li>Pantethine (a PPCS-independent CoA source) proposed as targeted treatment.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/29754768" title="CoA biosynthesis can occur with pantethine as a source independent from PPCS, suggesting pantethine as targeted treatment">PMID:29754768</a></li>
+</ul>
+<h2 id="annotation-review-decisions-summary">Annotation review decisions (summary)</h2>
+<ul>
+<li><strong>ACCEPT (core MF):</strong> GO:0004632 phosphopantothenate--cysteine ligase activity — IDA (11923312), IMP (29754768), IEA, IBA.</li>
+<li><strong>ACCEPT (core BP):</strong> GO:0015937 coenzyme A biosynthetic process — IDA, IMP, NAS, IEA, IBA.</li>
+<li><strong>ACCEPT (core CC):</strong> GO:0005829 cytosol — TAS Reactome.</li>
+<li><strong>ACCEPT (MF, catalysis-linked):</strong> GO:0042803 protein homodimerization activity — IMP (obligate homodimer, active site at interface).</li>
+<li><strong>KEEP_AS_NON_CORE:</strong> GO:0005737 cytoplasm (IBA, general vs cytosol); GO:0042802 identical protein binding (IPI HuRI, = homodimer); GO:1902494 catalytic complex (IPI, homodimer); GO:0003015 heart process (IMP, disease phenotype, downstream of CoA loss).</li>
+<li><strong>MARK_AS_OVER_ANNOTATED:</strong> GO:0005634 nucleus (IBA, wrong compartment for human enzyme); GO:0006085 acetyl-CoA biosynthetic process (IMP, downstream of the CoA pool, not a direct PPCS role — accurate term is GO:0015937). Neither REMOVED (nucleus is IBA and defensibly over-annotated, but per policy over-annotation is preferred; acetyl-CoA is IMP/experimental so never REMOVE).</li>
+</ul>
+<h2 id="core-function-ids-author-supplied-branch-validated">Core function IDs (author-supplied, branch-validated)</h2>
+<ul>
+<li>GO:0004632 phosphopantothenate--cysteine ligase activity (MF; acid-amino acid ligase branch) — verified current label + MF-branch via local go.db.</li>
+<li>GO:0042803 protein homodimerization activity (MF) — verified.</li>
+<li>Supporting: directly_involved_in GO:0015937 (BP); location GO:0005829 cytosol (CC).</li>
+</ul>
+<h2 id="provenance-caveats">Provenance / caveats</h2>
+<ul>
+<li>Publications PMID_11923312 and PMID_29754768 are <strong>abstract-only</strong> in the local cache (<code>full_text_available: false</code>; the latter's Full Text section is empty). All PMID <code>supporting_text</code> quotes above and in the review YAML are verbatim from the cached abstracts.</li>
+<li>GO term labels for all core_functions and reviewed terms confirmed current against local <code>~/.data/oaklib/go.db</code> (2026-07 build).</li>
+<li><code>just validate human PPCS</code> → ✓ Valid.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9HAB8
+gene_symbol: PPCS
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  PPCS (phosphopantothenate--cysteine ligase, also known as phosphopantothenoylcysteine
+  synthetase or PPC synthetase; gene synonym COAB) catalyzes the second of the five steps
+  of de novo coenzyme A (CoA) biosynthesis from vitamin B5 (pantothenate). It conjugates
+  L-cysteine to (R)-4&#39;-phosphopantothenate, in a reaction that hydrolyzes a nucleoside
+  triphosphate (via a phosphopantothenoyl-nucleotide intermediate), to form
+  N-[(R)-4-phosphopantothenoyl]-L-cysteine, releasing the nucleoside monophosphate and
+  diphosphate. Unlike its bacterial CoaB counterpart, the mammalian enzyme prefers ATP over
+  CTP as the nucleotide cosubstrate. The human enzyme is a cytosolic homodimer with a
+  CoaB-like fold. Biallelic loss-of-function variants in PPCS reduce cellular CoA levels and
+  cause autosomal-recessive dilated cardiomyopathy (CMD2C), a form of CoA biosynthesis
+  disorder distinct from the neurodegeneration-with-brain-iron-accumulation phenotypes
+  associated with other CoA pathway genes.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q9HAB8-1
+- name: &#39;2&#39;
+  id: Q9HAB8-2
+  sequence_note: VSP_045796
+existing_annotations:
+- term:
+    id: GO:0004632
+    label: phosphopantothenate--cysteine ligase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function. Phylogenetic (IBA) propagation of the phosphopantothenate--cysteine
+      ligase activity, which is the experimentally established catalytic function of PPCS and
+      is directly supported for the human enzyme by IDA and IMP evidence.
+    action: ACCEPT
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      PPCS is a cytosolic CoA-biosynthesis enzyme; the second step of CoA biosynthesis occurs
+      in the cytosol. Nuclear localization is an ancestral phylogenetic call not supported by
+      the human data (Reactome/UniProt place the enzyme in the cytosol, and the CoA pathway
+      is cytosolic/mitochondrial-intermembrane-space). This IBA nucleus term is an
+      over-annotation for the human protein.
+    action: MARK_AS_OVER_ANNOTATED
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - COMPARTMENT_OR_COMPLEX_MISMATCH
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Consistent with the enzyme&#39;s cytosolic localization, but general. The more specific
+      cytosol (GO:0005829) term is separately annotated (TAS:Reactome) and captures the
+      location precisely.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0015937
+    label: coenzyme A biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process. PPCS catalyzes step 2 of CoA biosynthesis; this is directly
+      supported by IDA and IMP evidence for the human enzyme.
+    action: ACCEPT
+- term:
+    id: GO:0004632
+    label: phosphopantothenate--cysteine ligase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (ARBA/RHEA) assignment of the core catalytic function, concordant with the
+      experimental IDA/IMP evidence.
+    action: ACCEPT
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IntAct/HuRI binary interactome self-interaction, consistent with the enzyme forming a
+      homodimer as shown crystallographically (PMID:12906824) and functionally
+      (PMID:29754768). The specific homodimerization activity (GO:0042803) is the more
+      informative term and is captured as a core function.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0015937
+    label: coenzyme A biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic assignment (ARBA/UniPathway UPA00241) of the core CoA biosynthetic process,
+      concordant with experimental evidence.
+    action: ACCEPT
+- term:
+    id: GO:0015937
+    label: coenzyme A biosynthetic process
+  evidence_type: NAS
+  original_reference_id: PMID:29754768
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Author-statement (ComplexPortal) assignment of the core CoA biosynthetic process,
+      concordant with the experimental evidence in the same paper.
+    action: ACCEPT
+- term:
+    id: GO:1902494
+    label: catalytic complex
+  evidence_type: IPI
+  original_reference_id: PMID:29754768
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      PPCS functions as a homodimer (PMID:12906824, PMID:29754768), so it is part of a
+      catalytic homodimeric complex. Correct but generic; the homodimerization activity
+      (GO:0042803) and the specific ligase activity are the more informative terms.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0004632
+    label: phosphopantothenate--cysteine ligase activity
+  evidence_type: IMP
+  original_reference_id: PMID:29754768
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function. Disease-associated variants (107-111del, A180P, E233V) reduce
+      or abolish phosphopantothenate--cysteine ligase activity, directly implicating this
+      function for the human enzyme.
+    action: ACCEPT
+- term:
+    id: GO:0003015
+    label: heart process
+  evidence_type: IMP
+  original_reference_id: PMID:29754768
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reflects the dilated-cardiomyopathy disease phenotype from biallelic PPCS variants
+      rather than a direct molecular role of the enzyme in cardiac physiology; the cardiac
+      effect is a downstream consequence of impaired CoA synthesis. Retain as a non-core
+      phenotype-derived annotation.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0006085
+    label: acetyl-CoA biosynthetic process
+  evidence_type: IMP
+  original_reference_id: PMID:29754768
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      PPCS acts several steps upstream of CoA itself and does not participate directly in
+      acetyl-CoA biosynthesis; acetyl-CoA formation is a downstream consequence of the CoA
+      pool that PPCS helps produce. This is an over-annotation propagated from reduced CoA in
+      patient cells; the accurate process term is coenzyme A biosynthetic process (GO:0015937).
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0015937
+    label: coenzyme A biosynthetic process
+  evidence_type: IMP
+  original_reference_id: PMID:29754768
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process, directly supported: PPCS variants decrease cellular CoA levels
+      in patient fibroblasts, and CoA can be restored via a PPCS-independent pantethine route.
+    action: ACCEPT
+- term:
+    id: GO:0042803
+    label: protein homodimerization activity
+  evidence_type: IMP
+  original_reference_id: PMID:29754768
+  qualifier: enables
+  review:
+    summary: &gt;-
+      PPCS is an obligate homodimer, with the active site formed at the dimer interface
+      (PMID:12906824, PMID:29754768). Homodimerization is intrinsic to catalytic function.
+    action: ACCEPT
+- term:
+    id: GO:0004632
+    label: phosphopantothenate--cysteine ligase activity
+  evidence_type: IDA
+  original_reference_id: PMID:11923312
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function directly demonstrated: the human enzyme was overexpressed,
+      purified, and its phosphopantothenoylcysteine synthetase activity experimentally verified
+      as part of in vitro reconstitution of the human CoA pathway.
+    action: ACCEPT
+- term:
+    id: GO:0015937
+    label: coenzyme A biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:11923312
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process, directly demonstrated: PPCS was shown to catalyze step 2 of
+      the human CoA biosynthetic pathway reconstituted in vitro from purified recombinant
+      enzymes.
+    action: ACCEPT
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-196753
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Core localization. The second step of CoA biosynthesis is catalyzed by cytosolic PPCS
+      (Reactome), consistent with the cytosolic/mitochondrial-intermembrane-space localization
+      of the CoA pathway.
+    action: ACCEPT
+core_functions:
+- description: &gt;-
+    Second step of coenzyme A biosynthesis: cytosolic ATP-preferring ligation of L-cysteine
+    to (R)-4&#39;-phosphopantothenate to form N-[(R)-4-phosphopantothenoyl]-L-cysteine.
+  molecular_function:
+    id: GO:0004632
+    label: phosphopantothenate--cysteine ligase activity
+  supported_by:
+  - reference_id: PMID:11923312
+    supporting_text: &gt;-
+      The individual human enzymes were overexpressed in E. coli and purified, and the
+      corresponding activities were experimentally verified.
+  - reference_id: file:human/PPCS/PPCS-uniprot.txt
+    supporting_text: Catalyzes the second step in the biosynthesis of coenzyme A
+  directly_involved_in:
+  - id: GO:0015937
+    label: coenzyme A biosynthetic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+- description: &gt;-
+    Assembly into an obligate catalytic homodimer, with the active site formed at the dimer
+    interface, required for ligase activity.
+  molecular_function:
+    id: GO:0042803
+    label: protein homodimerization activity
+  supported_by:
+  - reference_id: file:human/PPCS/PPCS-uniprot.txt
+    supporting_text: &#39;SUBUNIT: Homodimer.&#39;
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    What determines the mammalian PPCS preference for ATP over CTP relative to the
+    CTP-dependent bacterial CoaB enzyme, and is CTP used physiologically in any human tissue?
+- question: &gt;-
+    Why does loss of PPCS produce a dilated-cardiomyopathy phenotype (CMD2C) rather than the
+    neurodegeneration-with-brain-iron-accumulation seen with other CoA-pathway defects?
+suggested_experiments:
+- description: &gt;-
+    Quantify tissue-specific CoA and downstream acyl-CoA pools in PPCS-deficient models to
+    test whether the cardiac phenotype reflects a tissue-selective CoA threshold.
+- description: &gt;-
+    Structure-guided kinetic characterization of the ATP- vs CTP-dependent reactions of
+    human PPCS to define the nucleotide-selectivity determinants.
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:11923312
+  title: Complete reconstitution of the human coenzyme A biosynthetic pathway via
+    comparative genomics.
+  findings:
+  - statement: &gt;-
+      The human CoA biosynthetic pathway, including phosphopantothenoylcysteine synthetase
+      (PPCS), was reconstituted in vitro from purified recombinant enzymes and the individual
+      activities experimentally verified.
+    supporting_text: &gt;-
+      the entire pathway from phosphopantothenate to CoA was successfully reconstituted in
+      vitro using a mixture of purified recombinant enzymes
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Establishes the catalytic activity (IDA) and pathway role of human
+      PPCS. Abstract-only cache (full_text_available: false); quotes taken verbatim from the
+      abstract.
+- id: PMID:29754768
+  title: Mutations in PPCS, Encoding Phosphopantothenoylcysteine Synthetase, Cause
+    Autosomal-Recessive Dilated Cardiomyopathy.
+  findings:
+  - statement: &gt;-
+      Biallelic PPCS variants decrease cellular CoA levels and cause autosomal-recessive
+      dilated cardiomyopathy; PPCS catalyzes the second step of CoA biosynthesis.
+    supporting_text: &gt;-
+      Phosphopantothenoylcysteine synthetase (PPCS) catalyzes the second step of the pathway
+      during which phosphopantothenate reacts with ATP and cysteine to form
+      phosphopantothenoylcysteine.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Source of the disease (CMD2C), IMP catalytic-activity, homodimerization,
+      and pathway annotations. Cache is abstract-only (full_text_available: false; Full Text
+      section empty); quotes taken verbatim from the abstract.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings:
+  - statement: &gt;-
+      HuRI binary interactome mapping recorded a PPCS self-interaction (identical protein
+      binding), consistent with the known homodimer.
+    supporting_text: &gt;-
+      we present a human &#39;all-by-all&#39; reference interactome map of human binary protein
+      interactions, or &#39;HuRI&#39;.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified high-throughput binary interactome map. Supports the identical-protein-binding
+      (self-interaction) annotation; corroborated by structural homodimer evidence.
+- id: PMID:12906824
+  title: Structure of human phosphopantothenoylcysteine synthetase at 2.3 A resolution.
+  findings:
+  - statement: &gt;-
+      Crystal structure of human PPCS at 2.3 A shows a homodimeric enzyme, supporting the
+      homodimerization activity and catalytic-complex annotations.
+    supporting_text: &gt;-
+      Structure of human phosphopantothenoylcysteine synthetase at 2.3 A resolution.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cited in the UniProt entry (RN [9]) as evidence for FUNCTION and HOMODIMERIZATION;
+      structural basis for the homodimer and catalytic-complex annotations. Title verbatim from
+      the UniProt reference record.
+- id: Reactome:R-HSA-196753
+  title: 2xPPCS ligates PPanK with Cys
+  findings:
+  - statement: &gt;-
+      Cytosolic PPCS (as a homodimer) ligates cysteine to 4&#39;-phosphopantothenate; mammalian
+      PPCS prefers ATP to CTP unlike the E. coli ortholog.
+    supporting_text: &gt;-
+      is catalyzed by cytosolic phosphopantothenate-cysteine ligase (PPCS aka
+      Phosphopantothenoylcysteine synthase or PPC synthase). Mammalian PPCS prefers ATP to CTP
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction supporting the cytosol localization (TAS) and the ATP-preference of the
+      mammalian enzyme.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

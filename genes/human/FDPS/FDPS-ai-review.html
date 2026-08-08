@@ -1,0 +1,3866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FDPS - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>FDPS</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P14324" target="_blank" class="term-link">
+                        P14324
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "FDPS";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P14324" data-a="DESCRIPTION: FDPS encodes farnesyl pyrophosphate synthase (farn..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>FDPS encodes farnesyl pyrophosphate synthase (farnesyl diphosphate synthase, FPPS), a cytosolic trans-prenyltransferase of the mevalonate/isoprenoid pathway. Acting as a homodimer and requiring Mg(2+), it catalyzes two sequential head-to-tail (1&#39;-4) condensations of isopentenyl diphosphate (IPP): first with dimethylallyl diphosphate (DMAPP) to give geranyl diphosphate (GPP), and then with GPP to give (2E,6E)-farnesyl diphosphate (FPP). FPP is a central branch-point metabolite that feeds into the biosynthesis of sterols (via squalene), dolichols, ubiquinone, heme A, and the isoprenoid substrates for protein prenylation (farnesylation and, downstream via GGPP, geranylgeranylation). Because it controls flux at this branch point, FPPS is the molecular target of nitrogen-containing bisphosphonate drugs (e.g. alendronate, risedronate, zoledronate) used to treat osteoporosis and other bone-resorption disorders; these drugs mimic a carbocation intermediate and bind the allylic substrate pocket. Loss-of-function/hypomorphic variants in FDPS cause an autosomal disorder of keratinization (porokeratosis 9).</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004161" target="_blank" class="term-link">
+                                    GO:0004161
+                                </a>
+                            </span>
+                            <span class="term-label">dimethylallyltranstransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P14324" data-a="GO:0004161" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> First (GPP-forming) prenyltransferase step of FPPS: condensation of IPP with the allylic primer DMAPP to yield geranyl diphosphate (EC 2.5.1.1). This is a core molecular function, phylogenetically conserved across the FPP/GGPP synthase family and directly demonstrated experimentally for the human enzyme.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16684881" target="_blank" class="term-link">
+                                        PMID:16684881
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzes the successive condensation of isopentenyl pyrophosphate with dimethylallyl pyrophosphate and geranyl pyrophosphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004337" target="_blank" class="term-link">
+                                    GO:0004337
+                                </a>
+                            </span>
+                            <span class="term-label">(2E,6E)-farnesyl diphosphate synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P14324" data-a="GO:0004337" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Second (FPP-forming) prenyltransferase step of FPPS: condensation of IPP with GPP to yield (2E,6E)-farnesyl diphosphate (EC 2.5.1.10). This is the defining core molecular function of the gene product, conserved across the family and experimentally verified.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16684881" target="_blank" class="term-link">
+                                        PMID:16684881
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzes the successive condensation of isopentenyl pyrophosphate with dimethylallyl pyrophosphate and geranyl pyrophosphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P14324" data-a="GO:0005759" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Human FDPS is a cytosolic enzyme; UniProt records only Cytoplasm as the subcellular location. This mitochondrial-matrix IBA is propagated from a distinct PANTHER sub-branch supported by fly/rat orthologs (some prenyl synthases have organellar pools) and is not supported for the human protein. Marked as over-annotated rather than removed, since an organellar pool cannot be strictly excluded and this is an evolutionary inference, not a demonstrably wrong IEA.
+                        </div>
+
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">COMPARTMENT OR COMPLEX MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN000897621</span>
+
+                                    &middot; FPP/GGPP synthase family (mitochondrial-matrix sub-branch)
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Distinct PANTHER node from the cytosolic FPPS node (PTN000162949); backed by fly (FBgn0025373) and rat (RGD:68953) orthologs, not by the human protein, whose only curated location is Cytoplasm.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FDPS/FDPS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P14324" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core localization. FPPS is a soluble cytosolic enzyme, consistent with the UniProt subcellular location and multiple Reactome-based cytosol annotations.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FDPS/FDPS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045337" target="_blank" class="term-link">
+                                    GO:0045337
+                                </a>
+                            </span>
+                            <span class="term-label">trans, trans-farnesyl diphosphate biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P14324" data-a="GO:0045337" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process. FPPS is the dedicated enzyme producing (2E,6E)-farnesyl diphosphate in the mevalonate/isoprenoid pathway; this process annotation is the BP counterpart of its FPP-synthase molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FDPS/FDPS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Isoprenoid biosynthesis; farnesyl diphosphate biosynthesis; farnesyl diphosphate from geranyl diphosphate and isopentenyl diphosphate: step 1/1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004161" target="_blank" class="term-link">
+                                    GO:0004161
+                                </a>
+                            </span>
+                            <span class="term-label">dimethylallyltranstransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P14324" data-a="GO:0004161" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (RHEA/EC 2.5.1.1) restatement of the GPP-forming activity that is also supported experimentally and by phylogeny. Redundant across evidence types but correct core function; accept.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004337" target="_blank" class="term-link">
+                                    GO:0004337
+                                </a>
+                            </span>
+                            <span class="term-label">(2E,6E)-farnesyl diphosphate synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P14324" data-a="GO:0004337" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (RHEA/EC 2.5.1.10) restatement of the FPP-forming activity that is also supported experimentally and by phylogeny. Redundant across evidence types but correct core function; accept.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004659" target="_blank" class="term-link">
+                                    GO:0004659
+                                </a>
+                            </span>
+                            <span class="term-label">prenyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P14324" data-a="GO:0004659" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but non-informative parent term. The precise activities of FDPS (dimethylallyltranstransferase, GO:0004161, and (2E,6E)-farnesyl diphosphate synthase, GO:0004337) are already annotated with stronger evidence, so this generic InterPro-derived parent is an over-annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P14324" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct localization (matches the UniProt subcellular location &#34;Cytoplasm&#34;). More general than the cytosol annotation but not wrong; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FDPS/FDPS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006695" target="_blank" class="term-link">
+                                    GO:0006695
+                                </a>
+                            </span>
+                            <span class="term-label">cholesterol biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P14324" data-a="GO:0006695" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FPP is an upstream precursor of sterols, so FDPS contributes to cholesterol biosynthesis, but its direct, dedicated function is FPP synthesis; cholesterol synthesis proper is carried out by downstream squalene/sterol enzymes. This is a valid pathway-context annotation but not the gene&#39;s core process. Keep as non-core. (Duplicated below as a TAS/PMID:2690933 annotation.)
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008299" target="_blank" class="term-link">
+                                    GO:0008299
+                                </a>
+                            </span>
+                            <span class="term-label">isoprenoid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P14324" data-a="GO:0008299" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct high-level pathway process: FPPS is a central enzyme of isoprenoid biosynthesis. More general than the specific FPP-biosynthesis annotation but accurately describes the gene&#39;s core pathway; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FDPS/FDPS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Key enzyme in isoprenoid biosynthesis which catalyzes the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016765" target="_blank" class="term-link">
+                                    GO:0016765
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity, transferring alkyl or aryl (other than methyl) groups</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P14324" data-a="GO:0016765" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-level parent of prenyltransferase activity. Correct by classification but far less informative than the specific EC 2.5.1.1 / 2.5.1.10 activities already annotated; over-annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16713569" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16713569
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A protein-protein interaction network for human inherited at...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P14324" data-a="GO:0005515" data-r="PMID:16713569" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct-curated binary interaction (with ATXN1/P54253) from a high-throughput ataxia interactome screen. Bare &#34;protein binding&#34; is uninformative and does not describe a distinct molecular function of FPPS; retained per curation policy but marked as over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P14324" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct-curated binary interaction(s) from the HuRI reference interactome (with ABHD16A/O95870, RNF19B/Q6ZMZ0, SSMEM1/Q8WWF3, SLC30A2/Q9BRI3). Uninformative &#34;protein binding&#34;; retained per policy but marked as over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32814053
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interactome Mapping Provides a Network of Neurodegenerative ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P14324" data-a="GO:0005515" data-r="PMID:32814053" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct-curated binary interaction (with ATXN1/P54253) from a neurodegenerative-disease interactome map. Uninformative &#34;protein binding&#34;; retained per policy but marked as over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033384" target="_blank" class="term-link">
+                                    GO:0033384
+                                </a>
+                            </span>
+                            <span class="term-label">geranyl diphosphate biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P14324" data-a="GO:0033384" data-r="GO_REF:0000041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core process counterpart of the dimethylallyltranstransferase activity: FPPS produces geranyl diphosphate as the intermediate of its first condensation step. Supported by the UniPathway/UniProt pathway record; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FDPS/FDPS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Isoprenoid biosynthesis; geranyl diphosphate biosynthesis; geranyl diphosphate from dimethylallyl diphosphate and isopentenyl diphosphate: step 1/1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045337" target="_blank" class="term-link">
+                                    GO:0045337
+                                </a>
+                            </span>
+                            <span class="term-label">trans, trans-farnesyl diphosphate biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P14324" data-a="GO:0045337" data-r="GO_REF:0000041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (UniPathway) restatement of the core FPP-biosynthetic process, also supported by phylogeny (IBA). Redundant across evidence but correct core process; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FDPS/FDPS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Isoprenoid biosynthesis; farnesyl diphosphate biosynthesis; farnesyl diphosphate from geranyl diphosphate and isopentenyl diphosphate: step 1/1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004161" target="_blank" class="term-link">
+                                    GO:0004161
+                                </a>
+                            </span>
+                            <span class="term-label">dimethylallyltranstransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16684881" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16684881
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The molecular mechanism of nitrogen-containing bisphosphonat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P14324" data-a="GO:0004161" data-r="PMID:16684881" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally demonstrated GPP-forming activity (EC 2.5.1.1) for the human enzyme, established by crystallography and enzyme kinetics of human FPPS with substrates and bisphosphonate inhibitors. This is a core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16684881" target="_blank" class="term-link">
+                                        PMID:16684881
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FPPS, a key branchpoint of the mevalonate pathway, catalyzes the successive condensation of isopentenyl pyrophosphate with dimethylallyl pyrophosphate and geranyl pyrophosphate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004337" target="_blank" class="term-link">
+                                    GO:0004337
+                                </a>
+                            </span>
+                            <span class="term-label">(2E,6E)-farnesyl diphosphate synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16684881" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16684881
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The molecular mechanism of nitrogen-containing bisphosphonat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P14324" data-a="GO:0004337" data-r="PMID:16684881" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally demonstrated FPP-forming activity (EC 2.5.1.10) for the human enzyme. This is the defining core molecular function of FDPS.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16684881" target="_blank" class="term-link">
+                                        PMID:16684881
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FPPS, a key branchpoint of the mevalonate pathway, catalyzes the successive condensation of isopentenyl pyrophosphate with dimethylallyl pyrophosphate and geranyl pyrophosphate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                                    GO:0003723
+                                </a>
+                            </span>
+                            <span class="term-label">RNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22658674" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22658674
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Insights into RNA biology from an atlas of mammalian mRNA-bi...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P14324" data-a="GO:0003723" data-r="PMID:22658674" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FDPS was captured in a high-throughput HeLa mRNA-interactome study (&#34;interactome capture&#34;) that flagged many metabolic enzymes as candidate RNA-binding proteins. This is a proteome-wide screen with no gene-specific functional follow-up for FDPS, and no RNA-dependent function is known for this prenyltransferase. Not a core function; kept as a non-core moonlighting-candidate annotation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22658674" target="_blank" class="term-link">
+                                        PMID:22658674
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We identify 860 proteins that qualify as RBPs by biochemical and statistical criteria</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1655824
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P14324" data-a="GO:0005829" data-r="Reactome:R-HSA-1655824" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome-asserted cytosolic localization, consistent with the UniProt subcellular location. Core localization; accept.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-191303
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P14324" data-a="GO:0005829" data-r="Reactome:R-HSA-191303" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome cytosol annotation attached to the FPP-forming reaction (FDPS dimer transfers IPPP to GPP). Consistent with UniProt; accept.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-191322
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P14324" data-a="GO:0005829" data-r="Reactome:R-HSA-191322" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome cytosol annotation attached to the GPP-forming reaction (FDPS dimer transfers IPPP to DMAPP). Consistent with UniProt; accept.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9717841
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P14324" data-a="GO:0005829" data-r="Reactome:R-HSA-9717841" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome cytosol annotation attached to bisphosphonate binding by holo-FDPS. Consistent with UniProt; accept.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006695" target="_blank" class="term-link">
+                                    GO:0006695
+                                </a>
+                            </span>
+                            <span class="term-label">cholesterol biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2690933" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2690933
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning, analysis, and bacterial expression of human farnesy...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P14324" data-a="GO:0006695" data-r="PMID:2690933" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author (TAS) annotation from the original cloning/characterization paper, which framed human FPP synthetase in the context of cholesterol/sterol biosynthesis. FDPS provides the FPP precursor for the sterol branch but the dedicated cholesterol-synthesis reactions are downstream; contributory, not core. Keep as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Second condensation step of farnesyl diphosphate synthase: Mg(2+)-dependent head-to-tail condensation of isopentenyl diphosphate (IPP) with geranyl diphosphate (GPP) to form (2E,6E)-farnesyl diphosphate (FPP), EC 2.5.1.10. This is the defining activity of FDPS and the committed step producing the FPP branch-point metabolite of the isoprenoid pathway.</h3>
+                <span class="vote-buttons" data-g="P14324" data-a="FUNCTION: Second condensation step of farnesyl diphosphate s..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004337" target="_blank" class="term-link">
+                            (2E,6E)-farnesyl diphosphate synthase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045337" target="_blank" class="term-link">
+                                farnesyl diphosphate biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16684881" target="_blank" class="term-link">
+                                PMID:16684881
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">FPPS, a key branchpoint of the mevalonate pathway, catalyzes the successive condensation of isopentenyl pyrophosphate with dimethylallyl pyrophosphate and geranyl pyrophosphate.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>First condensation step of farnesyl diphosphate synthase: Mg(2+)-dependent head-to-tail condensation of isopentenyl diphosphate (IPP) with the allylic primer dimethylallyl diphosphate (DMAPP) to form geranyl diphosphate (GPP), EC 2.5.1.1. GPP is the substrate for the subsequent FPP-forming step catalyzed by the same enzyme.</h3>
+                <span class="vote-buttons" data-g="P14324" data-a="FUNCTION: First condensation step of farnesyl diphosphate sy..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004161" target="_blank" class="term-link">
+                            dimethylallyltranstransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033384" target="_blank" class="term-link">
+                                geranyl diphosphate biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16684881" target="_blank" class="term-link">
+                                PMID:16684881
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">FPPS, a key branchpoint of the mevalonate pathway, catalyzes the successive condensation of isopentenyl pyrophosphate with dimethylallyl pyrophosphate and geranyl pyrophosphate.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16684881" target="_blank" class="term-link">
+                            PMID:16684881
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The molecular mechanism of nitrogen-containing bisphosphonates as antiosteoporosis drugs.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human FPPS catalyzes the successive condensation of IPP with DMAPP and with GPP; it is the key branch-point enzyme of the mevalonate pathway and the target of nitrogen-containing bisphosphonate drugs. High-resolution structures of the human enzyme with risedronate/zoledronate and Mg(2+)/IPP define the catalytic mechanism.</div>
+
+                        <div class="finding-text">"FPPS, a key branchpoint of the mevalonate pathway, catalyzes the successive condensation of isopentenyl pyrophosphate with dimethylallyl pyrophosphate and geranyl pyrophosphate."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16713569" target="_blank" class="term-link">
+                            PMID:16713569
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A protein-protein interaction network for human inherited ataxias and disorders of Purkinje cell degeneration.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22658674" target="_blank" class="term-link">
+                            PMID:22658674
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Insights into RNA biology from an atlas of mammalian mRNA-binding proteins.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Systematic UV-crosslink &#34;interactome capture&#34; in HeLa cells identified 860 candidate mRNA-binding proteins, including many metabolic enzymes; FDPS was among the captured proteins (basis for the HDA RNA-binding annotation).</div>
+
+                        <div class="finding-text">"We identify 860 proteins that qualify as RBPs by biochemical and statistical criteria"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/2690933" target="_blank" class="term-link">
+                            PMID:2690933
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cloning, analysis, and bacterial expression of human farnesyl pyrophosphate synthetase and its regulation in Hep G2 cells.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cloning, bacterial expression and characterization of human farnesyl pyrophosphate synthetase, studied in the context of cholesterol/sterol biosynthesis regulation in Hep G2 cells (basis for the TAS cholesterol-biosynthesis annotation).</div>
+
+                        <div class="finding-text">"Cloning, analysis, and bacterial expression of human farnesyl pyrophosphate"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                            PMID:32814053
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread Protein Aggregation in Affected Brains.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-1655824
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Expression of Farnesyl Diphosphate Synthase (FDPS)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-191303
+
+                    </span>
+                </div>
+
+                <div class="reference-title">FDPS dimer transfers IPPP to GPP</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-191322
+
+                    </span>
+                </div>
+
+                <div class="reference-title">FDPS dimer transfers IPPP to DMAPP</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9717841
+
+                    </span>
+                </div>
+
+                <div class="reference-title">holo-FDPS dimer binds NBPs</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/FDPS/FDPS-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry P14324 (FPPS_HUMAN), farnesyl pyrophosphate synthase</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Key isoprenoid-pathway enzyme that catalyzes formation of farnesyl diphosphate via sequential condensations; cytoplasmic; homodimer; Mg(2+)-dependent (2 ions per subunit); two catalytic activities EC 2.5.1.1 and EC 2.5.1.10.</div>
+
+                        <div class="finding-text">"Key enzyme in isoprenoid biosynthesis which catalyzes the"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(FDPS-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P14324" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="fdps-p14324-fpps_human-review-notes">FDPS (P14324, FPPS_HUMAN) — review notes</h1>
+<h2 id="identity-and-core-function">Identity and core function</h2>
+<p>FDPS encodes <strong>farnesyl pyrophosphate synthase</strong> (farnesyl diphosphate synthase, FPPS; EC 2.5.1.10 and EC 2.5.1.1),<br />
+a cytosolic trans-prenyltransferase of the mevalonate/isoprenoid pathway.</p>
+<ul>
+<li>UniProt names the protein "Farnesyl pyrophosphate synthase" with two catalytic activities:<br />
+  EC 2.5.1.10 ((2E,6E)-farnesyl diphosphate synthase / geranyltranstransferase) and<br />
+  EC 2.5.1.1 (dimethylallyltranstransferase) [file:human/FDPS/FDPS-uniprot.txt "EC=2.5.1.10 {ECO:0000269|PubMed:16684881}" / "EC=2.5.1.1 {ECO:0000269|PubMed:16684881}"].</li>
+<li>FUNCTION: "Key enzyme in isoprenoid biosynthesis which catalyzes the formation of farnesyl diphosphate (FPP),<br />
+  a precursor for several classes of essential metabolites including sterols, dolichols, carotenoids, and ubiquinones.<br />
+  FPP also serves as substrate for protein farnesylation and geranylgeranylation. Catalyzes the sequential<br />
+  condensation of isopentenyl pyrophosphate with the allylic pyrophosphates, dimethylallyl pyrophosphate, and then<br />
+  with the resultant geranylpyrophosphate to the ultimate product farnesyl pyrophosphate."<br />
+  [file:human/FDPS/FDPS-uniprot.txt, CC FUNCTION block].</li>
+<li>Two catalytic-activity RHEA reactions in UniProt: IPP + DMAPP = GPP + diphosphate (RHEA:22408, EC 2.5.1.1);<br />
+  IPP + GPP = (2E,6E)-FPP + diphosphate (RHEA:19361, EC 2.5.1.10) [file:human/FDPS/FDPS-uniprot.txt].</li>
+<li>COFACTOR: Mg(2+); "Binds 2 Mg(2+) ions per subunit." [file:human/FDPS/FDPS-uniprot.txt, ECO:0000269|PubMed:19309137].</li>
+<li>PATHWAY: "Isoprenoid biosynthesis; farnesyl diphosphate biosynthesis; farnesyl diphosphate from geranyl diphosphate<br />
+  and isopentenyl diphosphate: step 1/1." and "Isoprenoid biosynthesis; geranyl diphosphate biosynthesis; geranyl<br />
+  diphosphate from dimethylallyl diphosphate and isopentenyl diphosphate: step 1/1." [file:human/FDPS/FDPS-uniprot.txt].</li>
+<li>SUBUNIT: "Homodimer." [file:human/FDPS/FDPS-uniprot.txt]. Consistent with the many "FDPS dimer" Reactome reactions.</li>
+<li>SUBCELLULAR LOCATION: "Cytoplasm." (only location recorded) [file:human/FDPS/FDPS-uniprot.txt].</li>
+</ul>
+<h2 id="experimental-evidence-for-catalysis-ec-2511-25110">Experimental evidence for catalysis (EC 2.5.1.1 / 2.5.1.10)</h2>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/16684881" title="The molecular mechanism of nitrogen-containing bisphosphonates as antiosteoporosis drugs">PMID:16684881</a> —<br />
+abstract-only in cache (<code>full_text_available: false</code>). Establishes human FPPS as the bisphosphonate target and<br />
+states: "FPPS, a key branchpoint of the mevalonate pathway, catalyzes the successive condensation of isopentenyl<br />
+pyrophosphate with dimethylallyl pyrophosphate and geranyl pyrophosphate." High-resolution X-ray structures of the<br />
+human enzyme with risedronate and zoledronate; kinetics show inhibition competitive with GPP. UniProt cites this<br />
+PMID (ECO:0000269) for both catalytic activities. This is the basis for the EXP MF annotations (GO:0004161, GO:0004337).</p>
+<h2 id="bisphosphonate-target-pharmacology">Bisphosphonate target (pharmacology)</h2>
+<p>Nitrogen-containing bisphosphonates (alendronate, risedronate, zoledronate, etc.) inhibit FPPS by binding the<br />
+allylic (DMAPP/GPP) substrate pocket and mimicking a carbocation intermediate [PMID:16684881, abstract]. Many bound<br />
+structures in the PDB (&gt;90 entries) and DrugBank entries (Alendronic acid DB00630, Risedronic acid DB00884, Zoledronic<br />
+acid DB00399, etc.) [file:human/FDPS/FDPS-uniprot.txt, DR DrugBank lines]. Not a GO annotation per se but confirms<br />
+the enzyme identity/active site.</p>
+<h2 id="disease">Disease</h2>
+<p>POROK9 (porokeratosis 9, multiple types; MIM:616631): autosomal disorder of keratinization; variant R179Q reported<br />
+[file:human/FDPS/FDPS-uniprot.txt, DISEASE block; VARIANT 179 R-&gt;Q; ECO:0000269|PubMed:26202976]. Mevalonate-pathway<br />
+gene variants underlie porokeratosis. Not an existing GO annotation in the GOA set.</p>
+<h2 id="regulation-interactions">Regulation / interactions</h2>
+<ul>
+<li>ACTIVITY REGULATION: "Inactivated by interferon-induced RSAD2" (viperin); may disrupt lipid rafts, antiviral effect<br />
+  [file:human/FDPS/FDPS-uniprot.txt, ECO:0000269|PubMed:18005724].</li>
+<li>Interacts with HTLV-1 p13(II) (microbial infection) [file:human/FDPS/FDPS-uniprot.txt, PubMed:11773414].</li>
+<li>High-throughput IntAct binary interactions (ATXN1, ABHD16A, RNF19B, SSMEM1, SLC30A2) underlie the six<br />
+  GO:0005515 "protein binding" IPI annotations in GOA (PMID:16713569, PMID:32296183, PMID:32814053).</li>
+</ul>
+<h2 id="rna-binding-moonlighting-candidate">RNA binding (moonlighting candidate)</h2>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/22658674" title="Insights into RNA biology from an atlas of mammalian mRNA-binding proteins">PMID:22658674</a> — abstract-only in cache.<br />
+Proteome-wide "interactome capture" in HeLa; "We identify 860 proteins that qualify as RBPs by biochemical and<br />
+statistical criteria," including many metabolic enzymes. FDPS was among captured proteins → HDA GO:0003723 RNA binding<br />
+annotation. No FDPS-specific RNA-dependent function known; kept as non-core.</p>
+<h2 id="curation-decisions-summary">Curation decisions (summary)</h2>
+<p>Core molecular functions (EC 2.5.1.10 GO:0004337; EC 2.5.1.1 GO:0004161) supported by EXP (PMID:16684881), IBA, and<br />
+IEA — all ACCEPT. Core BP (farnesyl-PP biosynthesis GO:0045337; geranyl-PP biosynthesis GO:0033384; isoprenoid<br />
+biosynthesis GO:0008299) and location (cytosol GO:0005829; cytoplasm GO:0005737) — ACCEPT. Redundancy across evidence<br />
+types is not treated as over-annotation.</p>
+<p>Over-annotations (MARK_AS_OVER_ANNOTATED): generic parent MF terms GO:0004659 prenyltransferase activity and<br />
+GO:0016765 (transferase, alkyl/aryl); the six bare GO:0005515 protein-binding IPIs; and GO:0005759 mitochondrial<br />
+matrix (IBA) — the human protein's only curated location is cytoplasm (UniProt), and the mitochondrial-matrix IBA<br />
+comes from a distinct PANTHER sub-branch (PTN000897621, fly/rat orthologs), not the human FPPS node (PTN000162949);<br />
+documented via propagation_review (PROPAGATION_BAD / COMPARTMENT_OR_COMPLEX_MISMATCH).</p>
+<p>Non-core (KEEP_AS_NON_CORE): GO:0006695 cholesterol biosynthetic process (IEA + TAS PMID:2690933) — FDPS provides the<br />
+FPP precursor but the dedicated sterol reactions are downstream; GO:0003723 RNA binding (HDA) — high-throughput<br />
+moonlighting candidate.</p>
+<p>No experimental (IDA/IMP/IPI/EXP) annotation was REMOVEd; no IEA was removed either (all were either correct core,<br />
+correct-but-general, or contributory).</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P14324
+gene_symbol: FDPS
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  FDPS encodes farnesyl pyrophosphate synthase (farnesyl diphosphate synthase, FPPS),
+  a cytosolic trans-prenyltransferase of the mevalonate/isoprenoid pathway. Acting as a
+  homodimer and requiring Mg(2+), it catalyzes two sequential head-to-tail (1&#39;-4)
+  condensations of isopentenyl diphosphate (IPP): first with dimethylallyl diphosphate
+  (DMAPP) to give geranyl diphosphate (GPP), and then with GPP to give (2E,6E)-farnesyl
+  diphosphate (FPP). FPP is a central branch-point metabolite that feeds into the
+  biosynthesis of sterols (via squalene), dolichols, ubiquinone, heme A, and the
+  isoprenoid substrates for protein prenylation (farnesylation and, downstream via GGPP,
+  geranylgeranylation). Because it controls flux at this branch point, FPPS is the
+  molecular target of nitrogen-containing bisphosphonate drugs (e.g. alendronate,
+  risedronate, zoledronate) used to treat osteoporosis and other bone-resorption
+  disorders; these drugs mimic a carbocation intermediate and bind the allylic
+  substrate pocket. Loss-of-function/hypomorphic variants in FDPS cause an autosomal
+  disorder of keratinization (porokeratosis 9).
+alternative_products:
+- name: &#39;1&#39;
+  id: P14324-1
+- name: &#39;2&#39;
+  id: P14324-2
+  sequence_note: VSP_046958
+existing_annotations:
+- term:
+    id: GO:0004161
+    label: dimethylallyltranstransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      First (GPP-forming) prenyltransferase step of FPPS: condensation of IPP with the
+      allylic primer DMAPP to yield geranyl diphosphate (EC 2.5.1.1). This is a core
+      molecular function, phylogenetically conserved across the FPP/GGPP synthase family
+      and directly demonstrated experimentally for the human enzyme.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:16684881
+      supporting_text: &gt;-
+        catalyzes the successive condensation of isopentenyl pyrophosphate with dimethylallyl
+        pyrophosphate and geranyl pyrophosphate
+- term:
+    id: GO:0004337
+    label: (2E,6E)-farnesyl diphosphate synthase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Second (FPP-forming) prenyltransferase step of FPPS: condensation of IPP with GPP to
+      yield (2E,6E)-farnesyl diphosphate (EC 2.5.1.10). This is the defining core molecular
+      function of the gene product, conserved across the family and experimentally verified.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:16684881
+      supporting_text: &gt;-
+        catalyzes the successive condensation of isopentenyl pyrophosphate with dimethylallyl
+        pyrophosphate and geranyl pyrophosphate
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Human FDPS is a cytosolic enzyme; UniProt records only Cytoplasm as the subcellular
+      location. This mitochondrial-matrix IBA is propagated from a distinct PANTHER
+      sub-branch supported by fly/rat orthologs (some prenyl synthases have organellar
+      pools) and is not supported for the human protein. Marked as over-annotated rather
+      than removed, since an organellar pool cannot be strictly excluded and this is an
+      evolutionary inference, not a demonstrably wrong IEA.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: file:human/FDPS/FDPS-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm.&#39;
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - COMPARTMENT_OR_COMPLEX_MISMATCH
+      source_entities:
+      - source_id: PANTHER:PTN000897621
+        source_label: FPP/GGPP synthase family (mitochondrial-matrix sub-branch)
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &gt;-
+          Distinct PANTHER node from the cytosolic FPPS node (PTN000162949); backed by fly
+          (FBgn0025373) and rat (RGD:68953) orthologs, not by the human protein, whose only
+          curated location is Cytoplasm.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Correct core localization. FPPS is a soluble cytosolic enzyme, consistent with the
+      UniProt subcellular location and multiple Reactome-based cytosol annotations.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/FDPS/FDPS-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm.&#39;
+- term:
+    id: GO:0045337
+    label: trans, trans-farnesyl diphosphate biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process. FPPS is the dedicated enzyme producing (2E,6E)-farnesyl
+      diphosphate in the mevalonate/isoprenoid pathway; this process annotation is the BP
+      counterpart of its FPP-synthase molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/FDPS/FDPS-uniprot.txt
+      supporting_text: &gt;-
+        Isoprenoid biosynthesis; farnesyl diphosphate biosynthesis; farnesyl diphosphate from
+        geranyl diphosphate and isopentenyl diphosphate: step 1/1.
+- term:
+    id: GO:0004161
+    label: dimethylallyltranstransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (RHEA/EC 2.5.1.1) restatement of the GPP-forming activity that is also
+      supported experimentally and by phylogeny. Redundant across evidence types but
+      correct core function; accept.
+    action: ACCEPT
+- term:
+    id: GO:0004337
+    label: (2E,6E)-farnesyl diphosphate synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (RHEA/EC 2.5.1.10) restatement of the FPP-forming activity that is also
+      supported experimentally and by phylogeny. Redundant across evidence types but
+      correct core function; accept.
+    action: ACCEPT
+- term:
+    id: GO:0004659
+    label: prenyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct but non-informative parent term. The precise activities of FDPS
+      (dimethylallyltranstransferase, GO:0004161, and (2E,6E)-farnesyl diphosphate synthase,
+      GO:0004337) are already annotated with stronger evidence, so this generic
+      InterPro-derived parent is an over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Correct localization (matches the UniProt subcellular location &#34;Cytoplasm&#34;). More
+      general than the cytosol annotation but not wrong; accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/FDPS/FDPS-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm.&#39;
+- term:
+    id: GO:0006695
+    label: cholesterol biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      FPP is an upstream precursor of sterols, so FDPS contributes to cholesterol
+      biosynthesis, but its direct, dedicated function is FPP synthesis; cholesterol
+      synthesis proper is carried out by downstream squalene/sterol enzymes. This is a
+      valid pathway-context annotation but not the gene&#39;s core process. Keep as non-core.
+      (Duplicated below as a TAS/PMID:2690933 annotation.)
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0008299
+    label: isoprenoid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Correct high-level pathway process: FPPS is a central enzyme of isoprenoid
+      biosynthesis. More general than the specific FPP-biosynthesis annotation but
+      accurately describes the gene&#39;s core pathway; accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/FDPS/FDPS-uniprot.txt
+      supporting_text: Key enzyme in isoprenoid biosynthesis which catalyzes the
+- term:
+    id: GO:0016765
+    label: transferase activity, transferring alkyl or aryl (other than methyl) groups
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      High-level parent of prenyltransferase activity. Correct by classification but far
+      less informative than the specific EC 2.5.1.1 / 2.5.1.10 activities already annotated;
+      over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16713569
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IntAct-curated binary interaction (with ATXN1/P54253) from a high-throughput ataxia
+      interactome screen. Bare &#34;protein binding&#34; is uninformative and does not describe a
+      distinct molecular function of FPPS; retained per curation policy but marked as
+      over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IntAct-curated binary interaction(s) from the HuRI reference interactome (with
+      ABHD16A/O95870, RNF19B/Q6ZMZ0, SSMEM1/Q8WWF3, SLC30A2/Q9BRI3). Uninformative
+      &#34;protein binding&#34;; retained per policy but marked as over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32814053
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IntAct-curated binary interaction (with ATXN1/P54253) from a neurodegenerative-disease
+      interactome map. Uninformative &#34;protein binding&#34;; retained per policy but marked as
+      over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0033384
+    label: geranyl diphosphate biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core process counterpart of the dimethylallyltranstransferase activity: FPPS produces
+      geranyl diphosphate as the intermediate of its first condensation step. Supported by
+      the UniPathway/UniProt pathway record; accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/FDPS/FDPS-uniprot.txt
+      supporting_text: &gt;-
+        Isoprenoid biosynthesis; geranyl diphosphate biosynthesis; geranyl diphosphate from
+        dimethylallyl diphosphate and isopentenyl diphosphate: step 1/1.
+- term:
+    id: GO:0045337
+    label: trans, trans-farnesyl diphosphate biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic (UniPathway) restatement of the core FPP-biosynthetic process, also
+      supported by phylogeny (IBA). Redundant across evidence but correct core process;
+      accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/FDPS/FDPS-uniprot.txt
+      supporting_text: &gt;-
+        Isoprenoid biosynthesis; farnesyl diphosphate biosynthesis; farnesyl diphosphate from
+        geranyl diphosphate and isopentenyl diphosphate: step 1/1.
+- term:
+    id: GO:0004161
+    label: dimethylallyltranstransferase activity
+  evidence_type: EXP
+  original_reference_id: PMID:16684881
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimentally demonstrated GPP-forming activity (EC 2.5.1.1) for the human enzyme,
+      established by crystallography and enzyme kinetics of human FPPS with substrates and
+      bisphosphonate inhibitors. This is a core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:16684881
+      supporting_text: &gt;-
+        FPPS, a key branchpoint of the mevalonate pathway, catalyzes the successive
+        condensation of isopentenyl pyrophosphate with dimethylallyl pyrophosphate and geranyl
+        pyrophosphate.
+- term:
+    id: GO:0004337
+    label: (2E,6E)-farnesyl diphosphate synthase activity
+  evidence_type: EXP
+  original_reference_id: PMID:16684881
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimentally demonstrated FPP-forming activity (EC 2.5.1.10) for the human enzyme.
+      This is the defining core molecular function of FDPS.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:16684881
+      supporting_text: &gt;-
+        FPPS, a key branchpoint of the mevalonate pathway, catalyzes the successive
+        condensation of isopentenyl pyrophosphate with dimethylallyl pyrophosphate and geranyl
+        pyrophosphate.
+- term:
+    id: GO:0003723
+    label: RNA binding
+  evidence_type: HDA
+  original_reference_id: PMID:22658674
+  qualifier: enables
+  review:
+    summary: &gt;-
+      FDPS was captured in a high-throughput HeLa mRNA-interactome study (&#34;interactome
+      capture&#34;) that flagged many metabolic enzymes as candidate RNA-binding proteins. This
+      is a proteome-wide screen with no gene-specific functional follow-up for FDPS, and no
+      RNA-dependent function is known for this prenyltransferase. Not a core function; kept
+      as a non-core moonlighting-candidate annotation.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:22658674
+      supporting_text: &gt;-
+        We identify 860 proteins that qualify as RBPs by biochemical and statistical criteria
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1655824
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome-asserted cytosolic localization, consistent with the UniProt subcellular
+      location. Core localization; accept.
+    action: ACCEPT
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-191303
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome cytosol annotation attached to the FPP-forming reaction (FDPS dimer transfers
+      IPPP to GPP). Consistent with UniProt; accept.
+    action: ACCEPT
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-191322
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome cytosol annotation attached to the GPP-forming reaction (FDPS dimer transfers
+      IPPP to DMAPP). Consistent with UniProt; accept.
+    action: ACCEPT
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9717841
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome cytosol annotation attached to bisphosphonate binding by holo-FDPS. Consistent
+      with UniProt; accept.
+    action: ACCEPT
+- term:
+    id: GO:0006695
+    label: cholesterol biosynthetic process
+  evidence_type: TAS
+  original_reference_id: PMID:2690933
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Author (TAS) annotation from the original cloning/characterization paper, which framed
+      human FPP synthetase in the context of cholesterol/sterol biosynthesis. FDPS provides
+      the FPP precursor for the sterol branch but the dedicated cholesterol-synthesis
+      reactions are downstream; contributory, not core. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+core_functions:
+- description: &gt;-
+    Second condensation step of farnesyl diphosphate synthase: Mg(2+)-dependent head-to-tail
+    condensation of isopentenyl diphosphate (IPP) with geranyl diphosphate (GPP) to form
+    (2E,6E)-farnesyl diphosphate (FPP), EC 2.5.1.10. This is the defining activity of FDPS
+    and the committed step producing the FPP branch-point metabolite of the isoprenoid
+    pathway.
+  molecular_function:
+    id: GO:0004337
+    label: (2E,6E)-farnesyl diphosphate synthase activity
+  supported_by:
+  - reference_id: PMID:16684881
+    supporting_text: &gt;-
+      FPPS, a key branchpoint of the mevalonate pathway, catalyzes the successive
+      condensation of isopentenyl pyrophosphate with dimethylallyl pyrophosphate and geranyl
+      pyrophosphate.
+  directly_involved_in:
+  - id: GO:0045337
+    label: farnesyl diphosphate biosynthetic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+- description: &gt;-
+    First condensation step of farnesyl diphosphate synthase: Mg(2+)-dependent head-to-tail
+    condensation of isopentenyl diphosphate (IPP) with the allylic primer dimethylallyl
+    diphosphate (DMAPP) to form geranyl diphosphate (GPP), EC 2.5.1.1. GPP is the substrate
+    for the subsequent FPP-forming step catalyzed by the same enzyme.
+  molecular_function:
+    id: GO:0004161
+    label: dimethylallyltranstransferase activity
+  supported_by:
+  - reference_id: PMID:16684881
+    supporting_text: &gt;-
+      FPPS, a key branchpoint of the mevalonate pathway, catalyzes the successive
+      condensation of isopentenyl pyrophosphate with dimethylallyl pyrophosphate and geranyl
+      pyrophosphate.
+  directly_involved_in:
+  - id: GO:0033384
+    label: geranyl diphosphate biosynthetic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:16684881
+  title: The molecular mechanism of nitrogen-containing bisphosphonates as antiosteoporosis
+    drugs.
+  findings:
+  - statement: &gt;-
+      Human FPPS catalyzes the successive condensation of IPP with DMAPP and with GPP; it is
+      the key branch-point enzyme of the mevalonate pathway and the target of
+      nitrogen-containing bisphosphonate drugs. High-resolution structures of the human
+      enzyme with risedronate/zoledronate and Mg(2+)/IPP define the catalytic mechanism.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      FPPS, a key branchpoint of the mevalonate pathway, catalyzes the successive
+      condensation of isopentenyl pyrophosphate with dimethylallyl pyrophosphate and geranyl
+      pyrophosphate.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; source of the EXP molecular-function annotations (EC 2.5.1.1 and
+      2.5.1.10) and Mg(2+) cofactor for human FPPS. Abstract-only in cache but the abstract
+      explicitly states the two sequential condensations. UniProt cites this PMID for both
+      catalytic-activity statements.
+- id: PMID:16713569
+  title: A protein-protein interaction network for human inherited ataxias and disorders
+    of Purkinje cell degeneration.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified high-throughput ataxia interactome; source of an IntAct
+      FDPS-ATXN1 &#34;protein binding&#34; annotation. No FDPS-specific functional characterization;
+      relevant only as interaction evidence, not to core function.
+- id: PMID:22658674
+  title: Insights into RNA biology from an atlas of mammalian mRNA-binding proteins.
+  findings:
+  - statement: &gt;-
+      Systematic UV-crosslink &#34;interactome capture&#34; in HeLa cells identified 860 candidate
+      mRNA-binding proteins, including many metabolic enzymes; FDPS was among the captured
+      proteins (basis for the HDA RNA-binding annotation).
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      We identify 860 proteins that qualify as RBPs by biochemical and statistical criteria
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; proteome-wide RBP capture, no gene-specific validation for FDPS.
+      Supports only a non-core moonlighting-candidate RNA-binding annotation.
+- id: PMID:2690933
+  title: Cloning, analysis, and bacterial expression of human farnesyl pyrophosphate
+    synthetase and its regulation in Hep G2 cells.
+  findings:
+  - statement: &gt;-
+      Cloning, bacterial expression and characterization of human farnesyl pyrophosphate
+      synthetase, studied in the context of cholesterol/sterol biosynthesis regulation in
+      Hep G2 cells (basis for the TAS cholesterol-biosynthesis annotation).
+    reference_section_type: TITLE
+    supporting_text: &gt;-
+      Cloning, analysis, and bacterial expression of human farnesyl pyrophosphate
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified original human FPPS cloning/expression paper. Abstract-only in cache.
+      Supports the enzyme identity and its pathway context; cited for the (non-core) TAS
+      cholesterol-biosynthesis annotation.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified HuRI reference interactome; source of several IntAct FDPS &#34;protein
+      binding&#34; annotations. High-throughput binary interactions, not core function.
+- id: PMID:32814053
+  title: Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins
+    and Uncovers Widespread Protein Aggregation in Affected Brains.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified neurodegeneration interactome map; source of an IntAct FDPS-ATXN1
+      &#34;protein binding&#34; annotation. Not relevant to FDPS core enzymatic function.
+- id: Reactome:R-HSA-1655824
+  title: Expression of Farnesyl Diphosphate Synthase (FDPS)
+  findings: []
+- id: Reactome:R-HSA-191303
+  title: FDPS dimer transfers IPPP to GPP
+  findings: []
+- id: Reactome:R-HSA-191322
+  title: FDPS dimer transfers IPPP to DMAPP
+  findings: []
+- id: Reactome:R-HSA-9717841
+  title: holo-FDPS dimer binds NBPs
+  findings: []
+- id: file:human/FDPS/FDPS-uniprot.txt
+  title: UniProt entry P14324 (FPPS_HUMAN), farnesyl pyrophosphate synthase
+  findings:
+  - statement: &gt;-
+      Key isoprenoid-pathway enzyme that catalyzes formation of farnesyl diphosphate via
+      sequential condensations; cytoplasmic; homodimer; Mg(2+)-dependent (2 ions per
+      subunit); two catalytic activities EC 2.5.1.1 and EC 2.5.1.10.
+    reference_section_type: OTHER
+    supporting_text: Key enzyme in isoprenoid biosynthesis which catalyzes the
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Authoritative UniProt record for human FDPS (P14324); source for function, catalytic
+      activities, cofactor, subcellular location (Cytoplasm) and pathway steps.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

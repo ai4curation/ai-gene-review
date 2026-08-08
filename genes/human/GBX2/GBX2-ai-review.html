@@ -1,0 +1,3573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GBX2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>GBX2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P52951" target="_blank" class="term-link">
+                        P52951
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "GBX2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P52951" data-a="DESCRIPTION: GBX2 is a nuclear homeobox transcription factor th..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>GBX2 is a nuclear homeobox transcription factor that binds sequence-specific cis-regulatory DNA and regulates RNA polymerase II transcription. Direct human-cell experiments show GBX2 occupancy and binding at target regulatory regions, nuclear localization, and transcriptional activation through an EEF1A1 promoter element; developmental studies also support context-dependent transcriptional repression. During vertebrate embryogenesis, spatially restricted Gbx2 activity specifies anterior hindbrain identity by opposing Otx2, positions and maintains the midbrain-hindbrain isthmic organizer, and supports patterning of rhombomere 1-derived cerebellar territory and other nervous-system structures. Human GBX2 transcript is detected in the developing CNS, while the causal developmental assignments derive primarily from conserved model-organism loss- and gain-of-function studies.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000981" target="_blank" class="term-link">
+                                    GO:0000981
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity, RNA polymerase II-specific</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P52951" data-a="GO:0000981" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GBX2 is a homeodomain transcription factor that binds regulatory DNA and controls RNA polymerase II transcription. Phylogenetic inference agrees with direct human-cell ChIP, gel-shift, and reporter evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This direction-neutral transcription-factor term best captures the core molecular activity because GBX2 can activate or repress transcription depending on regulatory sequence and cofactors.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23144817" target="_blank" class="term-link">
+                                        PMID:23144817
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We show through gel shift analyses that sequences within the promoter or introns of EEF1A1, ROBO1, PCDH15, USH2A and NOTCH2, are directly bound by GBX2.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006357" target="_blank" class="term-link">
+                                    GO:0006357
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of transcription by RNA polymerase II</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P52951" data-a="GO:0006357" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct GBX2 promoter-binding and reporter experiments establish regulation of RNA polymerase II transcription.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the biological-process counterpart of GBX2&#39;s core DNA-binding transcription-factor activity and is appropriately direction-neutral.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23144817" target="_blank" class="term-link">
+                                        PMID:23144817
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Furthermore, we show that GBX2 activates transcriptional activity through the promoter of EEF1A1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000977" target="_blank" class="term-link">
+                                    GO:0000977
+                                </a>
+                            </span>
+                            <span class="term-label">RNA polymerase II transcription regulatory region sequence-specific DNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P52951" data-a="GO:0000977" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GBX2 occupies cis-regulatory regions in human cells and directly binds promoter and intronic target sequences in gel-shift assays.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This specific DNA-binding term accurately describes the homeodomain-mediated recognition of RNA polymerase II regulatory regions.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23144817" target="_blank" class="term-link">
+                                        PMID:23144817
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We show through gel shift analyses that sequences within the promoter or introns of EEF1A1, ROBO1, PCDH15, USH2A and NOTCH2, are directly bound by GBX2.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P52951" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GBX2 functions in the nucleus, where it binds chromatin and regulates transcription; expressed GBX2 fusion protein was observed in nuclei of human cells.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Nucleus is the active compartment for GBX2&#39;s core transcription-factor activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23144817" target="_blank" class="term-link">
+                                        PMID:23144817
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Merge displays nuclear localization of GFP-GBX2 fusion proteins.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051960" target="_blank" class="term-link">
+                                    GO:0051960
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of nervous system development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P52951" data-a="GO:0051960" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Gbx2 regulates anterior-hindbrain identity, midbrain-hindbrain organizer position, and cerebellar patterning in vertebrate developmental models.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The annotation is biologically well supported and is a principal developmental output, but it is a tissue- and stage-specific context of the core nuclear transcription-factor activity rather than a separate molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10490024" target="_blank" class="term-link">
+                                        PMID:10490024
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We propose that formation of a normal MHB organizer depends on a sharp Otx2 caudal border and that Gbx2 is required to position and sharpen this border.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12367504" target="_blank" class="term-link">
+                                        PMID:12367504
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mid/hindbrain organizer gene expression, however, continues to be dependent on Gbx2.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000981" target="_blank" class="term-link">
+                                    GO:0000981
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity, RNA polymerase II-specific</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P52951" data-a="GO:0000981" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro mapping from the conserved homeobox is consistent with direct GBX2 DNA-binding and transcriptional-regulation experiments.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The electronic inference is correct and independently corroborated by direct human-cell evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23144817" target="_blank" class="term-link">
+                                        PMID:23144817
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Gbx2 encodes a DNA-binding transcription factor that plays pivotal roles during embryogenesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P52951" data-a="GO:0003677" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GBX2 binds DNA through its homeodomain, but the root-level DNA-binding term omits experimentally established sequence and regulatory-region specificity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Replace this uninformative parent term with the more specific RNA polymerase II regulatory-region sequence-specific DNA-binding activity already supported for GBX2.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000977" target="_blank" class="term-link">
+                                    RNA polymerase II transcription regulatory region sequence-specific DNA binding
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23144817" target="_blank" class="term-link">
+                                        PMID:23144817
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We show through gel shift analyses that sequences within the promoter or introns of EEF1A1, ROBO1, PCDH15, USH2A and NOTCH2, are directly bound by GBX2.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P52951" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt subcellular-location mapping to nucleus agrees with direct localization and GBX2&#39;s transcription-factor mechanism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The electronic localization is correct and experimentally corroborated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23144817" target="_blank" class="term-link">
+                                        PMID:23144817
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Merge displays nuclear localization of GFP-GBX2 fusion proteins.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P52951" data-a="GO:0006355" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GBX2 regulates DNA-templated transcription, but the generic parent term loses the experimentally supported RNA polymerase II context.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Use the more informative RNA polymerase II-specific process term supported by GBX2 promoter and reporter experiments.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006357" target="_blank" class="term-link">
+                                    regulation of transcription by RNA polymerase II
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23144817" target="_blank" class="term-link">
+                                        PMID:23144817
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Furthermore, we show that GBX2 activates transcriptional activity through the promoter of EEF1A1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045944" target="_blank" class="term-link">
+                                    GO:0045944
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of transcription by RNA polymerase II</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000108
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P52951" data-a="GO:0045944" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This logical inference from transcription-activator activity is supported by direct activation of an EEF1A1 promoter reporter by GBX2.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Positive transcriptional regulation is a genuine context-dependent GBX2 output, even though GBX2 can repress other targets and should not be described as exclusively activating.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23144817" target="_blank" class="term-link">
+                                        PMID:23144817
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Furthermore, we show that GBX2 activates transcriptional activity through the promoter of EEF1A1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001228" target="_blank" class="term-link">
+                                    GO:0001228
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription activator activity, RNA polymerase II-specific</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P52951" data-a="GO:0001228" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orthology transfer of transcription-activator activity is corroborated by human-cell GBX2 promoter-binding and reporter activation evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The activity is experimentally supported for an EEF1A1 promoter context. It is retained as one direction-specific mode within GBX2&#39;s broader context-dependent transcriptional role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23144817" target="_blank" class="term-link">
+                                        PMID:23144817
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In contrast, our results here show that GBX2 functions as a transcriptional activator of the EEF1A1 gene.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990837" target="_blank" class="term-link">
+                                    GO:1990837
+                                </a>
+                            </span>
+                            <span class="term-label">sequence-specific double-stranded DNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28473536" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28473536
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Impact of cytosine methylation on DNA binding specificities ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P52951" data-a="GO:1990837" data-r="PMID:28473536" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The GBX2 GOA row derives from a large methylation-sensitive SELEX survey and is consistent with independent GBX2 gel-shift and chromatin-occupancy experiments.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Sequence-specific double-stranded DNA binding is a core homeodomain function. The GBX2-specific supplementary result is accepted in deference to the experimental curator and is independently corroborated by direct GBX2 binding assays.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28473536" target="_blank" class="term-link">
+                                        PMID:28473536
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">By analysis of 542 human TFs with methylation-sensitive SELEX (systematic evolution of ligands by exponential enrichment)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23144817" target="_blank" class="term-link">
+                                        PMID:23144817
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We show through gel shift analyses that sequences within the promoter or introns of EEF1A1, ROBO1, PCDH15, USH2A and NOTCH2, are directly bound by GBX2.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000785" target="_blank" class="term-link">
+                                    GO:0000785
+                                </a>
+                            </span>
+                            <span class="term-label">chromatin</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000113
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P52951" data-a="GO:0000785" data-r="GO_REF:0000113" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TFClass-based chromatin localization agrees with direct ChIP-seq evidence that GBX2 occupies genomic regulatory regions in human cells.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Chromatin is an appropriate active location for a sequence-specific transcription factor with demonstrated genomic occupancy.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23144817" target="_blank" class="term-link">
+                                        PMID:23144817
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Using chromatin immunoprecipitation coupled with direct sequencing (ChIP-Seq) analysis in a human prostate cancer cell line, we identified cis-regulatory elements bound by GBX2 to provide insight into its direct downstream targets.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000981" target="_blank" class="term-link">
+                                    GO:0000981
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity, RNA polymerase II-specific</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000113
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P52951" data-a="GO:0000981" data-r="GO_REF:0000113" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TFClass assignment as a sequence-specific DNA-binding transcription factor is consistent with the GBX2 homeodomain and direct human-cell binding and transcription assays.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the core molecular activity and is independently supported beyond the similarity inference.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23144817" target="_blank" class="term-link">
+                                        PMID:23144817
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Gbx2 encodes a DNA-binding transcription factor that plays pivotal roles during embryogenesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9346236" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9346236
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The homeobox gene GBX2, a target of the myb oncogene, mediat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P52951" data-a="GO:0003700" data-r="PMID:9346236" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The original TAS paper is abstract-only locally, so its precise transcription assay cannot be rechecked. The annotation itself is strongly corroborated by later direct GBX2 DNA-binding, ChIP, and reporter experiments.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The broad transcription-factor term is correct. Acceptance relies on the complete evidence synthesis and defers to the original curator rather than treating unavailable full text as contrary evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23144817" target="_blank" class="term-link">
+                                        PMID:23144817
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Gbx2 encodes a DNA-binding transcription factor that plays pivotal roles during embryogenesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007399" target="_blank" class="term-link">
+                                    GO:0007399
+                                </a>
+                            </span>
+                            <span class="term-label">nervous system development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8838315" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8838315
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization and sequence analysis of the human homeobox...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P52951" data-a="GO:0007399" data-r="PMID:8838315" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The original human cloning paper establishes developing-CNS expression but its cached abstract does not provide a causal developmental assay. Conserved mouse genetic studies strongly support the broader nervous-system-development role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retain the biologically correct developmental annotation while marking it as a context-specific output. Full text for the original TAS source is unavailable, so the curator is not overruled; causal support comes from additional vertebrate studies.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8838315" target="_blank" class="term-link">
+                                        PMID:8838315
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A single 2.2-kb transcript was detected by Northern analysis in the developing human CNS as well as in other tissues.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21266408" target="_blank" class="term-link">
+                                        PMID:21266408
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Without Gbx2, hindbrain-born cells abnormally populate the entire midbrain, demonstrating that Gbx2 is essential for specifying hindbrain fate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>GBX2 acts in the nucleus and on chromatin as a homeodomain sequence-specific DNA-binding transcription factor. It binds RNA polymerase II cis-regulatory regions and regulates target transcription, producing activation or repression according to promoter context and cofactors. This molecular activity underlies its conserved roles in anterior-hindbrain identity, isthmic-organizer positioning and maintenance, and cerebellar territory patterning.</h3>
+                <span class="vote-buttons" data-g="P52951" data-a="FUNCTION: GBX2 acts in the nucleus and on chromatin as a hom..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000981" target="_blank" class="term-link">
+                            DNA-binding transcription factor activity, RNA polymerase II-specific
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006357" target="_blank" class="term-link">
+                                regulation of transcription by RNA polymerase II
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000785" target="_blank" class="term-link">
+                                chromatin
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23144817" target="_blank" class="term-link">
+                                PMID:23144817
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">We show through gel shift analyses that sequences within the promoter or introns of EEF1A1, ROBO1, PCDH15, USH2A and NOTCH2, are directly bound by GBX2.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23144817" target="_blank" class="term-link">
+                                PMID:23144817
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Furthermore, we show that GBX2 activates transcriptional activity through the promoter of EEF1A1</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10490024" target="_blank" class="term-link">
+                                PMID:10490024
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">We propose that formation of a normal MHB organizer depends on a sharp Otx2 caudal border and that Gbx2 is required to position and sharpen this border.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000113.md" target="_blank" class="term-link">
+                            GO_REF:0000113
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation of human sequence-specific DNA binding transcription factors (DbTFs) based on the TFClass database</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10490024" target="_blank" class="term-link">
+                            PMID:10490024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A role for Gbx2 in repression of Otx2 and positioning the mid/hindbrain organizer.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Mouse loss- and gain-of-function experiments establish that Gbx2 positions and sharpens the Otx2 boundary at the midbrain-hindbrain organizer.</div>
+
+                        <div class="finding-text">"We propose that formation of a normal MHB organizer depends on a sharp Otx2 caudal border and that Gbx2 is required to position and sharpen this border."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12367504" target="_blank" class="term-link">
+                            PMID:12367504
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Changing requirements for Gbx2 in development of the cerebellum and maintenance of the mid/hindbrain organizer.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Conditional loss after embryonic day 9 separates an early requirement for cerebellar territory from a continuing requirement for organizer maintenance.</div>
+
+                        <div class="finding-text">"In contrast to Gbx2 null mutants, mice lacking Gbx2 in rhombomere 1 (r1) after E9 (Gbx2-CKO) are viable and develop a cerebellum."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Midbrain-hindbrain organizer gene expression remains dependent on Gbx2 after the conditional deletion time point.</div>
+
+                        <div class="finding-text">"Mid/hindbrain organizer gene expression, however, continues to be dependent on Gbx2."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21266408" target="_blank" class="term-link">
+                            PMID:21266408
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gbx2 and Fgf8 are sequentially required for formation of the midbrain-hindbrain compartment boundary.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Fate mapping and genetic loss show that Gbx2 specifies hindbrain identity and establishes lineage separation at the midbrain-hindbrain boundary.</div>
+
+                        <div class="finding-text">"Without Gbx2, hindbrain-born cells abnormally populate the entire midbrain, demonstrating that Gbx2 is essential for specifying hindbrain fate."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23144817" target="_blank" class="term-link">
+                            PMID:23144817
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Elongation factor 1 alpha1 and genes associated with Usher syndromes are downstream targets of GBX2.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GBX2 directly binds cis-regulatory sequences at multiple target genes.</div>
+
+                        <div class="finding-text">"We show through gel shift analyses that sequences within the promoter or introns of EEF1A1, ROBO1, PCDH15, USH2A and NOTCH2, are directly bound by GBX2."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GBX2 can activate transcription through the EEF1A1 promoter.</div>
+
+                        <div class="finding-text">"Furthermore, we show that GBX2 activates transcriptional activity through the promoter of EEF1A1"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Expressed GBX2 fusion protein localizes to nuclei in human cells.</div>
+
+                        <div class="finding-text">"Merge displays nuclear localization of GFP-GBX2 fusion proteins."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28473536" target="_blank" class="term-link">
+                            PMID:28473536
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Impact of cytosine methylation on DNA binding specificities of human transcription factors.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The study systematically measured DNA-binding specificity for hundreds of human transcription factors, including the GBX2 GOA IDA record.</div>
+
+                        <div class="finding-text">"By analysis of 542 human TFs with methylation-sensitive SELEX (systematic evolution of ligands by exponential enrichment)"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28785208" target="_blank" class="term-link">
+                            PMID:28785208
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The Temporal Contribution of the Gbx2 Lineage to Cerebellar Neurons.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Temporally marked Gbx2-expressing precursors contribute to several major cerebellar neuronal classes.</div>
+
+                        <div class="finding-text">"The Gbx2 lineage gives rise to Purkinje cells, granule neurons, and deep cerebellar neurons across these marking stages."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8838315" target="_blank" class="term-link">
+                            PMID:8838315
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Characterization and sequence analysis of the human homeobox-containing gene GBX2.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The human GBX2 homeodomain is identical to mouse Gbx2 and GBX2 transcript is detected in the developing human CNS.</div>
+
+                        <div class="finding-text">"A single 2.2-kb transcript was detected by Northern analysis in the developing human CNS as well as in other tissues."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9346236" target="_blank" class="term-link">
+                            PMID:9346236
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The homeobox gene GBX2, a target of the myb oncogene, mediates autocrine growth and monocyte differentiation.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Ectopic GBX2 expression changes differentiation and growth-factor dependence in myeloblasts.</div>
+
+                        <div class="finding-text">"Ectopic expression of GBX2 in growth factor-dependent myeloblasts induces monocytic features and independence from exogenous cytokines"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which cofactors and regulatory-element features switch GBX2 between transcriptional activation and repression in human neural progenitors?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P52951" data-a="Q: Which cofactors and regulatory-element features sw..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which human GBX2-bound targets directly implement anterior-hindbrain identity and isthmic-organizer maintenance, and which model-organism targets are conserved in human cells?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P52951" data-a="Q: Which human GBX2-bound targets directly implement ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Generate inducible GBX2 knockout and rescue lines in human pluripotent-stem-cell-derived midbrain-hindbrain boundary or cerebellar organoid models. Combine time-resolved single-cell RNA-seq with GBX2 CUT&amp;RUN to distinguish direct transcriptional targets from secondary patterning effects and test effects on OTX2, FGF8, WNT1, and lineage-boundary programs.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: GBX2 directly establishes anterior-hindbrain transcriptional identity and organizer-adjacent signaling programs in human neural progenitors.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: Human neural-patterning perturbation with multi-omic profiling</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P52951" data-a="EXPERIMENT: Generate inducible GBX2 knockout and rescue lines ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Test wild-type and homeodomain- or EH1-motif-mutant GBX2 across endogenous target enhancers using reporter assays, cofactor perturbations, occupancy measurements, and nascent-transcription readouts in matched neural progenitors.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: GBX2 target directionality is determined by regulatory sequence and recruitment of activating versus TLE/Groucho-family repressive cofactors.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: Cofactor-dependent promoter and enhancer assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P52951" data-a="EXPERIMENT: Test wild-type and homeodomain- or EH1-motif-mutan..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(GBX2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P52951" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="gbx2-review-notes">GBX2 review notes</h1>
+<h2 id="scope-and-evidence-access">Scope and evidence access</h2>
+<ul>
+<li>Review initiated from the 16-row human GBX2 GOA seed. All 16 rows were manually assessed against the cached UniProt record, the three GOA-cited publications, and additional primary developmental literature.</li>
+<li>Automated deep-research providers were unavailable because of a global quota block. No provider-branded deep-research file was created; this file records the manual evidence trail instead.</li>
+<li>The GOA papers PMID:9346236 and PMID:8838315 are abstract-only in the local cache. Their curator-supported TAS annotations were therefore not overruled from incomplete evidence. PMID:28473536 has locally cached full text.</li>
+<li>Additional primary sources were cached for this review: PMID:23144817, PMID:10490024, PMID:12367504, PMID:21266408, and PMID:28785208.</li>
+</ul>
+<h2 id="gene-product-and-molecular-activity">Gene product and molecular activity</h2>
+<ul>
+<li>Human GBX2 is UniProtKB P52951, a 348-aa homeobox protein with the predicted homeobox DNA-binding region at residues 247-306. UniProt describes nuclear localization and a possible role as a transcription factor in embryonic pluripotency and differentiation. [UniProt:P52951, "DNA_BIND        247..306"; "SUBCELLULAR LOCATION: Nucleus"]</li>
+<li>The original human cloning study recovered GBX2 from an 11-week fetal-brain cDNA library, found a homeodomain identical to mouse Gbx2, and detected the transcript in the developing human CNS and other tissues. This supports expression and evolutionary conservation, but the abstract explicitly frames functional testing as future work. [PMID:8838315, "The amino acid sequence of the GBX2 homeodomain is identical (100%) to the that of homologous gene, Gbx2, expressed in the developing mouse embryo"; "A single 2.2-kb transcript was detected by Northern analysis in the developing human CNS as well as in other tissues."]</li>
+<li>A full-text human-cell study directly supports the transcription-factor mechanism. ChIP-seq identified GBX2-bound cis-regulatory regions, gel shifts showed direct binding at several target sequences, and a reporter assay showed activation through the EEF1A1 promoter. [PMID:23144817, "We show through gel shift analyses that sequences within the promoter or introns of EEF1A1, ROBO1, PCDH15, USH2A and NOTCH2, are directly bound by GBX2."; "Furthermore, we show that GBX2 activates transcriptional activity through the promoter of EEF1A1"]</li>
+<li>The same study localized expressed GBX2 fusion protein to nuclei in human PC-3 cells. [PMID:23144817, "Merge displays nuclear localization of GFP-GBX2 fusion proteins."]</li>
+<li>GOA assigns IDA sequence-specific double-stranded DNA binding from the methylation-sensitive SELEX survey of human transcription factors. The cached main text describes a systematic assay of 542 human TFs but does not name GBX2 outside supplementary data, so the GBX2-specific row is accepted in deference to the experimental curator and corroborating direct GBX2 binding data. [PMID:28473536, "By analysis of 542 human TFs with methylation-sensitive SELEX (systematic evolution of ligands by exponential enrichment)"]</li>
+<li>GBX2 can produce context-dependent transcriptional outputs. The direct human-cell reporter result establishes activation, whereas the developmental literature supports repression of Otx2 and the full-text target study discusses TLE/Groucho-dependent repression. The most defensible single core MF is therefore the direction-neutral RNA polymerase II-specific DNA-binding transcription-factor term, with activation retained as a genuine context-dependent activity. [PMID:23144817, "Based on loss-of-function and missexpression studies, Gbx2 has been implicated as a repressor of Otx2 expression at the MHB"; "In contrast, our results here show that GBX2 functions as a transcriptional activator of the EEF1A1 gene."]</li>
+</ul>
+<h2 id="developmental-biological-context">Developmental biological context</h2>
+<ul>
+<li>Mouse loss- and gain-of-function experiments show that Gbx2 sharpens the Otx2 caudal boundary and positions the midbrain/hindbrain organizer. [PMID:10490024, "We propose that formation of a normal MHB organizer depends on a sharp Otx2 caudal border and that Gbx2 is required to position and sharpen this border."]</li>
+<li>Fate mapping and genetic loss show that Gbx2 specifies anterior-hindbrain identity and prevents hindbrain progenitors from crossing into midbrain territory. [PMID:21266408, "Without Gbx2, hindbrain-born cells abnormally populate the entire midbrain, demonstrating that Gbx2 is essential for specifying hindbrain fate."]</li>
+<li>Conditional deletion after embryonic day 9 separates an early requirement for cerebellar territory from an ongoing requirement for organizer maintenance. The conditional mutants retain a cerebellum, but organizer gene expression remains GBX2-dependent and cerebellar growth is abnormal. This is the most direct cached support for GBX2's position in the top-down cerebellum-development decomposition. [PMID:12367504, "In contrast to Gbx2 null mutants, mice lacking Gbx2 in rhombomere 1 (r1) after E9 (Gbx2-CKO) are viable and develop a cerebellum."; "Mid/hindbrain organizer gene expression, however, continues to be dependent on Gbx2."]</li>
+<li>Temporally controlled mouse lineage tracing shows that Gbx2-expressing precursors contribute to Purkinje cells, granule neurons, and deep cerebellar neurons. This demonstrates lineage contribution, not by itself a cell-autonomous molecular mechanism. [PMID:28785208, "The Gbx2 lineage gives rise to Purkinje cells, granule neurons, and deep cerebellar neurons across these marking stages."]</li>
+<li>These vertebrate developmental phenotypes are strong evidence for conserved biological context, but direct causal human embryonic experiments are absent from the cached evidence. Accordingly, nervous-system-development annotations are retained as non-core contextual outputs rather than conflated with GBX2's core molecular activity.</li>
+</ul>
+<h2 id="annotation-decisions">Annotation decisions</h2>
+<ul>
+<li>ACCEPT the specific transcription-factor, regulatory-region DNA-binding, nucleus/chromatin, transcription-regulation, activation, and sequence-specific double-stranded-DNA annotations. They agree with the homeodomain, direct human-cell ChIP/gel-shift/reporter evidence, and phylogenetic inference.</li>
+<li>MODIFY generic <code>DNA binding</code> (GO:0003677) to <code>RNA polymerase II transcription regulatory region sequence-specific DNA binding</code> (GO:0000977).</li>
+<li>MODIFY generic <code>regulation of DNA-templated transcription</code> (GO:0006355) to <code>regulation of transcription by RNA polymerase II</code> (GO:0006357).</li>
+<li>KEEP_AS_NON_CORE the two broad nervous-system-development annotations. They are biologically well supported by vertebrate developmental studies and relevant to cerebellum development, but they are context-specific outputs of the core nuclear transcription-factor activity.</li>
+<li>No annotation was removed. No inaccessible experimental paper was treated as evidence of curator error.</li>
+</ul>
+<h2 id="core-function-synthesis">Core-function synthesis</h2>
+<p>GBX2's core function is a nuclear/chromatin-associated, sequence-specific DNA-binding transcription factor activity that regulates RNA polymerase II transcription. It can activate or repress transcription depending on the target regulatory element and cofactors. Hindbrain identity, isthmic-organizer positioning/maintenance, and cerebellar patterning are principal developmental outputs, not separate molecular activities.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P52951
+gene_symbol: GBX2
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  GBX2 is a nuclear homeobox transcription factor that binds sequence-specific
+  cis-regulatory DNA and regulates RNA polymerase II transcription. Direct human-cell
+  experiments show GBX2 occupancy and binding at target regulatory regions, nuclear
+  localization, and transcriptional activation through an EEF1A1 promoter element;
+  developmental studies also support context-dependent transcriptional repression.
+  During vertebrate embryogenesis, spatially restricted Gbx2 activity specifies anterior
+  hindbrain identity by opposing Otx2, positions and maintains the midbrain-hindbrain
+  isthmic organizer, and supports patterning of rhombomere 1-derived cerebellar territory
+  and other nervous-system structures. Human GBX2 transcript is detected in the developing
+  CNS, while the causal developmental assignments derive primarily from conserved
+  model-organism loss- and gain-of-function studies.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology
+    links
+  findings: []
+- id: GO_REF:0000113
+  title: Gene Ontology annotation of human sequence-specific DNA binding transcription
+    factors (DbTFs) based on the TFClass database
+  findings: []
+- id: PMID:10490024
+  title: A role for Gbx2 in repression of Otx2 and positioning the mid/hindbrain organizer.
+  findings:
+  - statement: Mouse loss- and gain-of-function experiments establish that Gbx2 positions
+      and sharpens the Otx2 boundary at the midbrain-hindbrain organizer.
+    supporting_text: &gt;-
+      We propose that formation of a normal MHB organizer depends on a sharp Otx2 caudal
+      border and that Gbx2 is required to position and sharpen this border.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified primary mouse genetic study; its abstract directly supports
+      organizer positioning and Otx2-boundary claims.
+- id: PMID:12367504
+  title: Changing requirements for Gbx2 in development of the cerebellum and maintenance
+    of the mid/hindbrain organizer.
+  findings:
+  - statement: Conditional loss after embryonic day 9 separates an early requirement for
+      cerebellar territory from a continuing requirement for organizer maintenance.
+    supporting_text: &gt;-
+      In contrast to Gbx2 null mutants, mice lacking Gbx2 in rhombomere 1 (r1) after E9
+      (Gbx2-CKO) are viable and develop a cerebellum.
+  - statement: Midbrain-hindbrain organizer gene expression remains dependent on Gbx2
+      after the conditional deletion time point.
+    supporting_text: &gt;-
+      Mid/hindbrain organizer gene expression, however, continues to be dependent on Gbx2.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified primary conditional-knockout study; the cached abstract
+      directly supports the cerebellar and organizer claims used here.
+- id: PMID:21266408
+  title: Gbx2 and Fgf8 are sequentially required for formation of the midbrain-hindbrain
+    compartment boundary.
+  findings:
+  - statement: Fate mapping and genetic loss show that Gbx2 specifies hindbrain identity
+      and establishes lineage separation at the midbrain-hindbrain boundary.
+    supporting_text: &gt;-
+      Without Gbx2, hindbrain-born cells abnormally populate the entire midbrain,
+      demonstrating that Gbx2 is essential for specifying hindbrain fate.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified primary mouse fate-mapping and genetic study; the cached
+      abstract directly supports the hindbrain-fate claim.
+- id: PMID:23144817
+  title: Elongation factor 1 alpha1 and genes associated with Usher syndromes are downstream
+    targets of GBX2.
+  findings:
+  - statement: GBX2 directly binds cis-regulatory sequences at multiple target genes.
+    supporting_text: &gt;-
+      We show through gel shift analyses that sequences within the promoter or introns of
+      EEF1A1, ROBO1, PCDH15, USH2A and NOTCH2, are directly bound by GBX2.
+  - statement: GBX2 can activate transcription through the EEF1A1 promoter.
+    supporting_text: &gt;-
+      Furthermore, we show that GBX2 activates transcriptional activity through the promoter
+      of EEF1A1
+  - statement: Expressed GBX2 fusion protein localizes to nuclei in human cells.
+    supporting_text: Merge displays nuclear localization of GFP-GBX2 fusion proteins.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full text is locally available and directly supports GBX2 DNA binding,
+      chromatin occupancy, nuclear localization, and promoter activation.
+- id: PMID:28473536
+  title: Impact of cytosine methylation on DNA binding specificities of human transcription
+    factors.
+  findings:
+  - statement: The study systematically measured DNA-binding specificity for hundreds of
+      human transcription factors, including the GBX2 GOA IDA record.
+    supporting_text: &gt;-
+      By analysis of 542 human TFs with methylation-sensitive SELEX (systematic evolution
+      of ligands by exponential enrichment)
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: The identifier, assay scope, and official GBX2 IDA GOA row are verified;
+      GBX2-specific measurements reside in supplementary data rather than searchable main text.
+- id: PMID:28785208
+  title: The Temporal Contribution of the Gbx2 Lineage to Cerebellar Neurons.
+  findings:
+  - statement: Temporally marked Gbx2-expressing precursors contribute to several major
+      cerebellar neuronal classes.
+    supporting_text: &gt;-
+      The Gbx2 lineage gives rise to Purkinje cells, granule neurons, and deep cerebellar
+      neurons across these marking stages.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Full text is locally available; lineage tracing supports cerebellar
+      developmental context but does not alone establish a cell-autonomous molecular mechanism.
+- id: PMID:8838315
+  title: Characterization and sequence analysis of the human homeobox-containing gene
+    GBX2.
+  findings:
+  - statement: The human GBX2 homeodomain is identical to mouse Gbx2 and GBX2 transcript
+      is detected in the developing human CNS.
+    supporting_text: &gt;-
+      A single 2.2-kb transcript was detected by Northern analysis in the developing human
+      CNS as well as in other tissues.
+  reference_review:
+    relevance: MEDIUM
+    correctness: UNVERIFIED
+    review_notes: The PMID and human GBX2 expression result are verified from the abstract,
+      but full text is unavailable and the abstract does not establish a causal role in
+      nervous-system development.
+- id: PMID:9346236
+  title: The homeobox gene GBX2, a target of the myb oncogene, mediates autocrine
+    growth and monocyte differentiation.
+  findings:
+  - statement: Ectopic GBX2 expression changes differentiation and growth-factor dependence
+      in myeloblasts.
+    supporting_text: &gt;-
+      Ectopic expression of GBX2 in growth factor-dependent myeloblasts induces monocytic
+      features and independence from exogenous cytokines
+  reference_review:
+    relevance: MEDIUM
+    correctness: UNVERIFIED
+    review_notes: The PMID and abstract are verified, but the full text needed to inspect
+      the older TAS transcription-factor assignment is unavailable locally.
+existing_annotations:
+- term:
+    id: GO:0000981
+    label: DNA-binding transcription factor activity, RNA polymerase II-specific
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      GBX2 is a homeodomain transcription factor that binds regulatory DNA and controls
+      RNA polymerase II transcription. Phylogenetic inference agrees with direct human-cell
+      ChIP, gel-shift, and reporter evidence.
+    action: ACCEPT
+    reason: &gt;-
+      This direction-neutral transcription-factor term best captures the core molecular
+      activity because GBX2 can activate or repress transcription depending on regulatory
+      sequence and cofactors.
+    supported_by:
+    - reference_id: PMID:23144817
+      supporting_text: &gt;-
+        We show through gel shift analyses that sequences within the promoter or introns of
+        EEF1A1, ROBO1, PCDH15, USH2A and NOTCH2, are directly bound by GBX2.
+- term:
+    id: GO:0006357
+    label: regulation of transcription by RNA polymerase II
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct GBX2 promoter-binding and reporter experiments establish regulation of RNA
+      polymerase II transcription.
+    action: ACCEPT
+    reason: &gt;-
+      This is the biological-process counterpart of GBX2&#39;s core DNA-binding transcription-factor
+      activity and is appropriately direction-neutral.
+    supported_by:
+    - reference_id: PMID:23144817
+      supporting_text: &gt;-
+        Furthermore, we show that GBX2 activates transcriptional activity through the promoter
+        of EEF1A1
+- term:
+    id: GO:0000977
+    label: RNA polymerase II transcription regulatory region sequence-specific DNA
+      binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      GBX2 occupies cis-regulatory regions in human cells and directly binds promoter and
+      intronic target sequences in gel-shift assays.
+    action: ACCEPT
+    reason: &gt;-
+      This specific DNA-binding term accurately describes the homeodomain-mediated recognition
+      of RNA polymerase II regulatory regions.
+    supported_by:
+    - reference_id: PMID:23144817
+      supporting_text: &gt;-
+        We show through gel shift analyses that sequences within the promoter or introns of
+        EEF1A1, ROBO1, PCDH15, USH2A and NOTCH2, are directly bound by GBX2.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      GBX2 functions in the nucleus, where it binds chromatin and regulates transcription;
+      expressed GBX2 fusion protein was observed in nuclei of human cells.
+    action: ACCEPT
+    reason: &gt;-
+      Nucleus is the active compartment for GBX2&#39;s core transcription-factor activity.
+    supported_by:
+    - reference_id: PMID:23144817
+      supporting_text: Merge displays nuclear localization of GFP-GBX2 fusion proteins.
+- term:
+    id: GO:0051960
+    label: regulation of nervous system development
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Gbx2 regulates anterior-hindbrain identity, midbrain-hindbrain organizer position,
+      and cerebellar patterning in vertebrate developmental models.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The annotation is biologically well supported and is a principal developmental output,
+      but it is a tissue- and stage-specific context of the core nuclear transcription-factor
+      activity rather than a separate molecular function.
+    supported_by:
+    - reference_id: PMID:10490024
+      supporting_text: &gt;-
+        We propose that formation of a normal MHB organizer depends on a sharp Otx2 caudal
+        border and that Gbx2 is required to position and sharpen this border.
+    - reference_id: PMID:12367504
+      supporting_text: &gt;-
+        Mid/hindbrain organizer gene expression, however, continues to be dependent on Gbx2.
+- term:
+    id: GO:0000981
+    label: DNA-binding transcription factor activity, RNA polymerase II-specific
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro mapping from the conserved homeobox is consistent with direct GBX2 DNA-binding
+      and transcriptional-regulation experiments.
+    action: ACCEPT
+    reason: &gt;-
+      The electronic inference is correct and independently corroborated by direct human-cell
+      evidence.
+    supported_by:
+    - reference_id: PMID:23144817
+      supporting_text: Gbx2 encodes a DNA-binding transcription factor that plays pivotal roles during embryogenesis.
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      GBX2 binds DNA through its homeodomain, but the root-level DNA-binding term omits
+      experimentally established sequence and regulatory-region specificity.
+    action: MODIFY
+    reason: &gt;-
+      Replace this uninformative parent term with the more specific RNA polymerase II
+      regulatory-region sequence-specific DNA-binding activity already supported for GBX2.
+    proposed_replacement_terms:
+    - id: GO:0000977
+      label: RNA polymerase II transcription regulatory region sequence-specific DNA binding
+    supported_by:
+    - reference_id: PMID:23144817
+      supporting_text: &gt;-
+        We show through gel shift analyses that sequences within the promoter or introns of
+        EEF1A1, ROBO1, PCDH15, USH2A and NOTCH2, are directly bound by GBX2.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      UniProt subcellular-location mapping to nucleus agrees with direct localization and
+      GBX2&#39;s transcription-factor mechanism.
+    action: ACCEPT
+    reason: &gt;-
+      The electronic localization is correct and experimentally corroborated.
+    supported_by:
+    - reference_id: PMID:23144817
+      supporting_text: Merge displays nuclear localization of GFP-GBX2 fusion proteins.
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      GBX2 regulates DNA-templated transcription, but the generic parent term loses the
+      experimentally supported RNA polymerase II context.
+    action: MODIFY
+    reason: &gt;-
+      Use the more informative RNA polymerase II-specific process term supported by GBX2
+      promoter and reporter experiments.
+    proposed_replacement_terms:
+    - id: GO:0006357
+      label: regulation of transcription by RNA polymerase II
+    supported_by:
+    - reference_id: PMID:23144817
+      supporting_text: &gt;-
+        Furthermore, we show that GBX2 activates transcriptional activity through the promoter
+        of EEF1A1
+- term:
+    id: GO:0045944
+    label: positive regulation of transcription by RNA polymerase II
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      This logical inference from transcription-activator activity is supported by direct
+      activation of an EEF1A1 promoter reporter by GBX2.
+    action: ACCEPT
+    reason: &gt;-
+      Positive transcriptional regulation is a genuine context-dependent GBX2 output, even
+      though GBX2 can repress other targets and should not be described as exclusively activating.
+    supported_by:
+    - reference_id: PMID:23144817
+      supporting_text: &gt;-
+        Furthermore, we show that GBX2 activates transcriptional activity through the promoter
+        of EEF1A1
+- term:
+    id: GO:0001228
+    label: DNA-binding transcription activator activity, RNA polymerase II-specific
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Orthology transfer of transcription-activator activity is corroborated by human-cell
+      GBX2 promoter-binding and reporter activation evidence.
+    action: ACCEPT
+    reason: &gt;-
+      The activity is experimentally supported for an EEF1A1 promoter context. It is retained
+      as one direction-specific mode within GBX2&#39;s broader context-dependent transcriptional role.
+    supported_by:
+    - reference_id: PMID:23144817
+      supporting_text: &gt;-
+        In contrast, our results here show that GBX2 functions as a transcriptional activator
+        of the EEF1A1 gene.
+- term:
+    id: GO:1990837
+    label: sequence-specific double-stranded DNA binding
+  evidence_type: IDA
+  original_reference_id: PMID:28473536
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The GBX2 GOA row derives from a large methylation-sensitive SELEX survey and is
+      consistent with independent GBX2 gel-shift and chromatin-occupancy experiments.
+    action: ACCEPT
+    reason: &gt;-
+      Sequence-specific double-stranded DNA binding is a core homeodomain function. The
+      GBX2-specific supplementary result is accepted in deference to the experimental curator
+      and is independently corroborated by direct GBX2 binding assays.
+    additional_reference_ids:
+    - PMID:23144817
+    supported_by:
+    - reference_id: PMID:28473536
+      supporting_text: &gt;-
+        By analysis of 542 human TFs with methylation-sensitive SELEX (systematic evolution
+        of ligands by exponential enrichment)
+    - reference_id: PMID:23144817
+      supporting_text: &gt;-
+        We show through gel shift analyses that sequences within the promoter or introns of
+        EEF1A1, ROBO1, PCDH15, USH2A and NOTCH2, are directly bound by GBX2.
+- term:
+    id: GO:0000785
+    label: chromatin
+  evidence_type: ISA
+  original_reference_id: GO_REF:0000113
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      TFClass-based chromatin localization agrees with direct ChIP-seq evidence that GBX2
+      occupies genomic regulatory regions in human cells.
+    action: ACCEPT
+    reason: &gt;-
+      Chromatin is an appropriate active location for a sequence-specific transcription
+      factor with demonstrated genomic occupancy.
+    supported_by:
+    - reference_id: PMID:23144817
+      supporting_text: &gt;-
+        Using chromatin immunoprecipitation coupled with direct sequencing (ChIP-Seq) analysis
+        in a human prostate cancer cell line, we identified cis-regulatory elements bound by GBX2
+        to provide insight into its direct downstream targets.
+- term:
+    id: GO:0000981
+    label: DNA-binding transcription factor activity, RNA polymerase II-specific
+  evidence_type: ISA
+  original_reference_id: GO_REF:0000113
+  qualifier: enables
+  review:
+    summary: &gt;-
+      TFClass assignment as a sequence-specific DNA-binding transcription factor is consistent
+      with the GBX2 homeodomain and direct human-cell binding and transcription assays.
+    action: ACCEPT
+    reason: &gt;-
+      This is the core molecular activity and is independently supported beyond the similarity
+      inference.
+    supported_by:
+    - reference_id: PMID:23144817
+      supporting_text: Gbx2 encodes a DNA-binding transcription factor that plays pivotal roles during embryogenesis.
+- term:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  evidence_type: TAS
+  original_reference_id: PMID:9346236
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The original TAS paper is abstract-only locally, so its precise transcription assay
+      cannot be rechecked. The annotation itself is strongly corroborated by later direct
+      GBX2 DNA-binding, ChIP, and reporter experiments.
+    action: ACCEPT
+    reason: &gt;-
+      The broad transcription-factor term is correct. Acceptance relies on the complete
+      evidence synthesis and defers to the original curator rather than treating unavailable
+      full text as contrary evidence.
+    additional_reference_ids:
+    - PMID:23144817
+    supported_by:
+    - reference_id: PMID:23144817
+      supporting_text: Gbx2 encodes a DNA-binding transcription factor that plays pivotal roles during embryogenesis.
+- term:
+    id: GO:0007399
+    label: nervous system development
+  evidence_type: TAS
+  original_reference_id: PMID:8838315
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      The original human cloning paper establishes developing-CNS expression but its cached
+      abstract does not provide a causal developmental assay. Conserved mouse genetic studies
+      strongly support the broader nervous-system-development role.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Retain the biologically correct developmental annotation while marking it as a
+      context-specific output. Full text for the original TAS source is unavailable, so the
+      curator is not overruled; causal support comes from additional vertebrate studies.
+    additional_reference_ids:
+    - PMID:10490024
+    - PMID:12367504
+    - PMID:21266408
+    supported_by:
+    - reference_id: PMID:8838315
+      supporting_text: &gt;-
+        A single 2.2-kb transcript was detected by Northern analysis in the developing human
+        CNS as well as in other tissues.
+    - reference_id: PMID:21266408
+      supporting_text: &gt;-
+        Without Gbx2, hindbrain-born cells abnormally populate the entire midbrain,
+        demonstrating that Gbx2 is essential for specifying hindbrain fate.
+core_functions:
+- description: &gt;-
+    GBX2 acts in the nucleus and on chromatin as a homeodomain sequence-specific DNA-binding
+    transcription factor. It binds RNA polymerase II cis-regulatory regions and regulates
+    target transcription, producing activation or repression according to promoter context
+    and cofactors. This molecular activity underlies its conserved roles in anterior-hindbrain
+    identity, isthmic-organizer positioning and maintenance, and cerebellar territory patterning.
+  molecular_function:
+    id: GO:0000981
+    label: DNA-binding transcription factor activity, RNA polymerase II-specific
+  directly_involved_in:
+  - id: GO:0006357
+    label: regulation of transcription by RNA polymerase II
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  - id: GO:0000785
+    label: chromatin
+  supported_by:
+  - reference_id: PMID:23144817
+    supporting_text: &gt;-
+      We show through gel shift analyses that sequences within the promoter or introns of
+      EEF1A1, ROBO1, PCDH15, USH2A and NOTCH2, are directly bound by GBX2.
+  - reference_id: PMID:23144817
+    supporting_text: &gt;-
+      Furthermore, we show that GBX2 activates transcriptional activity through the promoter
+      of EEF1A1
+  - reference_id: PMID:10490024
+    supporting_text: &gt;-
+      We propose that formation of a normal MHB organizer depends on a sharp Otx2 caudal
+      border and that Gbx2 is required to position and sharpen this border.
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Which cofactors and regulatory-element features switch GBX2 between transcriptional
+    activation and repression in human neural progenitors?
+  experts: []
+- question: &gt;-
+    Which human GBX2-bound targets directly implement anterior-hindbrain identity and
+    isthmic-organizer maintenance, and which model-organism targets are conserved in human cells?
+  experts: []
+suggested_experiments:
+- experiment_type: Human neural-patterning perturbation with multi-omic profiling
+  hypothesis: &gt;-
+    GBX2 directly establishes anterior-hindbrain transcriptional identity and organizer-adjacent
+    signaling programs in human neural progenitors.
+  description: &gt;-
+    Generate inducible GBX2 knockout and rescue lines in human pluripotent-stem-cell-derived
+    midbrain-hindbrain boundary or cerebellar organoid models. Combine time-resolved single-cell
+    RNA-seq with GBX2 CUT&amp;RUN to distinguish direct transcriptional targets from secondary
+    patterning effects and test effects on OTX2, FGF8, WNT1, and lineage-boundary programs.
+- experiment_type: Cofactor-dependent promoter and enhancer assay
+  hypothesis: &gt;-
+    GBX2 target directionality is determined by regulatory sequence and recruitment of
+    activating versus TLE/Groucho-family repressive cofactors.
+  description: &gt;-
+    Test wild-type and homeodomain- or EH1-motif-mutant GBX2 across endogenous target enhancers
+    using reporter assays, cofactor perturbations, occupancy measurements, and nascent-transcription
+    readouts in matched neural progenitors.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

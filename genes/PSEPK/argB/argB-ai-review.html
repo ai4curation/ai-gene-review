@@ -1,0 +1,2187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>argB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>argB</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P59300" target="_blank" class="term-link">
+                        P59300
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "argB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P59300" data-a="DESCRIPTION: ArgB (PP_5289) is an ATP-dependent acetylglutamate..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ArgB (PP_5289) is an ATP-dependent acetylglutamate kinase (EC 2.7.2.8) that phosphorylates N-acetyl-L-glutamate to N-acetyl-L-glutamyl 5-phosphate. It catalyzes the second reaction of the acetylated-ornithine route from glutamate to L-ornithine during L-arginine biosynthesis.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003991" target="_blank" class="term-link">
+                                    GO:0003991
+                                </a>
+                            </span>
+                            <span class="term-label">acetylglutamate kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P59300" data-a="GO:0003991" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the defining ArgB molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reviewed UniProt record assigns EC 2.7.2.8, RHEA:14629, and the ArgB-specific family to P59300.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/argB/argB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Acetylglutamate kinase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/argB/argB-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">N-acetyl-L-glutamate + ATP = N-acetyl-L-glutamyl 5-phosphate + ADP</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P59300" data-a="GO:0005524" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ATP is the phosphate donor in the ArgB reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct supporting chemistry, but the specific kinase activity is more informative.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P59300" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ArgB is a soluble cytoplasmic biosynthetic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The location is supported but is secondary to the reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006526" target="_blank" class="term-link">
+                                    GO:0006526
+                                </a>
+                            </span>
+                            <span class="term-label">L-arginine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P59300" data-a="GO:0006526" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ArgB performs step 2/4 of acetylated-ornithine formation during L-arginine synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reviewed UniProt pathway assignment supports this process, and a KT2440 argB insertion mutant is arginine auxotrophic.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016301" target="_blank" class="term-link">
+                                    GO:0016301
+                                </a>
+                            </span>
+                            <span class="term-label">kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P59300" data-a="GO:0016301" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This generic kinase term is redundant with acetylglutamate kinase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0003991 captures the substrate-specific reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Uses ATP to phosphorylate N-acetyl-L-glutamate to N-acetyl-L-glutamyl 5-phosphate in L-arginine biosynthesis.</h3>
+                <span class="vote-buttons" data-g="P59300" data-a="FUNCTION: Uses ATP to phosphorylate N-acetyl-L-glutamate to ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003991" target="_blank" class="term-link">
+                            acetylglutamate kinase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006526" target="_blank" class="term-link">
+                                L-arginine biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/argB/argB-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Full=Acetylglutamate kinase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/argB/argB-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">N-acetyl-L-glutamate + ATP = N-acetyl-L-glutamyl 5-phosphate + ADP</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31451546" target="_blank" class="term-link">
+                            PMID:31451546
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Arginine Biosynthesis Modulates Pyoverdine Production and Release in Pseudomonas putida as Part of the Mechanism of Adaptation to Oxidative Stress.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The KT2440 study tests an argB insertion mutant and reports that it cannot grow in minimal medium without exogenous arginine.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/argB/argB-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PSEPK ArgB</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Assigns P59300 to acetylglutamate phosphorylation in arginine biosynthesis.</div>
+
+                        <div class="finding-text">"Full=Acetylglutamate kinase"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/argB/argB-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO annotation snapshot for PSEPK ArgB</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains the five existing annotations reviewed above.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/argB/argB-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist functional synthesis for PSEPK ArgB</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report retrieves the exact ArgB reaction for P59300. Its target-specific claims about rate limitation, hexamerization, arginine inhibition, and absence of PII regulation are comparative inferences and are not promoted here; the direct KT2440 auxotrophy result above also supersedes its suggestion that this knockout remains to be tested.</div>
+
+                        <div class="finding-text">"N-acetyl-L-glutamate + ATP = N-acetyl-L-glutamyl 5-phosphate + ADP"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(argB-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P59300" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *argB* (N-Acetyl-L-Glutamate Kinase, NAGK) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">8 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-17T17:58:54.371612</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="argB-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="argB-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-argb-n-acetyl-l-glutamate-kinase-nagk-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>argB</em> (N-Acetyl-L-Glutamate Kinase, NAGK) in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>UniProt Accession:</strong> P59300 | <strong>Gene:</strong> <em>argB</em> | <strong>Ordered Locus:</strong> PP_5289 | <strong>EC:</strong> 2.7.2.8<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>The <em>argB</em> gene of <em>Pseudomonas putida</em> KT2440 (UniProt <strong>P59300</strong>, locus <strong>PP_5289</strong>) encodes <strong>N-acetyl-L-glutamate kinase (NAGK; EC 2.7.2.8)</strong>, also called N-acetyl-L-glutamate 5-phosphotransferase. NAGK is a soluble, cytoplasmic enzyme that catalyzes the <strong>ATP-dependent phosphorylation of the γ-carboxyl group of N-acetyl-L-glutamate (NAG)</strong> to yield <strong>N-acetyl-L-glutamyl-5-phosphate</strong> and ADP. This is the <strong>second, committed step</strong> of the acetylated ("cyclic") ornithine branch of the L-arginine biosynthetic pathway, in which glutamate is progressively converted, through eight enzymatic steps, into arginine. The identity of the enzyme is unambiguous: gene symbol, EC number, protein family, catalytic domains, and curated GO annotations all converge on the same NAGK assignment, and no evidence of gene-symbol ambiguity was found.</p>
+<p>NAGK belongs to the <strong>amino-acid-kinase (AAK) family</strong> and is, in fact, the structural paradigm of that family, which also includes carbamate kinase, UMP kinase, glutamate-5-kinase, and aspartokinase. In pseudomonads specifically, NAGK is the <strong>rate-limiting, pathway-controlling enzyme</strong> of arginine biosynthesis and is <strong>allosterically feedback-inhibited by the end-product L-arginine</strong>. Structurally, arginine-inhibitable <em>Pseudomonas</em> NAGK is a distinctive <strong>ring-shaped hexamer</strong> built from three E. coli-like dimers linked by an N-terminal kinked α-helix (the "N-helix"). Arginine binds each subunit and stabilizes an enlarged, catalytically unproductive active-centre conformation, while the substrate acetylglutamate counters this by promoting active-centre closure. This makes NAGK the principal regulatory valve that matches arginine production to cellular demand.</p>
+<p>While no experimental crystal structure exists for the <em>P. putida</em> protein itself (only an AlphaFold model), the functional and mechanistic assignment rests on exceptionally strong comparative evidence. P59300 shares <strong>92.1% sequence identity</strong> with the exhaustively characterized <em>P. aeruginosa</em> NAGK (Q9HTN2), including full conservation of the catalytic residues, the substrate-binding residues, the allosteric N-helix, and the specific N-helix residues (E17, R24) known to tune arginine affinity. In contrast, it shares only ~33% identity with the arginine-insensitive, dimeric <em>E. coli</em> enzyme. The <em>P. putida</em> enzyme is regulated <strong>solely</strong> by arginine feedback — unlike phototrophic NAGKs, it lacks the PII nitrogen-signalling regulatory interaction, consistent with a position-233 glycine rather than the PII-interacting arginine.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-argb-encodes-n-acetyl-l-glutamate-kinase-the-second-committed-step-of-arginine-biosynthesis">Finding 1 — <em>argB</em> encodes N-acetyl-L-glutamate kinase, the second committed step of arginine biosynthesis</h3>
+<p>UniProt P59300 annotates the protein as <strong>Acetylglutamate kinase (NAGK), EC 2.7.2.8</strong>, gene <em>argB</em>, ordered locus PP_5289, in <em>P. putida</em> KT2440. NAGK catalyzes the ATP-dependent phosphorylation of the γ-carboxyl of N-acetyl-L-glutamate (NAG) to N-acetyl-L-glutamyl-5-phosphate — the second of the eight steps converting glutamate to arginine. The reaction and family identity were established directly by transition-state crystallography: <em>"N-Acetyl-L-glutamate kinase (NAGK), the structural paradigm of the enzymes of the amino acid kinase family, catalyzes the phosphorylation of the gamma-COO(-) group of N-acetyl-L-glutamate (NAG) by ATP"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/12875848/">PMID: 12875848</a>).</p>
+<p>The same crystallographic work resolved the phosphoryl-transfer chemistry: the transfer <em>"occurs in line and is strongly associative, with Lys8 and Lys217 stabilizing the transition state and the leaving group, respectively"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/12875848/">PMID: 12875848</a>). This defines a precise catalytic mechanism rather than a generic "kinase activity," and pinpoints the active-site residues responsible.</p>
+<h3 id="finding-2-pseudomonas-nagk-is-a-hexameric-arginine-feedback-inhibited-enzyme-and-the-rate-limiting-control-point-of-arginine-biosynthesis">Finding 2 — <em>Pseudomonas</em> NAGK is a hexameric, arginine-feedback-inhibited enzyme and the rate-limiting control point of arginine biosynthesis</h3>
+<p>In <em>P. aeruginosa</em> — the closest well-characterized homolog of <em>P. putida argB</em> — NAGK is not merely one of eight enzymes but the <strong>pathway-controlling, rate-limiting valve</strong>. As stated directly: <em>"In Pseudomonas aeruginosa, but not in Escherichia coli, this step is rate limiting and feedback and sigmoidally inhibited by arginine"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/18263723/">PMID: 18263723</a>). The sigmoidal (cooperative) response is the hallmark of an allosteric regulatory enzyme tuned to switch output sharply around a threshold arginine concentration.</p>
+<p>The structural basis of this regulation was solved by crystallography of two arginine-inhibitable hexameric NAGKs. Both <em>"are highly similar ring-like hexamers having a central orifice of approximately 30 A diameter. They are formed by linking three E.coli NAGK-like homodimers through the interlacing of an N-terminal mobile kinked alpha-helix, which is absent from E.coli NAGK"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/16376937/">PMID: 16376937</a>). The allosteric mechanism itself was defined: <em>"Arginine, by gluing the C lobe of each subunit to the inter-dimeric junction, may stabilize an enlarged active centre conformation, hampering catalysis. Acetylglutamate counters arginine inhibition by promoting active centre closure"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/16376937/">PMID: 16376937</a>).</p>
+<p>The functional role of the N-helix was proven by mutagenesis: deletion of 26 N-terminal residues abolished arginine inhibition and dissociated the hexamer into active dimers (<a href="https://pubmed.ncbi.nlm.nih.gov/18263723/">PMID: 18263723</a>). The arginine-insensitive <em>E. coli</em> NAGK, lacking the N-helix, is a simple homodimer — establishing that the hexameric architecture and the N-helix are mechanistically inseparable from arginine feedback control.</p>
+<h3 id="finding-3-nagk-adopts-the-amino-acid-kinase-aak-fold-with-mutagenesis-defined-catalytic-and-substrate-recognition-residues">Finding 3 — NAGK adopts the amino-acid-kinase (AAK) fold with mutagenesis-defined catalytic and substrate-recognition residues</h3>
+<p>NAGK is the <strong>structural paradigm</strong> of the AAK family, which also encompasses carbamate kinase, UMP kinase, glutamate-5-kinase, and aspartokinase (<a href="https://pubmed.ncbi.nlm.nih.gov/12869195/">PMID: 12869195</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/20386738/">PMID: 20386738</a>). Site-directed mutagenesis of the <em>E. coli</em> enzyme confirmed structure-based predictions about which residues do what: <em>"The mutations K8R and D162E decreased V([sustrate]= infinity ) 100-fold and 1000-fold, respectively, in agreement with the predictions that K8 catalyzes phosphoryl transfer and D162 organizes the catalytic groups. R66K and N158Q increased selectively K(m)(Asp) three to four orders of magnitude, in agreement with the binding of R66 and N158 to the C(alpha) substituents of NAG"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/14623187/">PMID: 14623187</a>).</p>
+<p>This is a clean separation of function: <strong>K8</strong> and <strong>D162</strong> are catalytic (drop in Vmax when mutated), whereas <strong>R66</strong> and <strong>N158</strong> are substrate-recognition residues (rise in Km for the acetylglutamate substrate). The enzyme uses <strong>MgATP</strong> as the phosphoryl donor, and both substrates protect it against thermal denaturation: <em>"The substrates MgATP and N-acetyl-L-glutamate efficiently protect the enzyme against temperature denaturation"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/8394836/">PMID: 8394836</a>), which independently confirms the two-substrate identity and shared MgATP-binding motifs across bacterial and yeast NAGKs.</p>
+<h3 id="finding-4-p-putida-nagk-is-92-identical-to-the-characterized-p-aeruginosa-enzyme-with-the-allosteric-n-helix-conserved">Finding 4 — <em>P. putida</em> NAGK is 92% identical to the characterized <em>P. aeruginosa</em> enzyme, with the allosteric N-helix conserved</h3>
+<p>A global Needleman-Wunsch alignment of P59300 (301 aa) against the experimentally characterized <em>P. aeruginosa</em> PAO1 NAGK (UniProt Q9HTN2, ARGB_PSEAE, 301 aa) gives <strong>92.1% sequence identity</strong>. Against the arginine-insensitive dimeric <em>E. coli</em> NAGK (P0A6C8, 258 aa), identity drops to only <strong>32.9%</strong>. Critically, P59300 possesses the N-terminal extension/kinked helix (N-helix) absent from <em>E. coli</em> NAGK, and conserves the exact residues <strong>E17</strong> and <strong>R24</strong> that tune the apparent affinity for the arginine feedback inhibitor.</p>
+<table>
+<thead>
+<tr>
+<th>Enzyme</th>
+<th>UniProt</th>
+<th>Length (aa)</th>
+<th>% identity to P59300</th>
+<th>N-helix present?</th>
+<th>Quaternary form</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>P. putida</em> NAGK (target)</td>
+<td>P59300</td>
+<td>301</td>
+<td>—</td>
+<td>Yes</td>
+<td>Predicted hexamer</td>
+</tr>
+<tr>
+<td><em>P. aeruginosa</em> NAGK</td>
+<td>Q9HTN2</td>
+<td>301</td>
+<td><strong>92.1%</strong></td>
+<td>Yes</td>
+<td>Hexamer (arginine-inhibited)</td>
+</tr>
+<tr>
+<td><em>E. coli</em> NAGK</td>
+<td>P0A6C8</td>
+<td>258</td>
+<td>32.9%</td>
+<td>No</td>
+<td>Dimer (arginine-insensitive)</td>
+</tr>
+</tbody>
+</table>
+<p>The N-terminal alignment illustrates the near-identity to the <em>Pseudomonas</em> enzyme and the divergence from <em>E. coli</em>:</p>
+<div class="codehilite"><pre><span></span><code>P59300 (P. putida)     MTLDRDAASHVAEVLSEALPYIRRFVGKTLVIKYGGNAME
+Q9HTN2 (P. aeruginosa) MTLSRDDAAQVAKVLSEALPYIRRFVGKTLVIKYGGNAME
+P0A6C8 (E. coli)       MMNPLIIKLGGVLLDSEEALERLF...   (lacks N-helix)
+</code></pre></div>
+
+<p>The functional relevance of E17/R24 is established: <em>"N-helix mutations affecting R24 and E17 increased and decreased, respectively, the apparent affinity of PaNAGK for arginine, as predicted from enzyme structures that revealed the respective formation by these residues of bonds favoring inaccessible and accessible arginine site conformations"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/18263723/">PMID: 18263723</a>). Because both residues, plus the N-helix that distinguishes hexameric arginine-inhibitable NAGKs from the <em>E. coli</em> dimer (<a href="https://pubmed.ncbi.nlm.nih.gov/16376937/">PMID: 16376937</a>), are conserved in P59300, the <em>P. putida</em> enzyme is confidently assigned as an arginine-feedback-regulated hexamer.</p>
+<h3 id="finding-5-nagk-acts-in-the-cytoplasm-at-step-2-of-4-of-the-acetylated-cyclic-ornithine-branch">Finding 5 — NAGK acts in the cytoplasm, at step 2 of 4 of the acetylated (cyclic) ornithine branch</h3>
+<p>Curated UniProt annotations (HAMAP-Rule MF_00082) give: <strong>FUNCTION</strong> — "Catalyzes the ATP-dependent phosphorylation of N-acetyl-L-glutamate"; <strong>CATALYTIC ACTIVITY</strong> — "N-acetyl-L-glutamate + ATP = N-acetyl-L-glutamyl 5-phosphate + ADP" (EC 2.7.2.8); <strong>PATHWAY</strong> — "Amino-acid biosynthesis; L-arginine biosynthesis; N(2)-acetyl-L-ornithine from L-glutamate: step 2/4"; <strong>SUBCELLULAR LOCATION</strong> — "Cytoplasm." That NAGK is the second step is confirmed independently: <em>"N-Acetylglutamate kinase (NAGK) catalyses the second step in the route of arginine biosynthesis"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/16376937/">PMID: 16376937</a>).</p>
+<p>The four-step acetylated sub-pathway from L-glutamate to N2-acetyl-L-ornithine proceeds:</p>
+<div class="codehilite"><pre><span></span><code> ArgA (NAGS)         ArgB (NAGK)          ArgC              ArgD
+  L-glutamate ──────────────▶ N-acetyl- ───────────▶ N-acetyl-  ──────▶ N-acetyl-  ──────▶ N2-acetyl-
+acetyl-CoA     L-glutamate    ATP     glutamyl-5-  NADPH  glutamate-5-  Glu  L-ornithine
+                             (STEP 2)  phosphate         semialdehyde
+                          [rate-limiting,
+                           Arg-inhibited]
+</code></pre></div>
+
+<p>In <em>Pseudomonas</em> the acetyl group is subsequently recycled from N-acetylornithine back to glutamate by <strong>ornithine acetyltransferase (ArgJ)</strong> — the economical "cyclic" pathway — rather than being hydrolyzed and lost. This makes NAGK the entry-gate kinase of a cyclically conserved acetyl-carrier route.</p>
+<h3 id="finding-6-catalytic-and-substrate-binding-machinery-is-fully-conserved-in-the-p-putida-enzyme">Finding 6 — Catalytic and substrate-binding machinery is fully conserved in the <em>P. putida</em> enzyme</h3>
+<p>Mapping the experimentally validated NAGK catalytic residues onto the P59300 sequence shows complete conservation:</p>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th><em>E. coli</em> residue</th>
+<th><em>P. putida</em> (P59300) residue</th>
+<th>Motif context</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Phosphoryl-transfer lysine</td>
+<td>K8</td>
+<td><strong>K33</strong></td>
+<td>β1–αA catalytic loop "K33-Y-G-G" (33–36)</td>
+</tr>
+<tr>
+<td>ATP-binding glycine loop</td>
+<td>(β2–αB)</td>
+<td><strong>H66-G-G-G</strong> (66–69)</td>
+<td>Second glycine-rich loop</td>
+</tr>
+<tr>
+<td>Catalytic-group-organizing Asp</td>
+<td>D162</td>
+<td><strong>D199</strong></td>
+<td>Orients catalytic lysines</td>
+</tr>
+<tr>
+<td>Transition-state / leaving-group Lys</td>
+<td>K217</td>
+<td><strong>K255</strong></td>
+<td>Stabilizes leaving group</td>
+</tr>
+</tbody>
+</table>
+<p>These residues were shown by mutagenesis and transition-state crystallography to be essential for phosphoryl transfer and NAG binding: <em>"The transfer occurs in line and is strongly associative, with Lys8 and Lys217 stabilizing the transition state and the leaving group, respectively"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/12875848/">PMID: 12875848</a>) and <em>"the predictions that K8 catalyzes phosphoryl transfer and D162 organizes the catalytic groups"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/14623187/">PMID: 14623187</a>). Their conservation in P59300 (as K33, D199, K255) provides direct sequence-level evidence that the <em>P. putida</em> enzyme is catalytically competent by the same mechanism.</p>
+<h3 id="finding-7-in-heterotrophic-pseudomonas-arginine-feedback-is-the-sole-physiological-regulator-no-pii-control">Finding 7 — In heterotrophic <em>Pseudomonas</em>, arginine feedback is the sole physiological regulator (no PII control)</h3>
+<p>An important distinction sets <em>Pseudomonas</em> NAGK apart from that of phototrophs. In oxygenic photosynthetic organisms (cyanobacteria, plants), NAGK is additionally controlled by the <strong>PII nitrogen-signalling protein</strong>, which binds NAGK and relieves arginine inhibition: <em>"in photosynthetic organisms NAGK is the target of the nitrogen-signalling protein PII"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/16376937/">PMID: 16376937</a>). This PII–NAGK system <em>"regulates the arginine-controlled enzyme of the cyclic ornithine pathway, N-acetyl-l-glutamate kinase (NAGK), to control arginine biosynthesis"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/20399792/">PMID: 20399792</a>).</p>
+<p>However, this layer of control is specific to phototrophs. <em>P. putida</em> NAGK position 233 is a <strong>glycine</strong>, not the PII-interacting arginine (R233) documented in <em>Synechococcus</em>, and heterotrophic proteobacteria such as <em>Pseudomonas</em> lack the PII–NAGK interaction. The only established allosteric effector of <em>Pseudomonas</em> NAGK is the pathway end-product <strong>L-arginine</strong>, which sigmoidally/feedback-inhibits the hexameric enzyme (<a href="https://pubmed.ncbi.nlm.nih.gov/18263723/">PMID: 18263723</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/16376937/">PMID: 16376937</a>). This simplifies the regulatory model for the <em>P. putida</em> enzyme to a single, well-defined feedback loop.</p>
+<h3 id="finding-8-curated-godatabase-annotations-independently-corroborate-the-assignment-only-an-alphafold-model-exists-for-the-p-putida-protein">Finding 8 — Curated GO/database annotations independently corroborate the assignment; only an AlphaFold model exists for the <em>P. putida</em> protein</h3>
+<p>UniProt P59300 GO annotations independently support both function and localization: <strong>C:cytoplasm (GO:0005737); F:acetylglutamate kinase activity (GO:0003991); F:ATP binding (GO:0005524); P:L-arginine biosynthetic process via ornithine (GO:0042450)</strong>. Database cross-references (KEGG ppu:PP_5289, RefSeq WP_004575216.1, GeneID 83683097) confirm the locus. Structurally, an <strong>AlphaFold model</strong> is available (AlphaFoldDB P59300), but <strong>no experimental PDB entry exists for the <em>P. putida</em> enzyme</strong> — direct crystallographic evidence is confined to close orthologs (<em>P. aeruginosa</em> Q9HTN2, <em>E. coli</em>, <em>Thermotoga maritima</em>).</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>NAGK sits at the strategic control point of arginine biosynthesis in <em>P. putida</em>. The integrated model is as follows:</p>
+<p><strong>1. The reaction.</strong> NAGK catalyzes an in-line, associative phosphoryl transfer from MgATP to the γ-carboxylate of N-acetyl-L-glutamate, generating the acyl-phosphate N-acetyl-L-glutamyl-5-phosphate. Catalysis is executed by K33 (phosphoryl transfer) and K255 (leaving-group/transition-state stabilization), with D199 organizing the catalytic groups and R/N residues in the C-lobe reading out the Cα substituents of the acetylglutamate substrate to confer specificity.</p>
+<p><strong>2. Pathway placement.</strong> The product feeds directly into ArgC (N-acetyl-γ-glutamyl-phosphate reductase) and onward to N2-acetyl-L-ornithine (ArgD), with the acetyl group cyclically recycled by ArgJ. NAGK is thus the committed, energy-investing (ATP-consuming) gate of the acetylated ornithine route.</p>
+<p><strong>3. Allosteric control.</strong> The enzyme is a hexameric ring (three dimers bridged by the N-helix). L-arginine, the end product, binds each subunit at a site formed by the N-helix and C-lobe, "gluing" the C-lobe to the inter-dimeric junction and locking an enlarged, unproductive active centre. Substrate acetylglutamate opposes this by promoting active-centre closure. Sigmoidal kinetics amplify the response, so flux is throttled sharply once arginine accumulates.</p>
+<div class="codehilite"><pre><span></span><code><span class="w">       </span>┌────────────────<span class="w"> </span><span class="nv">L</span><span class="o">-</span><span class="nv">arginine</span><span class="w"> </span><span class="ss">(</span><span class="k">end</span><span class="w"> </span><span class="nv">product</span><span class="ss">)</span><span class="w"> </span>────────┐
+<span class="w">       </span>│<span class="w">  </span><span class="nv">feedback</span><span class="w"> </span><span class="nv">inhibition</span><span class="w"> </span><span class="ss">(</span><span class="nv">sigmoidal</span>,<span class="w"> </span><span class="nv">allosteric</span><span class="ss">)</span><span class="w">     </span>│
+<span class="w">       </span>▼<span class="w">                                                   </span>│
+<span class="w">   </span><span class="nv">Glutamate</span><span class="w"> </span>─<span class="nv">ArgA</span>─▶<span class="w"> </span><span class="nv">NAG</span><span class="w"> </span>──[<span class="nv">ArgB</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nv">NAGK</span>]──▶<span class="w"> </span><span class="nv">NAG</span><span class="o">-</span><span class="mi">5</span><span class="o">-</span><span class="nv">P</span><span class="w"> </span>─<span class="nv">ArgC</span>─▶<span class="w"> </span>...<span class="w"> </span>─▶<span class="w"> </span><span class="nv">Ornithine</span><span class="w"> </span>─▶<span class="w"> </span>...<span class="w"> </span>─▶<span class="w"> </span><span class="nv">ARGININE</span>
+<span class="w">            </span><span class="ss">(</span><span class="nv">STEP</span><span class="w"> </span><span class="mi">2</span>,<span class="w"> </span><span class="nv">RATE</span><span class="o">-</span><span class="nv">LIMITING</span><span class="ss">)</span><span class="w">                                        </span>│
+<span class="w">            </span><span class="nv">hexamer</span>,<span class="w"> </span><span class="nv">N</span><span class="o">-</span><span class="nv">helix</span><span class="w"> </span><span class="nv">E17</span><span class="o">/</span><span class="nv">R24</span><span class="w">                                       </span>│
+<span class="w">            </span><span class="nv">catalysis</span>:<span class="w"> </span><span class="nv">K33</span>,<span class="w"> </span><span class="nv">D199</span>,<span class="w"> </span><span class="nv">K255</span><span class="w">                                     </span>│
+<span class="w">       </span>└──────────────────────────────────────────────<span class="w">  </span><span class="nv">synthesized</span><span class="w"> </span>──────┘
+</code></pre></div>
+
+<p><strong>4. Organism-specific tuning.</strong> Unlike cyanobacterial/plant NAGK, the <em>P. putida</em> enzyme is <em>not</em> modulated by PII (position 233 = Gly). Arginine feedback is the exclusive allosteric input, making this a clean single-loop regulatory device.</p>
+<p><strong>5. Confidence of transfer to <em>P. putida</em>.</strong> Because P59300 is 92% identical to the biochemically and structurally dissected <em>P. aeruginosa</em> enzyme, conserves every catalytic and substrate-binding residue, retains the N-helix, and preserves the specific arginine-affinity-tuning residues E17/R24, the mechanistic model derived from <em>P. aeruginosa</em> transfers to <em>P. putida</em> with high confidence, even in the absence of a <em>P. putida</em> crystal structure.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Study (abbrev.)</th>
+<th>How it supports the findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12875848/">12875848</a></td>
+<td>Course of phosphorus in NAGK reaction; AlF4- transition-state mimic</td>
+<td>Defines the exact reaction (γ-carboxyl phosphorylation of NAG by ATP), in-line associative mechanism, and catalytic lysines K8/K217.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16376937/">16376937</a></td>
+<td>Hexameric NAGKs from <em>T. maritima</em> and <em>P. aeruginosa</em></td>
+<td>Establishes hexameric ring architecture, the N-helix, the arginine allosteric mechanism, second-step pathway placement, and PII specificity to phototrophs.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18263723/">18263723</a></td>
+<td>Basis of arginine sensitivity: mutagenesis of <em>P. aeruginosa</em> &amp; <em>E. coli</em> NAGK</td>
+<td>Shows NAGK is rate-limiting and sigmoidally arginine-inhibited in <em>Pseudomonas</em>; identifies N-helix residues E17/R24 tuning arginine affinity; N-helix deletion abolishes inhibition.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/14623187/">14623187</a></td>
+<td>Site-directed mutagenesis of <em>E. coli</em> NAGK and aspartokinase III</td>
+<td>Separates catalytic (K8, D162) from substrate-binding (R66, N158) residues; anchors residue-mapping onto P59300.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/8394836/">8394836</a></td>
+<td>NAGK of <em>B. stearothermophilus</em>: gene sequence &amp; characterization</td>
+<td>Confirms the two substrates (MgATP, N-acetyl-L-glutamate) and conserved MgATP-binding motifs across bacteria/yeast.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20386738/">20386738</a></td>
+<td>Conservation of slow dynamics in the AAK family: NAGK paradigm</td>
+<td>Establishes NAGK as the structural/dynamic paradigm of the AAK family; substrate-binding dynamics conserved.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12869195/">12869195</a></td>
+<td>UMP kinase of <em>B. subtilis</em></td>
+<td>Places NAGK within the AAK family sharing the carbamate-kinase/NAGK fold.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20399792/">20399792</a></td>
+<td>PII variant from <em>Synechococcus</em> / NAGK–PII complex</td>
+<td>Documents the phototroph-specific PII–NAGK regulatory system absent in heterotrophic <em>Pseudomonas</em>.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21980279/">21980279</a></td>
+<td>Dynamics upon oligomerization in the AAK family</td>
+<td>Explains how hexamerization confers cooperative arginine inhibition.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/28341883/">28341883</a></td>
+<td>Conformational dynamics of NAGK</td>
+<td>Reviews the essential role of conformational mobility in NAGK catalysis and allostery.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12037312/">12037312</a></td>
+<td>Cloning/crystallization of arginine-inhibited <em>P. aeruginosa</em> NAGK</td>
+<td>Documents the arginine-inhibitable <em>P. aeruginosa</em> NAGK as the best-characterized reference enzyme.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23806148/">23806148</a></td>
+<td>Proline production in <em>C. glutamicum</em></td>
+<td>Applied confirmation that feedback-alleviated NAGK increases flux through the acetylated glutamate route (uses <em>P. putida</em> pathway genes).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Consistency of the evidence.</strong> Every independent line — the curated UniProt/HAMAP annotation, the GO annotations, the KEGG/RefSeq cross-references, the crystallographic and mutagenesis literature on orthologs, and the direct sequence alignment — converges on the same conclusion. No contradictory literature or gene-symbol ambiguity was encountered. The <em>argB</em> symbol, the EC number 2.7.2.8, the ArgB/AAK domain architecture (IPR037528, IPR004662, IPR001048, IPR001057, IPR036393), and the organism all align cleanly.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No experimental structure or enzymology for the <em>P. putida</em> protein itself.</strong> All direct mechanistic and structural evidence derives from orthologs, chiefly <em>P. aeruginosa</em> (92% identical) and <em>E. coli</em> (33% identical). Only an AlphaFold model exists for P59300. The functional assignment is therefore inference-by-homology — albeit at a very high (92%) identity that makes the inference robust.</p>
+</li>
+<li>
+<p><strong>Hexameric state predicted, not directly demonstrated for <em>P. putida</em>.</strong> Oligomeric state and arginine inhibition are inferred from N-helix conservation and <em>P. aeruginosa</em> data, not measured for the KT2440 enzyme.</p>
+</li>
+<li>
+<p><strong>Kinetic parameters (Km for NAG and ATP, Ki for arginine, Hill coefficient) have not been measured for the <em>P. putida</em> enzyme.</strong> Values are expected to resemble the <em>P. aeruginosa</em> enzyme but remain to be confirmed.</p>
+</li>
+<li>
+<p><strong>Physiological/regulatory context in KT2440 in vivo</strong> — e.g., transcriptional control of <em>argB</em>, its operon organization, and integration with nitrogen/carbon status — was not investigated here and lies outside the strict "primary function" scope.</p>
+</li>
+<li>
+<p><strong>Absence of PII regulation is inferred</strong> from the position-233 glycine and the general biology of heterotrophic proteobacteria; it has not been experimentally excluded for <em>P. putida</em> specifically.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant expression and enzymology.</strong> Overexpress His-tagged P59300 in <em>E. coli</em>, purify, and determine steady-state kinetics (Km for NAG and MgATP, Vmax) and arginine inhibition (Ki, Hill coefficient) to confirm the predicted sigmoidal feedback.</p>
+</li>
+<li>
+<p><strong>Oligomeric-state determination.</strong> Use size-exclusion chromatography–MALS or analytical ultracentrifugation to test the predicted hexamer, and cryo-EM or crystallography to obtain the first experimental <em>P. putida</em> structure (with/without arginine).</p>
+</li>
+<li>
+<p><strong>N-helix / arginine-site mutagenesis.</strong> Mutate the conserved E17 and R24 (and delete the N-helix) in P59300 to test whether they tune arginine affinity as in <em>P. aeruginosa</em>, validating transfer of the allosteric model.</p>
+</li>
+<li>
+<p><strong>Active-site validation.</strong> Mutate the mapped catalytic residues (K33, D199, K255) and confirm the predicted losses in Vmax, verifying the conserved catalytic machinery.</p>
+</li>
+<li>
+<p><strong>Test for PII interaction.</strong> Perform pull-down/ITC assays between P59300 and the <em>P. putida</em> PII protein (GlnB/GlnK) to experimentally confirm the absence of PII regulation predicted from the position-233 glycine.</p>
+</li>
+<li>
+<p><strong>Physiological genetics.</strong> Construct a KT2440 <em>argB</em> conditional/deletion mutant to confirm arginine auxotrophy, and use a feedback-alleviated NAGK variant to probe control of flux through the cyclic ornithine pathway — of direct interest for metabolic engineering (cf. arginine/ornithine/proline/polyamine production).</p>
+</li>
+</ol>
+<hr />
+<p><em>Report compiled from 5 completed investigation iterations, 8 confirmed findings, and 16 reviewed publications. Gene identity verified: no ambiguity found — argB / PP_5289 / P59300 is unambiguously N-acetyl-L-glutamate kinase (EC 2.7.2.8) of the ArgB / amino-acid-kinase family in P. putida KT2440.</em></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="argB-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="argB-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:12875848</li>
+<li>PMID:18263723</li>
+<li>PMID:16376937</li>
+<li>PMID:12869195</li>
+<li>PMID:20386738</li>
+<li>PMID:14623187</li>
+<li>PMID:8394836</li>
+<li>PMID:20399792</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P59300
+gene_symbol: argB
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  ArgB (PP_5289) is an ATP-dependent acetylglutamate kinase (EC 2.7.2.8) that
+  phosphorylates N-acetyl-L-glutamate to N-acetyl-L-glutamyl 5-phosphate. It
+  catalyzes the second reaction of the acetylated-ornithine route from glutamate
+  to L-ornithine during L-arginine biosynthesis.
+existing_annotations:
+- term:
+    id: GO:0003991
+    label: acetylglutamate kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the defining ArgB molecular function.
+    action: ACCEPT
+    reason: The reviewed UniProt record assigns EC 2.7.2.8, RHEA:14629, and the ArgB-specific family to P59300.
+    supported_by:
+    - reference_id: file:PSEPK/argB/argB-uniprot.txt
+      supporting_text: Full=Acetylglutamate kinase
+    - reference_id: file:PSEPK/argB/argB-deep-research-openscientist.md
+      supporting_text: &gt;-
+        N-acetyl-L-glutamate + ATP = N-acetyl-L-glutamyl 5-phosphate + ADP
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: ATP is the phosphate donor in the ArgB reaction.
+    action: KEEP_AS_NON_CORE
+    reason: Correct supporting chemistry, but the specific kinase activity is more informative.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: ArgB is a soluble cytoplasmic biosynthetic enzyme.
+    action: KEEP_AS_NON_CORE
+    reason: The location is supported but is secondary to the reaction.
+- term:
+    id: GO:0006526
+    label: L-arginine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: ArgB performs step 2/4 of acetylated-ornithine formation during L-arginine synthesis.
+    action: ACCEPT
+    reason: &gt;-
+      The reviewed UniProt pathway assignment supports this process, and a
+      KT2440 argB insertion mutant is arginine auxotrophic.
+    additional_reference_ids:
+    - PMID:31451546
+- term:
+    id: GO:0016301
+    label: kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: This generic kinase term is redundant with acetylglutamate kinase activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0003991 captures the substrate-specific reaction.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:31451546
+  title: Arginine Biosynthesis Modulates Pyoverdine Production and Release in Pseudomonas
+    putida as Part of the Mechanism of Adaptation to Oxidative Stress.
+  full_text_unavailable: true
+  findings:
+  - statement: &gt;-
+      The KT2440 study tests an argB insertion mutant and reports that it cannot
+      grow in minimal medium without exogenous arginine.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and accessible publisher/PMC full text were checked. The
+      local publication cache remains abstract-only, so the full-text statement
+      is recorded without a supporting-text excerpt.
+- id: file:PSEPK/argB/argB-uniprot.txt
+  title: UniProtKB entry for PSEPK ArgB
+  findings:
+  - statement: Assigns P59300 to acetylglutamate phosphorylation in arginine biosynthesis.
+    supporting_text: Full=Acetylglutamate kinase
+- id: file:PSEPK/argB/argB-goa.tsv
+  title: QuickGO annotation snapshot for PSEPK ArgB
+  findings:
+  - statement: Contains the five existing annotations reviewed above.
+- id: file:PSEPK/argB/argB-deep-research-openscientist.md
+  title: OpenScientist functional synthesis for PSEPK ArgB
+  findings:
+  - statement: &gt;-
+      The report retrieves the exact ArgB reaction for P59300. Its
+      target-specific claims about rate limitation, hexamerization, arginine
+      inhibition, and absence of PII regulation are comparative inferences and
+      are not promoted here; the direct KT2440 auxotrophy result above also
+      supersedes its suggestion that this knockout remains to be tested.
+    supporting_text: &gt;-
+      N-acetyl-L-glutamate + ATP = N-acetyl-L-glutamyl 5-phosphate + ADP
+core_functions:
+- description: &gt;-
+    Uses ATP to phosphorylate N-acetyl-L-glutamate to N-acetyl-L-glutamyl
+    5-phosphate in L-arginine biosynthesis.
+  molecular_function:
+    id: GO:0003991
+    label: acetylglutamate kinase activity
+  directly_involved_in:
+  - id: GO:0006526
+    label: L-arginine biosynthetic process
+  supported_by:
+  - reference_id: file:PSEPK/argB/argB-uniprot.txt
+    supporting_text: Full=Acetylglutamate kinase
+  - reference_id: file:PSEPK/argB/argB-deep-research-openscientist.md
+    supporting_text: &gt;-
+      N-acetyl-L-glutamate + ATP = N-acetyl-L-glutamyl 5-phosphate + ADP
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,2318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>glxR - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>glxR</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88F01" target="_blank" class="term-link">
+                        Q88F01
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "glxR";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88F01" data-a="DESCRIPTION: glxR encodes a tartronate semialdehyde reductase i..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>glxR encodes a tartronate semialdehyde reductase in KT2440 glyoxylate metabolism. It is predicted to reduce 2-hydroxy-3-oxopropionate (tartronate semialdehyde) toward glycerate using NAD(H) or NADP(H)-linked oxidoreductase chemistry.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008679" target="_blank" class="term-link">
+                                    GO:0008679
+                                </a>
+                            </span>
+                            <span class="term-label">2-hydroxy-3-oxopropionate reductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F01" data-a="GO:0008679" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the specific predicted molecular function of GlxR.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns EC 1.1.1.60 and GOA maps GlxR to 2-hydroxy-3-oxopropionate reductase activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glxR/glxR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE            EC=1.1.1.60 {ECO:0000313|EMBL:AAN69879.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glxR/glxR-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88F01	glxR	enables	GO:0008679	2-hydroxy-3-oxopropionate reductase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glxR/glxR-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">The gene *glxR* (PP_4299; UniProt Q88F01) in *Pseudomonas putida* KT2440 encodes tartronate semialdehyde reductase (TSA reductase; EC 1.1.1.60; also named 2-hydroxy-3-oxopropionate reductase).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F01" data-a="GO:0016491" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The broad oxidoreductase term is correct but less informative than 2-hydroxy-3-oxopropionate reductase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0008679 captures the specific substrate/reaction relevant to the glyoxylate pathway.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glxR/glxR-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88F01	glxR	enables	GO:0008679	2-hydroxy-3-oxopropionate reductase activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046487" target="_blank" class="term-link">
+                                    GO:0046487
+                                </a>
+                            </span>
+                            <span class="term-label">glyoxylate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F01" data-a="GO:0046487" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GlxR acts in the glyoxylate/tartronate semialdehyde branch, so this process annotation is appropriate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The specific enzyme activity reduces the glyoxylate-derived tartronate semialdehyde intermediate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glxR/glxR-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88F01	glxR	involved_in	GO:0046487	glyoxylate metabolic process</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glxR/glxR-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">The enzyme is the committed reductive step of the **glycerate pathway of glyoxylate assimilation**.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050661" target="_blank" class="term-link">
+                                    GO:0050661
+                                </a>
+                            </span>
+                            <span class="term-label">NADP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F01" data-a="GO:0050661" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NADP binding is plausible cofactor context for this dehydrogenase/reductase family.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The InterPro-supported NADP-binding domain is consistent with the predicted oxidoreductase reaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glxR/glxR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR006115; 6PGDH_NADP-bd.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glxR/glxR-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88F01	glxR	enables	GO:0050661	NADP binding</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glxR/glxR-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">This is a soluble, cytoplasmic, homotetrameric NAD(P)H-dependent oxidoreductase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051287" target="_blank" class="term-link">
+                                    GO:0051287
+                                </a>
+                            </span>
+                            <span class="term-label">NAD binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F01" data-a="GO:0051287" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAD binding is plausible cofactor context for this dehydrogenase/reductase family.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The InterPro-supported NAD(P)-binding domain architecture is consistent with the predicted reductase activity; current metadata does not resolve strict NAD versus NADP specificity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glxR/glxR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR029154; HIBADH-like_NADP-bd.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glxR/glxR-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88F01	glxR	enables	GO:0051287	NAD binding</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glxR/glxR-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">Its primary catalytic function is the reduction of tartronate semialdehyde (2-hydroxy-3-oxopropionate) to D-glycerate, using NADH or NADPH as the electron donor.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Reduction of 2-hydroxy-3-oxopropionate in the glyoxylate/tartronate semialdehyde branch.</h3>
+                <span class="vote-buttons" data-g="Q88F01" data-a="FUNCTION: Reduction of 2-hydroxy-3-oxopropionate in the glyo..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008679" target="_blank" class="term-link">
+                            2-hydroxy-3-oxopropionate reductase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046487" target="_blank" class="term-link">
+                                glyoxylate metabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/glxR/glxR-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">UniProtKB	Q88F01	glxR	enables	GO:0008679	2-hydroxy-3-oxopropionate reductase activity</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/glxR/glxR-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">UniProtKB	Q88F01	glxR	involved_in	GO:0046487	glyoxylate metabolic process</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/glxR/glxR-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">The gene *glxR* (PP_4299; UniProt Q88F01) in *Pseudomonas putida* KT2440 encodes **tartronate semialdehyde reductase (EC 1.1.1.60)**</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/glxR/glxR-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for glxR</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies GlxR as tartronate semialdehyde reductase with EC 1.1.1.60 and NAD(P)-binding domains.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/glxR/glxR-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GOA annotations for glxR</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GOA includes 2-hydroxy-3-oxopropionate reductase activity, glyoxylate metabolic process, and NAD/NADP binding.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/glxR/glxR-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report for glxR</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OpenScientist supported GlxR as the soluble NAD(P)H-dependent tartronate semialdehyde reductase of the glyoxylate-assimilation glycerate pathway, and warned not to confuse it with unrelated Corynebacterium GlxR regulators.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(glxR-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88F01" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of *glxR* (PP_4299, UniProt Q88F01) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">14 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-15T17:43:36.678972</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="glxR-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="glxR-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-glxr-pp_4299-uniprot-q88f01-in-pseudomonas-putida-kt2440">Functional Annotation of <em>glxR</em> (PP_4299, UniProt Q88F01) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>The gene <em>glxR</em> (PP_4299; UniProt Q88F01) in <em>Pseudomonas putida</em> KT2440 encodes tartronate semialdehyde reductase (TSA reductase; EC 1.1.1.60; also named 2-hydroxy-3-oxopropionate reductase).</strong> This is a soluble, cytoplasmic, homotetrameric NAD(P)H-dependent oxidoreductase belonging to the β-hydroxyacid dehydrogenase superfamily (which also contains 6-phosphogluconate dehydrogenase and 3-hydroxyisobutyrate dehydrogenase). Its primary catalytic function is the reduction of tartronate semialdehyde (2-hydroxy-3-oxopropionate) to D-glycerate, using NADH or NADPH as the electron donor. The enzyme is the committed reductive step of the <strong>glycerate pathway of glyoxylate assimilation</strong>.</p>
+<p>The UniProt-provided annotation ("Tartronate semialdehyde reductase, EC 1.1.1.60") is strongly corroborated by multiple independent lines of evidence: (1) genomic context — <em>glxR</em> sits within the experimentally-defined <em>gcl</em> operon (PP_4297–PP_4301: <em>gcl</em>–<em>hyi</em>–<em>glxR</em>–glycerate kinase–pyruvate kinase); (2) direct in vitro biochemistry on the very close ortholog from <em>P. aeruginosa</em> (PA1500, 89.6% identical); (3) matching InterPro domain architecture (6-PGDH NADP-binding and HIBADH-like NAD-binding domains); and (4) conservation of the family catalytic lysine at position 171. Functionally, this enzyme allows <em>P. putida</em> to convert glyoxylate — a metabolite arising from allantoin/purine, glycolate, ethylene glycol, and glucarate catabolism — into 2-phosphoglycerate, feeding central carbon metabolism.</p>
+<p>A <strong>critical disambiguation</strong> must be noted: the gene symbol "<em>glxR</em>" is also used in <em>Corynebacterium glutamicum</em> for a completely unrelated protein — a global cAMP receptor protein (a Crp/CRP-family transcription factor). The <em>P. putida</em> GlxR (Q88F01) is an NAD(P)-dependent metabolic <strong>enzyme</strong>, not a DNA-binding regulator. This report concerns exclusively the metabolic enzyme. The evidence base is robust and internally consistent; the primary limitation is that the direct enzymological characterization was performed on the <em>P. aeruginosa</em> ortholog rather than the KT2440 protein itself, but the ~90% sequence identity and conserved active-site residues make function transfer secure.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-glxr-pp_4299-is-tartronate-semialdehyde-reductase-in-the-p-putida-kt2440-gcl-glyoxylate-assimilation-operon">Finding 1 — <em>glxR</em> (PP_4299) is tartronate semialdehyde reductase in the <em>P. putida</em> KT2440 <em>gcl</em> (glyoxylate-assimilation) operon</h3>
+<p>The genomic organization of <em>glxR</em> provides the first and most decisive piece of functional evidence. In <em>P. putida</em> KT2440, PP_4299 (<em>glxR</em>) is co-transcribed with <em>gcl</em> (glyoxylate carboligase), <em>hyi</em> (hydroxypyruvate isomerase), <em>ttuD</em> (glycerate kinase), and <em>pykF</em> (pyruvate kinase), forming the <em>gcl</em> operon. Franden et al. (2018) demonstrated that "all of the four genes in genomic proximity to <em>gcl</em> (<em>hyi</em>, <em>glxR</em>, <em>ttuD</em>, and <em>pykF</em>) are transcribed as an operon," and that "the expression of only two genes (<em>gcl</em> and <em>glxR</em>) resulted in growth in ethylene glycol" <a href="https://pubmed.ncbi.nlm.nih.gov/29885475/">PMID: 29885475</a>. Because ethylene glycol catabolism proceeds through glyoxylate, this experiment places <em>glxR</em> squarely in the glyoxylate-assimilation route and shows it is functionally required for growth on a glyoxylate-generating substrate.</p>
+<p>This pathway is under transcriptional control. Li et al. (2019) established "a central role of the transcriptional regulator GclR, which represses the glyoxylate carboligase pathway as part of a larger metabolic context of purine and allantoin metabolism" <a href="https://pubmed.ncbi.nlm.nih.gov/31166064/">PMID: 31166064</a>. This ties the operon containing <em>glxR</em> to the broader biological role of processing glyoxylate derived from nitrogen/purine catabolism.</p>
+<h3 id="finding-2-glxr-catalyzes-nadph-dependent-reduction-of-tartronate-semialdehyde-to-d-glycerate-ec-11160">Finding 2 — GlxR catalyzes NAD(P)H-dependent reduction of tartronate semialdehyde to D-glycerate (EC 1.1.1.60)</h3>
+<p>The precise reaction catalyzed is well established for this enzyme family. Njau et al. (2000) purified a recombinant member of this family and showed that "the purified recombinant protein very specifically catalyzed the NAD(+)-dependent oxidation of D-glycerate and the NADH-dependent reduction of tartronate semialdehyde, identifying this protein as a tartronate semialdehyde reductase" <a href="https://pubmed.ncbi.nlm.nih.gov/10978349/">PMID: 10978349</a>. The physiological direction of the reaction is reductive:</p>
+<div class="codehilite"><pre><span></span><code>tartronate semialdehyde (2-hydroxy-3-oxopropionate) + NAD(P)H + H+
+│
+▼   GlxR (EC 1.1.1.60)
+D-glycerate + NAD(P)+
+</code></pre></div>
+
+<p>The gene naming convention is also confirmed: Cusa et al. (1999) described the glycerate pathway genes as "encoding tartronic semialdehyde reductase (<em>glxR</em>) and glycerate kinase (<em>glxK</em>)" <a href="https://pubmed.ncbi.nlm.nih.gov/10601204/">PMID: 10601204</a>, directly linking the symbol <em>glxR</em> to this enzymatic activity. The reaction represents the final step of D-glycerate biosynthesis in the glycerate pathway (Osipiuk et al. 2009).</p>
+<h3 id="finding-3-glxr-belongs-to-the-hydroxyacid-dehydrogenase-6-pgdh-like-family-with-a-conserved-catalytic-lysine-and-nadp-binding-rossmann-fold">Finding 3 — GlxR belongs to the β-hydroxyacid dehydrogenase / 6-PGDH-like family with a conserved catalytic lysine and NAD(P)-binding Rossmann fold</h3>
+<p>The structural and mechanistic class of the enzyme is well defined. Osipiuk et al. (2009), reporting the 1.65 Å crystal structure of the GarR tartronate semialdehyde reductase from <em>Salmonella typhimurium</em>, noted that "these enzymes belong to family of structurally and mechanically related beta-hydroxyacid dehydrogenases which differ in substrate specificity" <a href="https://pubmed.ncbi.nlm.nih.gov/19184529/">PMID: 19184529</a>. This family includes 6-phosphogluconate dehydrogenase and 3-hydroxyisobutyrate dehydrogenase, and the structure revealed a putative NADPH-binding site and a product-mimic (L-tartrate) in the active site.</p>
+<p>The catalytic mechanism relies on a conserved active-site lysine. In the homologous plant enzyme AtGLYR1, Hoover et al. (2013) demonstrated through "kinetic studies and binding assays [that] Lys170 is essential for catalysis," functioning as a general acid in an acid/base mechanism <a href="https://pubmed.ncbi.nlm.nih.gov/24076009/">PMID: 24076009</a>. This family assignment matches precisely the InterPro domains annotated for Q88F01: 6PGDH_NADP-bd (IPR006115), HIBADH-like_NADP-bd (IPR029154), and 6-PGluconate_DH-like_C (IPR008927).</p>
+<h3 id="finding-4-glxr-shows-strong-d-glycerate-substrateenantio-specificity-dual-nadnadp-usage-and-a-side-hydride-stereospecificity-in-pseudomonas">Finding 4 — GlxR shows strong D-glycerate substrate/enantio-specificity, dual NAD/NADP usage, and A-side hydride stereospecificity in <em>Pseudomonas</em></h3>
+<p>The enzyme exhibits well-defined substrate and cofactor specificity. Liu et al. (2011), characterizing a functional TSA reductase (Tsr1), found that it "showed dual specificity to cofactors NAD(+) and NADP(+) and strong substrate specificity and enantioselectivity for D-glycerate" <a href="https://pubmed.ncbi.nlm.nih.gov/21305026/">PMID: 21305026</a>. This dual cofactor promiscuity and D-glycerate enantioselectivity are hallmark features of the enzyme.</p>
+<p>Importantly, <em>Pseudomonas putida</em>-specific stereochemical evidence exists. do Nascimento &amp; Davies (1975) showed that in <em>P. putida</em>, tartronate semialdehyde reductase (along with hydroxypyruvate reductase and meso-tartrate dehydrogenase) is A-side (pro-R) stereospecific for NAD hydride transfer: "such as hydroxypyruvate reductase and tartronate semialdehyde reductase, were also shown to be A-specific" <a href="https://pubmed.ncbi.nlm.nih.gov/1200995/">PMID: 1200995</a>. This stereospecificity is consistent with an evolutionary origin from malate dehydrogenase.</p>
+<h3 id="finding-5-glxr-is-a-soluble-31-kda-cytoplasmic-nadp-binding-enzyme-with-a-dedicated-tsa-reductase-interpro-signature">Finding 5 — GlxR is a soluble ~31 kDa cytoplasmic NAD(P)-binding enzyme with a dedicated TSA-reductase InterPro signature</h3>
+<p>Structurally, UniProt Q88F01 is a 297-amino-acid (30.9 kDa) protein composed of two domains: an N-terminal 6-phosphogluconate dehydrogenase NADP-binding domain (Pfam PF03446, residues 3–162) and a C-terminal HIBADH-like NAD-binding domain (Pfam PF14833, residues 165–283), with an annotated active site at residue 171. The protein carries the specific InterPro family signature IPR006398 ("Tartronate semialdehyde reductase") and is annotated with GO terms GO:0008679 (2-hydroxy-3-oxopropionate reductase activity), GO:0051287/GO:0050661 (NAD/NADP binding), and GO:0046487 (glyoxylate metabolic process).</p>
+<p>Crucially for localization, <strong>no signal peptide or transmembrane segment is annotated</strong>, indicating a soluble, cytoplasmic protein. This is consistent with its role as a metabolic enzyme in the cytosolic glycerate pathway. Database cross-references include KEGG ppu:PP_4299 and BioCyc PPUT160488:G1G01-4576-MONOMER.</p>
+<h3 id="finding-6-glxr-is-a-tetrameric-enzyme-kinetically-specific-for-gcl-derived-tartronate-semialdehyde-over-its-hydroxypyruvate-tautomer-direct-pseudomonas-evidence">Finding 6 — GlxR is a tetrameric enzyme kinetically specific for Gcl-derived tartronate semialdehyde over its hydroxypyruvate tautomer (direct <em>Pseudomonas</em> evidence)</h3>
+<p>The most direct and recent biochemical evidence comes from the very close ortholog in <em>P. aeruginosa</em>. Parkhill et al. (2025) characterized an allantoin-inducible glyoxylate cluster (PA1498–PA1502) that converts glyoxylate to pyruvate. They showed that "the purified proteins encoded by PA1502 and PA1500 have glyoxylate carboligase (Gcl) and tartronate semialdehyde (TSA) reductase (GlxR) activity, respectively, in vitro. Gcl condenses two molecules of glyoxylate to yield TSA, which is then reduced by GlxR to yield D-glycerate" <a href="https://pubmed.ncbi.nlm.nih.gov/41369682/">PMID: 41369682</a>.</p>
+<p>The enzyme displays refined substrate discrimination: "GlxR displayed much greater specificity (kcat/KM) for Gcl-derived TSA than it did for the TSA tautomer, hydroxypyruvate." This shows that GlxR is optimized for the authentic substrate produced by the upstream carboligase, and the adjacent hydroxypyruvate isomerase (Hyi) likely limits unwanted tautomerization. X-ray crystallography further revealed that "apo-GlxR is a configurationally flexible enzyme that can adopt two distinct tetrameric assemblies in vitro," establishing the <strong>homotetrameric quaternary structure</strong> of GlxR.</p>
+<h3 id="finding-7-disambiguation-p-putida-glxr-q88f01-is-an-enzyme-not-the-corynebacterium-glxr-camp-receptor-transcriptional-regulator">Finding 7 — Disambiguation: <em>P. putida</em> glxR (Q88F01) is an enzyme, NOT the <em>Corynebacterium</em> 'GlxR' cAMP-receptor transcriptional regulator</h3>
+<p>The symbol "GlxR" is used for a completely unrelated protein in <em>Corynebacterium glutamicum</em>, where it is a global cAMP receptor protein — a homolog of enterobacterial Crp. Schulte et al. (2017) described that "cAMP acts as effector of the global transcriptional regulator GlxR, a homolog of enterobacterial Crp. The cAMP-GlxR complex activates or represses the expression of about 200 target genes" <a href="https://pubmed.ncbi.nlm.nih.gov/28698098/">PMID: 28698098</a>. This <em>Corynebacterium</em> GlxR is a DNA-binding transcription factor with no enzymatic activity.</p>
+<p>By contrast, <em>P. putida</em> KT2440 <em>glxR</em>/PP_4299 (Q88F01) is an NAD(P)-dependent metabolic enzyme with InterPro IPR006398 and 6-PGDH/HIBADH-like domains — it has no DNA-binding or cAMP-binding features. These are two distinct proteins that happen to share a gene symbol, and they must not be conflated.</p>
+<h3 id="finding-8-kegg-confirms-pp_4299glxr-k00042-embedded-in-the-complete-kt2440-glycerate-pathway-gene-cluster">Finding 8 — KEGG confirms PP_4299/glxR = K00042 embedded in the complete KT2440 glycerate-pathway gene cluster</h3>
+<p>KEGG annotation independently confirms the pathway context. The contiguous <em>P. putida</em> KT2440 cluster is annotated as:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Gene</th>
+<th>KEGG Ortholog</th>
+<th>Enzyme</th>
+<th>EC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_4297</td>
+<td><em>gcl</em></td>
+<td>K01608</td>
+<td>glyoxylate carboligase (tartronate-semialdehyde synthase)</td>
+<td>4.1.1.47</td>
+</tr>
+<tr>
+<td>PP_4298</td>
+<td><em>hyi</em></td>
+<td>K01816</td>
+<td>hydroxypyruvate isomerase</td>
+<td>5.3.1.22</td>
+</tr>
+<tr>
+<td><strong>PP_4299</strong></td>
+<td><strong><em>glxR</em></strong></td>
+<td><strong>K00042</strong></td>
+<td><strong>tartronate semialdehyde reductase (2-hydroxy-3-oxopropionate reductase)</strong></td>
+<td><strong>1.1.1.60</strong></td>
+</tr>
+<tr>
+<td>PP_4300</td>
+<td><em>ttuD</em></td>
+<td>K11529</td>
+<td>glycerate 2-kinase</td>
+<td>2.7.1.165</td>
+</tr>
+<tr>
+<td>PP_4301</td>
+<td><em>pykF</em></td>
+<td>K00873</td>
+<td>pyruvate kinase</td>
+<td>2.7.1.40</td>
+</tr>
+</tbody>
+</table>
+<p>This matches the experimentally defined <em>gcl</em> operon (<em>gcl</em>-<em>hyi</em>-<em>glxR</em>-<em>ttuD</em>-<em>pykF</em>) from Franden et al. (2018) <a href="https://pubmed.ncbi.nlm.nih.gov/29885475/">PMID: 29885475</a>.</p>
+<h3 id="finding-9-p-putida-glxr-pp_4299-is-896-identical-to-the-experimentally-characterized-p-aeruginosa-glxr-pa1500">Finding 9 — <em>P. putida</em> GlxR (PP_4299) is 89.6% identical to the experimentally characterized <em>P. aeruginosa</em> GlxR (PA1500)</h3>
+<p>A global Needleman-Wunsch alignment of UniProt Q88F01 (<em>P. putida</em> KT2440 GlxR/PP_4299, 297 aa) against Q9I3L2 (<em>P. aeruginosa</em> PAO1 GlxR/PA1500, 296 aa) yields 266 identical positions over a 297-column alignment with a single gap = <strong>89.6% amino-acid identity</strong> (89.9% over the shorter sequence). Because Q9I3L2/PA1500 is the enzyme directly demonstrated in vitro to be a tartronate semialdehyde reductase forming D-glycerate and to crystallize as flexible tetramers <a href="https://pubmed.ncbi.nlm.nih.gov/41369682/">PMID: 41369682</a>, this near-identity provides strong justification for transferring the experimentally-verified function to PP_4299. At ~90% identity, essentially all functional residues, fold, oligomeric state, and catalytic properties can be confidently assumed to be shared.</p>
+<h3 id="finding-10-the-family-catalytic-lysine-is-directly-conserved-at-position-171-in-p-putida-glxr-q88f01">Finding 10 — The family catalytic lysine is directly conserved at position 171 in <em>P. putida</em> GlxR (Q88F01)</h3>
+<p>Direct inspection of the UniProt Q88F01 sequence confirms that the residue at the annotated active-site position 171 is a lysine (K), within the sequence context <code>GDGQTAKVANQIIVAL</code>. This corresponds to the essential catalytic lysine of the β-hydroxyacid dehydrogenase family — the same residue shown to be essential for catalysis (Lys170) in AtGLYR1 by Hoover et al. (2013): "kinetic studies and binding assays established that Lys170 is essential for catalysis" <a href="https://pubmed.ncbi.nlm.nih.gov/24076009/">PMID: 24076009</a>. The conservation of this catalytic residue at the expected position in the <em>P. putida</em> enzyme completes the mechanistic argument that Q88F01 is a catalytically active tartronate semialdehyde reductase.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="the-glycerate-pathway-of-glyoxylate-assimilation">The glycerate pathway of glyoxylate assimilation</h3>
+<p>GlxR performs the committed reductive step of the <strong>glycerate pathway</strong> — a route that allows <em>P. putida</em> to salvage the carbon in glyoxylate (a two-carbon compound) and convert it into central metabolic intermediates. The complete pathway operates as follows:</p>
+<div class="codehilite"><pre><span></span><code>   2 × glyoxylate (2C)
+│
+│  Gcl (glyoxylate carboligase, PP_4297, EC 4.1.1.47)
+│  condenses two glyoxylate + releases CO2
+▼
+   tartronate semialdehyde (TSA, 3C, 2-hydroxy-3-oxopropionate)
+│                              ⇄  hydroxypyruvate (tautomer)
+│                                 [Hyi isomerase, PP_4298, limits
+│                                  unwanted tautomerization]
+│  ►►► GlxR (PP_4299, EC 1.1.1.60) ◄◄◄
+│      NAD(P)H-dependent reduction; high specificity
+│      for authentic TSA over hydroxypyruvate
+▼
+   D-glycerate (3C)
+│
+│  glycerate 2-kinase (TtuD, PP_4300, EC 2.7.1.165)
+│  + ATP
+▼
+   2-phosphoglycerate
+│
+│  → enolase → pyruvate kinase (PykF, PP_4301)
+▼
+   central carbon metabolism (pyruvate / gluconeogenesis)
+</code></pre></div>
+
+<p>The key mechanistic insights are:</p>
+<ol>
+<li>
+<p><strong>Position in pathway</strong>: GlxR acts immediately downstream of glyoxylate carboligase (Gcl). Gcl condenses two glyoxylate molecules (with loss of CO₂) to make tartronate semialdehyde, and GlxR then reduces this to D-glycerate. The tight substrate specificity of GlxR for Gcl-derived TSA (rather than its hydroxypyruvate tautomer) indicates the enzymes are kinetically coupled, and the adjacent Hyi isomerase helps channel the correct tautomer.</p>
+</li>
+<li>
+<p><strong>Catalytic mechanism</strong>: GlxR uses a Rossmann-fold NAD(P)-binding architecture. Hydride is transferred from the A-face (pro-R) of the nicotinamide cofactor to the aldehyde/keto carbon of TSA, while the conserved active-site Lys171 acts as a general acid/base to protonate the developing alkoxide, yielding the D-glycerate hydroxyl. The A-side stereospecificity and catalytic lysine are both experimentally supported and conserved in the <em>P. putida</em> sequence.</p>
+</li>
+<li>
+<p><strong>Cofactor flexibility</strong>: The enzyme can use either NADH or NADPH, giving metabolic flexibility depending on the redox state of the cell.</p>
+</li>
+<li>
+<p><strong>Quaternary structure</strong>: GlxR is a homotetramer that can adopt distinct configurational states, consistent with the flexible tetrameric assemblies seen crystallographically for the <em>P. aeruginosa</em> ortholog.</p>
+</li>
+</ol>
+<h3 id="physiological-role-and-metabolic-entry-points">Physiological role and metabolic entry points</h3>
+<p>The glyoxylate that feeds this pathway can arise from several catabolic routes, all of which converge on the <em>gcl</em> operon:</p>
+<table>
+<thead>
+<tr>
+<th>Upstream substrate</th>
+<th>Route to glyoxylate</th>
+<th>Relevance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Allantoin / purines</td>
+<td>Purine degradation → glyoxylate</td>
+<td>Regulated by GclR; primary "native" role</td>
+</tr>
+<tr>
+<td>Ethylene glycol</td>
+<td>EG → glycolaldehyde → glycolate → glyoxylate</td>
+<td>Biotechnology (PET upcycling)</td>
+</tr>
+<tr>
+<td>Glycolate</td>
+<td>Glycolate oxidation → glyoxylate</td>
+<td>Photorespiration-like carbon salvage</td>
+</tr>
+<tr>
+<td>Glucarate/galactarate</td>
+<td>Sugar acid catabolism → TSA directly</td>
+<td>Hexaric acid utilization</td>
+</tr>
+</tbody>
+</table>
+<p>This explains why <em>glxR</em> is of considerable biotechnological interest: the ethylene glycol (a PET monomer) utilization capability of <em>P. putida</em> KT2440 depends directly on this glyoxylate assimilation pathway, and <em>gcl</em> + <em>glxR</em> expression alone can confer growth on ethylene glycol.</p>
+<h3 id="localization">Localization</h3>
+<p>All evidence points to a <strong>cytoplasmic</strong> localization. The protein has no signal peptide or transmembrane region, is soluble, and its substrates (TSA, D-glycerate) and cofactors (NAD/NADP) are cytosolic metabolites. The enzyme carries out its function in the cytosol as part of the soluble glycerate-pathway enzyme complement.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Study</th>
+<th>How it supports the findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29885475/">29885475</a></td>
+<td><em>Engineering P. putida KT2440 for efficient ethylene glycol utilization</em> (Franden et al. 2018)</td>
+<td>Directly establishes the <em>gcl</em> operon (<em>gcl</em>-<em>hyi</em>-<em>glxR</em>-<em>ttuD</em>-<em>pykF</em>) and shows <em>gcl</em>+<em>glxR</em> suffice for glyoxylate-derived growth. Primary genetic evidence for pathway membership.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/41369682/">41369682</a></td>
+<td><em>An allantoin-inducible glyoxylate utilization pathway in Pseudomonas</em> (Parkhill et al. 2025)</td>
+<td>Direct in vitro biochemistry on the ~90%-identical <em>P. aeruginosa</em> ortholog: confirms GlxR = TSA reductase forming D-glycerate, substrate specificity over hydroxypyruvate, and tetrameric structure. Strongest primary enzymological evidence.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10978349/">10978349</a></td>
+<td><em>Novel β-hydroxyacid dehydrogenases in E. coli and H. influenzae</em> (Njau et al. 2000)</td>
+<td>Direct biochemical demonstration of the NAD(P)-dependent TSA reductase reaction for the enzyme family.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10601204/">10601204</a></td>
+<td><em>Genetic analysis of allantoin/glyoxylate metabolism in E. coli</em> (Cusa et al. 1999)</td>
+<td>Confirms the gene symbol <em>glxR</em> corresponds to tartronate semialdehyde reductase in the glycerate pathway.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19184529/">19184529</a></td>
+<td><em>X-ray structure of GarR TSA reductase from S. typhimurium</em> (Osipiuk et al. 2009)</td>
+<td>Assigns the enzyme to the β-hydroxyacid dehydrogenase structural family; reveals NADPH-binding site and active-site geometry.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24076009/">24076009</a></td>
+<td><em>Catalytically important residues for glyoxylate reduction in plants</em> (Hoover et al. 2013)</td>
+<td>Identifies the essential catalytic lysine (Lys170 in AtGLYR1), conserved as Lys171 in Q88F01.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21305026/">21305026</a></td>
+<td><em>TSA reductase in Ustilago maydis</em> (Liu et al. 2011)</td>
+<td>Documents dual NAD/NADP cofactor specificity and D-glycerate enantioselectivity.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/1200995/">1200995</a></td>
+<td><em>Stereospecificity of NAD-dependent oxidoreductases</em> (do Nascimento &amp; Davies 1975)</td>
+<td><em>P. putida</em>-specific evidence for A-side (pro-R) hydride stereospecificity of TSA reductase.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31166064/">31166064</a></td>
+<td><em>Metabolic and regulatory basis of ethylene glycol metabolism</em> (Li et al. 2019)</td>
+<td>Establishes GclR regulation of the pathway in the context of purine/allantoin metabolism.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/28698098/">28698098</a></td>
+<td><em>Single-cell GlxR-based cAMP biosensor for C. glutamicum</em> (Schulte et al. 2017)</td>
+<td>Documents the unrelated <em>Corynebacterium</em> GlxR (cAMP receptor transcription factor) — the basis for symbol disambiguation.</td>
+</tr>
+</tbody>
+</table>
+<p>Supporting/contextual literature includes reports of the same enzyme family in the glucarate/galactarate pathway (<a href="https://pubmed.ncbi.nlm.nih.gov/9772162/">PMID: 9772162</a>), review of β-hydroxyacid dehydrogenases (<a href="https://pubmed.ncbi.nlm.nih.gov/11306094/">PMID: 11306094</a>), the glyoxylate-to-glycerate conversion in <em>Hyphomicrobium</em> grown on allantoin (<a href="https://pubmed.ncbi.nlm.nih.gov/6614900/">PMID: 6614900</a>), and photorespiratory-bypass engineering that used bacterial TSA reductase (<a href="https://pubmed.ncbi.nlm.nih.gov/17435746/">PMID: 17435746</a>).</p>
+<p><strong>Convergence of evidence:</strong> Ten independent lines of evidence — genomic context, KEGG annotation, InterPro/Pfam domains, family crystal structures, direct ortholog biochemistry, cofactor and stereochemical specificity, catalytic-residue conservation, and near-identity to a characterized enzyme — all point to the same conclusion. There are no contradictory findings.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct enzymology on the KT2440 protein itself.</strong> The most detailed biochemical characterization (kcat/KM, substrate discrimination, tetramer structure) was performed on the <em>P. aeruginosa</em> ortholog PA1500 (Q9I3L2). While 89.6% identity and conserved catalytic residues make function transfer secure, kinetic constants for the actual KT2440 GlxR (Q88F01) have not been directly measured. Absolute kcat, KM for TSA, and cofactor preference (NADH vs NADPH ratio) for the KT2440 enzyme are inferred, not measured.</p>
+</li>
+<li>
+<p><strong>No experimentally determined 3D structure of Q88F01.</strong> Structural inferences rest on the <em>S. typhimurium</em> GarR structure and the <em>P. aeruginosa</em> GlxR crystallography. An experimental structure of the <em>P. putida</em> enzyme (or a high-quality AlphaFold model verification) would confirm the active-site geometry and the two-tetramer configurational flexibility.</p>
+</li>
+<li>
+<p><strong>Catalytic Lys171 not directly mutated in <em>P. putida</em>.</strong> The catalytic essentiality of the lysine is established in AtGLYR1 (Lys170) and inferred by conservation; site-directed mutagenesis of Lys171 in Q88F01 has not been reported.</p>
+</li>
+<li>
+<p><strong>Precise physiological flux and redundancy.</strong> <em>P. putida</em> may possess additional or redundant reductases/aldehyde-processing enzymes (as recently suggested for the related strain JM37, which has genetic redundancy in glyoxylate assimilation). The quantitative contribution of <em>glxR</em> to glyoxylate flux under different growth conditions has not been isolated by clean single-gene knockout studies in KT2440 specifically.</p>
+</li>
+<li>
+<p><strong>Cofactor preference in vivo.</strong> Although the family is dual-specific (NAD/NADP), which cofactor dominates in vivo under specific growth conditions in KT2440 remains uncharacterized.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Direct enzymatic characterization of Q88F01.</strong> Express and purify recombinant KT2440 GlxR (His-tagged), and measure steady-state kinetics (kcat, KM) for tartronate semialdehyde reduction with both NADH and NADPH. Confirm the specificity ratio for TSA vs hydroxypyruvate observed in the <em>P. aeruginosa</em> ortholog.</p>
+</li>
+<li>
+<p><strong>Site-directed mutagenesis of Lys171.</strong> Generate a K171A (or K171R) variant and measure the loss of catalytic activity to confirm the predicted catalytic role of the conserved lysine, mirroring the AtGLYR1 Lys170 experiments.</p>
+</li>
+<li>
+<p><strong>Clean <em>glxR</em> knockout in KT2440.</strong> Delete PP_4299 and test growth phenotypes on glyoxylate-generating substrates (allantoin, glycolate, ethylene glycol, glucarate). Complement with plasmid-borne <em>glxR</em> to confirm the phenotype is due to loss of this gene, and quantify residual growth to assess redundancy.</p>
+</li>
+<li>
+<p><strong>Structural determination.</strong> Solve the X-ray crystal structure (or cryo-EM) of KT2440 GlxR, ideally with bound cofactor and substrate/product analog (e.g., L-tartrate as used for GarR), to confirm active-site architecture and the tetrameric assembly flexibility.</p>
+</li>
+<li>
+<p><strong>Metabolic flux analysis.</strong> Use ¹³C-labeled ethylene glycol or allantoin to trace carbon flux through the glycerate pathway and quantify the in vivo contribution of GlxR, and determine the dominant cofactor used under each condition.</p>
+</li>
+<li>
+<p><strong>Kinetic coupling assay.</strong> Reconstitute Gcl + Hyi + GlxR in vitro to test the proposed substrate channeling / tautomer-limiting model, confirming that Hyi improves overall flux by maintaining the correct TSA tautomer for GlxR.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>The gene <em>glxR</em> (PP_4299; UniProt Q88F01) in <em>Pseudomonas putida</em> KT2440 encodes <strong>tartronate semialdehyde reductase (EC 1.1.1.60)</strong>, a soluble, cytoplasmic, homotetrameric NAD(P)H-dependent oxidoreductase of the β-hydroxyacid dehydrogenase superfamily. It catalyzes the reduction of tartronate semialdehyde to D-glycerate — the committed reductive step of the glycerate pathway of glyoxylate assimilation — acting downstream of glyoxylate carboligase within the chromosomal <em>gcl</em> operon. Through this pathway, glyoxylate derived from allantoin/purine, glycolate, ethylene-glycol, and glucarate catabolism is funneled into 2-phosphoglycerate and central carbon metabolism. The functional annotation provided by UniProt is fully validated by convergent genomic, biochemical, structural, and comparative-sequence evidence. The enzyme should not be confused with the unrelated <em>Corynebacterium</em> "GlxR" cAMP-receptor transcription factor.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="glxR-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="glxR-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:29885475</li>
+<li>PMID:31166064</li>
+<li>PMID:10978349</li>
+<li>PMID:10601204</li>
+<li>PMID:19184529</li>
+<li>PMID:24076009</li>
+<li>PMID:21305026</li>
+<li>PMID:1200995</li>
+<li>PMID:41369682</li>
+<li>PMID:28698098</li>
+<li>PMID:9772162</li>
+<li>PMID:11306094</li>
+<li>PMID:6614900</li>
+<li>PMID:17435746</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88F01
+gene_symbol: glxR
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  glxR encodes a tartronate semialdehyde reductase in KT2440 glyoxylate
+  metabolism. It is predicted to reduce 2-hydroxy-3-oxopropionate (tartronate
+  semialdehyde) toward glycerate using NAD(H) or NADP(H)-linked
+  oxidoreductase chemistry.
+existing_annotations:
+- term:
+    id: GO:0008679
+    label: 2-hydroxy-3-oxopropionate reductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the specific predicted molecular function of GlxR.
+    action: ACCEPT
+    reason: UniProt assigns EC 1.1.1.60 and GOA maps GlxR to 2-hydroxy-3-oxopropionate reductase activity.
+    supported_by:
+    - reference_id: file:PSEPK/glxR/glxR-uniprot.txt
+      supporting_text: &#34;DE            EC=1.1.1.60 {ECO:0000313|EMBL:AAN69879.1};&#34;
+    - reference_id: file:PSEPK/glxR/glxR-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88F01\tglxR\tenables\tGO:0008679\t2-hydroxy-3-oxopropionate reductase activity&#34;
+    - reference_id: file:PSEPK/glxR/glxR-deep-research-openscientist.md
+      supporting_text: &#34;The gene *glxR* (PP_4299; UniProt Q88F01) in *Pseudomonas putida* KT2440 encodes tartronate semialdehyde reductase (TSA reductase; EC 1.1.1.60; also named 2-hydroxy-3-oxopropionate reductase).&#34;
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: The broad oxidoreductase term is correct but less informative than 2-hydroxy-3-oxopropionate reductase activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0008679 captures the specific substrate/reaction relevant to the glyoxylate pathway.
+    supported_by:
+    - reference_id: file:PSEPK/glxR/glxR-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88F01\tglxR\tenables\tGO:0008679\t2-hydroxy-3-oxopropionate reductase activity&#34;
+- term:
+    id: GO:0046487
+    label: glyoxylate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: GlxR acts in the glyoxylate/tartronate semialdehyde branch, so this process annotation is appropriate.
+    action: ACCEPT
+    reason: The specific enzyme activity reduces the glyoxylate-derived tartronate semialdehyde intermediate.
+    supported_by:
+    - reference_id: file:PSEPK/glxR/glxR-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88F01\tglxR\tinvolved_in\tGO:0046487\tglyoxylate metabolic process&#34;
+    - reference_id: file:PSEPK/glxR/glxR-deep-research-openscientist.md
+      supporting_text: &#34;The enzyme is the committed reductive step of the **glycerate pathway of glyoxylate assimilation**.&#34;
+- term:
+    id: GO:0050661
+    label: NADP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: NADP binding is plausible cofactor context for this dehydrogenase/reductase family.
+    action: ACCEPT
+    reason: The InterPro-supported NADP-binding domain is consistent with the predicted oxidoreductase reaction.
+    supported_by:
+    - reference_id: file:PSEPK/glxR/glxR-uniprot.txt
+      supporting_text: &#34;DR   InterPro; IPR006115; 6PGDH_NADP-bd.&#34;
+    - reference_id: file:PSEPK/glxR/glxR-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88F01\tglxR\tenables\tGO:0050661\tNADP binding&#34;
+    - reference_id: file:PSEPK/glxR/glxR-deep-research-openscientist.md
+      supporting_text: &#34;This is a soluble, cytoplasmic, homotetrameric NAD(P)H-dependent oxidoreductase&#34;
+- term:
+    id: GO:0051287
+    label: NAD binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: NAD binding is plausible cofactor context for this dehydrogenase/reductase family.
+    action: ACCEPT
+    reason: The InterPro-supported NAD(P)-binding domain architecture is consistent with the predicted reductase activity; current metadata does not resolve strict NAD versus NADP specificity.
+    supported_by:
+    - reference_id: file:PSEPK/glxR/glxR-uniprot.txt
+      supporting_text: &#34;DR   InterPro; IPR029154; HIBADH-like_NADP-bd.&#34;
+    - reference_id: file:PSEPK/glxR/glxR-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88F01\tglxR\tenables\tGO:0051287\tNAD binding&#34;
+    - reference_id: file:PSEPK/glxR/glxR-deep-research-openscientist.md
+      supporting_text: &#34;Its primary catalytic function is the reduction of tartronate semialdehyde (2-hydroxy-3-oxopropionate) to D-glycerate, using NADH or NADPH as the electron donor.&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/glxR/glxR-uniprot.txt
+  title: UniProtKB entry for glxR
+  findings:
+  - statement: UniProt identifies GlxR as tartronate semialdehyde reductase with EC 1.1.1.60 and NAD(P)-binding domains.
+- id: file:PSEPK/glxR/glxR-goa.tsv
+  title: GOA annotations for glxR
+  findings:
+  - statement: GOA includes 2-hydroxy-3-oxopropionate reductase activity, glyoxylate metabolic process, and NAD/NADP binding.
+- id: file:PSEPK/glxR/glxR-deep-research-openscientist.md
+  title: OpenScientist deep research report for glxR
+  findings:
+  - statement: OpenScientist supported GlxR as the soluble NAD(P)H-dependent tartronate semialdehyde reductase of the glyoxylate-assimilation glycerate pathway, and warned not to confuse it with unrelated Corynebacterium GlxR regulators.
+core_functions:
+- description: Reduction of 2-hydroxy-3-oxopropionate in the glyoxylate/tartronate semialdehyde branch.
+  molecular_function:
+    id: GO:0008679
+    label: 2-hydroxy-3-oxopropionate reductase activity
+  directly_involved_in:
+  - id: GO:0046487
+    label: glyoxylate metabolic process
+  supported_by:
+  - reference_id: file:PSEPK/glxR/glxR-goa.tsv
+    supporting_text: &#34;UniProtKB\tQ88F01\tglxR\tenables\tGO:0008679\t2-hydroxy-3-oxopropionate reductase activity&#34;
+  - reference_id: file:PSEPK/glxR/glxR-goa.tsv
+    supporting_text: &#34;UniProtKB\tQ88F01\tglxR\tinvolved_in\tGO:0046487\tglyoxylate metabolic process&#34;
+  - reference_id: file:PSEPK/glxR/glxR-deep-research-openscientist.md
+    supporting_text: &#34;The gene *glxR* (PP_4299; UniProt Q88F01) in *Pseudomonas putida* KT2440 encodes **tartronate semialdehyde reductase (EC 1.1.1.60)**&#34;
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

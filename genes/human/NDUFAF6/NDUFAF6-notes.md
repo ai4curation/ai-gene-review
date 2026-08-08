@@ -75,3 +75,19 @@ UniProt: Q330K2 (NDUF6_HUMAN), 333 aa. Gene symbol NDUFAF6; synonym C8orf38.
 ## Molecular function
 - No experimental MF. Family is isoprenoid-synthase-like (putative), but no catalytic activity is
   supported by UniProt/GOA. => core_functions centers on the BP (GO:0032981); no catalytic MF assigned.
+
+## QA re-review 2026-07-23
+Conservative QA pass (no rewrite). `uv run ai-gene-review validate` => ✓ Valid, no warnings.
+Findings:
+- No `protein binding` (GO:0005515) annotations present; nothing to MODIFY on that basis.
+- All 13 existing_annotations correspond 1:1 to GOA rows; labels match GOA exactly.
+- Supporting_text quotes verify verbatim against sources (UniProt FUNCTION/SUBCELLULAR lines;
+  PMID:22019594 "almost undetectable levels of steady-state complex I..." and "crucial factor
+  required for the translation and/or integration of ND1..."; PMID:34800366 "high-confidence
+  mitochondrial proteome MitoCoP", present in the cached publication).
+- Core function correctly captured as the BP GO:0032981 (complex I assembly) with location
+  GO:0005743 (inner membrane); explicitly framed as an assembly factor, not a structural subunit,
+  and no catalytic/NADH-dehydrogenase MF assigned. Not over-generalized.
+- ACCEPT / KEEP_AS_NON_CORE actions each carry positive supporting evidence; nucleus/cytoplasm
+  KEEP_AS_NON_CORE correctly attributed to isoform 2.
+No edits warranted; review is biologically and curatorially sound.

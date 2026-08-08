@@ -94,7 +94,9 @@ Default output:
 Extract a per-pathway checklist for a PR batch:
 
 ```bash
-python3 projects/P_PUTIDA/extract_pathway_batch.py ppu00400 --module tryptophan_biosynthesis
+uv run python projects/P_PUTIDA/extract_pathway_batch.py ppu00400 \
+  --module tryptophan_biosynthesis \
+  --research-provider openscientist
 ```
 
 Default output for the first pilot:
@@ -102,7 +104,29 @@ Default output for the first pilot:
 - `projects/P_PUTIDA/batches/ppu00400_tryptophan_biosynthesis.tsv`
 - `projects/P_PUTIDA/batches/ppu00400_tryptophan_biosynthesis.md`
 
+After hand-curating the Markdown page, refresh provider and review statuses
+without replacing it by adding `--tsv-only`.
+
 ## Research provider policy
+
+**Current provider override (2026-07-18):** while Edison is unavailable, use
+OpenScientist for both gene-level and module-level deep research:
+
+```bash
+just deep-research-openscientist PSEPK <gene> --timeout 7200
+just module-deep-research-openscientist <module> --timeout 7200
+just module-pathway-deep-research openscientist "<module>" <pathway> PSEPK --timeout 7200
+```
+
+OpenScientist jobs commonly take 20 minutes or longer. A short polling window is
+not a failure condition: keep a live client running to completion and allow the
+two-hour timeout. Treat the generated report as retrieval support and verify
+curation-changing claims against UniProt, GOA, PAINT, ontology definitions, and
+primary literature.
+
+The provider ladder below is the baseline policy. While this override is
+active, replace its Asta/Falcon gene, module, and species-aware research steps
+with the OpenScientist commands above.
 
 Use the cheapest useful source first:
 
@@ -113,17 +137,20 @@ Use the cheapest useful source first:
 just fetch-gene PSEPK <gene>
 ```
 
-3. Gene-level first-pass research with Asta. For this organism, simple retrieval
-   is usually enough to identify the relevant primary literature:
+3. Current gene-level research uses OpenScientist while the Edison-backed
+   Falcon route is unavailable. Use three iterations for batch throughput but
+   retain a two-hour provider allowance:
 
 ```bash
-just deep-research-asta PSEPK <gene>
+just deep-research-openscientist PSEPK <gene> --timeout 8100 \
+  --extra-args --param timeout=7200 --param max_iterations=3
 ```
 
-4. Module-level research with Falcon when a broader pathway synthesis is needed:
+4. Use OpenScientist for the generic reusable-module synthesis as well:
 
 ```bash
-just module-deep-research-falcon <module>
+just module-deep-research-openscientist <module> --timeout 8100 \
+  --extra-args --param timeout=7200 --param max_iterations=3
 ```
 
 5. For species-aware module/pathway research, use the module + pathway + taxon
@@ -132,27 +159,37 @@ just module-deep-research-falcon <module>
    partition table when available:
 
 ```bash
-just module-pathway-deep-research-falcon "central carbon metabolism" ppu00020 PSEPK
+just module-pathway-deep-research openscientist "central carbon metabolism" \
+  ppu00020 PSEPK --project P_PUTIDA --timeout 8100 \
+  --extra-args --param timeout=7200 --param max_iterations=3
 ```
 
 The report is written under the project support folder by default, e.g.
-`projects/P_PUTIDA/deep-research/PSEPK__central-carbon-metabolism__ppu00020-deep-research-falcon.md`.
+`projects/P_PUTIDA/deep-research/PSEPK__central-carbon-metabolism__ppu00020-deep-research-openscientist.md`.
 
-6. PaperBLAST remains an optional protein-specific lookup:
+6. Asta remains a lightweight gene-level fallback, and Falcon remains the
+   preferred module-level provider when its Edison route is available again.
+7. PaperBLAST remains an optional protein-specific lookup:
 
 ```bash
 uv run python scripts/fetch_paperblast.py <uniprot_accession>
 ```
 
-7. Use `perplexity-lite` only as a secondary fallback when Asta is unavailable
+8. Use `perplexity-lite` only as a secondary fallback when Asta is unavailable
    or comparison across providers is useful.
-8. Escalate to OpenAI/perplexity/full manual literature only when the first-pass
+9. Escalate to OpenAI/perplexity/full manual literature only when the first-pass
    provider output leaves a curation-changing question unresolved.
+
+OpenScientist is a long-running research provider, not a short smoke test.
+Successful jobs commonly take more than 20 minutes and difficult jobs can use
+most or all of the two-hour provider allowance. Do not apply a 180-second
+timeout or treat a quiet wrapper as failure. If a five-iteration run exhausts
+the allowance, rerun with `max_iterations=3` and the same full timeout.
 
 Operational caveat: the repository has a PaperBLAST wrapper, but it depends on
 Playwright and the PaperBLAST website can present a Cloudflare challenge. If the
 script returns a timeout or challenge page, record that in the module checklist
-and use Asta or another fallback rather than pretending PaperBLAST was queried.
+and use an available provider rather than pretending PaperBLAST was queried.
 
 Never create a fake `-deep-research-{provider}.md` by hand. If manual notes are
 needed, write them as notes or a clearly named manual research file.
@@ -211,6 +248,31 @@ Each module batch should leave behind:
 - Links to completed gene reviews and validation commands run.
 - Notes on GO term gaps, obsolete/broad terms, and cases where a PSEPK enzyme
   fills a pathway step under a different name than the standard model organism.
+- One focused pull request containing the module, its selected gene reviews,
+  research artifacts, batch record, rendered outputs, and validation results.
+
+## Active batch: ppu00220 / arginine_biosynthesis
+
+Batch files:
+
+- `projects/P_PUTIDA/batches/ppu00220_arginine_biosynthesis.tsv`
+- `projects/P_PUTIDA/batches/ppu00220_arginine_biosynthesis.md`
+
+Status as of 2026-07-17:
+
+- A reusable eight-part acetylated-ornithine module covers the linear ArgA/ArgE
+  and cyclic ArgJ implementations through the shared ArgF/ArgG/ArgH trunk.
+- 12 selected gene reviews are curated: ten preferred pathway genes plus
+  `argD/PP_4481` and `PP_3571` as boundary/conflict reviews.
+- 12/12 OpenScientist gene-level reports and the PSEPK
+  module/pathway/taxon report are complete and integrated conservatively.
+- Direct KT2440 genetics, local family assignments, and exact UniProt
+  exemplars override unsupported provider claims about route dominance,
+  redundancy, `PP_4481`, and `PP_3571`.
+- Scoped validation passes, and repository-wide validation reports 3,694/3,694
+  reviews valid with zero errors. Draft PR
+  [#2178](https://github.com/ai4curation/ai-gene-review/pull/2178) contains the
+  focused module batch.
 
 ## Pilot status: ppu00400 / tryptophan_biosynthesis
 
@@ -290,7 +352,45 @@ Main curation conclusions from the current batch:
   oxidation. These reviews are useful first-pass curation, but not every member
   is a core ED/gluconeogenesis module component.
 
-## Current batch: ppu00622 / benzoate_upper_pathway
+## Current batch: ppu00770 / coenzyme_a_biosynthesis
+
+Batch files:
+
+- `projects/P_PUTIDA/batches/ppu00770_coenzyme_a_biosynthesis.tsv`
+- `projects/P_PUTIDA/batches/ppu00770_coenzyme_a_biosynthesis.md`
+
+Status as of 2026-07-18:
+
+- 24 KEGG `ppu00770` membership candidates partitioned, plus the independently
+  identified PP_4452 false-positive ketopantoate-reductase annotation.
+- 12/12 selected review folders present, curated, and validated with no
+  remaining `PENDING` actions.
+- 12/12 OpenScientist gene-level reports present and manually assessed; the
+  PP_2325 and PP_2998 PanE overcalls were not imported.
+- OpenScientist PSEPK module+pathway+taxon research complete:
+  `projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md`.
+- The first generic OpenScientist request reached its full two-hour limit
+  without a result. A correctly scoped retry completed in 1,889.79 seconds and
+  has been assessed and incorporated.
+- The reusable module now models eight reaction activities, including
+  canonical PanC/PanK and archaeal PoK/PPS reaction-order variants, with exact
+  cross-taxon UniProt exemplars and seven verified PAINT IBD function nodes.
+- Draft PR [#2180](https://github.com/ai4curation/ai-gene-review/pull/2180).
+
+Main curation conclusions from this batch:
+
+- KT2440 satisfies all eight reactions with seven proteins because fused
+  `dfp/coaBC` performs the consecutive ligase and decarboxylase steps.
+- Canonical `panE`/PP_1351 satisfies ketopantoate reduction. PP_2325 is the
+  close ortholog of experimentally inactive PaKPR2 and is removed from the
+  pathway; PP_2998 remains unresolved; PP_4452 is an opine-family
+  oxidoreductase rather than a ketopantoate reductase.
+- Beta-alanine supply is an external, taxon-dependent input rather than a fixed
+  PanD module step. KT2440 likely uses reductive pyrimidine degradation.
+- PP_0922 AcpH and MazG are pathway-map spillover involved in carrier-protein
+  turnover and nucleotide-pool turnover, respectively, not CoA synthesis.
+
+## Previous batch: ppu00622 / benzoate_upper_pathway
 
 Batch files:
 
@@ -324,6 +424,79 @@ Main curation conclusions from this batch:
   benzoate degradation.
 - Catechol ortho-cleavage, catechol meta-cleavage, and CoA-dependent benzoate
   routes are separate modules, not parts of this upper-pathway module.
+
+## Previous batch: ppu00740 / riboflavin_biosynthesis
+
+Batch files:
+
+- `projects/P_PUTIDA/batches/ppu00740_riboflavin_biosynthesis.tsv`
+- `projects/P_PUTIDA/batches/ppu00740_riboflavin_biosynthesis.md`
+
+Status as of 2026-07-15:
+
+- 15 KEGG `ppu00740` membership candidates extracted for first-pass review.
+- Module-first light pass started without creating PENDING review stubs for all
+  KEGG members.
+- Species-neutral module YAML seeded:
+  `modules/riboflavin_biosynthesis.yaml`.
+- OpenScientist generic module research complete:
+  `modules/riboflavin_biosynthesis-deep-research-openscientist.md`.
+- OpenScientist PSEPK module+pathway research complete:
+  `projects/P_PUTIDA/deep-research/PSEPK__riboflavin_biosynthesis__ppu00740-deep-research-openscientist.md`.
+
+Main first-pass boundary decisions:
+
+- Core riboflavin-ring synthesis is the RibA, RibD, RibB/RibBX, RibH, and
+  RibE/RibC reaction chain from GTP and ribulose 5-phosphate to riboflavin.
+- RibF is modeled as the connected bacterial FMN/FAD activation step because it
+  converts riboflavin to the active flavin cofactors and is often bifunctional.
+- `ssuE`, `msuE`, `ubiX`, `bluB`, `nudF`, and `had` are KEGG-map neighbors or
+  spillover candidates, not required steps in de novo riboflavin biosynthesis.
+- The PSEPK report supports full module satisfiability but flags `ribAB-I` and
+  `ribAB-II` as likely RibBX-like DHBP synthase proteins with degenerate
+  C-terminal GTP-CHII-fold domains; treat `ribA` as the only GTP cyclohydrolase
+  II exemplar until targeted gene reviews confirm otherwise.
+- Full gene reviews should prioritize `ribAB-I` and `ribAB-II`, then `ribC` and
+  `ribF`; lower-priority checks include `ribD`, `ribE`, and any non-core
+  candidates whose current pathway annotations appear misleading.
+
+## Previous batch: ppu00361 / catechol_ortho_cleavage
+
+Batch files:
+
+- `projects/P_PUTIDA/batches/ppu00361_catechol_ortho_cleavage.tsv`
+- `projects/P_PUTIDA/batches/ppu00361_catechol_ortho_cleavage.md`
+
+Status as of 2026-07-15:
+
+- 3 KEGG `ppu00361` membership candidates extracted for first-pass review:
+  `catA-II`, `catA-I`, and `catB`.
+- `catC`/PP_3714 added from neighboring `ppu00362` because it is the required
+  muconolactone delta-isomerase step that completes the catechol branch.
+- 4/4 selected review folders present and curated; `catA-II` was fetched and
+  curated in this batch.
+- OpenScientist generic module research complete:
+  `modules/catechol_ortho_cleavage-deep-research-openscientist.md`.
+- OpenScientist PSEPK module+pathway research complete:
+  `projects/P_PUTIDA/deep-research/PSEPK__catechol_ortho_cleavage__ppu00361-deep-research-openscientist.md`.
+- Module YAML seeded:
+  `modules/catechol_ortho_cleavage.yaml`.
+
+Main curation conclusions from this batch:
+
+- The reusable module is the three-step catechol ortho-cleavage branch:
+  CatA catechol 1,2-dioxygenase, CatB muconate cycloisomerase, and CatC
+  muconolactone delta-isomerase.
+- KT2440 satisfies the module once CatC/PP_3714 is included. The original
+  three-gene candidate list omitted CatC because KEGG partitions PP_3714 into
+  neighboring `ppu00362`; this is a map-membership artifact, not a biological
+  gap.
+- The KEGG `ppu00361` "chlorocyclohexane and chlorobenzene degradation" label
+  is over-broad for KT2440; the native module is non-chlorinated catechol
+  ortho-cleavage feeding the beta-ketoadipate pathway.
+- CatA-I/PP_3713 and CatA-II/PP_3166 should be represented as distinct
+  catechol 1,2-dioxygenase exemplars, with unresolved physiology around their
+  relative contributions under benzoate and catechol flux.
 
 ## First batch proposal
 

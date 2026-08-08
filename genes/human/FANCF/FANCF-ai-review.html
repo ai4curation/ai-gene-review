@@ -1,0 +1,4866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FANCF - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>FANCF</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9NPI8" target="_blank" class="term-link">
+                        Q9NPI8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "FANCF";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9NPI8" data-a="DESCRIPTION: FANCF is a subunit of the Fanconi anemia (FA) nucl..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>FANCF is a subunit of the Fanconi anemia (FA) nuclear core complex, a multisubunit ubiquitin ligase that also contains FANCA, FANCB, FANCC, FANCE, FANCG, FANCL (the RING E3), FANCM and associated FAAP proteins. The core complex is activated by DNA damage, particularly DNA interstrand cross-links (ICLs) and replication stress, and its essential output is monoubiquitination of the FANCD2-FANCI (ID2) heterodimer. Monoubiquitinated ID2 is loaded onto chromatin near the lesion and directs the downstream steps of replication- coupled ICL repair (nucleolytic unhooking, translesion synthesis and homologous recombination), thereby maintaining chromosome stability. FANCF has no catalytic activity or recognizable sequence motif; its C-terminal domain adopts a HEAT/ARM-like helical-repeat fold and it acts as a flexible molecular adaptor/scaffold that bridges the FANCA:FANCG and FANCC:FANCE subcomplexes, so it is required for assembly and stability of the intact core complex and hence for FANCD2 monoubiquitination. FANCF is predominantly nuclear/nucleoplasmic and associates with chromatin upon DNA damage. Biallelic loss-of-function of FANCF causes Fanconi anemia complementation group F, with bone marrow failure, congenital malformations, cancer predisposition and cellular hypersensitivity to cross-linking agents.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006974" target="_blank" class="term-link">
+                                    GO:0006974
+                                </a>
+                            </span>
+                            <span class="term-label">DNA damage response</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPI8" data-a="GO:0006974" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FANCF, as a subunit of the FA core complex, participates in the cellular response to DNA damage (ICLs and replication stress). Correct but broad; the specific process is interstrand cross-link repair.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well supported by phylogenetic inference and by direct evidence that the FA core complex is activated by DNA damage to monoubiquitinate FANCD2-FANCI. A valid parent term; retained as a general process alongside the more specific ICL repair annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17082180" target="_blank" class="term-link">
+                                        PMID:17082180
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">At least eight FA proteins (FANCA, B, C, E, F, G, L, and M) form a nuclear core complex required for monoubiquitination of a downstream protein, FANCD2.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21915857" target="_blank" class="term-link">
+                                        PMID:21915857
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">they showed an aberrant response to DNA cross-linking agents as manifested by G(2) arrest, chromosomal aberrations, reduced survival, and an inability to monoubiquitinate FANCD2.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043240" target="_blank" class="term-link">
+                                    GO:0043240
+                                </a>
+                            </span>
+                            <span class="term-label">Fanconi anaemia nuclear complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPI8" data-a="GO:0043240" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FANCF is a bona fide subunit of the Fanconi anemia nuclear (core) complex. This is its core cellular-component annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly demonstrated: FANCF complexes with FANCA, FANCC and FANCG in the nucleus, and is a stable component of the eight-subunit FA core complex resolved by cryo-EM. Phylogenetic (IBA) call agrees with experimental data.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11063725" target="_blank" class="term-link">
+                                        PMID:11063725
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FANCF was found predominantly in the nucleus, where it complexes with FANCA, FANCC and FANCG.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPI8" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FANCF localizes predominantly to the nucleus, consistent with its role in the nuclear FA core complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt subcellular-location mapping agrees with experimental immunofluorescence/fractionation showing predominant nuclear localization. Broad but correct (the more granular nucleoplasm term is also annotated).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11063725" target="_blank" class="term-link">
+                                        PMID:11063725
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FANCF was found predominantly in the nucleus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036297" target="_blank" class="term-link">
+                                    GO:0036297
+                                </a>
+                            </span>
+                            <span class="term-label">interstrand cross-link repair</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPI8" data-a="GO:0036297" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FANCF is required for the FA pathway that repairs DNA interstrand cross-links. Core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The InterPro2GO mapping (FANCF family IPR035428 to ICL repair) is biologically correct: the FA core complex, of which FANCF is an essential adaptor subunit, drives FANCD2 monoubiquitination that is required for replication-coupled ICL repair.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19965384" target="_blank" class="term-link">
+                                        PMID:19965384
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FANCI-FANCD2 is required for replication-coupled ICL repair in S phase.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043240" target="_blank" class="term-link">
+                                    GO:0043240
+                                </a>
+                            </span>
+                            <span class="term-label">Fanconi anaemia nuclear complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPI8" data-a="GO:0043240" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated (ARBA/InterPro) call that FANCF is part of the FA nuclear complex; duplicates the experimentally supported membership annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with experimental and phylogenetic evidence for FA core complex membership. Redundant with the IBA/IDA/NAS annotations to the same term but not incorrect.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11063725" target="_blank" class="term-link">
+                                        PMID:11063725
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FANCF was found predominantly in the nucleus, where it complexes with FANCA, FANCC and FANCG.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11063725" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11063725
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Fanconi anemia protein FANCF forms a nuclear complex wit...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPI8" data-a="GO:0005515" data-r="PMID:11063725" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI capturing FANCF interactions with FANCA (O15360) and FANCG (O15287), the core-complex partners it bridges. &#39;Protein binding&#39; is uninformative; the underlying function is molecular adaptor/scaffold activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> These interactions are exactly the adaptor function of FANCF: it bridges the FANCA:FANCG and FANCC:FANCE subcomplexes to assemble the core complex. Replace the uninformative &#39;protein binding&#39; with protein-macromolecule adaptor activity (GO:0030674), which captures the actual molecular function.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030674" target="_blank" class="term-link">
+                                    protein-macromolecule adaptor activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11063725" target="_blank" class="term-link">
+                                        PMID:11063725
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FANCF was found predominantly in the nucleus, where it complexes with FANCA, FANCC and FANCG.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17082180" target="_blank" class="term-link">
+                                        PMID:17082180
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The human FANCF protein reportedly functions as a molecular adaptor within the FA nuclear complex, bridging between the subcomplexes A:G and C:E.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15262960" target="_blank" class="term-link">
+                                        PMID:15262960
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Our data demonstrate that FANCF acts as a flexible adaptor protein that plays a key role in the proper assembly of the FA core complex.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12649160" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12649160
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Fanconi anemia protein complex: mapping protein interactions...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPI8" data-a="GO:0005515" data-r="PMID:12649160" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Yeast two/three-hybrid mapping of the FANCF-FANCG (and FANCA) contacts. As with the other core-complex interaction, the informative molecular function is adaptor activity, not the generic &#39;protein binding&#39;.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The mapped FANCF/FANCG contact and FANCG-mediated bridging of FANCA to FANCF are the physical basis of FANCF&#39;s scaffolding role. Modify to protein-macromolecule adaptor activity (GO:0030674).
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030674" target="_blank" class="term-link">
+                                    protein-macromolecule adaptor activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12649160" target="_blank" class="term-link">
+                                        PMID:12649160
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FANCG was shown to interact with both the amino-terminus of FANCA and the carboxyl-terminal region of FANCF.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12649160" target="_blank" class="term-link">
+                                        PMID:12649160
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FANCG was able to mediate interaction between FANCA and FANCF</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPI8" data-a="GO:0005515" data-r="PMID:32296183" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput binary interactome (HuRI) Y2H hit between FANCF and TCP11 (Q8WWU5-7). Real recorded interaction but uninformative and with no established relevance to FANCF function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A systematic all-by-all Y2H screen; the interaction is not corroborated by focused studies and TCP11 has no known role in the FA pathway. Retain as a documented interaction but it is non-core and &#39;protein binding&#39; carries no functional information.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Here we present a human &#39;all-by-all&#39; reference interactome map of human binary protein interactions, or &#39;HuRI&#39;.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32814053
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interactome Mapping Provides a Network of Neurodegenerative ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPI8" data-a="GO:0005515" data-r="PMID:32814053" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Y2H hit between FANCF and HTT (huntingtin, P42858) from a neurodegeneration-focused interactome screen. Real recorded interaction but uninformative and of no established relevance to FANCF function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Large-scale screen aimed at neurodegenerative-disease proteins; the FANCF- HTT interaction is not supported by focused FA-pathway studies. Retain as a documented interaction but mark non-core; &#39;protein binding&#39; is uninformative as a molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                                        PMID:32814053
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">systematic yeast two-hybrid interaction screening of ∼500 ND-related proteins and integration of literature interactions</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPI8" data-a="GO:0005654" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Immunofluorescence (HPA) localizes FANCF to the nucleoplasm, consistent with its role in the nuclear FA core complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct immunofluorescence evidence agrees with the predominant nuclear localization reported for endogenous FANCF and the core complex.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11063725" target="_blank" class="term-link">
+                                        PMID:11063725
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FANCF was found predominantly in the nucleus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000785" target="_blank" class="term-link">
+                                    GO:0000785
+                                </a>
+                            </span>
+                            <span class="term-label">chromatin</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22343915" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22343915
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    FAAP20: a novel ubiquitin-binding FA nuclear core-complex pr...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPI8" data-a="GO:0000785" data-r="PMID:22343915" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The FA core complex (including FANCF) is loaded onto chromatin in response to DNA damage; ComplexPortal-curated chromatin localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with DNA-damage-induced chromatin recruitment of the FA core complex, which is required for functional integrity of the FA-BRCA pathway. Experimental IDA assigned by ComplexPortal for the complex FANCF belongs to.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22343915" target="_blank" class="term-link">
+                                        PMID:22343915
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">is required for DNA-damage-induced chromatin loading of FANCA and the functional integrity of the FA pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036297" target="_blank" class="term-link">
+                                    GO:0036297
+                                </a>
+                            </span>
+                            <span class="term-label">interstrand cross-link repair</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19965384" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19965384
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Fanconi anemia pathway promotes replication-dependent DN...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPI8" data-a="GO:0036297" data-r="PMID:19965384" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FANCF, via the FA core complex and FANCD2-FANCI monoubiquitination, contributes to replication-dependent DNA interstrand cross-link repair.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The cited work establishes that the FA pathway (FANCI-FANCD2) is required for replication-coupled ICL repair; FANCF is an essential upstream core- complex subunit for that pathway. Core biological process (duplicates the IEA ICL-repair annotation).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19965384" target="_blank" class="term-link">
+                                        PMID:19965384
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The Fanconi anemia pathway promotes replication-dependent DNA interstrand cross-link repair.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043240" target="_blank" class="term-link">
+                                    GO:0043240
+                                </a>
+                            </span>
+                            <span class="term-label">Fanconi anaemia nuclear complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22343915" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22343915
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    FAAP20: a novel ubiquitin-binding FA nuclear core-complex pr...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPI8" data-a="GO:0043240" data-r="PMID:22343915" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator statement (ComplexPortal) that FANCF is part of the FA nuclear core complex. Consistent with all other membership evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> FANCF is an integral subunit of the FA nuclear core complex characterized in this and related studies. Redundant with the experimental IDA and IBA annotations to the same term but correct.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22343915" target="_blank" class="term-link">
+                                        PMID:22343915
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Fanconi anemia (FA) nuclear core complex is a multiprotein complex</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9835411
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPI8" data-a="GO:0005829" data-r="Reactome:R-HSA-9835411" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome models a cytosolic FA-core-complex:HSP70 species that binds PKR (PKR-mediated signaling). FANCF is predominantly nuclear, so a cytosolic pool is peripheral and less well established.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Derived from a Reactome PKR-signaling reaction rather than direct FANCF localization data. Retained (author-traceable) but marked non-core because FANCF&#39;s characterized localization and function are nuclear; any cytosolic role is minor and not central to FA-pathway ICL repair.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11063725" target="_blank" class="term-link">
+                                        PMID:11063725
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FANCF was found predominantly in the nucleus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6785126
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPI8" data-a="GO:0005654" data-r="Reactome:R-HSA-6785126" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome ICL-repair reaction (FA core complex assembles at ICLs) placing FANCF in the nucleoplasm.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the predominant nuclear/nucleoplasmic localization of FANCF and the FA core complex acting at ICLs in the nucleoplasm.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11063725" target="_blank" class="term-link">
+                                        PMID:11063725
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FANCF was found predominantly in the nucleus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6785342
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPI8" data-a="GO:0005654" data-r="Reactome:R-HSA-6785342" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome ICL-repair reaction placing FANCF in the nucleoplasm.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the nuclear/nucleoplasmic localization of the FA core complex during ICL repair.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11063725" target="_blank" class="term-link">
+                                        PMID:11063725
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FANCF was found predominantly in the nucleus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6785361
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPI8" data-a="GO:0005654" data-r="Reactome:R-HSA-6785361" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome ICL-repair reaction placing FANCF in the nucleoplasm.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the nuclear/nucleoplasmic localization of the FA core complex during ICL repair.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11063725" target="_blank" class="term-link">
+                                        PMID:11063725
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FANCF was found predominantly in the nucleus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6785732
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPI8" data-a="GO:0005654" data-r="Reactome:R-HSA-6785732" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome ICL-repair reaction placing FANCF in the nucleoplasm.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the nuclear/nucleoplasmic localization of the FA core complex during ICL repair.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11063725" target="_blank" class="term-link">
+                                        PMID:11063725
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FANCF was found predominantly in the nucleus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6785986
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPI8" data-a="GO:0005654" data-r="Reactome:R-HSA-6785986" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome ICL-repair reaction placing FANCF in the nucleoplasm.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the nuclear/nucleoplasmic localization of the FA core complex during ICL repair.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11063725" target="_blank" class="term-link">
+                                        PMID:11063725
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FANCF was found predominantly in the nucleus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6786155
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPI8" data-a="GO:0005654" data-r="Reactome:R-HSA-6786155" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome ICL-repair reaction placing FANCF in the nucleoplasm.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the nuclear/nucleoplasmic localization of the FA core complex during ICL repair.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11063725" target="_blank" class="term-link">
+                                        PMID:11063725
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FANCF was found predominantly in the nucleus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6786166
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPI8" data-a="GO:0005654" data-r="Reactome:R-HSA-6786166" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome ICL-repair reaction placing FANCF in the nucleoplasm.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the nuclear/nucleoplasmic localization of the FA core complex during ICL repair.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11063725" target="_blank" class="term-link">
+                                        PMID:11063725
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FANCF was found predominantly in the nucleus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6786171
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPI8" data-a="GO:0005654" data-r="Reactome:R-HSA-6786171" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome ICL-repair reaction placing FANCF in the nucleoplasm.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the nuclear/nucleoplasmic localization of the FA core complex during ICL repair.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11063725" target="_blank" class="term-link">
+                                        PMID:11063725
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FANCF was found predominantly in the nucleus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6788385
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPI8" data-a="GO:0005654" data-r="Reactome:R-HSA-6788385" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome ICL-repair reaction placing FANCF in the nucleoplasm.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the nuclear/nucleoplasmic localization of the FA core complex during ICL repair.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11063725" target="_blank" class="term-link">
+                                        PMID:11063725
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FANCF was found predominantly in the nucleus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6788392
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPI8" data-a="GO:0005654" data-r="Reactome:R-HSA-6788392" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome ICL-repair reaction placing FANCF in the nucleoplasm.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the nuclear/nucleoplasmic localization of the FA core complex during ICL repair.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11063725" target="_blank" class="term-link">
+                                        PMID:11063725
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FANCF was found predominantly in the nucleus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043240" target="_blank" class="term-link">
+                                    GO:0043240
+                                </a>
+                            </span>
+                            <span class="term-label">Fanconi anaemia nuclear complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20347428" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20347428
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A histone-fold complex and FANCM form a conserved DNA-remode...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPI8" data-a="GO:0043240" data-r="PMID:20347428" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) demonstration that FANCF is part of the FA core complex, here shown to associate with the FANCM-MHF DNA-remodeling complex that promotes FANCD2 monoubiquitination.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental membership evidence; FANCF is an integral subunit of the FA core complex, consistent with all other lines of evidence. Core cellular-component annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20347428" target="_blank" class="term-link">
+                                        PMID:20347428
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FANCM-MHF associates with the Fanconi anemia (FA) core complex, promotes FANCD2 monoubiquitination in response to DNA damage</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Acts as a flexible molecular adaptor/scaffold within the Fanconi anemia nuclear core complex, bridging the FANCA:FANCG and FANCC:FANCE subcomplexes to assemble and stabilize the complex; this scaffolding is required for the complex&#39;s monoubiquitination of FANCD2-FANCI and thus for replication-coupled DNA interstrand cross-link repair and chromosome stability.</h3>
+                <span class="vote-buttons" data-g="Q9NPI8" data-a="FUNCTION: Acts as a flexible molecular adaptor/scaffold with..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030674" target="_blank" class="term-link">
+                            protein-macromolecule adaptor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036297" target="_blank" class="term-link">
+                                interstrand cross-link repair
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006974" target="_blank" class="term-link">
+                                DNA damage response
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                nucleoplasm
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000785" target="_blank" class="term-link">
+                                chromatin
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043240" target="_blank" class="term-link">
+                            Fanconi anaemia nuclear complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17082180" target="_blank" class="term-link">
+                                PMID:17082180
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The human FANCF protein reportedly functions as a molecular adaptor within the FA nuclear complex, bridging between the subcomplexes A:G and C:E.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17082180" target="_blank" class="term-link">
+                                PMID:17082180
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Two C-terminal loops of FANCF are essential for monoubiquitination of FANCD2 and normal cellular resistance to the DNA cross-linking agent mitomycin C.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11063725" target="_blank" class="term-link">
+                                PMID:11063725
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">FANCF was found predominantly in the nucleus, where it complexes with FANCA, FANCC and FANCG.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15262960" target="_blank" class="term-link">
+                                PMID:15262960
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">We found that the C terminus of FANCF interacts directly with FANCG and allows the assembly of other FA proteins into a stable complex.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15262960" target="_blank" class="term-link">
+                                PMID:15262960
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The N terminus appears to stabilize the interaction with FANCA and FANCG and is essential for the binding of the FANCC/FANCE subcomplex.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11063725" target="_blank" class="term-link">
+                            PMID:11063725
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The Fanconi anemia protein FANCF forms a nuclear complex with FANCA, FANCC and FANCG.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">FANCF is predominantly nuclear and forms a complex with FANCA, FANCC and FANCG; these interactions are lost in FA cell lines, indicating each subunit is required for complex formation.</div>
+
+                        <div class="finding-text">"FANCF was found predominantly in the nucleus, where it complexes with FANCA, FANCC and FANCG."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12649160" target="_blank" class="term-link">
+                            PMID:12649160
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Fanconi anemia protein complex: mapping protein interactions in the yeast 2- and 3-hybrid systems.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">FANCG binds both the N-terminus of FANCA and the C-terminal region of FANCF, and can bridge FANCA to FANCF, mapping the physical architecture underlying FANCF&#39;s adaptor role.</div>
+
+                        <div class="finding-text">"FANCG was shown to interact with both the amino-terminus of FANCA and the carboxyl-terminal region of FANCF."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15262960" target="_blank" class="term-link">
+                            PMID:15262960
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The Fanconi anemia gene product FANCF is a flexible adaptor protein.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">FANCF is a flexible adaptor whose C-terminus binds FANCG to nucleate assembly of the other FA proteins, while its N-terminus stabilizes the FANCA/FANCG interaction and is required to recruit the FANCC/FANCE subcomplex; FANCF does not have a ROM-like function.</div>
+
+                        <div class="finding-text">"We found that the C terminus of FANCF interacts directly with FANCG and allows the assembly of other FA proteins into a stable complex."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17082180" target="_blank" class="term-link">
+                            PMID:17082180
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural determinants of human FANCF protein that function in the assembly of a DNA damage signaling complex.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The FANCF C-terminal domain has a Cand1-like helical-repeat fold and functions as a molecular adaptor bridging the A:G and C:E subcomplexes; two C-terminal loops are essential for FANCD2 monoubiquitination and mitomycin C resistance.</div>
+
+                        <div class="finding-text">"The human FANCF protein reportedly functions as a molecular adaptor within the FA nuclear complex, bridging between the subcomplexes A:G and C:E."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19965384" target="_blank" class="term-link">
+                            PMID:19965384
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The Fanconi anemia pathway promotes replication-dependent DNA interstrand cross-link repair.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">FANCI-FANCD2 (activated by the FA core complex) is required for replication-coupled ICL repair in S phase, including incisions and translesion synthesis.</div>
+
+                        <div class="finding-text">"FANCI-FANCD2 is required for replication-coupled ICL repair in S phase."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20347428" target="_blank" class="term-link">
+                            PMID:20347428
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A histone-fold complex and FANCM form a conserved DNA-remodeling complex to maintain genome stability.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">FANCM-MHF associates with the FA core complex and promotes FANCD2 monoubiquitination in response to DNA damage.</div>
+
+                        <div class="finding-text">"FANCM-MHF associates with the Fanconi anemia (FA) core complex, promotes FANCD2 monoubiquitination in response to DNA damage"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21915857" target="_blank" class="term-link">
+                            PMID:21915857
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Fancf-deficient mice are prone to develop ovarian tumours.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Fancf-deficient cells show an aberrant response to DNA cross-linking agents (G2 arrest, chromosomal aberrations, reduced survival, inability to monoubiquitinate FANCD2), providing in vivo confirmation that FANCF is required for FANCD2 activation and the DNA cross-link damage response.</div>
+
+                        <div class="finding-text">"they showed an aberrant response to DNA cross-linking agents as manifested by G(2) arrest, chromosomal aberrations, reduced survival, and an inability to monoubiquitinate FANCD2."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22343915" target="_blank" class="term-link">
+                            PMID:22343915
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">FAAP20: a novel ubiquitin-binding FA nuclear core-complex protein required for functional integrity of the FA-BRCA DNA repair pathway.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">FAAP20 is an integral FA core-complex protein whose UBZ domain is required for DNA-damage-induced chromatin loading of FANCA and functional integrity of the FA pathway.</div>
+
+                        <div class="finding-text">"is required for DNA-damage-induced chromatin loading of FANCA and the functional integrity of the FA pathway"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                            PMID:32814053
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread Protein Aggregation in Affected Brains.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6785126
+
+                    </span>
+                </div>
+
+                <div class="reference-title">FA core complex assembles at DNA interstrand crosslinks (ICLs)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6785342
+
+                    </span>
+                </div>
+
+                <div class="reference-title">FANCD2:FANCI complex and UBE2T bind ICL-DNA associated with the FA core complex</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6785361
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Monoubiquitination of FANCD2:FANCI</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6785732
+
+                    </span>
+                </div>
+
+                <div class="reference-title">DNA nucleases bind monoubiquitinated ID2 complex</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6785986
+
+                    </span>
+                </div>
+
+                <div class="reference-title">DNA nucleases unhook the interstrand crosslink (ICL)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6786155
+
+                    </span>
+                </div>
+
+                <div class="reference-title">POLN binds ICL-DNA</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6786166
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Translesion synthesis across unhooked ICL by POLN</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6786171
+
+                    </span>
+                </div>
+
+                <div class="reference-title">FANCD2 deubiquitination by USP1:WDR48</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6788385
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The complex of ATR and ATRIP is recruited to ICL-DNA</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6788392
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ATR phosphorylates RPA2, FANCI, FANCD2 and FANCM at ICL-DNA</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9835411
+
+                    </span>
+                </div>
+
+                <div class="reference-title">FA core complex:HSP70s binds PKR</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does FANCF have any function outside the FA core complex (e.g. the cytosolic FA-core-complex:HSP70:PKR species modeled by Reactome), or is it strictly a nuclear scaffolding subunit?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NPI8" data-a="Q: Does FANCF have any function outside the FA core c..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are the high-throughput FANCF interactions with TCP11 and HTT biologically meaningful, or are they interactome-screen artifacts?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NPI8" data-a="Q: Are the high-throughput FANCF interactions with TC..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Structure-guided separation-of-function mutations in the FANCF C-terminal adaptor surface (e.g. the loops mutated in PMID:17082180), assayed for core-complex assembly and FANCD2 monoubiquitination.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Each subcomplex-bridging contact on the FANCF C-terminal adaptor surface contributes independently to core-complex assembly and FANCD2 monoubiquitination.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NPI8" data-a="EXPERIMENT: Structure-guided separation-of-function mutations ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Proximity labeling (BioID/TurboID) of endogenous FANCF in unperturbed vs ICL-damaged cells to define its complete interaction/localization landscape and test for any non-nuclear pool.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: FANCF localization and interactions are restricted to the nucleus/chromatin.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NPI8" data-a="EXPERIMENT: Proximity labeling (BioID/TurboID) of endogenous F..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Affinage</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(FANCF-deep-research-affinage.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9NPI8" data-a="DEEP_RESEARCH: Affinage" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Affinage mechanistic annotation for FANCF (human)</span>
+
+
+                    <span class="report-badge">Affinage</span>
+
+
+                    <span class="report-badge">Affinage (Claude Sonnet reading pass + Opus synthesis pass)</span>
+
+
+                    <span class="report-badge">9 citations</span>
+
+
+
+
+
+                </div>
+
+
+                <h1 id="affinage-mechanistic-annotation-for-fancf-human">Affinage mechanistic annotation for FANCF (human)</h1>
+<h2 id="current-model-mechanistic-narrative">Current model (mechanistic narrative)</h2>
+<p>FANCF is a nuclear adaptor protein essential for assembly of the Fanconi anemia (FA) core complex, which drives monoubiquitination of FANCD2 to enable repair of DNA interstrand cross-links [PMID:11063725, PMID:21915857]. It functions as a flexible bridging subunit: its C-terminus binds FANCG to nucleate assembly of other FA proteins, while its N-terminus stabilizes FANCA/FANCG contacts and is required to recruit the FANCC/FANCE subcomplex <a href="https://pubmed.ncbi.nlm.nih.gov/15262960">PMID:15262960</a>. The C-terminal domain adopts a Cand1-like helical repeat fold whose two surface loops are critical both for interaction with other core complex components and for FANCD2 monoubiquitination and cellular resistance to mitomycin C <a href="https://pubmed.ncbi.nlm.nih.gov/17082180">PMID:17082180</a>. Loss of FANCF abolishes FANCD2 monoubiquitination and produces G2 arrest, chromosomal aberrations, sensitivity to cross-linking agents, and, in mice, defective gametogenesis and ovarian tumors, establishing its non-redundant role in the FA/BRCA pathway in vivo <a href="https://pubmed.ncbi.nlm.nih.gov/21915857">PMID:21915857</a>. The FANCC-FANCE-FANCF subcomplex is evolutionarily conserved to plants, where it additionally acts as an anti-crossover factor during meiotic recombination <a href="https://pubmed.ncbi.nlm.nih.gov/36652992">PMID:36652992</a>. FANCF expression is transcriptionally activated by ICSBP/IRF8 during myeloid differentiation <a href="https://pubmed.ncbi.nlm.nih.gov/19801548">PMID:19801548</a> and is suppressed by p53-driven miR-30c, such that p53 loss in cancer cells upregulates FANCF and confers chemoresistance <a href="https://pubmed.ncbi.nlm.nih.gov/31511498">PMID:31511498</a>; silencing FANCF inactivates the FA/BRCA pathway and sensitizes breast and ovarian cancer cells to chemotherapeutic agents through p38/JNK MAPK signaling [PMID:22952942, PMID:23440494].</p>
+<h2 id="affinage-mechanism-profile-affinages-own-goreactome-grounding">Affinage mechanism profile (Affinage's own GO/Reactome grounding)</h2>
+<ul>
+<li><strong>molecular_activity:</strong> GO:0060090 molecular adaptor activity</li>
+<li><strong>localization:</strong> GO:0005634 nucleus</li>
+<li><strong>pathway (Reactome):</strong> R-HSA-73894 DNA Repair, R-HSA-1474165 Reproduction</li>
+<li><strong>partners:</strong> FANCA, FANCC, FANCG, FANCE</li>
+<li><strong>complexes:</strong> Fanconi anemia core complex, FANCC-FANCE-FANCF subcomplex</li>
+</ul>
+<h2 id="dated-findings-citation-anchored">Dated findings (citation-anchored)</h2>
+<table>
+<thead>
+<tr>
+<th>Year</th>
+<th>Confidence</th>
+<th>Finding</th>
+<th>PMIDs</th>
+<th>Journal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2000</td>
+<td>High</td>
+<td>FANCF forms a nuclear complex with FANCA, FANCC, and FANCG in human lymphoblasts. Each FA protein (except FANCD) is required for complex formation, as interactions were detected in wild-type and FA-D cells but not in lymphoblasts of other FA complementation groups.</td>
+<td>PMID:11063725</td>
+<td>Human molecular genetics</td>
+</tr>
+<tr>
+<td>2004</td>
+<td>High</td>
+<td>FANCF acts as a flexible adaptor protein in the FA core complex: its C-terminus interacts directly with FANCG to allow assembly of other FA proteins, while the N-terminus stabilizes interactions with FANCA and FANCG and is essential for binding of the FANCC/FANCE subcomplex. FANCF does not have a ROM-like function as previously suggested.</td>
+<td>PMID:15262960</td>
+<td>The Journal of biological chemistry</td>
+</tr>
+<tr>
+<td>2006</td>
+<td>High</td>
+<td>X-ray crystallography of the FANCF C-terminal domain reveals a helical repeat structure similar to Cand1, a regulator of a Cul1-Rbx1-Skp1-Fbox ubiquitin ligase complex. Two C-terminal loops are essential for FANCD2 monoubiquitination and cellular resistance to mitomycin C; mutations in this surface abolish interaction with other FA core complex components.</td>
+<td>PMID:17082180</td>
+<td>The Journal of biological chemistry</td>
+</tr>
+<tr>
+<td>2009</td>
+<td>Medium</td>
+<td>ICSBP/IRF8 directly activates transcription of FANCF during myeloid differentiation by binding a cis element in the FANCF promoter. ICSBP-deficient myeloid cells show impaired DNA cross-link repair in a FANCF-dependent manner.</td>
+<td>PMID:19801548</td>
+<td>The Journal of biological chemistry</td>
+</tr>
+<tr>
+<td>2012</td>
+<td>Medium</td>
+<td>FANCF silencing by shRNA blocks FANCD2 monoubiquitination (inactivating the FA/BRCA pathway), inhibits cell proliferation, induces apoptosis and chromosome fragmentation, and sensitizes breast cancer cells to mitoxantrone. Sensitization involves activation of p38 and JNK MAPK pathways; BCRP expression is restored by p38 inhibitor SB203580.</td>
+<td>PMID:22952942</td>
+<td>PloS one</td>
+</tr>
+<tr>
+<td>2013</td>
+<td>Medium</td>
+<td>FANCF silencing by siRNA inactivates the FA/BRCA pathway (decreasing FANCD2 monoubiquitination and focus formation), reduces cell proliferation, induces apoptosis, and sensitizes OVCAR3 ovarian cancer cells to adriamycin through JNK-dependent mitochondrial apoptosis pathway activation.</td>
+<td>PMID:23440494</td>
+<td>Oncology reports</td>
+</tr>
+<tr>
+<td>2023</td>
+<td>Medium</td>
+<td>The FANCC-FANCE-FANCF subcomplex is evolutionarily conserved from vertebrates to plants (Arabidopsis). Physical interaction among FANCC, FANCE, and FANCF is conserved, and this subcomplex acts as an anti-crossover factor during meiotic recombination; loss of any of the three genes partially rescues CO-defective mutants and causes synthetic meiotic catastrophe with the pro-CO factor MUS81.</td>
+<td>PMID:36652992</td>
+<td>Nucleic acids research</td>
+</tr>
+<tr>
+<td>2019</td>
+<td>Medium</td>
+<td>Wild-type p53 activates transcription of miR-30c by binding its promoter; miR-30c in turn targets FANCF (and REV1), thereby suppressing FANCF expression. In p53-mutant breast cancer cells, loss of this regulation leads to FANCF upregulation and increased adriamycin resistance.</td>
+<td>PMID:31511498</td>
+<td>Cell death &amp; disease</td>
+</tr>
+<tr>
+<td>2011</td>
+<td>High</td>
+<td>Fancf-deficient mouse embryonic fibroblasts are unable to monoubiquitinate FANCD2, show G2 arrest, chromosomal aberrations, and reduced survival in response to DNA cross-linking agents, confirming FANCF is required for FANCD2 activation in vivo. Fancf knockout mice show compromised follicle development and spermatogenesis, and increased incidence of ovarian tumors.</td>
+<td>PMID:21915857</td>
+<td>The Journal of pathology</td>
+</tr>
+</tbody>
+</table>
+<h2 id="citations">Citations</h2>
+<ul>
+<li>PMID:11063725</li>
+<li>PMID:15262960</li>
+<li>PMID:17082180</li>
+<li>PMID:19801548</li>
+<li>PMID:21915857</li>
+<li>PMID:22952942</li>
+<li>PMID:23440494</li>
+<li>PMID:31511498</li>
+<li>PMID:36652992</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(FANCF-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9NPI8" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="fancf-q9npi8-review-notes">FANCF (Q9NPI8) review notes</h1>
+<p>Human Fanconi anemia group F protein. 374 aa, chromosome 11p14.3. HGNC:3587.</p>
+<h2 id="core-biology">Core biology</h2>
+<p>FANCF is a subunit of the Fanconi anemia (FA) nuclear <strong>core complex</strong> (FANCA, FANCB,<br />
+FANCC, FANCE, FANCF, FANCG, FANCL, FANCM + associated FAAP proteins). The core complex is<br />
+a multisubunit ubiquitin ligase (FANCL is the RING E3, UBE2T the E2) whose essential job is<br />
+<strong>monoubiquitination of the FANCD2-FANCI (ID2) complex</strong> in response to DNA damage<br />
+(especially interstrand cross-links, ICLs) and replication stress. Monoubiquitinated ID2 is<br />
+loaded onto chromatin and coordinates the downstream ICL-repair steps (nucleolytic<br />
+unhooking, translesion synthesis, homologous recombination).</p>
+<p>FANCF itself has no catalytic activity and no recognizable sequence motif; its function is<br />
+<strong>structural — a flexible molecular adaptor/scaffold</strong> that bridges the FANCA:FANCG and<br />
+FANCC:FANCE subcomplexes and is required for assembly/stability of the intact core complex<br />
+and hence for FANCD2 monoubiquitination.</p>
+<ul>
+<li>de Winter 2000 <a href="https://pubmed.ncbi.nlm.nih.gov/11063725" title="FANCF was found predominantly in the nucleus, where it complexes with FANCA, FANCC and FANCG">PMID:11063725</a> — nuclear localization + core-complex membership; interactions lost in FA cell lines (each subunit required for complex).</li>
+<li>Kowal 2007 (crystal structure of C-terminal domain 156-357) <a href="https://pubmed.ncbi.nlm.nih.gov/17082180" title="The human FANCF protein reportedly functions as a molecular adaptor within the FA nuclear complex, bridging between the subcomplexes A:G and C:E">PMID:17082180</a> and <a href="https://pubmed.ncbi.nlm.nih.gov/17082180" title="Two C-terminal loops of FANCF are essential for monoubiquitination of FANCD2 and normal cellular resistance to the DNA cross-linking agent mitomycin C">PMID:17082180</a> and <a href="https://pubmed.ncbi.nlm.nih.gov/17082180" title="FANCF mutants bearing amino acid substitutions in this C-terminal surface fail to interact with other components of the FA complex, indicating that this surface is critical for the proper assembly of the FA core complex">PMID:17082180</a>. FANCF C-terminal fold resembles the Cand1 HEAT-repeat regulator of a cullin-RING ligase. MUTAGEN residues (L209R, F251R, Y287A/L289A/F339A/V341A/L344A) reduce FANCD2 monoubiquitination (UniProt features, ECO:0000269|PubMed:17082180).</li>
+<li>Gordon &amp; Buchwald 2003 <a href="https://pubmed.ncbi.nlm.nih.gov/12649160" title="FANCG was shown to interact with both the amino-terminus of FANCA and the carboxyl-terminal region of FANCF">PMID:12649160</a> and <a href="https://pubmed.ncbi.nlm.nih.gov/12649160" title="FANCG was able to mediate interaction between FANCA and FANCF">PMID:12649160</a> — Y2H/Y3H mapping of FANCF/FANCG contact.</li>
+</ul>
+<h2 id="fa-core-complex-membership-subunit-evidence-uniprot">FA core complex membership (subunit evidence, UniProt)</h2>
+<ul>
+<li>FANCA, FANCC, FANCG complex: PMID:11063725.</li>
+<li>FANCA/FANCC/FANCE/FANCG/FANCL: PMID:12724401.</li>
+<li>+FANCB: PMID:15502827. +FANCM: PMID:16116422.</li>
+<li>ComplexPortal CPX-6263 "Fanconi anemia ubiquitin ligase complex".</li>
+<li>Cryo-EM structures of the human FA core complex 7KZP/7KZQ/... include FANCF chain F (1-374).</li>
+</ul>
+<h2 id="downstream-pathway-process">Downstream pathway / process</h2>
+<ul>
+<li>Knipscheer 2009 <a href="https://pubmed.ncbi.nlm.nih.gov/19965384" title="FANCI-FANCD2 is required for replication-coupled ICL repair in S phase">PMID:19965384</a> — establishes the FA pathway drives replication-dependent ICL repair (NAS basis for FANCF ICL-repair BP annotation via ComplexPortal).</li>
+<li>FANCM-MHF (histone-fold MHF1/MHF2) DNA-remodeling complex recruits/anchors the core complex to stalled forks and promotes FANCD2 monoubiquitination <a href="https://pubmed.ncbi.nlm.nih.gov/20347428" title="FANCM-MHF associates with the Fanconi anemia (FA) core complex, promotes FANCD2 monoubiquitination in response to DNA damage">PMID:20347428</a>. This is the IDA basis (PMID:20347428) for FANCF part_of FA nuclear complex.</li>
+<li>FAAP20 is an integral core-complex protein required for DNA-damage-induced chromatin loading of FANCA and functional integrity of the pathway [PMID:22343915 "FAAP20 is an integral component of the FA nuclear core complex" ; "the FAAP20-UBZ domain ... is required for DNA-damage-induced chromatin loading of FANCA and the functional integrity of the FA pathway"] — supports chromatin localization of the core complex (FANCF chromatin IDA, ComplexPortal).</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Nucleus/nucleoplasm predominant (PMID:11063725; HPA immunofluorescence GO_REF:0000052). Chromatin upon DNA damage (ComplexPortal PMID:22343915). Reactome also models a cytosolic FA core complex:HSP70 species that binds PKR (R-HSA-9835411, PKR-mediated signaling) — peripheral/less-established, non-core.</li>
+</ul>
+<h2 id="interactome-protein-binding-ipi">Interactome (protein binding IPI)</h2>
+<ul>
+<li>PMID:11063725: FANCA (O15360), FANCG (O15287) — core partners (adaptor function).</li>
+<li>PMID:12649160: FANCA (O15360), FANCG (O15287) — Y2H contact mapping.</li>
+<li>PMID:32296183 (HuRI binary interactome): TCP11 (Q8WWU5-7) — high-throughput Y2H, no established FA relevance; non-core.</li>
+<li>PMID:32814053 (neurodegeneration Y2H interactome): HTT/huntingtin (P42858) — high-throughput screen, no established FA relevance; non-core.</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<p>Biallelic FANCF loss → Fanconi anemia complementation group F (MIM:603467): bone marrow<br />
+failure, congenital malformations, cancer predisposition, cellular ICL hypersensitivity and<br />
+chromosomal instability [PMID:10615118, de Winter 2000 Nat Genet, FANCF cloning].</p>
+<h2 id="action-rationale-summary">Action rationale summary</h2>
+<ul>
+<li>FA nuclear complex (GO:0043240) part_of, ICL repair (GO:0036297), nucleoplasm/nucleus/chromatin, DNA damage response: ACCEPT (well supported, on-target).</li>
+<li>protein binding (GO:0005515): FANCA/FANCG (PMID:11063725, 12649160) MODIFY → molecular adaptor activity (GO:0060090), the informative MF. TCP11/HTT large-scale hits: KEEP_AS_NON_CORE (real IPI, uninformative, no functional relevance).</li>
+<li>cytosol (GO:0005829, Reactome PKR): KEEP_AS_NON_CORE (predominantly nuclear; peripheral).</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9NPI8
+gene_symbol: FANCF
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  FANCF is a subunit of the Fanconi anemia (FA) nuclear core complex, a
+  multisubunit ubiquitin ligase that also contains FANCA, FANCB, FANCC, FANCE,
+  FANCG, FANCL (the RING E3), FANCM and associated FAAP proteins. The core
+  complex is activated by DNA damage, particularly DNA interstrand cross-links
+  (ICLs) and replication stress, and its essential output is monoubiquitination
+  of the FANCD2-FANCI (ID2) heterodimer. Monoubiquitinated ID2 is loaded onto
+  chromatin near the lesion and directs the downstream steps of replication-
+  coupled ICL repair (nucleolytic unhooking, translesion synthesis and
+  homologous recombination), thereby maintaining chromosome stability. FANCF
+  has no catalytic activity or recognizable sequence motif; its C-terminal
+  domain adopts a HEAT/ARM-like helical-repeat fold and it acts as a flexible
+  molecular adaptor/scaffold that bridges the FANCA:FANCG and FANCC:FANCE
+  subcomplexes, so it is required for assembly and stability of the intact core
+  complex and hence for FANCD2 monoubiquitination. FANCF is predominantly
+  nuclear/nucleoplasmic and associates with chromatin upon DNA damage. Biallelic
+  loss-of-function of FANCF causes Fanconi anemia complementation group F, with
+  bone marrow failure, congenital malformations, cancer predisposition and
+  cellular hypersensitivity to cross-linking agents.
+existing_annotations:
+- term:
+    id: GO:0006974
+    label: DNA damage response
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      FANCF, as a subunit of the FA core complex, participates in the cellular
+      response to DNA damage (ICLs and replication stress). Correct but broad;
+      the specific process is interstrand cross-link repair.
+    action: ACCEPT
+    reason: &gt;-
+      Well supported by phylogenetic inference and by direct evidence that the
+      FA core complex is activated by DNA damage to monoubiquitinate FANCD2-FANCI.
+      A valid parent term; retained as a general process alongside the more
+      specific ICL repair annotation.
+    supported_by:
+    - reference_id: PMID:17082180
+      supporting_text: &gt;-
+        At least eight FA proteins (FANCA, B, C, E, F, G, L, and M) form a
+        nuclear core complex required for monoubiquitination of a downstream
+        protein, FANCD2.
+    - reference_id: PMID:21915857
+      supporting_text: &gt;-
+        they showed an aberrant response to DNA cross-linking agents as manifested
+        by G(2) arrest, chromosomal aberrations, reduced survival, and an inability
+        to monoubiquitinate FANCD2.
+- term:
+    id: GO:0043240
+    label: Fanconi anaemia nuclear complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      FANCF is a bona fide subunit of the Fanconi anemia nuclear (core) complex.
+      This is its core cellular-component annotation.
+    action: ACCEPT
+    reason: &gt;-
+      Directly demonstrated: FANCF complexes with FANCA, FANCC and FANCG in the
+      nucleus, and is a stable component of the eight-subunit FA core complex
+      resolved by cryo-EM. Phylogenetic (IBA) call agrees with experimental data.
+    supported_by:
+    - reference_id: PMID:11063725
+      supporting_text: &gt;-
+        FANCF was found predominantly in the nucleus, where it complexes with
+        FANCA, FANCC and FANCG.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      FANCF localizes predominantly to the nucleus, consistent with its role in
+      the nuclear FA core complex.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt subcellular-location mapping agrees with experimental
+      immunofluorescence/fractionation showing predominant nuclear localization.
+      Broad but correct (the more granular nucleoplasm term is also annotated).
+    supported_by:
+    - reference_id: PMID:11063725
+      supporting_text: FANCF was found predominantly in the nucleus
+- term:
+    id: GO:0036297
+    label: interstrand cross-link repair
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      FANCF is required for the FA pathway that repairs DNA interstrand
+      cross-links. Core biological process.
+    action: ACCEPT
+    reason: &gt;-
+      The InterPro2GO mapping (FANCF family IPR035428 to ICL repair) is
+      biologically correct: the FA core complex, of which FANCF is an essential
+      adaptor subunit, drives FANCD2 monoubiquitination that is required for
+      replication-coupled ICL repair.
+    supported_by:
+    - reference_id: PMID:19965384
+      supporting_text: &gt;-
+        FANCI-FANCD2 is required for replication-coupled ICL repair in S phase.
+- term:
+    id: GO:0043240
+    label: Fanconi anaemia nuclear complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Automated (ARBA/InterPro) call that FANCF is part of the FA nuclear
+      complex; duplicates the experimentally supported membership annotation.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with experimental and phylogenetic evidence for FA core complex
+      membership. Redundant with the IBA/IDA/NAS annotations to the same term but
+      not incorrect.
+    supported_by:
+    - reference_id: PMID:11063725
+      supporting_text: &gt;-
+        FANCF was found predominantly in the nucleus, where it complexes with
+        FANCA, FANCC and FANCG.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:11063725
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI capturing FANCF interactions with FANCA (O15360) and FANCG (O15287),
+      the core-complex partners it bridges. &#39;Protein binding&#39; is uninformative;
+      the underlying function is molecular adaptor/scaffold activity.
+    action: MODIFY
+    reason: &gt;-
+      These interactions are exactly the adaptor function of FANCF: it bridges
+      the FANCA:FANCG and FANCC:FANCE subcomplexes to assemble the core complex.
+      Replace the uninformative &#39;protein binding&#39; with protein-macromolecule adaptor
+      activity (GO:0030674), which captures the actual molecular function.
+    proposed_replacement_terms:
+    - id: GO:0030674
+      label: protein-macromolecule adaptor activity
+    supported_by:
+    - reference_id: PMID:11063725
+      supporting_text: &gt;-
+        FANCF was found predominantly in the nucleus, where it complexes with
+        FANCA, FANCC and FANCG.
+    - reference_id: PMID:17082180
+      supporting_text: &gt;-
+        The human FANCF protein reportedly functions as a molecular adaptor
+        within the FA nuclear complex, bridging between the subcomplexes A:G and
+        C:E.
+    - reference_id: PMID:15262960
+      supporting_text: &gt;-
+        Our data demonstrate that FANCF acts as a flexible adaptor protein that
+        plays a key role in the proper assembly of the FA core complex.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:12649160
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Yeast two/three-hybrid mapping of the FANCF-FANCG (and FANCA) contacts.
+      As with the other core-complex interaction, the informative molecular
+      function is adaptor activity, not the generic &#39;protein binding&#39;.
+    action: MODIFY
+    reason: &gt;-
+      The mapped FANCF/FANCG contact and FANCG-mediated bridging of FANCA to
+      FANCF are the physical basis of FANCF&#39;s scaffolding role. Modify to
+      protein-macromolecule adaptor activity (GO:0030674).
+    proposed_replacement_terms:
+    - id: GO:0030674
+      label: protein-macromolecule adaptor activity
+    supported_by:
+    - reference_id: PMID:12649160
+      supporting_text: &gt;-
+        FANCG was shown to interact with both the amino-terminus of FANCA and
+        the carboxyl-terminal region of FANCF.
+    - reference_id: PMID:12649160
+      supporting_text: &gt;-
+        FANCG was able to mediate interaction between FANCA and FANCF
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      High-throughput binary interactome (HuRI) Y2H hit between FANCF and TCP11
+      (Q8WWU5-7). Real recorded interaction but uninformative and with no
+      established relevance to FANCF function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      A systematic all-by-all Y2H screen; the interaction is not corroborated by
+      focused studies and TCP11 has no known role in the FA pathway. Retain as a
+      documented interaction but it is non-core and &#39;protein binding&#39; carries no
+      functional information.
+    supported_by:
+    - reference_id: PMID:32296183
+      supporting_text: &gt;-
+        Here we present a human &#39;all-by-all&#39; reference interactome map of human
+        binary protein interactions, or &#39;HuRI&#39;.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32814053
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Y2H hit between FANCF and HTT (huntingtin, P42858) from a
+      neurodegeneration-focused interactome screen. Real recorded interaction but
+      uninformative and of no established relevance to FANCF function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Large-scale screen aimed at neurodegenerative-disease proteins; the FANCF-
+      HTT interaction is not supported by focused FA-pathway studies. Retain as a
+      documented interaction but mark non-core; &#39;protein binding&#39; is
+      uninformative as a molecular function.
+    supported_by:
+    - reference_id: PMID:32814053
+      supporting_text: &gt;-
+        systematic yeast two-hybrid interaction screening of ∼500 ND-related
+        proteins and integration of literature interactions
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Immunofluorescence (HPA) localizes FANCF to the nucleoplasm, consistent
+      with its role in the nuclear FA core complex.
+    action: ACCEPT
+    reason: &gt;-
+      Direct immunofluorescence evidence agrees with the predominant nuclear
+      localization reported for endogenous FANCF and the core complex.
+    supported_by:
+    - reference_id: PMID:11063725
+      supporting_text: FANCF was found predominantly in the nucleus
+- term:
+    id: GO:0000785
+    label: chromatin
+  evidence_type: IDA
+  original_reference_id: PMID:22343915
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      The FA core complex (including FANCF) is loaded onto chromatin in response
+      to DNA damage; ComplexPortal-curated chromatin localization.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with DNA-damage-induced chromatin recruitment of the FA core
+      complex, which is required for functional integrity of the FA-BRCA pathway.
+      Experimental IDA assigned by ComplexPortal for the complex FANCF belongs to.
+    supported_by:
+    - reference_id: PMID:22343915
+      supporting_text: &gt;-
+        is required for DNA-damage-induced chromatin loading of FANCA and the
+        functional integrity of the FA pathway
+- term:
+    id: GO:0036297
+    label: interstrand cross-link repair
+  evidence_type: NAS
+  original_reference_id: PMID:19965384
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      FANCF, via the FA core complex and FANCD2-FANCI monoubiquitination,
+      contributes to replication-dependent DNA interstrand cross-link repair.
+    action: ACCEPT
+    reason: &gt;-
+      The cited work establishes that the FA pathway (FANCI-FANCD2) is required
+      for replication-coupled ICL repair; FANCF is an essential upstream core-
+      complex subunit for that pathway. Core biological process (duplicates the
+      IEA ICL-repair annotation).
+    supported_by:
+    - reference_id: PMID:19965384
+      supporting_text: &gt;-
+        The Fanconi anemia pathway promotes replication-dependent DNA interstrand
+        cross-link repair.
+- term:
+    id: GO:0043240
+    label: Fanconi anaemia nuclear complex
+  evidence_type: NAS
+  original_reference_id: PMID:22343915
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Curator statement (ComplexPortal) that FANCF is part of the FA nuclear
+      core complex. Consistent with all other membership evidence.
+    action: ACCEPT
+    reason: &gt;-
+      FANCF is an integral subunit of the FA nuclear core complex characterized
+      in this and related studies. Redundant with the experimental IDA and IBA
+      annotations to the same term but correct.
+    supported_by:
+    - reference_id: PMID:22343915
+      supporting_text: Fanconi anemia (FA) nuclear core complex is a multiprotein complex
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9835411
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome models a cytosolic FA-core-complex:HSP70 species that binds PKR
+      (PKR-mediated signaling). FANCF is predominantly nuclear, so a cytosolic
+      pool is peripheral and less well established.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Derived from a Reactome PKR-signaling reaction rather than direct FANCF
+      localization data. Retained (author-traceable) but marked non-core because
+      FANCF&#39;s characterized localization and function are nuclear; any cytosolic
+      role is minor and not central to FA-pathway ICL repair.
+    supported_by:
+    - reference_id: PMID:11063725
+      supporting_text: FANCF was found predominantly in the nucleus
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6785126
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome ICL-repair reaction (FA core complex assembles at ICLs) placing
+      FANCF in the nucleoplasm.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the predominant nuclear/nucleoplasmic localization of FANCF
+      and the FA core complex acting at ICLs in the nucleoplasm.
+    supported_by:
+    - reference_id: PMID:11063725
+      supporting_text: FANCF was found predominantly in the nucleus
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6785342
+  qualifier: located_in
+  review:
+    summary: Reactome ICL-repair reaction placing FANCF in the nucleoplasm.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the nuclear/nucleoplasmic localization of the FA core
+      complex during ICL repair.
+    supported_by:
+    - reference_id: PMID:11063725
+      supporting_text: FANCF was found predominantly in the nucleus
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6785361
+  qualifier: located_in
+  review:
+    summary: Reactome ICL-repair reaction placing FANCF in the nucleoplasm.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the nuclear/nucleoplasmic localization of the FA core
+      complex during ICL repair.
+    supported_by:
+    - reference_id: PMID:11063725
+      supporting_text: FANCF was found predominantly in the nucleus
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6785732
+  qualifier: located_in
+  review:
+    summary: Reactome ICL-repair reaction placing FANCF in the nucleoplasm.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the nuclear/nucleoplasmic localization of the FA core
+      complex during ICL repair.
+    supported_by:
+    - reference_id: PMID:11063725
+      supporting_text: FANCF was found predominantly in the nucleus
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6785986
+  qualifier: located_in
+  review:
+    summary: Reactome ICL-repair reaction placing FANCF in the nucleoplasm.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the nuclear/nucleoplasmic localization of the FA core
+      complex during ICL repair.
+    supported_by:
+    - reference_id: PMID:11063725
+      supporting_text: FANCF was found predominantly in the nucleus
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6786155
+  qualifier: located_in
+  review:
+    summary: Reactome ICL-repair reaction placing FANCF in the nucleoplasm.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the nuclear/nucleoplasmic localization of the FA core
+      complex during ICL repair.
+    supported_by:
+    - reference_id: PMID:11063725
+      supporting_text: FANCF was found predominantly in the nucleus
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6786166
+  qualifier: located_in
+  review:
+    summary: Reactome ICL-repair reaction placing FANCF in the nucleoplasm.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the nuclear/nucleoplasmic localization of the FA core
+      complex during ICL repair.
+    supported_by:
+    - reference_id: PMID:11063725
+      supporting_text: FANCF was found predominantly in the nucleus
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6786171
+  qualifier: located_in
+  review:
+    summary: Reactome ICL-repair reaction placing FANCF in the nucleoplasm.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the nuclear/nucleoplasmic localization of the FA core
+      complex during ICL repair.
+    supported_by:
+    - reference_id: PMID:11063725
+      supporting_text: FANCF was found predominantly in the nucleus
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6788385
+  qualifier: located_in
+  review:
+    summary: Reactome ICL-repair reaction placing FANCF in the nucleoplasm.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the nuclear/nucleoplasmic localization of the FA core
+      complex during ICL repair.
+    supported_by:
+    - reference_id: PMID:11063725
+      supporting_text: FANCF was found predominantly in the nucleus
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6788392
+  qualifier: located_in
+  review:
+    summary: Reactome ICL-repair reaction placing FANCF in the nucleoplasm.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the nuclear/nucleoplasmic localization of the FA core
+      complex during ICL repair.
+    supported_by:
+    - reference_id: PMID:11063725
+      supporting_text: FANCF was found predominantly in the nucleus
+- term:
+    id: GO:0043240
+    label: Fanconi anaemia nuclear complex
+  evidence_type: IDA
+  original_reference_id: PMID:20347428
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Experimental (IDA) demonstration that FANCF is part of the FA core complex,
+      here shown to associate with the FANCM-MHF DNA-remodeling complex that
+      promotes FANCD2 monoubiquitination.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental membership evidence; FANCF is an integral subunit of
+      the FA core complex, consistent with all other lines of evidence. Core
+      cellular-component annotation.
+    supported_by:
+    - reference_id: PMID:20347428
+      supporting_text: &gt;-
+        FANCM-MHF associates with the Fanconi anemia (FA) core complex, promotes
+        FANCD2 monoubiquitination in response to DNA damage
+core_functions:
+- description: &gt;-
+    Acts as a flexible molecular adaptor/scaffold within the Fanconi anemia
+    nuclear core complex, bridging the FANCA:FANCG and FANCC:FANCE subcomplexes
+    to assemble and stabilize the complex; this scaffolding is required for the
+    complex&#39;s monoubiquitination of FANCD2-FANCI and thus for replication-coupled
+    DNA interstrand cross-link repair and chromosome stability.
+  molecular_function:
+    id: GO:0030674
+    label: protein-macromolecule adaptor activity
+  directly_involved_in:
+  - id: GO:0036297
+    label: interstrand cross-link repair
+  - id: GO:0006974
+    label: DNA damage response
+  locations:
+  - id: GO:0005654
+    label: nucleoplasm
+  - id: GO:0000785
+    label: chromatin
+  in_complex:
+    id: GO:0043240
+    label: Fanconi anaemia nuclear complex
+  supported_by:
+  - reference_id: PMID:17082180
+    supporting_text: &gt;-
+      The human FANCF protein reportedly functions as a molecular adaptor within
+      the FA nuclear complex, bridging between the subcomplexes A:G and C:E.
+  - reference_id: PMID:17082180
+    supporting_text: &gt;-
+      Two C-terminal loops of FANCF are essential for monoubiquitination of
+      FANCD2 and normal cellular resistance to the DNA cross-linking agent
+      mitomycin C.
+  - reference_id: PMID:11063725
+    supporting_text: &gt;-
+      FANCF was found predominantly in the nucleus, where it complexes with
+      FANCA, FANCC and FANCG.
+  - reference_id: PMID:15262960
+    supporting_text: &gt;-
+      We found that the C terminus of FANCF interacts directly with FANCG and
+      allows the assembly of other FA proteins into a stable complex.
+  - reference_id: PMID:15262960
+    supporting_text: &gt;-
+      The N terminus appears to stabilize the interaction with FANCA and FANCG
+      and is essential for the binding of the FANCC/FANCE subcomplex.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:11063725
+  title: The Fanconi anemia protein FANCF forms a nuclear complex with FANCA, FANCC
+    and FANCG.
+  findings:
+  - statement: &gt;-
+      FANCF is predominantly nuclear and forms a complex with FANCA, FANCC and
+      FANCG; these interactions are lost in FA cell lines, indicating each subunit
+      is required for complex formation.
+    supporting_text: &gt;-
+      FANCF was found predominantly in the nucleus, where it complexes with FANCA,
+      FANCC and FANCG.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified primary paper (de Winter 2000, Hum Mol Genet). Establishes
+      nuclear localization and FA core-complex membership of FANCF; directly
+      supports the FA nuclear complex and nucleus/nucleoplasm annotations.
+- id: PMID:12649160
+  title: &#39;Fanconi anemia protein complex: mapping protein interactions in the yeast
+    2- and 3-hybrid systems.&#39;
+  findings:
+  - statement: &gt;-
+      FANCG binds both the N-terminus of FANCA and the C-terminal region of FANCF,
+      and can bridge FANCA to FANCF, mapping the physical architecture underlying
+      FANCF&#39;s adaptor role.
+    supporting_text: &gt;-
+      FANCG was shown to interact with both the amino-terminus of FANCA and the
+      carboxyl-terminal region of FANCF.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (Gordon &amp; Buchwald 2003, Blood). Y2H/Y3H mapping of FANCF-
+      FANCG/FANCA contacts; supports the molecular adaptor function.
+- id: PMID:15262960
+  title: The Fanconi anemia gene product FANCF is a flexible adaptor protein.
+  findings:
+  - statement: &gt;-
+      FANCF is a flexible adaptor whose C-terminus binds FANCG to nucleate
+      assembly of the other FA proteins, while its N-terminus stabilizes the
+      FANCA/FANCG interaction and is required to recruit the FANCC/FANCE
+      subcomplex; FANCF does not have a ROM-like function.
+    supporting_text: &gt;-
+      We found that the C terminus of FANCF interacts directly with FANCG and
+      allows the assembly of other FA proteins into a stable complex.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified primary paper (Leveille 2004, JBC). Mutagenesis study that
+      first established FANCF as a flexible adaptor bridging the FANCA:FANCG and
+      FANCC:FANCE subcomplexes; the primary experimental basis for the molecular
+      adaptor activity core function and the subcomplex-bridging model.
+- id: PMID:17082180
+  title: Structural determinants of human FANCF protein that function in the assembly
+    of a DNA damage signaling complex.
+  findings:
+  - statement: &gt;-
+      The FANCF C-terminal domain has a Cand1-like helical-repeat fold and
+      functions as a molecular adaptor bridging the A:G and C:E subcomplexes; two
+      C-terminal loops are essential for FANCD2 monoubiquitination and mitomycin C
+      resistance.
+    supporting_text: &gt;-
+      The human FANCF protein reportedly functions as a molecular adaptor within
+      the FA nuclear complex, bridging between the subcomplexes A:G and C:E.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (Kowal 2007, JBC). Crystal structure + mutagenesis defining
+      FANCF as a molecular adaptor whose C-terminal surface assembles the core
+      complex and is required for FANCD2 monoubiquitination. Primary basis for the
+      protein-macromolecule adaptor activity core function.
+- id: PMID:19965384
+  title: The Fanconi anemia pathway promotes replication-dependent DNA interstrand
+    cross-link repair.
+  findings:
+  - statement: &gt;-
+      FANCI-FANCD2 (activated by the FA core complex) is required for
+      replication-coupled ICL repair in S phase, including incisions and
+      translesion synthesis.
+    supporting_text: &gt;-
+      FANCI-FANCD2 is required for replication-coupled ICL repair in S phase.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (Knipscheer 2009, Science). Establishes the FA pathway&#39;s role
+      in replication-dependent ICL repair; NAS basis for the FANCF ICL-repair
+      process annotation.
+- id: PMID:20347428
+  title: A histone-fold complex and FANCM form a conserved DNA-remodeling complex
+    to maintain genome stability.
+  findings:
+  - statement: &gt;-
+      FANCM-MHF associates with the FA core complex and promotes FANCD2
+      monoubiquitination in response to DNA damage.
+    supporting_text: &gt;-
+      FANCM-MHF associates with the Fanconi anemia (FA) core complex, promotes
+      FANCD2 monoubiquitination in response to DNA damage
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (Yan 2010, Mol Cell). Focuses on FANCM-MHF but characterizes
+      the FA core complex; IDA basis for FANCF FA-nuclear-complex membership.
+- id: PMID:21915857
+  title: Fancf-deficient mice are prone to develop ovarian tumours.
+  findings:
+  - statement: &gt;-
+      Fancf-deficient cells show an aberrant response to DNA cross-linking agents
+      (G2 arrest, chromosomal aberrations, reduced survival, inability to
+      monoubiquitinate FANCD2), providing in vivo confirmation that FANCF is
+      required for FANCD2 activation and the DNA cross-link damage response.
+    supporting_text: &gt;-
+      they showed an aberrant response to DNA cross-linking agents as manifested
+      by G(2) arrest, chromosomal aberrations, reduced survival, and an inability
+      to monoubiquitinate FANCD2.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (Bakker 2012, J Pathol). Fancf knockout mouse model; in vivo
+      corroboration that FANCF loss abolishes FANCD2 monoubiquitination and confers
+      cross-linker hypersensitivity, supporting the DNA damage response / ICL
+      repair process annotations. Mouse, not human, so recorded as MEDIUM relevance.
+- id: PMID:22343915
+  title: &#39;FAAP20: a novel ubiquitin-binding FA nuclear core-complex protein required
+    for functional integrity of the FA-BRCA DNA repair pathway.&#39;
+  findings:
+  - statement: &gt;-
+      FAAP20 is an integral FA core-complex protein whose UBZ domain is required
+      for DNA-damage-induced chromatin loading of FANCA and functional integrity of
+      the FA pathway.
+    supporting_text: &gt;-
+      is required for DNA-damage-induced chromatin loading of FANCA and the
+      functional integrity of the FA pathway
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (Ali 2012, Blood). Supports DNA-damage-induced chromatin
+      recruitment of the FA core complex; basis for FANCF chromatin and FA-nuclear-
+      complex (NAS) annotations assigned by ComplexPortal.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (Luck 2020, Nature; HuRI). Large-scale binary Y2H; the FANCF-
+      TCP11 hit is uninformative and non-core.
+- id: PMID:32814053
+  title: Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins
+    and Uncovers Widespread Protein Aggregation in Affected Brains.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (Haenig 2020, Cell Rep). Neurodegeneration-focused Y2H; the
+      FANCF-HTT hit is uninformative and non-core.
+- id: Reactome:R-HSA-6785126
+  title: FA core complex assembles at DNA interstrand crosslinks (ICLs)
+  findings: []
+- id: Reactome:R-HSA-6785342
+  title: FANCD2:FANCI complex and UBE2T bind ICL-DNA associated with the FA core complex
+  findings: []
+- id: Reactome:R-HSA-6785361
+  title: Monoubiquitination of FANCD2:FANCI
+  findings: []
+- id: Reactome:R-HSA-6785732
+  title: DNA nucleases bind monoubiquitinated ID2 complex
+  findings: []
+- id: Reactome:R-HSA-6785986
+  title: DNA nucleases unhook the interstrand crosslink (ICL)
+  findings: []
+- id: Reactome:R-HSA-6786155
+  title: POLN binds ICL-DNA
+  findings: []
+- id: Reactome:R-HSA-6786166
+  title: Translesion synthesis across unhooked ICL by POLN
+  findings: []
+- id: Reactome:R-HSA-6786171
+  title: FANCD2 deubiquitination by USP1:WDR48
+  findings: []
+- id: Reactome:R-HSA-6788385
+  title: The complex of ATR and ATRIP is recruited to ICL-DNA
+  findings: []
+- id: Reactome:R-HSA-6788392
+  title: ATR phosphorylates RPA2, FANCI, FANCD2 and FANCM at ICL-DNA
+  findings: []
+- id: Reactome:R-HSA-9835411
+  title: FA core complex:HSP70s binds PKR
+  findings: []
+suggested_questions:
+- question: &gt;-
+    Does FANCF have any function outside the FA core complex (e.g. the cytosolic
+    FA-core-complex:HSP70:PKR species modeled by Reactome), or is it strictly a
+    nuclear scaffolding subunit?
+- question: &gt;-
+    Are the high-throughput FANCF interactions with TCP11 and HTT biologically
+    meaningful, or are they interactome-screen artifacts?
+suggested_experiments:
+- hypothesis: &gt;-
+    Each subcomplex-bridging contact on the FANCF C-terminal adaptor surface
+    contributes independently to core-complex assembly and FANCD2
+    monoubiquitination.
+  description: &gt;-
+    Structure-guided separation-of-function mutations in the FANCF C-terminal
+    adaptor surface (e.g. the loops mutated in PMID:17082180), assayed for
+    core-complex assembly and FANCD2 monoubiquitination.
+- hypothesis: FANCF localization and interactions are restricted to the nucleus/chromatin.
+  description: &gt;-
+    Proximity labeling (BioID/TurboID) of endogenous FANCF in unperturbed vs
+    ICL-damaged cells to define its complete interaction/localization landscape
+    and test for any non-nuclear pool.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

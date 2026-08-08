@@ -1,0 +1,3648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ABRACL - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ABRACL</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9P1F3" target="_blank" class="term-link">
+                        Q9P1F3
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ABRACL";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9P1F3" data-a="DESCRIPTION: ABRACL is an 81-residue protein and the human memb..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ABRACL is an 81-residue protein and the human member of the Costars family, a small eukaryotic family that is usually but not universally single-copy per genome (PANTHER PTHR46334 resolves into two subfamilies, and Arabidopsis carries two members) and absent from fungi. Its NMR structure is a winged helix-like fold - three alpha-helices packed against four antiparallel beta-strands - but it lacks DNA-binding activity, and the surface that in canonical winged-helix proteins accommodates the DNA backbone is instead a conserved hydrophobic groove, taken to be a protein-interaction site. ABRACL binds filamentous actin directly but weakly in vitro, and in cells it associates with the actin-severing protein cofilin-1 (CFL1), with which it colocalises at the leading edge of lamellipodia in migrating cells. On purified proteins it blunts cofilin-stimulated depolymerisation of F-actin in a dose-dependent way without displacing cofilin from filaments, so it acts on cofilin&#39;s activity rather than competing for the filament. Cells depleted of ABRACL migrate less and change shape, and in Dictyostelium loss of the ortholog Costars (cosA) slows chemotactic movement and disturbs F-actin distribution, defects that expression of the human protein reverses. The direction in which ABRACL shifts the F-/G-actin balance differs between the Dictyostelium and human systems, so the protein is best described as a modulator of actin filament dynamics whose sign is context-dependent. It is broadly expressed across human tissues, elevated in several carcinomas, and in the embryonic mammalian forebrain it marks subpallial progenitors, migrating interneurons and postmitotic neurons.</p>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>actin severing inhibitor activity</h3>
+                <span class="vote-buttons" data-g="Q9P1F3" data-a="actin severing inhibitor activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+
+            <p><strong>Definition:</strong> Binds to and decreases the activity of an actin severing protein.</p>
+
+
+
+            <p><strong>Justification:</strong> GO already contains the positive half of this pair - GO:0000513 actin severing activator activity, defined as binding to and increasing the activity of an actin severing protein - but no inhibitor. ABRACL is a clean instance of the missing half: it binds cofilin, blunts cofilin-stimulated F-actin depolymerisation dose-dependently, and does so without preventing cofilin from binding the filament, so it is acting on the severing protein&#39;s activity rather than competing for actin. The proposed definition is the existing activator definition with the sign reversed, so the term needs no new modelling machinery. Without it, a protein whose entire known function is dampening a severing factor can be annotated only to actin filament binding, which is true of ABRACL but conveys none of the mechanism, or to nothing at all, which is the current state.</p>
+
+
+
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140678" target="_blank" class="term-link">
+                    molecular function inhibitor activity
+                </a>
+            </p>
+
+
+
+
+
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+
+                <li>
+
+                    <a href="https://pubmed.ncbi.nlm.nih.gov/33670794" target="_blank" class="term-link">
+                        PMID:33670794
+                    </a>
+
+
+                    : the addition of ABRACL in the reaction blunted this effect of cofilin in a dose-dependent manner
+
+                </li>
+
+                <li>
+
+                    <a href="https://pubmed.ncbi.nlm.nih.gov/33670794" target="_blank" class="term-link">
+                        PMID:33670794
+                    </a>
+
+
+                    : We found that ABRACL did not inhibit the co-sedimentation of cofilin with F-actin
+
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032970" target="_blank" class="term-link">
+                                    GO:0032970
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of actin filament-based process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P1F3" data-a="GO:0032970" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted as the core process, and deliberately left at this level of specificity.
+
+The transfer itself is as clean as phylogenetic transfers get. PANTHER PTHR46334 does contain two subfamilies, but the transfer stays inside one of them: both the donor and the target are PTHR46334:SF1, while the separate SF3 is plant-restricted (Arabidopsis Q8LBN7, Eutrema B4YYA9). So no subfamily boundary is crossed, and the WITH/FROM donor dictyBase:DDB_G0272861 is Dictyostelium cosA, which carries its own experimental annotation to this same term. More than that, the transfer has been tested directly: the human protein expressed in cosA-null Dictyostelium restores the mutant&#39;s motility and actin phenotypes. Functional complementation across that distance is a stronger warrant for an ortholog transfer than any sequence statistic, and independent human experimental work reaches the same conclusion from the other direction.
+
+The interesting question is whether to make the term more specific, and the answer is no. Three lines of evidence disagree about the SIGN of ABRACL&#39;s effect on the filamentous/globular actin balance. Deleting the Dictyostelium ortholog RAISES cytoskeleton-associated actin; depleting human ABRACL LOWERS the cellular F-/G-actin ratio; and purified human ABRACL on its own INHIBITS actin polymerisation, a result the authors themselves flag as contradicting their cellular data. Only in the presence of cofilin does ABRACL clearly favour F-actin. So GO:0030835 negative regulation of actin filament depolymerization and GO:0030837 negative regulation of actin filament polymerization are each supported by one part of the evidence and contradicted by another. The unsigned parent is not an under-annotation here; it is the strongest claim every dataset supports, and the PAINT curator was right to stop at it.
+                        </div>
+
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">dictyBase:DDB_G0272861</span>
+
+                                    &middot; cosA (Dictyostelium discoideum Costars)
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">Donor carries an experimental annotation to the same term, and the human protein rescues the cosA-null phenotype, so the transfer has been tested rather than assumed.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN000507089</span>
+
+                                    &middot; Costars ancestral node (PTHR46334)
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">PANTHER metadata records subfamilies: 2 for PTHR46334, so this is not the single-copy, paralog-free node an earlier draft of this review claimed. The transfer nonetheless stays inside one subfamily: the Dictyostelium cosA donor (Q558Y7) and human ABRACL (Q9P1F3) are both PTHR46334:SF1 (13 members, animals plus Dictyostelium plus most plant entries), while the separate SF3 is plant-restricted (2 members, Arabidopsis Q8LBN7 and Eutrema B4YYA9). No subfamily boundary is crossed, so the node supports the transfer - but for that reason, not for the absence of paralogs.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20940261" target="_blank" class="term-link">
+                                        PMID:20940261
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Expressing cosA or its human counterpart mCostars eliminated abnormalities of cosA(-) cells.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20940261" target="_blank" class="term-link">
+                                        PMID:20940261
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">cosA(-) cells exhibited changes in the actin cytoskeleton, showing aberrant distribution of F-actin in fluorescence cell staining and an increased amount of cytoskeleton-associated actin.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33670794" target="_blank" class="term-link">
+                                        PMID:33670794
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">both ABRACL-knockdown and ABRACL-knockout cells displayed lower cellular F-/G-actin ratios compared to the control cells</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33670794" target="_blank" class="term-link">
+                                        PMID:33670794
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These in vitro results appeared to contradict the above-mentioned finding of decreased F/G-actin ratios in cells lacking ABRACL</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ABRACL/ABRACL-deep-research-affinage.md
+
+                                </span>
+
+                                <div class="support-text">ABRACL is a small winged helix-like protein that regulates actin cytoskeletal dynamics and cell motility, a role conserved from the Dictyostelium ortholog Costars</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                    GO:0005929
+                                </a>
+                            </span>
+                            <span class="term-label">cilium</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P1F3" data-a="GO:0005929" data-r="GO_REF:0000044" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Removed. Traced back, this annotation rests on nothing that was ever a localisation observation.
+
+The chain has four links. GOA maps UniProtKB-SubCell:SL-0066 mechanically, as GO_REF:0000044 is designed to do. The UniProt line it maps is flagged ECO:0000305 - a curator inference, not an experimental record - and cites PubMed:37759737. That paper is an expression study of mouse and cat embryonic telencephalon which reports no ciliary localisation of its own; its single sentence on the subject attributes the claim to somebody else&#39;s high-throughput proteomics. In the same paragraph it reports evidence pointing the other way, that neither the transcript nor the protein is present in the ventricular zone, which is precisely where the ciliated progenitors sit. The proteomics study being cited is PMID:26638075, the Gupta et al. centrosome-cilium BioID interactome, and it is the only source of physical-interaction data for ABRACL in IntAct at all: five proximity hits, one publication, one detection method.
+
+Proximity-dependent biotinylation labels whatever comes within roughly ten nanometres of the bait over hours, so its output is a neighbourhood rather than a compartment assignment, and three of the four baits (SASS6, CNTRL, DCTN1) are centriolar or dynactin proteins rather than ciliary ones. The fourth, RPGRIP1L, IS genuinely ciliary - a transition-zone protein - so the bait panel is not uniformly non-ciliary and that should be conceded. It does not rescue the annotation: proximity to one ciliary bait over hours of labelling is still a neighbourhood observation, not a localisation call. A family-level check points the same way: Costars is retained in Arabidopsis, rice, maize and Dictyostelium, none of which builds a cilium, basal body or centriole, while IFT88, IFT52, BBS1 and ARL13B are absent from every one of those proteomes.
+
+None of this proves ABRACL never enters a human cilium, and a lineage-specific role would not show up in a phyletic comparison. What it establishes is that no evidence for the annotation exists at any link in the chain, and that the conserved function of the family cannot be ciliary. An unsupported compartment assignment on an otherwise sparsely annotated protein is worse than no assignment, because it is the kind of statement downstream tools propagate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The UniProt subcellular location this IEA maps is a curator inference (ECO:0000305) whose cited paper reports no ciliary localisation and in fact places the protein outside the ciliated ventricular zone. The only primary data behind it are proximity-labelling hits from a single BioID screen with centriolar baits, which do not establish a localisation, and the Costars family is retained in four proteomes that build no cilium at all.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">SOURCE WEAK OR INFERRED</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">SOURCE EVIDENCE WEAK</span>
+
+                                <span class="badge">SOURCE MISCITATION</span>
+
+                                <span class="badge">COMPARTMENT OR COMPLEX MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB-SubCell:SL-0066</span>
+
+                                    &middot; Cilium (UniProt subcellular location)
+
+
+                                    <span class="badge">SOURCE WEAK OR INFERRED</span>
+
+
+                                    <div class="propagation-comment">The GOA row is a faithful mapping of this location term; the fault is upstream, in the ECO:0000305 statement being mapped, not in the mapping.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PMID:37759737</span>
+
+                                    &middot; Troumpoukis et al. 2023, Abracl-expressing populations in embryonic telencephalon
+
+
+                                    <span class="badge">SOURCE BAD</span>
+
+
+                                    <div class="propagation-comment">Cited by UniProt as the evidence for cilium, but it reports no ciliary localisation and states that neither Abracl mRNA nor protein is present in the ventricular zone.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PMID:26638075</span>
+
+                                    &middot; Gupta et al. 2015, centrosome-cilium BioID interactome
+
+
+                                    <span class="badge">SOURCE WEAK OR INFERRED</span>
+
+
+                                    <div class="propagation-comment">The actual primary source, two citations removed. Five proximity-labelling hits with centriolar and dynactin baits; a BioID neighbourhood is not a compartment call.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ABRACL/ABRACL-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC       {ECO:0000305|PubMed:37759737}.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/37759737" target="_blank" class="term-link">
+                                        PMID:37759737
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a high-throughput proteomics study in non-neuronal cell lines has shown that Abracl is associated with the primary cilia</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/37759737" target="_blank" class="term-link">
+                                        PMID:37759737
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">our results show that neither Abracl mRNA nor Abracl were expressed in the VZ</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ABRACL/ABRACL-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">Detection methods observed: proximity-dependent biotin identification.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030027" target="_blank" class="term-link">
+                                    GO:0030027
+                                </a>
+                            </span>
+                            <span class="term-label">lamellipodium</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P1F3" data-a="GO:0030027" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted, and worth separating sharply from the cilium row it was generated alongside. Both are IEA mappings of UniProt subcellular locations under GO_REF:0000044, but the statements being mapped are not comparable: the cilium line is ECO:0000305, a curator inference, whereas the lamellipodium line is ECO:0000269, backed by experiment.
+
+The experiment is a good one for a localisation call. Endogenous ABRACL was stained with a specific antibody in migrating MDA-MB-231 cells fixed during wound closure, and the signal coincided with F-actin at the leading edge; ABRACL/cofilin colocalisation in the same cells was likewise concentrated at lamellipodia. This is a direct assay on the untagged protein at native levels, so the annotation would properly be IDA against PMID:33670794 rather than IEA against a location vocabulary. The recommendation is to upgrade the evidence code, not to change the term.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ABRACL/ABRACL-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SUBCELLULAR LOCATION: Cell projection, lamellipodium</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33670794" target="_blank" class="term-link">
+                                        PMID:33670794
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">fluorescence signals for endogenous ABRACL and F-actin were colocalized at the leading edge of lamellipodia</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33670794" target="_blank" class="term-link">
+                                        PMID:33670794
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the colocalization was particularly evident at lamellipodia</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051015" target="_blank" class="term-link">
+                                    GO:0051015
+                                </a>
+                            </span>
+                            <span class="term-label">actin filament binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33670794" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33670794
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human Costars Family Protein ABRACL Modulates Actin Dynamics...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P1F3" data-a="GO:0051015" data-r="PMID:33670794" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new annotation, and the first molecular function this gene would carry. ABRACL currently has none at all, which is the largest single gap in its record: a protein with a solved structure, a named interaction partner and two in vitro assays on purified protein has no MF row.
+
+The assay is direct and on the right material. GST-ABRACL was expressed in E. coli, cleaved with Factor Xa and the tag removed, so the co-sedimentation was performed on untagged protein; the pellet signal was quantified across independent experiments against a no-F-actin control. UniProt records the same conclusion in its SUBUNIT line.
+
+The annotation is offered with its limitation stated rather than buried: the authors describe the binding as very weak, and the fraction of ABRACL recovered in the pellet was small. That is a reason to record the activity honestly, not to omit it - a weak direct binding measured against a proper control is evidence, and it is the only representable molecular function this protein has. The activity that actually matters mechanistically, inhibition of a cofilin-type severing protein, has no GO term at all and is proposed as a new one below.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33670794" target="_blank" class="term-link">
+                                        PMID:33670794
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These results indicated that purified recombinant ABRACL bound to F-actin, although very weakly, under the in vitro experimental conditions.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ABRACL/ABRACL-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SUBUNIT: Weakly interacts with F-actin (PubMed:33670794). Interacts</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030335" target="_blank" class="term-link">
+                                    GO:0030335
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of cell migration</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33670794" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33670794
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human Costars Family Protein ABRACL Modulates Actin Dynamics...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P1F3" data-a="GO:0030335" data-r="PMID:33670794" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new annotation. The migration phenotype is the best-replicated thing known about this gene and it is not represented in GO at all.
+
+The evidence is bidirectional and uses more than one perturbation. Transient overexpression increases Transwell migration of MDA-MB-231 cells; two independent shRNAs reduce it in HCT116; re-expression from an RNAi-resistant construct restores it, which excludes off-target knockdown; and five independent CRISPR knockout clones reduce it again. The Dictyostelium ortholog gives the same sign - cosA-null cells move more slowly toward cAMP - so this is not a cancer-cell-line peculiarity.
+
+One qualification belongs on the record rather than in a footnote: in MDA-MB-231 the basal migration of knockout cells was unaffected, and the defect appeared only under EGF stimulation. ABRACL is therefore a modulator of stimulated migration in at least some contexts rather than a component required for baseline motility, and the positive-regulation term rather than a participation term is the right shape for that.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33670794" target="_blank" class="term-link">
+                                        PMID:33670794
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">All five ABRACL-knockout clones examined displayed significantly reduced migration in the Transwell assay</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33670794" target="_blank" class="term-link">
+                                        PMID:33670794
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In this cell line, depletion of ABRACL expression did not affect the basal migration activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33670794" target="_blank" class="term-link">
+                                        PMID:33670794
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ABRACL-knockout cells exhibited significantly decreased migration compared to the parental control cells</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20940261" target="_blank" class="term-link">
+                                        PMID:20940261
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Analysis of cell motion in cAMP gradients revealed decreased speed but wild-type-like directional persistence of cosA(-) cells, suggesting a defect in the cellular machinery for motility rather than for chemotactic orientation.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ABRACL binds filamentous actin weakly and associates with the actin-severing protein cofilin-1 at the leading edge of lamellipodia, where it reduces cofilin-stimulated filament disassembly without displacing cofilin from the filament. Through this it tunes the balance between filamentous and globular actin and modulates cell migration. The molecular function recorded here is the one GO can currently express; the activity that carries the mechanism - inhibiting a cofilin-type severing protein - has no term, and is proposed as a new one.</h3>
+                <span class="vote-buttons" data-g="Q9P1F3" data-a="FUNCTION: ABRACL binds filamentous actin weakly and associat..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051015" target="_blank" class="term-link">
+                            actin filament binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032970" target="_blank" class="term-link">
+                                regulation of actin filament-based process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030335" target="_blank" class="term-link">
+                                positive regulation of cell migration
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030027" target="_blank" class="term-link">
+                                lamellipodium
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33670794" target="_blank" class="term-link">
+                                PMID:33670794
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">These results indicated that purified recombinant ABRACL bound to F-actin, although very weakly, under the in vitro experimental conditions.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33670794" target="_blank" class="term-link">
+                                PMID:33670794
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the addition of ABRACL in the reaction blunted this effect of cofilin in a dose-dependent manner</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33670794" target="_blank" class="term-link">
+                                PMID:33670794
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">We found that ABRACL did not inhibit the co-sedimentation of cofilin with F-actin</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/ABRACL/ABRACL-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">CC       with CFL1; this interaction decreases CFL1-mediated actin</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33670794" target="_blank" class="term-link">
+                            PMID:33670794
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Human Costars Family Protein ABRACL Modulates Actin Dynamics and Cell Migration and Associates with Tumorigenic Growth.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Purified untagged recombinant ABRACL binds F-actin directly in a co-sedimentation assay, though weakly.</div>
+
+                        <div class="finding-text">"These results indicated that purified recombinant ABRACL bound to F-actin, although very weakly, under the in vitro experimental conditions."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ABRACL and cofilin interact in cells, shown by proximity ligation that is lost on knockdown of either partner and by co-immunoprecipitation of endogenous cofilin.</div>
+
+                        <div class="finding-text">"Fluorescence PLA signals were detected in the control cells but greatly diminished in ABRACL- or cofilin-knockdown cells"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ABRACL inhibits cofilin-stimulated depolymerisation of pyrene F-actin in a dose-dependent manner.</div>
+
+                        <div class="finding-text">"the addition of ABRACL in the reaction blunted this effect of cofilin in a dose-dependent manner"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The inhibition is not simple displacement - ABRACL does not prevent cofilin from binding F-actin.</div>
+
+                        <div class="finding-text">"We found that ABRACL did not inhibit the co-sedimentation of cofilin with F-actin"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ABRACL alone inhibits actin polymerisation in vitro, which the authors note is inconsistent with the direction of the cellular F/G-actin phenotype.</div>
+
+                        <div class="finding-text">"These in vitro results appeared to contradict the above-mentioned finding of decreased F/G-actin ratios in cells lacking ABRACL"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20940261" target="_blank" class="term-link">
+                            PMID:20940261
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Costars, a Dictyostelium protein similar to the C-terminal domain of STARS, regulates the actin cytoskeleton and motility.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">cosA-null Dictyostelium cells move more slowly toward cAMP but steer normally, indicating a motility-machinery defect rather than a chemotactic-orientation defect.</div>
+
+                        <div class="finding-text">"Analysis of cell motion in cAMP gradients revealed decreased speed but wild-type-like directional persistence of cosA(-) cells, suggesting a defect in the cellular machinery for motility rather than for chemotactic orientation."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Loss of Costars increases cytoskeleton-associated actin, the opposite sign to the human knockdown phenotype.</div>
+
+                        <div class="finding-text">"cosA(-) cells exhibited changes in the actin cytoskeleton, showing aberrant distribution of F-actin in fluorescence cell staining and an increased amount of cytoskeleton-associated actin."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The human ortholog functionally replaces Costars in Dictyostelium, which is the strongest available warrant for the phylogenetic transfer.</div>
+
+                        <div class="finding-text">"Expressing cosA or its human counterpart mCostars eliminated abnormalities of cosA(-) cells."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37759737" target="_blank" class="term-link">
+                            PMID:37759737
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Characterization of the Abracl-Expressing Cell Populations in the Embryonic Mammalian Telencephalon.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The paper&#39;s only statement linking Abracl to cilia is a citation of a third-party high-throughput proteomics study, not an observation of its own.</div>
+
+                        <div class="finding-text">"a high-throughput proteomics study in non-neuronal cell lines has shown that Abracl is associated with the primary cilia"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Its own data place Abracl outside the ventricular zone, where the ciliated progenitors reside.</div>
+
+                        <div class="finding-text">"our results show that neither Abracl mRNA nor Abracl were expressed in the VZ"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26638075" target="_blank" class="term-link">
+                            PMID:26638075
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A Dynamic Protein Interaction Landscape of the Human Centrosome-Cilium Interface.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21082705" target="_blank" class="term-link">
+                            PMID:21082705
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Solution structure of the human HSPC280 protein.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fold is winged helix-like but the protein does not bind DNA, which forecloses the annotation a winged-helix fold would otherwise invite.</div>
+
+                        <div class="finding-text">"However, HEPC280 is not a typical DNA-binding winged helix protein in that it lacks DNA-binding activity."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A hydrophobic groove is conserved between the Costars family and the Abra C-terminal domain and is proposed to mediate protein interaction.</div>
+
+                        <div class="finding-text">"Comparisons with the C-terminal 80-residue domain of proteins in the Abra family reveal a conserved hydrophobic groove in the HSPC280 family, which may allow HSPC280 to interact with other proteins."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26537243" target="_blank" class="term-link">
+                            PMID:26537243
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">HSPC280, a winged helix protein expressed in the subventricular zone of the developing ganglionic eminences, inhibits neuronal differentiation.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/ABRACL/ABRACL-bioinformatics/RESULTS.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">What actually places ABRACL in the cilium?</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The entire physical-interaction record for ABRACL in IntAct is one proximity-labelling experiment.</div>
+
+                        <div class="finding-text">"Detection methods observed: proximity-dependent biotin identification."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The Costars family is retained in four proteomes that build no cilium, while four cilium-core control families are absent from all of them.</div>
+
+                        <div class="finding-text">"Costars distribution therefore does not track cilium presence in either direction."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/ABRACL/ABRACL-deep-research-affinage.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Affinage mechanistic annotation for ABRACL (human)</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does ABRACL bind cofilin directly? Every line of evidence for the interaction is in cells - colocalisation, proximity ligation, co-immunoprecipitation - and the in vitro experiment that follows is functional rather than binary: ABRACL blunts cofilin&#39;s effect on filaments. A direct binary binding measurement between the two purified proteins, with an affinity, has not been reported, so it remains possible that the two meet on the filament rather than in solution.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9P1F3" data-a="Q: Does ABRACL bind cofilin directly? Every line of e..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which way does ABRACL push the actin balance, and why do the systems disagree? Deleting the Dictyostelium ortholog raises cytoskeleton-associated actin, depleting human ABRACL lowers the F-/G-actin ratio, and purified ABRACL alone inhibits polymerisation. The authors of the human study flag the contradiction themselves. Until it is resolved, no signed regulatory term can be justified.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9P1F3" data-a="Q: Which way does ABRACL push the actin balance, and ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What occupies the conserved hydrophobic groove? The NMR structure identifies a groove shared with the ABRA C-terminal domain and proposes it as a protein-interaction site, but no residue in it has been mutated and no partner has been mapped onto it. Whether cofilin binds there is the obvious first test.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9P1F3" data-a="Q: What occupies the conserved hydrophobic groove? Th..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is there anything to the centrosome connection? The cilium annotation should go, but the underlying BioID data are real: ABRACL was labelled by SASS6, CNTRL, DCTN1 and RPGRIP1L baits. Cofilin and actin have roles at the centrosome, so a genuine centrosomal pool is not absurd - it has simply never been tested by any method other than proximity labelling.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9P1F3" data-a="Q: Is there anything to the centrosome connection? Th..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the nuclear pool reported in neural progenitors real, and is it functional? A 9 kDa protein diffuses through nuclear pores whether or not it is targeted, and the supporting experiment is overexpression in a neuroblastoma line. Distinguishing passive equilibration from active retention needs endogenous tagging.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9P1F3" data-a="Q: Is the nuclear pool reported in neural progenitors..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure the affinity of purified ABRACL for purified CFL1 by ITC or SPR in the absence of actin, then map the interface by NMR chemical-shift perturbation onto the 2L2O structure and test predicted groove residues by mutation, scoring loss of cofilin binding and loss of the inhibitory effect on depolymerisation together. A separation-of-function mutant that binds F-actin but not cofilin would settle which activity carries the cellular phenotype.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: ABRACL binds cofilin directly, through the conserved hydrophobic groove identified in the NMR structure.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: biophysics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9P1F3" data-a="EXPERIMENT: Measure the affinity of purified ABRACL for purifi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Use single-filament TIRF microscopy with fluorescently labelled actin and cofilin, titrating ABRACL, and measure severing events per filament length per unit time, cofilin cluster nucleation density, and elongation rate as separate observables. Bulk pyrene assays cannot distinguish these, which is why the sign of ABRACL&#39;s effect is currently ambiguous.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: ABRACL reduces cofilin-mediated severing rather than altering filament elongation or cofilin binding.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: in vitro reconstitution</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9P1F3" data-a="EXPERIMENT: Use single-filament TIRF microscopy with fluoresce..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Knock a fluorescent tag into the endogenous ABRACL locus in a ciliated human line such as RPE-1, serum-starve to induce primary cilia, and image the tagged protein against ciliary and centriolar markers, alongside neural progenitors for the nuclear question. A negative result is as useful as a positive one and would close the question that the current annotation leaves open.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The cilium and nucleus localisations attributed to ABRACL are artefacts of proximity labelling and of overexpression respectively.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: cell biology</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9P1F3" data-a="EXPERIMENT: Knock a fluorescent tag into the endogenous ABRACL..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Perform the same F-/G-actin fractionation in both systems side by side, then repeat in Dictyostelium cells whose cofilin has been replaced with the human protein, and in human cells expressing the Dictyostelium ortholog. Because the human protein already rescues cosA-null cells, the reciprocal swap tests whether the partner rather than the Costars protein sets the direction.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The opposite sign of the Dictyostelium and human actin phenotypes reflects a difference in cofilin regulation between the two systems rather than a divergence in ABRACL itself.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: comparative cell biology</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9P1F3" data-a="EXPERIMENT: Perform the same F-/G-actin fractionation in both ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> GO cannot express what ABRACL does. It binds cofilin and reduces cofilin-stimulated filament disassembly without competing for the filament, which is an inhibitor activity directed at an actin-severing protein. GO carries the activator of exactly this activity, GO:0000513 actin severing activator activity, defined as binding to and increasing the activity of an actin severing protein, and no inhibitor counterpart.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">ONTOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> What is established is the effect and its independence from displacement: ABRACL blunts cofilin-stimulated pyrene F-actin depolymerisation dose-dependently, and does not prevent cofilin from co-sedimenting with F-actin. What is missing is a term, not an experiment.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> This is a large part of why a protein with a solved structure, a named partner and two assays on purified protein carries no molecular function annotation at all. The gap is not specific to ABRACL: any protein that dampens a severing factor rather than sequestering actin faces the same missing branch.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Create the sibling term, actin severing inhibitor activity, under GO:0140678 molecular function inhibitor activity, mirroring GO:0000513.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"the addition of ABRACL in the reaction blunted this effect of cofilin in a dose-dependent manner"</em> — PMID:33670794</li>
+
+                <li><em>"We found that ABRACL did not inhibit the co-sedimentation of cofilin with F-actin"</em> — PMID:33670794</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The direction in which ABRACL shifts the filamentous/globular actin balance is unresolved. Losing the Dictyostelium ortholog raises cytoskeleton-associated actin; depleting human ABRACL lowers the F-/G-actin ratio; and purified human ABRACL on its own inhibits polymerisation. No single signed statement fits all three.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">CURATION</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> That ABRACL modulates actin filament dynamics is established from three independent systems, and the cofilin-dependent arm of the mechanism is established on purified proteins. Only the sign of the net cellular effect is unsettled.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> It determines whether the correct process term is negative regulation of actin filament depolymerization, negative regulation of actin filament polymerization, or neither, and it is the reason this review leaves the annotation at the unsigned parent rather than refining it.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Single-filament TIRF microscopy with purified actin, cofilin and ABRACL at defined ratios, measuring severing frequency, elongation rate and cofilin cluster nucleation separately, rather than inferring the sign from bulk pyrene traces or from steady-state cellular fractionation.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"These in vitro results appeared to contradict the above-mentioned finding of decreased F/G-actin ratios in cells lacking ABRACL"</em> — PMID:33670794</li>
+
+                <li><em>"cosA(-) cells exhibited changes in the actin cytoskeleton, showing aberrant distribution of F-actin in fluorescence cell staining and an increased amount of cytoskeleton-associated actin."</em> — PMID:20940261</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Affinage</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ABRACL-deep-research-affinage.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9P1F3" data-a="DEEP_RESEARCH: Affinage" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Affinage mechanistic annotation for ABRACL (human)</span>
+
+
+                    <span class="report-badge">Affinage</span>
+
+
+                    <span class="report-badge">Affinage (Claude Sonnet reading pass + Opus synthesis pass)</span>
+
+
+                    <span class="report-badge">8 citations</span>
+
+
+
+
+
+                </div>
+
+
+                <h1 id="affinage-mechanistic-annotation-for-abracl-human">Affinage mechanistic annotation for ABRACL (human)</h1>
+<h2 id="current-model-mechanistic-narrative">Current model (mechanistic narrative)</h2>
+<p>ABRACL is a small winged helix-like protein that regulates actin cytoskeletal dynamics and cell motility, a role conserved from the Dictyostelium ortholog Costars, whose loss produces aberrant F-actin distribution and excessive pseudopod formation that human ABRACL rescues <a href="https://pubmed.ncbi.nlm.nih.gov/20940261">PMID:20940261</a>. Structurally it adopts a three-helix, four-stranded antiparallel β-sheet winged helix-like fold that lacks DNA-binding activity and presents a conserved hydrophobic groove implicated in protein–protein interaction <a href="https://pubmed.ncbi.nlm.nih.gov/21082705">PMID:21082705</a>. Mechanistically, ABRACL binds cofilin and inhibits cofilin-stimulated F-actin depolymerization, shifting the F/G-actin balance toward polymerized actin at the leading edge to drive cell migration <a href="https://pubmed.ncbi.nlm.nih.gov/33670794">PMID:33670794</a>. This actin-promoting activity underlies a recurrent pro-tumorigenic role: ABRACL knockdown suppresses proliferation, migration, and invasion across esophageal, breast, gastric, and glioma cancer models [PMID:33728339, PMID:35341461, PMID:39286126, PMID:39376051], with its expression transcriptionally activated by MYBL2 and CBX4 [PMID:35341461, PMID:39376051] and post-transcriptionally repressed by miR-145-5p <a href="https://pubmed.ncbi.nlm.nih.gov/33728339">PMID:33728339</a>. In neural progenitor cells ABRACL localizes to the nucleus and inhibits neuronal differentiation, indicating a context-dependent role distinct from its cytoplasmic actin function <a href="https://pubmed.ncbi.nlm.nih.gov/26537243">PMID:26537243</a>.</p>
+<h2 id="affinage-mechanism-profile-affinages-own-goreactome-grounding">Affinage mechanism profile (Affinage's own GO/Reactome grounding)</h2>
+<ul>
+<li><strong>molecular_activity:</strong> GO:0008092 cytoskeletal protein binding, GO:0098772 molecular function regulator activity</li>
+<li><strong>localization:</strong> GO:0005856 cytoskeleton, GO:0005634 nucleus</li>
+<li><strong>pathway (Reactome):</strong> <em>(none)</em></li>
+<li><strong>partners:</strong> CFL1, MYBL2, CBX4</li>
+<li><strong>complexes:</strong> <em>(none)</em></li>
+</ul>
+<h2 id="dated-findings-citation-anchored">Dated findings (citation-anchored)</h2>
+<table>
+<thead>
+<tr>
+<th>Year</th>
+<th>Confidence</th>
+<th>Finding</th>
+<th>PMIDs</th>
+<th>Journal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2010</td>
+<td>High</td>
+<td>Dictyostelium Costars (ortholog of human ABRACL) is required for normal actin dynamics and cell motility: cosA-null cells show aberrant F-actin distribution, increased cytoskeleton-associated actin, and excessive pseudopod formation. Expression of the human ABRACL counterpart rescued these defects, establishing functional conservation.</td>
+<td>PMID:20940261</td>
+<td>Journal of cell science</td>
+</tr>
+<tr>
+<td>2011</td>
+<td>High</td>
+<td>The solution structure of human ABRACL (HSPC280) was determined by NMR: it adopts a winged helix-like fold with three α-helices and four antiparallel β-strands, lacks DNA-binding activity, and contains a conserved hydrophobic groove (shared with the ABRA C-terminal domain family) proposed to mediate protein–protein interactions. The protein presents an unusually long wing-1 loop and asymmetric charge distribution.</td>
+<td>PMID:21082705</td>
+<td>Protein science</td>
+</tr>
+<tr>
+<td>2015</td>
+<td>Medium</td>
+<td>ABRACL (HSPC280) is localized to the nucleus in neural progenitor cells, and its overexpression in Neuro2a cells inhibits neuronal differentiation in vitro, placing it in the regulation of neural progenitor proliferation vs. differentiation.</td>
+<td>PMID:26537243</td>
+<td>Histochemistry and cell biology</td>
+</tr>
+<tr>
+<td>2021</td>
+<td>High</td>
+<td>Human ABRACL physically interacts with cofilin (supported by immunofluorescence colocalization at the leading edge and proximity ligation assay), and inhibits cofilin-stimulated F-actin depolymerization in vitro (pyrene actin assay), thereby promoting actin polymerization and cell migration.</td>
+<td>PMID:33670794</td>
+<td>International journal of molecular sciences</td>
+</tr>
+<tr>
+<td>2021</td>
+<td>Medium</td>
+<td>miR-145-5p directly targets the ABRACL 3′-UTR (validated by dual-luciferase reporter assay), reducing ABRACL expression and consequently suppressing proliferation, migration, and invasion of esophageal carcinoma cells.</td>
+<td>PMID:33728339</td>
+<td>BioMed research international</td>
+</tr>
+<tr>
+<td>2022</td>
+<td>Medium</td>
+<td>The transcription factor MYBL2 directly transcriptionally activates ABRACL expression in breast cancer cells (validated by luciferase reporter assay and ChIP), and MYBL2 overexpression reverses the suppressive effects of ABRACL knockdown on proliferation, invasion, migration, and EMT.</td>
+<td>PMID:35341461</td>
+<td>Bioengineered</td>
+</tr>
+<tr>
+<td>2024</td>
+<td>Medium</td>
+<td>ABRACL knockdown in glioma cells inhibits proliferation, migration, invasion, and cytoskeletal dynamics and induces apoptosis and cell-cycle arrest; these effects are associated with activation (not suppression) of STAT3 signaling, suggesting ABRACL acts upstream of STAT3 to promote glioma malignancy.</td>
+<td>PMID:39286126</td>
+<td>Heliyon</td>
+</tr>
+<tr>
+<td>2024</td>
+<td>Medium</td>
+<td>The transcription factor CBX4 binds the ABRACL promoter and transcriptionally upregulates ABRACL expression in gastric cancer cells (validated by luciferase reporter and ChIP); CBX4 overexpression reverses the inhibitory effects of ABRACL silencing on proliferation, migration, invasion, and apoptosis.</td>
+<td>PMID:39376051</td>
+<td>Histology and histopathology</td>
+</tr>
+</tbody>
+</table>
+<h2 id="citations">Citations</h2>
+<ul>
+<li>PMID:20940261</li>
+<li>PMID:21082705</li>
+<li>PMID:26537243</li>
+<li>PMID:33670794</li>
+<li>PMID:33728339</li>
+<li>PMID:35341461</li>
+<li>PMID:39286126</li>
+<li>PMID:39376051</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ABRACL-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9P1F3" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="abracl-q9p1f3-review-notes">ABRACL (Q9P1F3) — review notes</h1>
+<p>Human ABRACL, "ABRA C-terminal like", formerly C6orf115 / HSPC280 / PRO2013. 81 aa, ~9 kDa,<br />
+usually one copy per genome, but not universally: PANTHER PTHR46334 resolves into two subfamilies,<br />
+SF1 (human, Dictyostelium and most plants) and a plant-restricted SF3, and Arabidopsis has 2 members<br />
+while maize has 3.</p>
+<h2 id="starting-position-three-annotations-no-molecular-function">Starting position: three annotations, no molecular function</h2>
+<p>The whole GOA record is three rows:</p>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Aspect</th>
+<th>Evidence</th>
+<th>Reference</th>
+<th>WITH/FROM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GO:0032970 regulation of actin filament-based process</td>
+<td>BP</td>
+<td>IBA</td>
+<td>GO_REF:0000033</td>
+<td>PANTHER:PTN000507089 | dictyBase:DDB_G0272861</td>
+</tr>
+<tr>
+<td>GO:0005929 cilium</td>
+<td>CC</td>
+<td>IEA</td>
+<td>GO_REF:0000044</td>
+<td>UniProtKB-SubCell:SL-0066</td>
+</tr>
+<tr>
+<td>GO:0030027 lamellipodium</td>
+<td>CC</td>
+<td>IEA</td>
+<td>GO_REF:0000044</td>
+<td>UniProtKB-SubCell:SL-0291</td>
+</tr>
+</tbody>
+</table>
+<p>Nothing is experimental, and there is <strong>no molecular function annotation at all</strong> — despite a<br />
+2021 paper that reports a direct in-vitro binding assay and a direct in-vitro activity assay<br />
+on purified recombinant protein.</p>
+<h2 id="what-the-primary-literature-actually-shows">What the primary literature actually shows</h2>
+<h3 id="dictyostelium-the-origin-of-the-phylogenetic-annotation">Dictyostelium: the origin of the phylogenetic annotation</h3>
+<p>cosA was found in a chemotaxis screen. cosA-null cells move slower but steer normally<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/20940261" title="Analysis of cell motion in cAMP gradients revealed decreased speed but wild-type-like directional persistence of cosA(-) cells, suggesting a defect in the cellular machinery for motility rather than for chemotactic orientation.">PMID:20940261</a>, and their actin cytoskeleton<br />
+is disturbed <a href="https://pubmed.ncbi.nlm.nih.gov/20940261" title="cosA(-) cells exhibited changes in the actin cytoskeleton, showing aberrant distribution of F-actin in fluorescence cell staining and an increased amount of cytoskeleton-associated actin.">PMID:20940261</a>.</p>
+<p>The decisive point for the IBA is functional complementation: <a href="https://pubmed.ncbi.nlm.nih.gov/20940261" title="Expressing cosA or its human counterpart mCostars eliminated abnormalities of cosA(-) cells.">PMID:20940261</a> The human<br />
+protein does the Dictyostelium protein's job in Dictyostelium cells. That is a stronger basis<br />
+for an ortholog transfer than sequence identity alone.</p>
+<h3 id="human-cofilin-f-actin-and-the-leading-edge">Human: cofilin, F-actin, and the leading edge</h3>
+<p>All from PMID:33670794 (Hsiao et al. 2021, full text available):</p>
+<ul>
+<li>Direct, weak F-actin binding by purified untagged recombinant protein in a co-sedimentation<br />
+  assay: <a href="https://pubmed.ncbi.nlm.nih.gov/33670794" title="These results indicated that purified recombinant ABRACL bound to   F-actin, although very weakly, under the in vitro experimental conditions.">PMID:33670794</a></li>
+<li>Colocalisation of endogenous protein with F-actin at the leading edge:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/33670794" title="fluorescence signals for endogenous ABRACL and F-actin were colocalized at the   leading edge of lamellipodia">PMID:33670794</a></li>
+<li>Cofilin interaction in cells, three ways — colocalisation especially at lamellipodia,<br />
+  proximity ligation that disappears on knockdown of either partner, and co-IP:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/33670794" title="Fluorescence PLA signals were detected in the control cells but greatly   diminished in ABRACL- or cofilin-knockdown cells">PMID:33670794</a> and <a href="https://pubmed.ncbi.nlm.nih.gov/33670794" title="endogenous cofilin was   detected together with the immunoprecipitated ABRACL-Myc-His">PMID:33670794</a></li>
+<li>The functional interaction, on purified proteins: <a href="https://pubmed.ncbi.nlm.nih.gov/33670794" title="the addition of ABRACL in   the reaction blunted this effect of cofilin in a dose-dependent manner">PMID:33670794</a>, and the necessary<br />
+  control ruling out simple displacement: <a href="https://pubmed.ncbi.nlm.nih.gov/33670794" title="We found that ABRACL did not inhibit   the co-sedimentation of cofilin with F-actin">PMID:33670794</a></li>
+<li>Loss-of-function: <a href="https://pubmed.ncbi.nlm.nih.gov/33670794" title="All five ABRACL-knockout clones examined displayed   significantly reduced migration in the Transwell assay">PMID:33670794</a></li>
+</ul>
+<h3 id="the-sign-problem-why-the-vague-go-term-is-the-right-one">The sign problem — why the vague GO term is the right one</h3>
+<p>Three lines of evidence disagree about which way ABRACL pushes the F-/G-actin balance.</p>
+<ol>
+<li>Losing the Dictyostelium ortholog <em>raises</em> cytoskeleton-associated actin<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/20940261" title="an increased amount of cytoskeleton-associated actin">PMID:20940261</a>.</li>
+<li>Losing human ABRACL <em>lowers</em> it <a href="https://pubmed.ncbi.nlm.nih.gov/33670794" title="both ABRACL-knockdown and ABRACL-knockout    cells displayed lower cellular F-/G-actin ratios compared to the control cells">PMID:33670794</a>.</li>
+<li>Purified ABRACL on its own <em>inhibits</em> polymerisation <a href="https://pubmed.ncbi.nlm.nih.gov/33670794" title="the results showed that    ABRACL inhibited actin polymerization in a dose-dependent manner">PMID:33670794</a>, which the authors<br />
+   themselves flag as inconsistent with (2) <a href="https://pubmed.ncbi.nlm.nih.gov/33670794" title="These in vitro results appeared to    contradict the above-mentioned finding of decreased F/G-actin ratios in cells lacking    ABRACL">PMID:33670794</a>.</li>
+</ol>
+<p>Only in the presence of cofilin does ABRACL clearly favour F-actin. So <code>GO:0030835 negative
+regulation of actin filament depolymerization</code> and <code>GO:0030837 negative regulation of actin
+filament polymerization</code> are each supported by part of the evidence and contradicted by another<br />
+part. The unsigned parent GO:0032970 is not a lazy annotation here — it is the only claim all<br />
+three datasets support. Left as ACCEPT for exactly that reason.</p>
+<h2 id="the-cilium-annotation-a-four-step-chain-with-nothing-at-the-end">The cilium annotation: a four-step chain with nothing at the end</h2>
+<p>This is the main finding of the review.</p>
+<p><code>GO:0005929 cilium</code> is IEA from GO_REF:0000044, i.e. a mechanical mapping of the UniProt<br />
+subcellular-location line <code>Cell projection, cilium {ECO:0000305|PubMed:37759737}</code>. Tracing back:</p>
+<ol>
+<li><strong>GOA</strong> transfers <code>UniProtKB-SubCell:SL-0066</code> without judgement — as designed.</li>
+<li><strong>UniProt</strong> flags its own statement ECO:0000305 (curator inference, not observation).</li>
+<li><strong>PMID:37759737</strong> is an <em>expression</em> study of mouse and cat embryonic telencephalon. It<br />
+   reports no ciliary localisation of its own. It says only:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/37759737" title="a high-throughput proteomics study in non-neuronal cell lines has shown that    Abracl is associated with the primary cilia">PMID:37759737</a> — a citation of somebody else's work. In the<br />
+   same paragraph it reports data pointing the other way:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/37759737" title="our results show that neither Abracl mRNA nor Abracl were expressed in the    VZ">PMID:37759737</a> — the ventricular zone being where the ciliated progenitors are.</li>
+<li>That "high-throughput proteomics study" is PMID:26638075, the Gupta et al. centrosome-cilium<br />
+   BioID interactome. It is the <em>only</em> source of physical-interaction data for ABRACL in IntAct:<br />
+   five proximity-labelling hits, one publication, one detection method, with baits SASS6,<br />
+   CNTRL, DCTN1 and RPGRIP1L (see <code>ABRACL-bioinformatics/RESULTS.md</code>).</li>
+</ol>
+<p>So a proximity-labelling neighbourhood became, three citations later, a subcellular location on<br />
+the human protein. Nobody along the chain did anything unreasonable; the failure is that no step<br />
+re-examined the one before it.</p>
+<p>The phyletic check in <code>ABRACL-bioinformatics/RESULTS.md</code> adds a family-level argument: Costars is<br />
+retained in <em>Arabidopsis</em>, rice, maize and <em>Dictyostelium</em>, none of<br />
+which builds a cilium, basal body or centriole, while IFT88, IFT52, BBS1 and ARL13B are absent<br />
+from all four. Whatever the family is conserved for, it is not ciliary. That does not exclude a<br />
+human-specific ciliary role, and the notes say so — but there is no evidence for one either.</p>
+<h2 id="the-lamellipodium-annotation-is-the-opposite-problem">The lamellipodium annotation is the opposite problem</h2>
+<p><code>GO:0030027 lamellipodium</code> is also IEA-from-SubCell, but here the underlying UniProt statement is<br />
+ECO:0000269 (experimental) and the human experiment exists: endogenous protein, endogenous<br />
+antibody, colocalised with F-actin at the leading edge, in the paper's Figure 4D. This<br />
+annotation deserves to be IDA. Kept as ACCEPT with a recommendation to upgrade the evidence code<br />
+rather than the term.</p>
+<h2 id="what-is-missing-from-go-itself">What is missing from GO itself</h2>
+<p>ABRACL binds cofilin and reduces cofilin-stimulated filament disassembly without displacing<br />
+cofilin from the filament. GO has a molecular function for the opposite sign — <code>GO:0000513 actin
+severing activator activity</code>, "Binds to and increases the activity of a actin severing protein" —<br />
+and no inhibitor counterpart. The absence of that sibling term is a large part of why this gene<br />
+has no MF annotation. Proposed as a new term in the review.</p>
+<p><code>GO:0051015 actin filament binding</code> is proposed as a NEW annotation in the meantime: it is<br />
+directly demonstrated (purified protein, co-sedimentation, quantified against a no-actin<br />
+control), and it is honest about being weak.</p>
+<h2 id="loose-ends-not-annotated">Loose ends not annotated</h2>
+<ul>
+<li><strong>Nuclear localisation.</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/26537243">PMID:26537243</a> reports HSPC280/Abracl in the subventricular zone and<br />
+  that overexpression in Neuro2a inhibits neuronal differentiation. Nuclear localisation there is<br />
+  hard to reconcile with the lamellipodial pool; the protein is 9 kDa and would diffuse through<br />
+  nuclear pores regardless, so this needs a targeted experiment, not an annotation.</li>
+<li><strong>Winged-helix fold without DNA binding.</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/21082705">PMID:21082705</a> solved the NMR structure (PDB 2L2O).<br />
+  The fold is winged-helix-like but the groove is hydrophobic and the recognition helix negatively<br />
+  charged, so the natural reading is protein interaction, not DNA. No DNA-binding annotation<br />
+  exists and none should be added.</li>
+<li><strong>Cancer biology.</strong> Multiple knockdown papers in oesophageal, breast, gastric and glioma lines,<br />
+  plus upstream regulators MYBL2, CBX4 and miR-145-5p. These are disease-context studies of a<br />
+  normal actin regulator; they do not add a distinct GO process for the gene and are not<br />
+  annotated here.</li>
+</ul>
+<h2 id="correction-the-family-is-not-single-copy-and-the-subfamily-structure-matters">Correction: the family is not single-copy, and the subfamily structure matters</h2>
+<p>A first draft of this review called PTHR46334 a single-copy family, in five places. <strong>The PR's own<br />
+fetched data contradicts that</strong> — <code>RESULTS.md</code> shows <em>Arabidopsis</em> = 2 and <em>Zea mays</em> = 3, and the<br />
+PANTHER metadata records <code>subfamilies: 2</code>.</p>
+<p>Resolving the entries file:</p>
+<table>
+<thead>
+<tr>
+<th>Subfamily</th>
+<th>Members</th>
+<th>Composition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PTHR46334:SF1</code></td>
+<td>13</td>
+<td>animals, <em>Dictyostelium</em>, and most plant entries — includes <strong>human ABRACL (Q9P1F3)</strong> and <strong>Dicty cosA (Q558Y7)</strong></td>
+</tr>
+<tr>
+<td><code>PTHR46334:SF3</code></td>
+<td>2</td>
+<td>plant-restricted: <em>Arabidopsis</em> Q8LBN7, <em>Eutrema</em> B4YYA9</td>
+</tr>
+</tbody>
+</table>
+<p>This does <strong>not</strong> weaken the <code>GO:0032970</code> ACCEPT — it strengthens the provenance argument. The IBA<br />
+donor (<em>Dictyostelium</em> cosA) and the human target are <strong>both SF1</strong>, so the transfer is<br />
+<em>within-subfamily</em> and is not crossing the one boundary the family contains. The <code>propagation_review</code><br />
+now names that boundary rather than denying one exists.</p>
+<p>The lesson: the copy-number claim was a summary written alongside the analysis rather than read out<br />
+of it, and the analysis script printed it as hardcoded prose regardless of the counts fetched. Any<br />
+claim a script asserts should be derived from what the script fetched.</p>
+<h2 id="two-verifications-added-after-review">Two verifications added after review</h2>
+<p><strong><code>GO:0000513</code> is real.</strong> It is absent from the local ontology cache, so the reviewer could not<br />
+check it. QuickGO confirms: <code>GO:0000513 actin severing activator activity</code>, molecular_function,<br />
+not obsolete, defined as <em>"Binds to and increases the activity of a actin severing protein."</em> That<br />
+is exactly the positive counterpart of the inhibitor activity proposed under <code>proposed_new_terms</code>,<br />
+so the asymmetry the proposal rests on is genuine.</p>
+<p><strong>RPGRIP1L is genuinely ciliary.</strong> Conceded in the review rather than glossed: of the four BioID<br />
+baits that labelled ABRACL, three (SASS6, CNTRL, DCTN1) are centriolar or dynactin proteins, but<br />
+RPGRIP1L is a transition-zone protein. The bait panel is therefore not uniformly non-ciliary. It<br />
+does not rescue the annotation — proximity to one ciliary bait over hours of labelling is a<br />
+neighbourhood observation, not a localisation — but the argument is stronger for stating the<br />
+inconvenient part.</p>
+            </div>
+        </details>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioinformatics Results</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RESULTS.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9P1F3" data-a="DOC: Bioinformatics Results" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="what-actually-places-abracl-in-the-cilium">What actually places ABRACL in the cilium?</h1>
+<p>Generated by <code>analyze_cilium_evidence.py</code>. All numbers are fetched live from the IntAct and UniProt REST APIs at run time; nothing here is hard-coded.</p>
+<h2 id="question">Question</h2>
+<p>Human ABRACL carries <code>GO:0005929 cilium</code> (IEA, GO_REF:0000044), mapped from the UniProt subcellular-location line <code>Cell projection, cilium {ECO:0000305|PubMed:37759737}</code>. That publication is an expression study of mouse and cat embryonic telencephalon which does not assay ciliary localisation; it attributes the claim to a high-throughput proteomics study. This asks what that primary evidence is, and whether a ciliary role is plausible for the family.</p>
+<h2 id="part-1-the-physical-evidence-from-intact">Part 1 - the physical evidence, from IntAct</h2>
+<table>
+<thead>
+<tr>
+<th>Interactions recorded for Q9P1F3</th>
+<th>5</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Distinct detection methods</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Distinct source publications</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Partner</th>
+<th>Detection method</th>
+<th>Interaction type</th>
+<th>Publication</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CNTRL</td>
+<td>proximity-dependent biotin identification</td>
+<td>proximity</td>
+<td>26638075 (pubmed)</td>
+</tr>
+<tr>
+<td>CNTRL</td>
+<td>proximity-dependent biotin identification</td>
+<td>proximity</td>
+<td>26638075 (pubmed)</td>
+</tr>
+<tr>
+<td>DCTN1</td>
+<td>proximity-dependent biotin identification</td>
+<td>proximity</td>
+<td>26638075 (pubmed)</td>
+</tr>
+<tr>
+<td>RPGRIP1L</td>
+<td>proximity-dependent biotin identification</td>
+<td>proximity</td>
+<td>26638075 (pubmed)</td>
+</tr>
+<tr>
+<td>SASS6</td>
+<td>proximity-dependent biotin identification</td>
+<td>proximity</td>
+<td>26638075 (pubmed)</td>
+</tr>
+</tbody>
+</table>
+<p>Detection methods observed: proximity-dependent biotin identification.</p>
+<h2 id="part-2-is-the-family-present-where-cilia-do-not-exist">Part 2 - is the family present where cilia do not exist?</h2>
+<p>Counts are UniProtKB entries (reviewed + unreviewed) cross-referenced to each PANTHER family in each proteome. Angiosperms build no cilium, basal body or centriole at any life stage, and neither does <em>Dictyostelium discoideum</em> - which is also the donor organism for ABRACL's IBA annotation. A family whose conserved function is ciliary should score zero in all four.</p>
+<table>
+<thead>
+<tr>
+<th>PANTHER</th>
+<th>Family</th>
+<th>Role</th>
+<th>Homo sapiens</th>
+<th>Danio rerio</th>
+<th>Chlamydomonas reinhardtii</th>
+<th>Arabidopsis thaliana</th>
+<th>Oryza sativa subsp. japonica</th>
+<th>Zea mays</th>
+<th>Dictyostelium discoideum</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PTHR46334</td>
+<td>Costars / ABRACL</td>
+<td>test</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>2</td>
+<td>1</td>
+<td>3</td>
+<td>1</td>
+</tr>
+<tr>
+<td>PTHR44117</td>
+<td>IFT88</td>
+<td>cilium-core control</td>
+<td>7</td>
+<td>8</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>PTHR12969</td>
+<td>IFT52</td>
+<td>cilium-core control</td>
+<td>2</td>
+<td>4</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>PTHR20870</td>
+<td>BBS1</td>
+<td>cilium-core control</td>
+<td>11</td>
+<td>3</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>PTHR46090</td>
+<td>ARL13B</td>
+<td>cilium-core control</td>
+<td>18</td>
+<td>13</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>PTHR11588</td>
+<td>tubulin beta</td>
+<td>universal control</td>
+<td>122</td>
+<td>54</td>
+<td>11</td>
+<td>23</td>
+<td>22</td>
+<td>98</td>
+<td>4</td>
+</tr>
+</tbody>
+</table>
+<h3 id="read-out">Read-out</h3>
+<ul>
+<li>Costars/ABRACL entries across the 4 aciliate proteomes: <strong>7</strong></li>
+<li>IFT88 (cilium-core control) across the same proteomes: <strong>0</strong></li>
+<li>IFT52 (cilium-core control) across the same proteomes: <strong>0</strong></li>
+<li>BBS1 (cilium-core control) across the same proteomes: <strong>0</strong></li>
+<li>ARL13B (cilium-core control) across the same proteomes: <strong>0</strong></li>
+<li>Tubulin beta (universal control) across the same proteomes: <strong>147</strong></li>
+</ul>
+<h2 id="interpretation">Interpretation</h2>
+<p>Part 1 shows the entire physical-interaction record for ABRACL is one proximity-labelling experiment. BioID biotinylates whatever comes within roughly 10 nm of the bait during hours of labelling, so a prey list is a neighbourhood, not a localisation call; and three of the four baits here (SASS6, CNTRL, DCTN1) are centriolar or dynactin proteins rather than ciliary ones. Part 2 shows the family is retained in four proteomes that build no cilium at all, while four cilium-core families are absent from every one of them and the universal control is present in all. The reciprocal observation points the same way: no PTHR46334 member is cross-referenced in <em>Chlamydomonas reinhardtii</em>, the most heavily ciliated proteome in the panel, where all four cilium-core controls are present. Costars distribution therefore does not track cilium presence in either direction. That single absence is a cross-reference count rather than a homology search, so it is reported as an observation and no weight is placed on it alone.</p>
+<p>Neither part proves ABRACL is absent from human cilia; a lineage-specific ciliary role would not show up in a phyletic comparison, and BioID hits are sometimes real. What they establish is narrower and sufficient for curation: there is no direct localisation evidence behind the cilium annotation, and the conserved function of the family cannot be ciliary.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9P1F3
+gene_symbol: ABRACL
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: ABRACL is an 81-residue protein and the human member of the Costars family, a small eukaryotic
+  family that is usually but not universally single-copy per genome (PANTHER PTHR46334 resolves into two
+  subfamilies, and Arabidopsis carries two members) and absent from fungi. Its NMR structure is a winged
+  helix-like fold - three alpha-helices packed against four antiparallel beta-strands - but it lacks DNA-binding
+  activity, and the surface that in canonical winged-helix proteins accommodates the DNA backbone is instead
+  a conserved hydrophobic groove, taken to be a protein-interaction site. ABRACL binds filamentous actin
+  directly but weakly in vitro, and in cells it associates with the actin-severing protein cofilin-1 (CFL1),
+  with which it colocalises at the leading edge of lamellipodia in migrating cells. On purified proteins
+  it blunts cofilin-stimulated depolymerisation of F-actin in a dose-dependent way without displacing
+  cofilin from filaments, so it acts on cofilin&#39;s activity rather than competing for the filament. Cells
+  depleted of ABRACL migrate less and change shape, and in Dictyostelium loss of the ortholog Costars
+  (cosA) slows chemotactic movement and disturbs F-actin distribution, defects that expression of the
+  human protein reverses. The direction in which ABRACL shifts the F-/G-actin balance differs between
+  the Dictyostelium and human systems, so the protein is best described as a modulator of actin filament
+  dynamics whose sign is context-dependent. It is broadly expressed across human tissues, elevated in
+  several carcinomas, and in the embryonic mammalian forebrain it marks subpallial progenitors, migrating
+  interneurons and postmitotic neurons.
+existing_annotations:
+- term:
+    id: GO:0032970
+    label: regulation of actin filament-based process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &#39;Accepted as the core process, and deliberately left at this level of specificity.
+
+
+      The transfer itself is as clean as phylogenetic transfers get. PANTHER PTHR46334 does contain two
+      subfamilies, but the transfer stays inside one of them: both the donor and the target are PTHR46334:SF1,
+      while the separate SF3 is plant-restricted (Arabidopsis Q8LBN7, Eutrema B4YYA9). So no subfamily
+      boundary is crossed, and the WITH/FROM donor dictyBase:DDB_G0272861 is Dictyostelium cosA, which
+      carries its own experimental annotation to this same term. More than that, the transfer has been
+      tested directly: the human protein expressed in cosA-null Dictyostelium restores the mutant&#39;&#39;s motility
+      and actin phenotypes. Functional complementation across that distance is a stronger warrant for
+      an ortholog transfer than any sequence statistic, and independent human experimental work reaches
+      the same conclusion from the other direction.
+
+
+      The interesting question is whether to make the term more specific, and the answer is no. Three
+      lines of evidence disagree about the SIGN of ABRACL&#39;&#39;s effect on the filamentous/globular actin
+      balance. Deleting the Dictyostelium ortholog RAISES cytoskeleton-associated actin; depleting human
+      ABRACL LOWERS the cellular F-/G-actin ratio; and purified human ABRACL on its own INHIBITS actin
+      polymerisation, a result the authors themselves flag as contradicting their cellular data. Only
+      in the presence of cofilin does ABRACL clearly favour F-actin. So GO:0030835 negative regulation
+      of actin filament depolymerization and GO:0030837 negative regulation of actin filament polymerization
+      are each supported by one part of the evidence and contradicted by another. The unsigned parent
+      is not an under-annotation here; it is the strongest claim every dataset supports, and the PAINT
+      curator was right to stop at it.&#39;
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:20940261
+      supporting_text: Expressing cosA or its human counterpart mCostars eliminated abnormalities of cosA(-)
+        cells.
+    - reference_id: PMID:20940261
+      supporting_text: cosA(-) cells exhibited changes in the actin cytoskeleton, showing aberrant distribution
+        of F-actin in fluorescence cell staining and an increased amount of cytoskeleton-associated actin.
+    - reference_id: PMID:33670794
+      supporting_text: both ABRACL-knockdown and ABRACL-knockout cells displayed lower cellular F-/G-actin
+        ratios compared to the control cells
+    - reference_id: PMID:33670794
+      supporting_text: These in vitro results appeared to contradict the above-mentioned finding of decreased
+        F/G-actin ratios in cells lacking ABRACL
+    - reference_id: file:human/ABRACL/ABRACL-deep-research-affinage.md
+      supporting_text: ABRACL is a small winged helix-like protein that regulates actin cytoskeletal dynamics
+        and cell motility, a role conserved from the Dictyostelium ortholog Costars
+    propagation_review:
+      root_cause: NO_FAILURE_CORE
+      source_entities:
+      - source_id: dictyBase:DDB_G0272861
+        source_label: cosA (Dictyostelium discoideum Costars)
+        source_status: SUPPORTS_TRANSFER
+        comment: Donor carries an experimental annotation to the same term, and the human protein rescues
+          the cosA-null phenotype, so the transfer has been tested rather than assumed.
+      - source_id: PANTHER:PTN000507089
+        source_label: Costars ancestral node (PTHR46334)
+        source_status: SUPPORTS_TRANSFER
+        comment: &#39;PANTHER metadata records subfamilies: 2 for PTHR46334, so this is not the single-copy,
+          paralog-free node an earlier draft of this review claimed. The transfer nonetheless stays inside
+          one subfamily: the Dictyostelium cosA donor (Q558Y7) and human ABRACL (Q9P1F3) are both PTHR46334:SF1
+          (13 members, animals plus Dictyostelium plus most plant entries), while the separate SF3 is
+          plant-restricted (2 members, Arabidopsis Q8LBN7 and Eutrema B4YYA9). No subfamily boundary is
+          crossed, so the node supports the transfer - but for that reason, not for the absence of paralogs.&#39;
+- term:
+    id: GO:0005929
+    label: cilium
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &#39;Removed. Traced back, this annotation rests on nothing that was ever a localisation observation.
+
+
+      The chain has four links. GOA maps UniProtKB-SubCell:SL-0066 mechanically, as GO_REF:0000044 is
+      designed to do. The UniProt line it maps is flagged ECO:0000305 - a curator inference, not an experimental
+      record - and cites PubMed:37759737. That paper is an expression study of mouse and cat embryonic
+      telencephalon which reports no ciliary localisation of its own; its single sentence on the subject
+      attributes the claim to somebody else&#39;&#39;s high-throughput proteomics. In the same paragraph it reports
+      evidence pointing the other way, that neither the transcript nor the protein is present in the ventricular
+      zone, which is precisely where the ciliated progenitors sit. The proteomics study being cited is
+      PMID:26638075, the Gupta et al. centrosome-cilium BioID interactome, and it is the only source of
+      physical-interaction data for ABRACL in IntAct at all: five proximity hits, one publication, one
+      detection method.
+
+
+      Proximity-dependent biotinylation labels whatever comes within roughly ten nanometres of the bait
+      over hours, so its output is a neighbourhood rather than a compartment assignment, and three of
+      the four baits (SASS6, CNTRL, DCTN1) are centriolar or dynactin proteins rather than ciliary ones.
+      The fourth, RPGRIP1L, IS genuinely ciliary - a transition-zone protein - so the bait panel is not
+      uniformly non-ciliary and that should be conceded. It does not rescue the annotation: proximity
+      to one ciliary bait over hours of labelling is still a neighbourhood observation, not a localisation
+      call. A family-level check points the same way: Costars is retained in Arabidopsis, rice, maize
+      and Dictyostelium, none of which builds a cilium, basal body or centriole, while IFT88, IFT52, BBS1
+      and ARL13B are absent from every one of those proteomes.
+
+
+      None of this proves ABRACL never enters a human cilium, and a lineage-specific role would not show
+      up in a phyletic comparison. What it establishes is that no evidence for the annotation exists at
+      any link in the chain, and that the conserved function of the family cannot be ciliary. An unsupported
+      compartment assignment on an otherwise sparsely annotated protein is worse than no assignment, because
+      it is the kind of statement downstream tools propagate.&#39;
+    action: REMOVE
+    reason: The UniProt subcellular location this IEA maps is a curator inference (ECO:0000305) whose
+      cited paper reports no ciliary localisation and in fact places the protein outside the ciliated
+      ventricular zone. The only primary data behind it are proximity-labelling hits from a single BioID
+      screen with centriolar baits, which do not establish a localisation, and the Costars family is retained
+      in four proteomes that build no cilium at all.
+    supported_by:
+    - reference_id: file:human/ABRACL/ABRACL-uniprot.txt
+      supporting_text: CC       {ECO:0000305|PubMed:37759737}.
+    - reference_id: PMID:37759737
+      supporting_text: a high-throughput proteomics study in non-neuronal cell lines has shown that Abracl
+        is associated with the primary cilia
+    - reference_id: PMID:37759737
+      supporting_text: our results show that neither Abracl mRNA nor Abracl were expressed in the VZ
+    - reference_id: file:human/ABRACL/ABRACL-bioinformatics/RESULTS.md
+      supporting_text: &#39;Detection methods observed: proximity-dependent biotin identification.&#39;
+    propagation_review:
+      root_cause: SOURCE_WEAK_OR_INFERRED
+      failure_modes:
+      - SOURCE_EVIDENCE_WEAK
+      - SOURCE_MISCITATION
+      - COMPARTMENT_OR_COMPLEX_MISMATCH
+      source_entities:
+      - source_id: UniProtKB-SubCell:SL-0066
+        source_label: Cilium (UniProt subcellular location)
+        source_status: SOURCE_WEAK_OR_INFERRED
+        comment: The GOA row is a faithful mapping of this location term; the fault is upstream, in the
+          ECO:0000305 statement being mapped, not in the mapping.
+      - source_id: PMID:37759737
+        source_label: Troumpoukis et al. 2023, Abracl-expressing populations in embryonic telencephalon
+        source_status: SOURCE_BAD
+        comment: Cited by UniProt as the evidence for cilium, but it reports no ciliary localisation and
+          states that neither Abracl mRNA nor protein is present in the ventricular zone.
+      - source_id: PMID:26638075
+        source_label: Gupta et al. 2015, centrosome-cilium BioID interactome
+        source_status: SOURCE_WEAK_OR_INFERRED
+        comment: The actual primary source, two citations removed. Five proximity-labelling hits with
+          centriolar and dynactin baits; a BioID neighbourhood is not a compartment call.
+- term:
+    id: GO:0030027
+    label: lamellipodium
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &#39;Accepted, and worth separating sharply from the cilium row it was generated alongside. Both
+      are IEA mappings of UniProt subcellular locations under GO_REF:0000044, but the statements being
+      mapped are not comparable: the cilium line is ECO:0000305, a curator inference, whereas the lamellipodium
+      line is ECO:0000269, backed by experiment.
+
+
+      The experiment is a good one for a localisation call. Endogenous ABRACL was stained with a specific
+      antibody in migrating MDA-MB-231 cells fixed during wound closure, and the signal coincided with
+      F-actin at the leading edge; ABRACL/cofilin colocalisation in the same cells was likewise concentrated
+      at lamellipodia. This is a direct assay on the untagged protein at native levels, so the annotation
+      would properly be IDA against PMID:33670794 rather than IEA against a location vocabulary. The recommendation
+      is to upgrade the evidence code, not to change the term.&#39;
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ABRACL/ABRACL-uniprot.txt
+      supporting_text: &#39;CC   -!- SUBCELLULAR LOCATION: Cell projection, lamellipodium&#39;
+    - reference_id: PMID:33670794
+      supporting_text: fluorescence signals for endogenous ABRACL and F-actin were colocalized at the
+        leading edge of lamellipodia
+    - reference_id: PMID:33670794
+      supporting_text: the colocalization was particularly evident at lamellipodia
+- term:
+    id: GO:0051015
+    label: actin filament binding
+  evidence_type: IDA
+  original_reference_id: PMID:33670794
+  qualifier: enables
+  review:
+    summary: &#39;Proposed new annotation, and the first molecular function this gene would carry. ABRACL
+      currently has none at all, which is the largest single gap in its record: a protein with a solved
+      structure, a named interaction partner and two in vitro assays on purified protein has no MF row.
+
+
+      The assay is direct and on the right material. GST-ABRACL was expressed in E. coli, cleaved with
+      Factor Xa and the tag removed, so the co-sedimentation was performed on untagged protein; the pellet
+      signal was quantified across independent experiments against a no-F-actin control. UniProt records
+      the same conclusion in its SUBUNIT line.
+
+
+      The annotation is offered with its limitation stated rather than buried: the authors describe the
+      binding as very weak, and the fraction of ABRACL recovered in the pellet was small. That is a reason
+      to record the activity honestly, not to omit it - a weak direct binding measured against a proper
+      control is evidence, and it is the only representable molecular function this protein has. The activity
+      that actually matters mechanistically, inhibition of a cofilin-type severing protein, has no GO
+      term at all and is proposed as a new one below.&#39;
+    action: NEW
+    supported_by:
+    - reference_id: PMID:33670794
+      supporting_text: These results indicated that purified recombinant ABRACL bound to F-actin, although
+        very weakly, under the in vitro experimental conditions.
+    - reference_id: file:human/ABRACL/ABRACL-uniprot.txt
+      supporting_text: &#39;CC   -!- SUBUNIT: Weakly interacts with F-actin (PubMed:33670794). Interacts&#39;
+- term:
+    id: GO:0030335
+    label: positive regulation of cell migration
+  evidence_type: IMP
+  original_reference_id: PMID:33670794
+  qualifier: involved_in
+  review:
+    summary: &#39;Proposed new annotation. The migration phenotype is the best-replicated thing known about
+      this gene and it is not represented in GO at all.
+
+
+      The evidence is bidirectional and uses more than one perturbation. Transient overexpression increases
+      Transwell migration of MDA-MB-231 cells; two independent shRNAs reduce it in HCT116; re-expression
+      from an RNAi-resistant construct restores it, which excludes off-target knockdown; and five independent
+      CRISPR knockout clones reduce it again. The Dictyostelium ortholog gives the same sign - cosA-null
+      cells move more slowly toward cAMP - so this is not a cancer-cell-line peculiarity.
+
+
+      One qualification belongs on the record rather than in a footnote: in MDA-MB-231 the basal migration
+      of knockout cells was unaffected, and the defect appeared only under EGF stimulation. ABRACL is
+      therefore a modulator of stimulated migration in at least some contexts rather than a component
+      required for baseline motility, and the positive-regulation term rather than a participation term
+      is the right shape for that.&#39;
+    action: NEW
+    supported_by:
+    - reference_id: PMID:33670794
+      supporting_text: All five ABRACL-knockout clones examined displayed significantly reduced migration
+        in the Transwell assay
+    - reference_id: PMID:33670794
+      supporting_text: In this cell line, depletion of ABRACL expression did not affect the basal migration
+        activity
+    - reference_id: PMID:33670794
+      supporting_text: ABRACL-knockout cells exhibited significantly decreased migration compared to the
+        parental control cells
+    - reference_id: PMID:20940261
+      supporting_text: Analysis of cell motion in cAMP gradients revealed decreased speed but wild-type-like
+        directional persistence of cosA(-) cells, suggesting a defect in the cellular machinery for motility
+        rather than for chemotactic orientation.
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping,
+    accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: PMID:33670794
+  title: Human Costars Family Protein ABRACL Modulates Actin Dynamics and Cell Migration and Associates
+    with Tumorigenic Growth.
+  findings:
+  - statement: Purified untagged recombinant ABRACL binds F-actin directly in a co-sedimentation assay,
+      though weakly.
+    supporting_text: These results indicated that purified recombinant ABRACL bound to F-actin, although
+      very weakly, under the in vitro experimental conditions.
+  - statement: ABRACL and cofilin interact in cells, shown by proximity ligation that is lost on knockdown
+      of either partner and by co-immunoprecipitation of endogenous cofilin.
+    supporting_text: Fluorescence PLA signals were detected in the control cells but greatly diminished
+      in ABRACL- or cofilin-knockdown cells
+  - statement: ABRACL inhibits cofilin-stimulated depolymerisation of pyrene F-actin in a dose-dependent
+      manner.
+    supporting_text: the addition of ABRACL in the reaction blunted this effect of cofilin in a dose-dependent
+      manner
+  - statement: The inhibition is not simple displacement - ABRACL does not prevent cofilin from binding
+      F-actin.
+    supporting_text: We found that ABRACL did not inhibit the co-sedimentation of cofilin with F-actin
+  - statement: ABRACL alone inhibits actin polymerisation in vitro, which the authors note is inconsistent
+      with the direction of the cellular F/G-actin phenotype.
+    supporting_text: These in vitro results appeared to contradict the above-mentioned finding of decreased
+      F/G-actin ratios in cells lacking ABRACL
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: The one substantial functional paper on human ABRACL, full text available and read in
+      full. Title matches the cached record. Its central claims are supported by the figures described,
+      and it is unusually candid about the internal inconsistency between its in vitro and cellular results,
+      which is why this review declines to give the process annotation a sign. Note that the F-actin binding
+      it reports is explicitly weak and the cofilin interaction is established in cells rather than by
+      a binary assay on purified proteins.
+- id: PMID:20940261
+  title: Costars, a Dictyostelium protein similar to the C-terminal domain of STARS, regulates the actin
+    cytoskeleton and motility.
+  findings:
+  - statement: cosA-null Dictyostelium cells move more slowly toward cAMP but steer normally, indicating
+      a motility-machinery defect rather than a chemotactic-orientation defect.
+    supporting_text: Analysis of cell motion in cAMP gradients revealed decreased speed but wild-type-like
+      directional persistence of cosA(-) cells, suggesting a defect in the cellular machinery for motility
+      rather than for chemotactic orientation.
+  - statement: Loss of Costars increases cytoskeleton-associated actin, the opposite sign to the human
+      knockdown phenotype.
+    supporting_text: cosA(-) cells exhibited changes in the actin cytoskeleton, showing aberrant distribution
+      of F-actin in fluorescence cell staining and an increased amount of cytoskeleton-associated actin.
+  - statement: The human ortholog functionally replaces Costars in Dictyostelium, which is the strongest
+      available warrant for the phylogenetic transfer.
+    supporting_text: Expressing cosA or its human counterpart mCostars eliminated abnormalities of cosA(-)
+      cells.
+  full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Cached title matches. Abstract only, but the three claims used here are all stated in
+      the abstract itself, so no full-text access is needed to support them. This is the donor evidence
+      behind the IBA and the source of the cross-species complementation result; it is also the source
+      of the sign discrepancy with the human data, which is why it is cited on both sides of that argument
+      rather than only in support.
+- id: PMID:37759737
+  title: Characterization of the Abracl-Expressing Cell Populations in the Embryonic Mammalian Telencephalon.
+  findings:
+  - statement: The paper&#39;s only statement linking Abracl to cilia is a citation of a third-party high-throughput
+      proteomics study, not an observation of its own.
+    supporting_text: a high-throughput proteomics study in non-neuronal cell lines has shown that Abracl
+      is associated with the primary cilia
+  - statement: Its own data place Abracl outside the ventricular zone, where the ciliated progenitors
+      reside.
+    supporting_text: our results show that neither Abracl mRNA nor Abracl were expressed in the VZ
+  reference_review:
+    relevance: MEDIUM
+    correctness: MISCITED
+    review_notes: &#39;Cached title matches and the paper itself is sound - a careful expression and co-labelling
+      study of mouse and cat embryonic forebrain. It is marked MISCITED for the use made of it elsewhere,
+      not for anything it does wrong: UniProt cites it as the evidence for Cell projection, cilium on
+      human ABRACL, and it contains no such observation. It reports somebody else&#39;&#39;s proteomics result
+      in its Discussion and, in the same paragraph, data that argue against the protein being in the ciliated
+      ventricular zone. It is also a mouse and cat study, so even a genuine localisation finding would
+      need an ISS-style transfer rather than a direct human location. Note on the enum: MISCITED is defined
+      as &#39;&#39;right paper, but it does not support the claim&#39;&#39;, which strictly describes how a citation is
+      used rather than a property of the paper. It is applied here to record that this reference is cited
+      elsewhere in GOA for something it does not show; within this document the paper is cited only for
+      what it does report. Flagged because a reader aggregating correctness values could otherwise read
+      it as a defect in this review&#39;&#39;s own use of the reference.&#39;
+- id: PMID:26638075
+  title: A Dynamic Protein Interaction Landscape of the Human Centrosome-Cilium Interface.
+  findings: []
+  full_text_unavailable: true
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &#39;Cached title matches. Identified as the actual primary source at the far end of the
+      cilium annotation&#39;&#39;s citation chain, and confirmed independently: querying IntAct for Q9P1F3 returns
+      five interactions, all proximity-dependent biotin identification, all from this one publication,
+      with baits SASS6, CNTRL, DCTN1 and RPGRIP1L. The screen is a legitimate and well-executed piece
+      of work; the error lies in a proximity-labelling prey list being read downstream as a subcellular
+      localisation.&#39;
+- id: PMID:21082705
+  title: Solution structure of the human HSPC280 protein.
+  findings:
+  - statement: The fold is winged helix-like but the protein does not bind DNA, which forecloses the annotation
+      a winged-helix fold would otherwise invite.
+    supporting_text: However, HEPC280 is not a typical DNA-binding winged helix protein in that it lacks
+      DNA-binding activity.
+  - statement: A hydrophobic groove is conserved between the Costars family and the Abra C-terminal domain
+      and is proposed to mediate protein interaction.
+    supporting_text: Comparisons with the C-terminal 80-residue domain of proteins in the Abra family
+      reveal a conserved hydrophobic groove in the HSPC280 family, which may allow HSPC280 to interact
+      with other proteins.
+  full_text_unavailable: true
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &#39;Cached title matches; PDB 2L2O and the secondary-structure features in the UniProt
+      feature table correspond to it. Abstract only, but the two claims drawn from it are stated there.
+      Cited here mainly for a negative that matters: a winged-helix fold invites a DNA-binding annotation,
+      and this paper rules one out explicitly. The abstract contains a typo, HEPC280 for HSPC280, which
+      is reproduced verbatim in the quote above.&#39;
+- id: PMID:26537243
+  title: HSPC280, a winged helix protein expressed in the subventricular zone of the developing ganglionic
+    eminences, inhibits neuronal differentiation.
+  findings: []
+  full_text_unavailable: true
+  reference_review:
+    relevance: LOW
+    correctness: UNVERIFIED
+    review_notes: Cached title matches. Abstract only; not used to support any annotation. Recorded because
+      it reports a nuclear pool of the protein in neural progenitors and an anti-differentiation effect
+      on overexpression in Neuro2a cells, both of which sit awkwardly with the lamellipodial pool that
+      the human functional work establishes. At 9 kDa the protein would enter nuclei by passive diffusion
+      regardless of any targeting, so an overexpression result is a weak basis for a nuclear location
+      and none is proposed. Marked UNVERIFIED rather than VERIFIED because the localisation claim was
+      not checkable from the abstract.
+- id: file:human/ABRACL/ABRACL-bioinformatics/RESULTS.md
+  title: What actually places ABRACL in the cilium?
+  findings:
+  - statement: The entire physical-interaction record for ABRACL in IntAct is one proximity-labelling
+      experiment.
+    supporting_text: &#39;Detection methods observed: proximity-dependent biotin identification.&#39;
+  - statement: The Costars family is retained in four proteomes that build no cilium, while four cilium-core
+      control families are absent from all of them.
+    supporting_text: Costars distribution therefore does not track cilium presence in either direction.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &#39;Analysis written for this review; the script queries IntAct and UniProt live and hard-codes
+      no results. It was designed to be able to fail: had the family turned out to be absent from angiosperms,
+      or had IntAct returned affinity-capture or two-hybrid evidence alongside the BioID hits, the cilium
+      annotation would have been left standing. It also records the one observation that cuts against
+      a tidy story - Costars is not cross-referenced in the Chlamydomonas proteome - and declines to lean
+      on it, since a cross-reference count is not a homology search.&#39;
+- id: file:human/ABRACL/ABRACL-deep-research-affinage.md
+  title: Affinage mechanistic annotation for ABRACL (human)
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Machine-fetched Affinage record; gates passed, all eight citations are genuine numeric
+      PMIDs, and the mechanistic narrative matches the primary literature on the points this review uses.
+      Two cautions. Its own GO grounding proposes GO:0005634 nucleus as a localisation, which rests on
+      the abstract-only Neuro2a overexpression study and is not adopted here. And its narrative asserts
+      the cofilin-inhibition mechanism without recording the authors&#39; own statement that their in vitro
+      and cellular results conflict, which is the single most important caveat for annotating this gene.
+core_functions:
+- description: ABRACL binds filamentous actin weakly and associates with the actin-severing protein cofilin-1
+    at the leading edge of lamellipodia, where it reduces cofilin-stimulated filament disassembly without
+    displacing cofilin from the filament. Through this it tunes the balance between filamentous and globular
+    actin and modulates cell migration. The molecular function recorded here is the one GO can currently
+    express; the activity that carries the mechanism - inhibiting a cofilin-type severing protein - has
+    no term, and is proposed as a new one.
+  molecular_function:
+    id: GO:0051015
+    label: actin filament binding
+  directly_involved_in:
+  - id: GO:0032970
+    label: regulation of actin filament-based process
+  - id: GO:0030335
+    label: positive regulation of cell migration
+  locations:
+  - id: GO:0030027
+    label: lamellipodium
+  supported_by:
+  - reference_id: PMID:33670794
+    supporting_text: These results indicated that purified recombinant ABRACL bound to F-actin, although
+      very weakly, under the in vitro experimental conditions.
+  - reference_id: PMID:33670794
+    supporting_text: the addition of ABRACL in the reaction blunted this effect of cofilin in a dose-dependent
+      manner
+  - reference_id: PMID:33670794
+    supporting_text: We found that ABRACL did not inhibit the co-sedimentation of cofilin with F-actin
+  - reference_id: file:human/ABRACL/ABRACL-uniprot.txt
+    supporting_text: CC       with CFL1; this interaction decreases CFL1-mediated actin
+knowledge_gaps:
+- gap_statement: GO cannot express what ABRACL does. It binds cofilin and reduces cofilin-stimulated filament
+    disassembly without competing for the filament, which is an inhibitor activity directed at an actin-severing
+    protein. GO carries the activator of exactly this activity, GO:0000513 actin severing activator activity,
+    defined as binding to and increasing the activity of an actin severing protein, and no inhibitor counterpart.
+  boundary: &#39;What is established is the effect and its independence from displacement: ABRACL blunts cofilin-stimulated
+    pyrene F-actin depolymerisation dose-dependently, and does not prevent cofilin from co-sedimenting
+    with F-actin. What is missing is a term, not an experiment.&#39;
+  gap_kind:
+  - ONTOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &#39;This is a large part of why a protein with a solved structure, a named partner and two
+    assays on purified protein carries no molecular function annotation at all. The gap is not specific
+    to ABRACL: any protein that dampens a severing factor rather than sequestering actin faces the same
+    missing branch.&#39;
+  resolution: Create the sibling term, actin severing inhibitor activity, under GO:0140678 molecular function
+    inhibitor activity, mirroring GO:0000513.
+  provenance:
+  - reference_id: PMID:33670794
+    supporting_text: the addition of ABRACL in the reaction blunted this effect of cofilin in a dose-dependent
+      manner
+  - reference_id: PMID:33670794
+    supporting_text: We found that ABRACL did not inhibit the co-sedimentation of cofilin with F-actin
+- gap_statement: The direction in which ABRACL shifts the filamentous/globular actin balance is unresolved.
+    Losing the Dictyostelium ortholog raises cytoskeleton-associated actin; depleting human ABRACL lowers
+    the F-/G-actin ratio; and purified human ABRACL on its own inhibits polymerisation. No single signed
+    statement fits all three.
+  boundary: That ABRACL modulates actin filament dynamics is established from three independent systems,
+    and the cofilin-dependent arm of the mechanism is established on purified proteins. Only the sign
+    of the net cellular effect is unsettled.
+  gap_kind:
+  - BIOLOGY
+  - CURATION
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: It determines whether the correct process term is negative regulation of actin filament
+    depolymerization, negative regulation of actin filament polymerization, or neither, and it is the
+    reason this review leaves the annotation at the unsigned parent rather than refining it.
+  resolution: Single-filament TIRF microscopy with purified actin, cofilin and ABRACL at defined ratios,
+    measuring severing frequency, elongation rate and cofilin cluster nucleation separately, rather than
+    inferring the sign from bulk pyrene traces or from steady-state cellular fractionation.
+  provenance:
+  - reference_id: PMID:33670794
+    supporting_text: These in vitro results appeared to contradict the above-mentioned finding of decreased
+      F/G-actin ratios in cells lacking ABRACL
+  - reference_id: PMID:20940261
+    supporting_text: cosA(-) cells exhibited changes in the actin cytoskeleton, showing aberrant distribution
+      of F-actin in fluorescence cell staining and an increased amount of cytoskeleton-associated actin.
+proposed_new_terms:
+- proposed_name: actin severing inhibitor activity
+  proposed_definition: Binds to and decreases the activity of an actin severing protein.
+  proposed_parent:
+    id: GO:0140678
+    label: molecular function inhibitor activity
+  justification: &#39;GO already contains the positive half of this pair - GO:0000513 actin severing activator
+    activity, defined as binding to and increasing the activity of an actin severing protein - but no
+    inhibitor. ABRACL is a clean instance of the missing half: it binds cofilin, blunts cofilin-stimulated
+    F-actin depolymerisation dose-dependently, and does so without preventing cofilin from binding the
+    filament, so it is acting on the severing protein&#39;&#39;s activity rather than competing for actin. The
+    proposed definition is the existing activator definition with the sign reversed, so the term needs
+    no new modelling machinery. Without it, a protein whose entire known function is dampening a severing
+    factor can be annotated only to actin filament binding, which is true of ABRACL but conveys none of
+    the mechanism, or to nothing at all, which is the current state.&#39;
+  supported_by:
+  - reference_id: PMID:33670794
+    supporting_text: the addition of ABRACL in the reaction blunted this effect of cofilin in a dose-dependent
+      manner
+  - reference_id: PMID:33670794
+    supporting_text: We found that ABRACL did not inhibit the co-sedimentation of cofilin with F-actin
+suggested_questions:
+- question: &#39;Does ABRACL bind cofilin directly? Every line of evidence for the interaction is in cells
+    - colocalisation, proximity ligation, co-immunoprecipitation - and the in vitro experiment that follows
+    is functional rather than binary: ABRACL blunts cofilin&#39;&#39;s effect on filaments. A direct binary binding
+    measurement between the two purified proteins, with an affinity, has not been reported, so it remains
+    possible that the two meet on the filament rather than in solution.&#39;
+- question: Which way does ABRACL push the actin balance, and why do the systems disagree? Deleting the
+    Dictyostelium ortholog raises cytoskeleton-associated actin, depleting human ABRACL lowers the F-/G-actin
+    ratio, and purified ABRACL alone inhibits polymerisation. The authors of the human study flag the
+    contradiction themselves. Until it is resolved, no signed regulatory term can be justified.
+- question: What occupies the conserved hydrophobic groove? The NMR structure identifies a groove shared
+    with the ABRA C-terminal domain and proposes it as a protein-interaction site, but no residue in it
+    has been mutated and no partner has been mapped onto it. Whether cofilin binds there is the obvious
+    first test.
+- question: &#39;Is there anything to the centrosome connection? The cilium annotation should go, but the
+    underlying BioID data are real: ABRACL was labelled by SASS6, CNTRL, DCTN1 and RPGRIP1L baits. Cofilin
+    and actin have roles at the centrosome, so a genuine centrosomal pool is not absurd - it has simply
+    never been tested by any method other than proximity labelling.&#39;
+- question: Is the nuclear pool reported in neural progenitors real, and is it functional? A 9 kDa protein
+    diffuses through nuclear pores whether or not it is targeted, and the supporting experiment is overexpression
+    in a neuroblastoma line. Distinguishing passive equilibration from active retention needs endogenous
+    tagging.
+suggested_experiments:
+- hypothesis: ABRACL binds cofilin directly, through the conserved hydrophobic groove identified in the
+    NMR structure.
+  description: Measure the affinity of purified ABRACL for purified CFL1 by ITC or SPR in the absence
+    of actin, then map the interface by NMR chemical-shift perturbation onto the 2L2O structure and test
+    predicted groove residues by mutation, scoring loss of cofilin binding and loss of the inhibitory
+    effect on depolymerisation together. A separation-of-function mutant that binds F-actin but not cofilin
+    would settle which activity carries the cellular phenotype.
+  experiment_type: biophysics
+- hypothesis: ABRACL reduces cofilin-mediated severing rather than altering filament elongation or cofilin
+    binding.
+  description: Use single-filament TIRF microscopy with fluorescently labelled actin and cofilin, titrating
+    ABRACL, and measure severing events per filament length per unit time, cofilin cluster nucleation
+    density, and elongation rate as separate observables. Bulk pyrene assays cannot distinguish these,
+    which is why the sign of ABRACL&#39;s effect is currently ambiguous.
+  experiment_type: in vitro reconstitution
+- hypothesis: The cilium and nucleus localisations attributed to ABRACL are artefacts of proximity labelling
+    and of overexpression respectively.
+  description: Knock a fluorescent tag into the endogenous ABRACL locus in a ciliated human line such
+    as RPE-1, serum-starve to induce primary cilia, and image the tagged protein against ciliary and centriolar
+    markers, alongside neural progenitors for the nuclear question. A negative result is as useful as
+    a positive one and would close the question that the current annotation leaves open.
+  experiment_type: cell biology
+- hypothesis: The opposite sign of the Dictyostelium and human actin phenotypes reflects a difference
+    in cofilin regulation between the two systems rather than a divergence in ABRACL itself.
+  description: Perform the same F-/G-actin fractionation in both systems side by side, then repeat in
+    Dictyostelium cells whose cofilin has been replaced with the human protein, and in human cells expressing
+    the Dictyostelium ortholog. Because the human protein already rescues cosA-null cells, the reciprocal
+    swap tests whether the partner rather than the Costars protein sets the direction.
+  experiment_type: comparative cell biology
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

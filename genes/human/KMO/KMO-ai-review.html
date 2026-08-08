@@ -1,0 +1,4617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KMO - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>KMO</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O15229" target="_blank" class="term-link">
+                        O15229
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "KMO";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O15229" data-a="DESCRIPTION: KMO is kynurenine 3-monooxygenase (kynurenine 3-hy..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>KMO is kynurenine 3-monooxygenase (kynurenine 3-hydroxylase; EC 1.14.13.9), an FAD-dependent, NADPH-dependent flavin monooxygenase of the aromatic-ring hydroxylase family that catalyzes the hydroxylation of L-kynurenine to 3-hydroxy-L-kynurenine, using molecular oxygen and NADPH. It is anchored in the outer mitochondrial membrane as a multi-pass membrane protein, with its transmembrane segments required for enzymatic activity, and binds one non-covalently associated FAD cofactor per subunit. KMO occupies the committed branch point of the kynurenine pathway of tryptophan catabolism: by converting kynurenine to 3-hydroxykynurenine it directs flux toward 3-hydroxyanthranilate, quinolinate and de novo NAD+ biosynthesis, and away from the competing branch that yields the neuroprotective metabolite kynurenic acid. It is most highly expressed in liver, kidney and placenta and, in the brain, predominantly in microglia. Because its inhibition or loss shifts kynurenine-pathway flux toward neuroprotective kynurenic acid and reduces the neurotoxic metabolites 3-hydroxykynurenine and quinolinate, KMO is a major drug target in neurodegenerative disease and in inflammatory multi-organ failure.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004502" target="_blank" class="term-link">
+                                    GO:0004502
+                                </a>
+                            </span>
+                            <span class="term-label">kynurenine 3-monooxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0004502" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of the kynurenine 3-monooxygenase catalytic activity. This is the core, defining molecular function of KMO and is directly supported by multiple experimental (IDA) annotations on the human enzyme, the UniProt catalytic activity, and the EC 1.14.13.9 assignment. Accept as a core function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/KMO/KMO-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=1.14.13.9</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0005741" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference that KMO is active in the mitochondrial outer membrane. Consistent with the experimental EXP annotation and the UniProt subcellular location. Accept as the core localization.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/KMO/KMO-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion outer membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004502" target="_blank" class="term-link">
+                                    GO:0004502
+                                </a>
+                            </span>
+                            <span class="term-label">kynurenine 3-monooxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0004502" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assertion of the core kynurenine 3-monooxygenase activity (ARBA/UniRule/RHEA/EC). Redundant with the experimental annotations but correct. Accept.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0005741" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (SubCell SL-0172 / ortholog) assertion of the outer mitochondrial membrane location. Correct and consistent with experimental evidence. Accept.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006569" target="_blank" class="term-link">
+                                    GO:0006569
+                                </a>
+                            </span>
+                            <span class="term-label">L-tryptophan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0006569" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assertion that KMO is involved in L-tryptophan catabolism (the kynurenine pathway). Correct: KMO catalyzes a committed step of tryptophan degradation via kynurenine. Also supported experimentally (IDA, PMID:26752518). Accept.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019805" target="_blank" class="term-link">
+                                    GO:0019805
+                                </a>
+                            </span>
+                            <span class="term-label">quinolinate biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0019805" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assertion that KMO participates in quinolinate biosynthesis. Correct and specific: KMO is step 1/3 of the UniProt &#34;quinolinate from L-kynurenine&#34; pathway, and its product 3-hydroxykynurenine feeds toward quinolinate. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/KMO/KMO-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">quinolinate from</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031966" target="_blank" class="term-link">
+                                    GO:0031966
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0031966" data-r="GO_REF:0000104" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assertion of the broad &#34;mitochondrial membrane&#34; location. Not wrong, but it is a less-specific parent of the correct mitochondrial outer membrane term (GO:0005741), which is separately annotated with experimental evidence. Over-annotation relative to the specific term.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034354" target="_blank" class="term-link">
+                                    GO:0034354
+                                </a>
+                            </span>
+                            <span class="term-label">&#39;de novo&#39; NAD+ biosynthetic process from L-tryptophan</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0034354" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assertion that KMO is involved in de novo NAD+ biosynthesis from L-tryptophan. Correct and appropriately specific: KMO catalyzes an early committed step of the tryptophan-to-NAD+ (kynurenine) route. Accept as a core process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/KMO/KMO-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">NAD(+) biosynthesis; quinolinate from</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050660" target="_blank" class="term-link">
+                                    GO:0050660
+                                </a>
+                            </span>
+                            <span class="term-label">flavin adenine dinucleotide binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0050660" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assertion of FAD binding. Correct (KMO is a flavoprotein binding one FAD), but this term is essentially synonymous with, and redundant to, GO:0071949 (FAD binding), which is separately annotated with experimental (IDA) evidence and used as the core cofactor function. Kept as non-core to avoid duplicate representation of the same cofactor binding.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071949" target="_blank" class="term-link">
+                                    GO:0071949
+                                </a>
+                            </span>
+                            <span class="term-label">FAD binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0071949" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (InterPro IPR002938 FAD-binding domain) assertion of FAD binding. Correct and corroborated by the experimental IDA annotation and the crystal structure of human KMO in complex with FAD. Accept as the core cofactor-binding function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/KMO/KMO-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=FAD; Xref=ChEBI:CHEBI:57692</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0005576" data-r="GO_REF:0000107" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic transfer (Ensembl Compara) from the rat ortholog placing KMO in the extracellular region. This is incompatible with the well-established biology of KMO as a multi-pass outer mitochondrial membrane protein whose transmembrane segments are required for activity. A cytosol-facing OMM enzyme is not secreted; this is a spurious ortholog-transfer with no supporting experimental evidence. Remove.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0014049" target="_blank" class="term-link">
+                                    GO:0014049
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of glutamate secretion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0014049" data-r="GO_REF:0000107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic transfer from the rat ortholog. Any effect of KMO on glutamate secretion would be indirect, mediated by downstream kynurenine-pathway metabolites (e.g. quinolinate/NMDA-receptor effects), not a direct molecular role of the enzyme. Over-annotation for the metabolic enzyme.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019674" target="_blank" class="term-link">
+                                    GO:0019674
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0019674" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic transfer asserting a broad &#34;NAD+ metabolic process&#34; role. KMO does contribute to de novo NAD+ biosynthesis, but that is captured more specifically by GO:0034354 and GO:0019805. This broad parent term is subsumed by the specific de-novo-NAD+/quinolinate core terms; kept as non-core (consistent with the experimental IDA annotation to the same term).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032496" target="_blank" class="term-link">
+                                    GO:0032496
+                                </a>
+                            </span>
+                            <span class="term-label">response to lipopolysaccharide</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0032496" data-r="GO_REF:0000107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic transfer from the rat ortholog. KMO expression is induced under neuroinflammatory conditions (e.g. in microglia), but &#34;response to lipopolysaccharide&#34; describes a regulatory/inflammatory induction context rather than the direct evolved metabolic function of the enzyme. Over-annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034276" target="_blank" class="term-link">
+                                    GO:0034276
+                                </a>
+                            </span>
+                            <span class="term-label">kynurenic acid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0034276" data-r="GO_REF:0000107" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic transfer from the rat ortholog asserting involvement in kynurenic acid biosynthesis. This is biologically backwards: KMO diverts kynurenine AWAY from the kynurenic acid branch, and genetic loss or pharmacological inhibition of KMO INCREASES kynurenic acid (81-fold in Kmo-null mice). Annotating KMO as involved in kynurenic acid biosynthesis is incorrect; remove this spurious IEA.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26752518" target="_blank" class="term-link">
+                                        PMID:26752518
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">There is preferential diversion of kynurenine metabolism to kynurenic acid in the Kmonull mice</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071222" target="_blank" class="term-link">
+                                    GO:0071222
+                                </a>
+                            </span>
+                            <span class="term-label">cellular response to lipopolysaccharide</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0071222" data-r="GO_REF:0000107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic transfer from the rat ortholog. As with GO:0032496, this reflects inflammatory induction of KMO rather than its direct molecular function; the enzyme is not a signaling component of the LPS response. Over-annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071347" target="_blank" class="term-link">
+                                    GO:0071347
+                                </a>
+                            </span>
+                            <span class="term-label">cellular response to interleukin-1</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0071347" data-r="GO_REF:0000107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic transfer from the rat ortholog. KMO is transcriptionally induced by inflammatory cytokines, but &#34;cellular response to interleukin-1&#34; is a regulatory context, not the enzyme&#39;s direct evolved function. Over-annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903296" target="_blank" class="term-link">
+                                    GO:1903296
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of glutamate secretion, neurotransmission</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:1903296" data-r="GO_REF:0000107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic transfer from the rat ortholog. As with GO:0014049, any influence of KMO on glutamatergic neurotransmission is indirect (via downstream neuroactive metabolites such as quinolinate acting on NMDA receptors), not a direct molecular function of the enzyme. Over-annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006569" target="_blank" class="term-link">
+                                    GO:0006569
+                                </a>
+                            </span>
+                            <span class="term-label">L-tryptophan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26752518" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26752518
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Kynurenine-3-monooxygenase inhibition prevents multiple orga...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0006569" data-r="PMID:26752518" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) annotation that KMO participates in L-tryptophan (kynurenine-pathway) catabolism. Supported by Kmo-knockout metabolic profiling showing KMO is the predominant route for kynurenine metabolism (&#34;gatekeeper&#34;). Accept as a core biological process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26752518" target="_blank" class="term-link">
+                                        PMID:26752518
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">KMO is the key gatekeeper enzyme that determines the metabolic fate of kynurenine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006569" target="_blank" class="term-link">
+                                    GO:0006569
+                                </a>
+                            </span>
+                            <span class="term-label">L-tryptophan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-71240
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0006569" data-r="Reactome:R-HSA-71240" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable-author (Reactome) statement placing KMO in tryptophan catabolism. Correct and consistent with the experimental evidence. Accept.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009435" target="_blank" class="term-link">
+                                    GO:0009435
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0009435" data-r="GO_REF:0000041" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (UniPathway UPA00253) assertion of a role in NAD+ biosynthesis. Correct in substance, but a less-specific parent of GO:0034354 (&#39;de novo&#39; NAD+ biosynthetic process from L-tryptophan), which is the appropriately specific core term. Kept as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004502" target="_blank" class="term-link">
+                                    GO:0004502
+                                </a>
+                            </span>
+                            <span class="term-label">kynurenine 3-monooxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-71200
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0004502" data-r="Reactome:R-HSA-71200" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable-author (Reactome) statement of the kynurenine 3-monooxygenase reaction (L-kynurenine + NADPH + O2 -&gt; 3-hydroxykynurenine + NADP+ + H2O). This is the core catalytic function. Accept.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-71200
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0005741" data-r="Reactome:R-HSA-71200" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable-author (Reactome) statement of outer mitochondrial membrane localization. Correct and consistent with the experimental EXP annotation. Accept.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9237672" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9237672
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and functional expression of human kynurenine 3-mono...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0005741" data-r="PMID:9237672" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental annotation of outer mitochondrial membrane localization from the original human KMO cloning/characterization study. This is the authoritative, core localization for KMO and matches the UniProt subcellular location call. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/KMO/KMO-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Multi-pass membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0005739" data-r="PMID:34800366" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput detection of KMO in the high-confidence human mitochondrial proteome. Correct but less specific than the outer mitochondrial membrane annotation; kept as non-core supporting evidence for mitochondrial localization.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004502" target="_blank" class="term-link">
+                                    GO:0004502
+                                </a>
+                            </span>
+                            <span class="term-label">kynurenine 3-monooxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26752518" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26752518
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Kynurenine-3-monooxygenase inhibition prevents multiple orga...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0004502" data-r="PMID:26752518" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) demonstration of kynurenine 3-monooxygenase activity for human KMO (recombinant human enzyme converts kynurenine to 3-hydroxykynurenine; used for inhibitor characterization). Core molecular function. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26752518" target="_blank" class="term-link">
+                                        PMID:26752518
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Human KMO was cloned and stably expressed in HEK293 cells where it conferred the ability to convert kynurenine to 3–hydroxykynurenine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004502" target="_blank" class="term-link">
+                                    GO:0004502
+                                </a>
+                            </span>
+                            <span class="term-label">kynurenine 3-monooxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29208702" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29208702
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Biochemistry and structural studies of kynurenine 3-monooxyg...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0004502" data-r="PMID:29208702" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) demonstration of kynurenine 3-monooxygenase activity, with active-site mutagenesis (e.g. R85, Y99, N363, Y398) abolishing activity, confirming the catalytic function. Core molecular function. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29208702" target="_blank" class="term-link">
+                                        PMID:29208702
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The human kynurenine 3-monooxygenase (hKMO) is a potential therapeutic target</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071949" target="_blank" class="term-link">
+                                    GO:0071949
+                                </a>
+                            </span>
+                            <span class="term-label">FAD binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29429898" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29429898
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural Basis for Inhibitor-Induced Hydrogen Peroxide Pro...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0071949" data-r="PMID:29429898" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) demonstration of FAD binding, from the crystal structure of human KMO (PDB 5X68) solved in complex with FAD. This is the core cofactor-binding function of this flavoprotein monooxygenase. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/KMO/KMO-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">X-RAY CRYSTALLOGRAPHY (2.10 ANGSTROMS) OF 1-374 IN COMPLEX WITH FAD</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004502" target="_blank" class="term-link">
+                                    GO:0004502
+                                </a>
+                            </span>
+                            <span class="term-label">kynurenine 3-monooxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23575632" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23575632
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural basis of kynurenine 3-monooxygenase inhibition.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0004502" data-r="PMID:23575632" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) demonstration of kynurenine 3-monooxygenase activity; recombinant human KMO with kinetics similar to native enzyme, used for the structural inhibition study. Core molecular function. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23575632" target="_blank" class="term-link">
+                                        PMID:23575632
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FAD)-dependent monooxygenase and is located in the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004502" target="_blank" class="term-link">
+                                    GO:0004502
+                                </a>
+                            </span>
+                            <span class="term-label">kynurenine 3-monooxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29429898" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29429898
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural Basis for Inhibitor-Induced Hydrogen Peroxide Pro...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0004502" data-r="PMID:29429898" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) demonstration of kynurenine 3-monooxygenase activity accompanying the human KMO structure determination. Core molecular function. Accept.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016174" target="_blank" class="term-link">
+                                    GO:0016174
+                                </a>
+                            </span>
+                            <span class="term-label">NAD(P)H oxidase H2O2-forming activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23575632" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23575632
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural basis of kynurenine 3-monooxygenase inhibition.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0016174" data-r="PMID:23575632" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) demonstration of NAD(P)H oxidase / H2O2-forming activity. This is a real but non-physiological uncoupled side reaction of the flavin monooxygenase: NADPH-dependent O2 reduction to H2O2 that is strongly accelerated (~20-fold) by inhibitor (UPF 648) binding. It is not the evolved core function of KMO, so it is kept as non-core rather than removed.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23575632" target="_blank" class="term-link">
+                                        PMID:23575632
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Binding UPF 648 was found to accelerate hydrogen peroxide formation by a factor of ~20-fold compared to reactions in absence of UPF 648</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016174" target="_blank" class="term-link">
+                                    GO:0016174
+                                </a>
+                            </span>
+                            <span class="term-label">NAD(P)H oxidase H2O2-forming activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29429898" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29429898
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural Basis for Inhibitor-Induced Hydrogen Peroxide Pro...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0016174" data-r="PMID:29429898" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) demonstration of inhibitor-induced hydrogen peroxide production by KMO (the paper&#39;s central finding). As above, this is a non-physiological uncoupled flavin side reaction, not the core hydroxylase function. Kept as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29429898" target="_blank" class="term-link">
+                                        PMID:29429898
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Structural Basis for Inhibitor-Induced Hydrogen Peroxide Production by</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019674" target="_blank" class="term-link">
+                                    GO:0019674
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23575632" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23575632
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural basis of kynurenine 3-monooxygenase inhibition.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0019674" data-r="PMID:23575632" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) annotation of a role in NAD+ metabolism. KMO&#39;s contribution to NAD+ is real (via the tryptophan-to-quinolinate route), but this broad term is subsumed by the more specific de-novo-NAD+/quinolinate biosynthesis terms. Being experimental, it is kept as non-core rather than removed.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004502" target="_blank" class="term-link">
+                                    GO:0004502
+                                </a>
+                            </span>
+                            <span class="term-label">kynurenine 3-monooxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10672018" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10672018
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional characterization and mechanism of action of recom...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0004502" data-r="PMID:10672018" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) characterization of recombinant human kynurenine 3-hydroxylase activity, including NADPH dependence, one bound FAD per enzyme, and Michaelis-Menten kinetics. Core molecular function. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10672018" target="_blank" class="term-link">
+                                        PMID:10672018
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">it catalyzes the hydroxylation of kynurenine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004502" target="_blank" class="term-link">
+                                    GO:0004502
+                                </a>
+                            </span>
+                            <span class="term-label">kynurenine 3-monooxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9237672" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9237672
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and functional expression of human kynurenine 3-mono...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0004502" data-r="PMID:9237672" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) demonstration of kynurenine 3-monooxygenase activity from the original human KMO cloning and functional expression study (functional expression in HEK-293 with native-like kinetics). Core molecular function. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9237672" target="_blank" class="term-link">
+                                        PMID:9237672
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the hydroxylation of L-kynurenine to L-3-hydroxykynurenine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10672018" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10672018
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional characterization and mechanism of action of recom...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15229" data-a="GO:0005741" data-r="PMID:10672018" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity (ISS, from mouse ortholog O88867) annotation of outer mitochondrial membrane localization. Consistent with the experimental EXP annotation and UniProt. Accept.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Kynurenine 3-monooxygenase (kynurenine 3-hydroxylase) activity: the FAD- and NADPH-dependent hydroxylation of L-kynurenine to 3-hydroxy-L-kynurenine (EC 1.14.13.9), the committed branch-point step of the kynurenine pathway that directs tryptophan-derived flux toward quinolinate and de novo NAD+ biosynthesis. This function requires the transmembrane-anchored, outer mitochondrial membrane enzyme and its bound FAD cofactor.</h3>
+                <span class="vote-buttons" data-g="O15229" data-a="FUNCTION: Kynurenine 3-monooxygenase (kynurenine 3-hydroxyla..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004502" target="_blank" class="term-link">
+                            kynurenine 3-monooxygenase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006569" target="_blank" class="term-link">
+                                L-tryptophan catabolic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019805" target="_blank" class="term-link">
+                                quinolinate biosynthetic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034354" target="_blank" class="term-link">
+                                &#39;de novo&#39; NAD+ biosynthetic process from L-tryptophan
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                mitochondrial outer membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9237672" target="_blank" class="term-link">
+                                PMID:9237672
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the hydroxylation of L-kynurenine to L-3-hydroxykynurenine</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/KMO/KMO-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">EC=1.14.13.9</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FAD binding: KMO is a flavoprotein that binds one non-covalently associated FAD cofactor per subunit, required for the flavin-monooxygenase catalytic cycle. The human enzyme was crystallized in complex with FAD (PDB 5X68).</h3>
+                <span class="vote-buttons" data-g="O15229" data-a="FUNCTION: FAD binding: KMO is a flavoprotein that binds one ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071949" target="_blank" class="term-link">
+                            FAD binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                mitochondrial outer membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10672018" target="_blank" class="term-link">
+                                PMID:10672018
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">bound FAD per molecule of enzyme</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/KMO/KMO-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Name=FAD; Xref=ChEBI:CHEBI:57692</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10672018" target="_blank" class="term-link">
+                            PMID:10672018
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Functional characterization and mechanism of action of recombinant human kynurenine 3-hydroxylase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23575632" target="_blank" class="term-link">
+                            PMID:23575632
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural basis of kynurenine 3-monooxygenase inhibition.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26752518" target="_blank" class="term-link">
+                            PMID:26752518
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Kynurenine-3-monooxygenase inhibition prevents multiple organ failure in rodent models of acute pancreatitis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29208702" target="_blank" class="term-link">
+                            PMID:29208702
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Biochemistry and structural studies of kynurenine 3-monooxygenase reveal allosteric inhibition by Ro 61-8048.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29429898" target="_blank" class="term-link">
+                            PMID:29429898
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural Basis for Inhibitor-Induced Hydrogen Peroxide Production by Kynurenine 3-Monooxygenase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9237672" target="_blank" class="term-link">
+                            PMID:9237672
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cloning and functional expression of human kynurenine 3-monooxygenase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-71200
+
+                    </span>
+                </div>
+
+                <div class="reference-title">kynurenine + O2 + NADPH + H+ =&gt; 3-hydroxykynurenine + NADP+ + H2O</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-71240
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Tryptophan catabolism</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(KMO-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O15229" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="kmo-kynurenine-3-monooxygenase-review-notes">KMO (kynurenine 3-monooxygenase) — review notes</h1>
+<p>UniProt: O15229 (KMO_HUMAN); HGNC:6381; EC 1.14.13.9; 486 aa. Human, chromosome 1.<br />
+Source files used: <code>KMO-uniprot.txt</code>, <code>KMO-goa.tsv</code>, and cached publications under <code>publications/</code>.</p>
+<h2 id="core-identity-and-function">Core identity and function</h2>
+<p>KMO is <strong>kynurenine 3-monooxygenase</strong> (a.k.a. kynurenine 3-hydroxylase, K3H), an<br />
+<strong>FAD-dependent, NADPH-dependent flavin monooxygenase</strong> that hydroxylates<br />
+<strong>L-kynurenine to 3-hydroxy-L-kynurenine</strong> using O2 and NADPH.</p>
+<ul>
+<li>Catalytic activity / cofactor / EC, from UniProt:<br />
+  [file:human/KMO/KMO-uniprot.txt "Reaction=L-kynurenine + NADPH + O2 + H(+) = 3-hydroxy-L-kynurenine + NADP(+) + H2O"],<br />
+  [file:human/KMO/KMO-uniprot.txt "Name=FAD; Xref=ChEBI:CHEBI:57692"],<br />
+  [file:human/KMO/KMO-uniprot.txt "EC=1.14.13.9"].</li>
+<li>Enzyme class described in the original cloning paper:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/9237672" title="Kynurenine 3-monooxygenase, an NADPH-dependent flavin monooxygenase, catalyses the hydroxylation of L-kynurenine to L-3-hydroxykynurenine">PMID:9237672</a>.</li>
+<li>One non-covalently bound FAD per enzyme molecule:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/10672018" title="to contain one molecule of non-covalently bound FAD per molecule of enzyme">PMID:10672018</a>.</li>
+<li>FAD-dependence and OMM location stated explicitly in the structure paper:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/23575632" title="KMO is a flavin adenine dinucleotide (FAD)-dependent monooxygenase and is located in the outer mitochondrial membrane where it converts l-kynurenine to 3-hydroxykynurenine">PMID:23575632</a>.</li>
+</ul>
+<h2 id="subcellular-location">Subcellular location</h2>
+<p>Outer mitochondrial membrane, multi-pass membrane protein.<br />
+- [file:human/KMO/KMO-uniprot.txt "SUBCELLULAR LOCATION: Mitochondrion outer membrane"] and<br />
+  [file:human/KMO/KMO-uniprot.txt "Multi-pass membrane protein"].<br />
+- Rat-liver-mitochondria basis stated by Reactome: [reactome:R-HSA-71200 "The localization of KMO to the outer mitochondrial membrane is inferred from studies of the enzyme in rat liver mitochondria (Okamoto et al. 1967)"].<br />
+- Note: the Reactome display text confusingly opens with "Cytosolic kynurenine 3-monooxygenase (KMO)" but its own summary then places the enzyme on the outer mitochondrial membrane; the authoritative UniProt/experimental call is OMM.<br />
+- Transmembrane domains (TM 385-404, 425-445) are required for enzymatic activity:<br />
+  [file:human/KMO/KMO-uniprot.txt "Transmembrane domains are required for enzymatic activity"].<br />
+- Detected in the high-confidence human mitochondrial proteome (HTP): PMID:34800366<br />
+  (large quantitative MS dataset; KMO is one of the catalogued mitochondrial proteins — consistent with, but less specific than, the OMM call).</p>
+<h2 id="pathway-position-branch-point-gatekeeper-of-the-kynurenine-pathway">Pathway position: branch-point gatekeeper of the kynurenine pathway</h2>
+<p>KMO sits at the committed branch of the kynurenine pathway. Its product 3-hydroxykynurenine<br />
+feeds toward <strong>quinolinate → NAD+</strong> (de novo NAD+ biosynthesis from tryptophan), while the<br />
+competing branch produces the neuroprotective metabolite <strong>kynurenic acid (KYNA)</strong>.</p>
+<ul>
+<li>UniProt pathway: [file:human/KMO/KMO-uniprot.txt "Cofactor biosynthesis; NAD(+) biosynthesis; quinolinate from"] "L-kynurenine: step 1/3" (UPA00253, UER00328).</li>
+<li>"Required for synthesis of quinolinic acid, a neurotoxic NMDA receptor antagonist":<br />
+  [file:human/KMO/KMO-uniprot.txt "Required for"] ... "synthesis of quinolinic acid".</li>
+<li>Kmo-knockout mice: kynurenine backs up, flux is diverted to KYNA; KMO is the "gatekeeper":<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/26752518" title="KMO is normally the predominant pathway for metabolism of kynurenine">PMID:26752518</a>,<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/26752518" title="There is preferential diversion of kynurenine metabolism to kynurenic acid in the Kmonull mice">PMID:26752518</a>,<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/26752518" title="KMO is the key gatekeeper enzyme that determines the metabolic fate of kynurenine">PMID:26752518</a>.</li>
+</ul>
+<p>Because loss/inhibition of KMO <strong>raises</strong> KYNA, KMO is NOT itself an enzyme "involved in<br />
+kynurenic acid biosynthesis" — the GOA IEA to GO:0034276 (kynurenic acid biosynthetic<br />
+process, transferred from a rat ortholog) is biologically backwards and is removed here.</p>
+<h2 id="side-uncoupled-activity-nadph-oxidase-h2o2-production">Side / uncoupled activity: NAD(P)H oxidase, H2O2 production</h2>
+<p>Under uncoupling (notably in the presence of certain inhibitors or when the substrate is<br />
+absent/product present), the reduced flavin reacts with O2 to make H2O2 rather than<br />
+hydroxylating substrate — an experimentally documented but non-physiological side reaction,<br />
+not the evolved core function.<br />
+- Uncoupling / peroxide formation: <a href="https://pubmed.ncbi.nlm.nih.gov/10672018" title="suggesting an uncoupling effect of">PMID:10672018</a> "3-hydroxykynurenine with peroxide formation".<br />
+- Inhibitor (UPF 648) accelerates H2O2 ~20-fold: <a href="https://pubmed.ncbi.nlm.nih.gov/23575632" title="Binding UPF 648 was found to accelerate hydrogen peroxide formation by a factor of ~20-fold compared to reactions in absence of UPF 648">PMID:23575632</a>.<br />
+- The GO:0016174 (NAD(P)H oxidase, H2O2-forming) IDA annotations (PMID:23575632, PMID:29429898)<br />
+  capture this real-but-non-core activity → kept as non-core.</p>
+<h2 id="structure-mechanism">Structure / mechanism</h2>
+<ul>
+<li>FAD/NAD(P)-binding Rossmann fold (Gene3D 3.50.50.60; Pfam PF01494 FAD_binding_3); aromatic-ring<br />
+  hydroxylase family, KMO subfamily [file:human/KMO/KMO-uniprot.txt "Belongs to the aromatic-ring hydroxylase family. KMO"].</li>
+<li>PDB 5X68: human KMO 1-374 in complex with FAD; multiple FAD-binding residues and L-kynurenine<br />
+  substrate-binding residues annotated (e.g. Arg85/Tyr99 substrate binding; mutation abolishes activity).</li>
+<li>Active-site mutagenesis (PMID:29208702): R85A/K, Y99A, N363D, Y398A/F abolish KMO activity;<br />
+  C-terminal ~110 aa essential for activity (allosteric tunnel binds Ro 61-8048).</li>
+</ul>
+<h2 id="disease-drug-target-context">Disease / drug-target context</h2>
+<p>Major CNS drug target. KMO inhibition shifts kynurenine flux toward neuroprotective KYNA and<br />
+away from neurotoxic 3-HK/quinolinate; beneficial in Huntington's, Alzheimer's, Parkinson's<br />
+models, cerebral malaria, and acute pancreatitis-associated multi-organ failure.<br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/23575632" title="Inhibition of kynurenine 3-monooxygenase (KMO) ... leads to amelioration of Huntington's-disease-relevant phenotypes in yeast, fruitfly and mouse models, as well as in a mouse model of Alzheimer's disease">PMID:23575632</a>.<br />
+- Acute-pancreatitis MODS therapeutic target (GSK180 inhibitor): <a href="https://pubmed.ncbi.nlm.nih.gov/26752518" title="kynurenine-3-monooxygenase (KMO), a key enzyme of tryptophan metabolism, is central to the pathogenesis of AP-MODS">PMID:26752518</a>.</p>
+<h2 id="annotation-review-decisions-summary">Annotation-review decisions (summary)</h2>
+<p>Core functions retained:<br />
+- GO:0004502 kynurenine 3-monooxygenase activity (MF) — IDA×several, IBA, TAS.<br />
+- GO:0071949 FAD binding (MF, cofactor) — IDA.<br />
+- GO:0005741 mitochondrial outer membrane (location) — EXP, IBA, TAS, ISS.<br />
+- GO:0034354 'de novo' NAD+ biosynthetic process from L-tryptophan / GO:0006569 L-tryptophan<br />
+  catabolic process / GO:0019805 quinolinate biosynthetic process (BP).</p>
+<p>Kept as non-core / over-annotated:<br />
+- GO:0050660 flavin adenine dinucleotide binding — redundant IEA duplicate of GO:0071949.<br />
+- GO:0016174 NAD(P)H oxidase, H2O2-forming (IDA) — real uncoupled side activity, not core.<br />
+- GO:0031966 mitochondrial membrane — less-specific parent of OMM.<br />
+- GO:0005739 mitochondrion (HTP) — correct but less specific.<br />
+- GO:0019674 NAD+ metabolic process, GO:0009435 NAD+ biosynthetic process — broad parents of<br />
+  the specific de-novo-NAD+/quinolinate terms.<br />
+- GO:0014049 / GO:1903296 (positive regulation of glutamate secretion / neurotransmission),<br />
+  GO:0032496 / GO:0071222 (response to / cellular response to LPS), GO:0071347 (cellular<br />
+  response to IL-1) — indirect/inflammatory electronic transfers from the rat ortholog; over-annotations.</p>
+<p>Removed (clearly-wrong IEA):<br />
+- GO:0005576 extracellular region — an OMM multi-pass membrane enzyme is not extracellular;<br />
+  spurious ortholog-transfer.<br />
+- GO:0034276 kynurenic acid biosynthetic process — biologically backwards (KMO diverts flux<br />
+  AWAY from KYNA; its loss raises KYNA).<br />
+</content><br />
+</invoke></p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O15229
+gene_symbol: KMO
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  KMO is kynurenine 3-monooxygenase (kynurenine 3-hydroxylase; EC 1.14.13.9), an
+  FAD-dependent, NADPH-dependent flavin monooxygenase of the aromatic-ring hydroxylase
+  family that catalyzes the hydroxylation of L-kynurenine to 3-hydroxy-L-kynurenine,
+  using molecular oxygen and NADPH. It is anchored in the outer mitochondrial membrane
+  as a multi-pass membrane protein, with its transmembrane segments required for
+  enzymatic activity, and binds one non-covalently associated FAD cofactor per subunit.
+  KMO occupies the committed branch point of the kynurenine pathway of tryptophan
+  catabolism: by converting kynurenine to 3-hydroxykynurenine it directs flux toward
+  3-hydroxyanthranilate, quinolinate and de novo NAD+ biosynthesis, and away from the
+  competing branch that yields the neuroprotective metabolite kynurenic acid. It is
+  most highly expressed in liver, kidney and placenta and, in the brain, predominantly
+  in microglia. Because its inhibition or loss shifts kynurenine-pathway flux toward
+  neuroprotective kynurenic acid and reduces the neurotoxic metabolites 3-hydroxykynurenine
+  and quinolinate, KMO is a major drug target in neurodegenerative disease and in
+  inflammatory multi-organ failure.
+alternative_products:
+- name: 1 {ECO:0000269|PubMed:10672018, ECO:0000269|PubMed:9237672}
+  id: O15229-1
+- name: 2 {ECO:0000269|PubMed:16710414}
+  id: O15229-2
+  sequence_note: VSP_051973
+- name: 3 {ECO:0000269|PubMed:16710414}
+  id: O15229-3
+  sequence_note: VSP_051972
+existing_annotations:
+- term:
+    id: GO:0004502
+    label: kynurenine 3-monooxygenase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference of the kynurenine 3-monooxygenase catalytic activity.
+      This is the core, defining molecular function of KMO and is directly supported by
+      multiple experimental (IDA) annotations on the human enzyme, the UniProt catalytic
+      activity, and the EC 1.14.13.9 assignment. Accept as a core function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/KMO/KMO-uniprot.txt
+      supporting_text: &#34;EC=1.14.13.9&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference that KMO is active in the mitochondrial outer membrane.
+      Consistent with the experimental EXP annotation and the UniProt subcellular location.
+      Accept as the core localization.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/KMO/KMO-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion outer membrane&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0004502
+    label: kynurenine 3-monooxygenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic assertion of the core kynurenine 3-monooxygenase activity (ARBA/UniRule/RHEA/EC).
+      Redundant with the experimental annotations but correct. Accept.
+    action: ACCEPT
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic (SubCell SL-0172 / ortholog) assertion of the outer mitochondrial membrane
+      location. Correct and consistent with experimental evidence. Accept.
+    action: ACCEPT
+- term:
+    id: GO:0006569
+    label: L-tryptophan catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic assertion that KMO is involved in L-tryptophan catabolism (the kynurenine
+      pathway). Correct: KMO catalyzes a committed step of tryptophan degradation via kynurenine.
+      Also supported experimentally (IDA, PMID:26752518). Accept.
+    action: ACCEPT
+- term:
+    id: GO:0019805
+    label: quinolinate biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic assertion that KMO participates in quinolinate biosynthesis. Correct and
+      specific: KMO is step 1/3 of the UniProt &#34;quinolinate from L-kynurenine&#34; pathway, and
+      its product 3-hydroxykynurenine feeds toward quinolinate. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/KMO/KMO-uniprot.txt
+      supporting_text: &#34;quinolinate from&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0031966
+    label: mitochondrial membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic assertion of the broad &#34;mitochondrial membrane&#34; location. Not wrong, but it
+      is a less-specific parent of the correct mitochondrial outer membrane term (GO:0005741),
+      which is separately annotated with experimental evidence. Over-annotation relative to the
+      specific term.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0034354
+    label: &#34;&#39;de novo&#39; NAD+ biosynthetic process from L-tryptophan&#34;
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic assertion that KMO is involved in de novo NAD+ biosynthesis from L-tryptophan.
+      Correct and appropriately specific: KMO catalyzes an early committed step of the tryptophan-to-NAD+
+      (kynurenine) route. Accept as a core process.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/KMO/KMO-uniprot.txt
+      supporting_text: &#34;NAD(+) biosynthesis; quinolinate from&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0050660
+    label: flavin adenine dinucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic assertion of FAD binding. Correct (KMO is a flavoprotein binding one FAD), but
+      this term is essentially synonymous with, and redundant to, GO:0071949 (FAD binding), which
+      is separately annotated with experimental (IDA) evidence and used as the core cofactor
+      function. Kept as non-core to avoid duplicate representation of the same cofactor binding.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0071949
+    label: FAD binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (InterPro IPR002938 FAD-binding domain) assertion of FAD binding. Correct and
+      corroborated by the experimental IDA annotation and the crystal structure of human KMO in
+      complex with FAD. Accept as the core cofactor-binding function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/KMO/KMO-uniprot.txt
+      supporting_text: &#34;Name=FAD; Xref=ChEBI:CHEBI:57692&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic transfer (Ensembl Compara) from the rat ortholog placing KMO in the extracellular
+      region. This is incompatible with the well-established biology of KMO as a multi-pass outer
+      mitochondrial membrane protein whose transmembrane segments are required for activity. A
+      cytosol-facing OMM enzyme is not secreted; this is a spurious ortholog-transfer with no
+      supporting experimental evidence. Remove.
+    action: REMOVE
+- term:
+    id: GO:0014049
+    label: positive regulation of glutamate secretion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic transfer from the rat ortholog. Any effect of KMO on glutamate secretion would be
+      indirect, mediated by downstream kynurenine-pathway metabolites (e.g. quinolinate/NMDA-receptor
+      effects), not a direct molecular role of the enzyme. Over-annotation for the metabolic enzyme.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0019674
+    label: NAD+ metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic transfer asserting a broad &#34;NAD+ metabolic process&#34; role. KMO does contribute to
+      de novo NAD+ biosynthesis, but that is captured more specifically by GO:0034354 and GO:0019805.
+      This broad parent term is subsumed by the specific de-novo-NAD+/quinolinate core terms; kept as
+      non-core (consistent with the experimental IDA annotation to the same term).
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0032496
+    label: response to lipopolysaccharide
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic transfer from the rat ortholog. KMO expression is induced under neuroinflammatory
+      conditions (e.g. in microglia), but &#34;response to lipopolysaccharide&#34; describes a regulatory/inflammatory
+      induction context rather than the direct evolved metabolic function of the enzyme. Over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0034276
+    label: kynurenic acid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic transfer from the rat ortholog asserting involvement in kynurenic acid biosynthesis.
+      This is biologically backwards: KMO diverts kynurenine AWAY from the kynurenic acid branch, and
+      genetic loss or pharmacological inhibition of KMO INCREASES kynurenic acid (81-fold in Kmo-null mice).
+      Annotating KMO as involved in kynurenic acid biosynthesis is incorrect; remove this spurious IEA.
+    action: REMOVE
+    supported_by:
+    - reference_id: PMID:26752518
+      supporting_text: &#34;There is preferential diversion of kynurenine metabolism to kynurenic acid in the Kmonull mice&#34;
+      reference_section_type: RESULTS
+- term:
+    id: GO:0071222
+    label: cellular response to lipopolysaccharide
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic transfer from the rat ortholog. As with GO:0032496, this reflects inflammatory induction
+      of KMO rather than its direct molecular function; the enzyme is not a signaling component of the LPS
+      response. Over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0071347
+    label: cellular response to interleukin-1
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic transfer from the rat ortholog. KMO is transcriptionally induced by inflammatory cytokines,
+      but &#34;cellular response to interleukin-1&#34; is a regulatory context, not the enzyme&#39;s direct evolved
+      function. Over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:1903296
+    label: positive regulation of glutamate secretion, neurotransmission
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic transfer from the rat ortholog. As with GO:0014049, any influence of KMO on glutamatergic
+      neurotransmission is indirect (via downstream neuroactive metabolites such as quinolinate acting on
+      NMDA receptors), not a direct molecular function of the enzyme. Over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0006569
+    label: L-tryptophan catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:26752518
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental (IDA) annotation that KMO participates in L-tryptophan (kynurenine-pathway) catabolism.
+      Supported by Kmo-knockout metabolic profiling showing KMO is the predominant route for kynurenine
+      metabolism (&#34;gatekeeper&#34;). Accept as a core biological process.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:26752518
+      supporting_text: &#34;KMO is the key gatekeeper enzyme that determines the metabolic fate of kynurenine&#34;
+      reference_section_type: RESULTS
+- term:
+    id: GO:0006569
+    label: L-tryptophan catabolic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-71240
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Traceable-author (Reactome) statement placing KMO in tryptophan catabolism. Correct and consistent
+      with the experimental evidence. Accept.
+    action: ACCEPT
+- term:
+    id: GO:0009435
+    label: NAD+ biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic (UniPathway UPA00253) assertion of a role in NAD+ biosynthesis. Correct in substance,
+      but a less-specific parent of GO:0034354 (&#39;de novo&#39; NAD+ biosynthetic process from L-tryptophan),
+      which is the appropriately specific core term. Kept as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0004502
+    label: kynurenine 3-monooxygenase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-71200
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Traceable-author (Reactome) statement of the kynurenine 3-monooxygenase reaction
+      (L-kynurenine + NADPH + O2 -&gt; 3-hydroxykynurenine + NADP+ + H2O). This is the core catalytic
+      function. Accept.
+    action: ACCEPT
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-71200
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Traceable-author (Reactome) statement of outer mitochondrial membrane localization. Correct and
+      consistent with the experimental EXP annotation. Accept.
+    action: ACCEPT
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: EXP
+  original_reference_id: PMID:9237672
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Experimental annotation of outer mitochondrial membrane localization from the original human KMO
+      cloning/characterization study. This is the authoritative, core localization for KMO and matches
+      the UniProt subcellular location call. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/KMO/KMO-uniprot.txt
+      supporting_text: &#34;Multi-pass membrane protein&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput detection of KMO in the high-confidence human mitochondrial proteome. Correct but
+      less specific than the outer mitochondrial membrane annotation; kept as non-core supporting evidence
+      for mitochondrial localization.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0004502
+    label: kynurenine 3-monooxygenase activity
+  evidence_type: IDA
+  original_reference_id: PMID:26752518
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (IDA) demonstration of kynurenine 3-monooxygenase activity for human KMO (recombinant
+      human enzyme converts kynurenine to 3-hydroxykynurenine; used for inhibitor characterization). Core
+      molecular function. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:26752518
+      supporting_text: &#34;Human KMO was cloned and stably expressed in HEK293 cells where it conferred the ability to convert kynurenine to 3–hydroxykynurenine&#34;
+      reference_section_type: RESULTS
+- term:
+    id: GO:0004502
+    label: kynurenine 3-monooxygenase activity
+  evidence_type: IDA
+  original_reference_id: PMID:29208702
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (IDA) demonstration of kynurenine 3-monooxygenase activity, with active-site mutagenesis
+      (e.g. R85, Y99, N363, Y398) abolishing activity, confirming the catalytic function. Core molecular
+      function. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:29208702
+      supporting_text: &#34;The human kynurenine 3-monooxygenase (hKMO) is a potential therapeutic target&#34;
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0071949
+    label: FAD binding
+  evidence_type: IDA
+  original_reference_id: PMID:29429898
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (IDA) demonstration of FAD binding, from the crystal structure of human KMO (PDB 5X68)
+      solved in complex with FAD. This is the core cofactor-binding function of this flavoprotein
+      monooxygenase. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/KMO/KMO-uniprot.txt
+      supporting_text: &#34;X-RAY CRYSTALLOGRAPHY (2.10 ANGSTROMS) OF 1-374 IN COMPLEX WITH FAD&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0004502
+    label: kynurenine 3-monooxygenase activity
+  evidence_type: IDA
+  original_reference_id: PMID:23575632
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (IDA) demonstration of kynurenine 3-monooxygenase activity; recombinant human KMO with
+      kinetics similar to native enzyme, used for the structural inhibition study. Core molecular function.
+      Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:23575632
+      supporting_text: &#34;FAD)-dependent monooxygenase and is located in the&#34;
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0004502
+    label: kynurenine 3-monooxygenase activity
+  evidence_type: IDA
+  original_reference_id: PMID:29429898
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (IDA) demonstration of kynurenine 3-monooxygenase activity accompanying the human KMO
+      structure determination. Core molecular function. Accept.
+    action: ACCEPT
+- term:
+    id: GO:0016174
+    label: NAD(P)H oxidase H2O2-forming activity
+  evidence_type: IDA
+  original_reference_id: PMID:23575632
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (IDA) demonstration of NAD(P)H oxidase / H2O2-forming activity. This is a real but
+      non-physiological uncoupled side reaction of the flavin monooxygenase: NADPH-dependent O2 reduction
+      to H2O2 that is strongly accelerated (~20-fold) by inhibitor (UPF 648) binding. It is not the evolved
+      core function of KMO, so it is kept as non-core rather than removed.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:23575632
+      supporting_text: &#34;Binding UPF 648 was found to accelerate hydrogen peroxide formation by a factor of ~20-fold compared to reactions in absence of UPF 648&#34;
+      reference_section_type: RESULTS
+- term:
+    id: GO:0016174
+    label: NAD(P)H oxidase H2O2-forming activity
+  evidence_type: IDA
+  original_reference_id: PMID:29429898
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (IDA) demonstration of inhibitor-induced hydrogen peroxide production by KMO (the paper&#39;s
+      central finding). As above, this is a non-physiological uncoupled flavin side reaction, not the core
+      hydroxylase function. Kept as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:29429898
+      supporting_text: &#34;Structural Basis for Inhibitor-Induced Hydrogen Peroxide Production by&#34;
+      reference_section_type: TITLE
+- term:
+    id: GO:0019674
+    label: NAD+ metabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:23575632
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental (IDA) annotation of a role in NAD+ metabolism. KMO&#39;s contribution to NAD+ is real (via
+      the tryptophan-to-quinolinate route), but this broad term is subsumed by the more specific
+      de-novo-NAD+/quinolinate biosynthesis terms. Being experimental, it is kept as non-core rather than removed.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0004502
+    label: kynurenine 3-monooxygenase activity
+  evidence_type: IDA
+  original_reference_id: PMID:10672018
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (IDA) characterization of recombinant human kynurenine 3-hydroxylase activity, including
+      NADPH dependence, one bound FAD per enzyme, and Michaelis-Menten kinetics. Core molecular function. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:10672018
+      supporting_text: &#34;it catalyzes the hydroxylation of kynurenine&#34;
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0004502
+    label: kynurenine 3-monooxygenase activity
+  evidence_type: IDA
+  original_reference_id: PMID:9237672
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (IDA) demonstration of kynurenine 3-monooxygenase activity from the original human KMO
+      cloning and functional expression study (functional expression in HEK-293 with native-like kinetics).
+      Core molecular function. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:9237672
+      supporting_text: &#34;the hydroxylation of L-kynurenine to L-3-hydroxykynurenine&#34;
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: ISS
+  original_reference_id: PMID:10672018
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Sequence-similarity (ISS, from mouse ortholog O88867) annotation of outer mitochondrial membrane
+      localization. Consistent with the experimental EXP annotation and UniProt. Accept.
+    action: ACCEPT
+core_functions:
+- description: &gt;-
+    Kynurenine 3-monooxygenase (kynurenine 3-hydroxylase) activity: the FAD- and NADPH-dependent
+    hydroxylation of L-kynurenine to 3-hydroxy-L-kynurenine (EC 1.14.13.9), the committed branch-point
+    step of the kynurenine pathway that directs tryptophan-derived flux toward quinolinate and de novo
+    NAD+ biosynthesis. This function requires the transmembrane-anchored, outer mitochondrial membrane
+    enzyme and its bound FAD cofactor.
+  molecular_function:
+    id: GO:0004502
+    label: kynurenine 3-monooxygenase activity
+  supported_by:
+  - reference_id: PMID:9237672
+    supporting_text: &#34;the hydroxylation of L-kynurenine to L-3-hydroxykynurenine&#34;
+    reference_section_type: ABSTRACT
+  - reference_id: file:human/KMO/KMO-uniprot.txt
+    supporting_text: &#34;EC=1.14.13.9&#34;
+    reference_section_type: DATABASE_ENTRY
+  directly_involved_in:
+  - id: GO:0006569
+    label: L-tryptophan catabolic process
+  - id: GO:0019805
+    label: quinolinate biosynthetic process
+  - id: GO:0034354
+    label: &#34;&#39;de novo&#39; NAD+ biosynthetic process from L-tryptophan&#34;
+  locations:
+  - id: GO:0005741
+    label: mitochondrial outer membrane
+- description: &gt;-
+    FAD binding: KMO is a flavoprotein that binds one non-covalently associated FAD cofactor per subunit,
+    required for the flavin-monooxygenase catalytic cycle. The human enzyme was crystallized in complex
+    with FAD (PDB 5X68).
+  molecular_function:
+    id: GO:0071949
+    label: FAD binding
+  supported_by:
+  - reference_id: PMID:10672018
+    supporting_text: &#34;bound FAD per molecule of enzyme&#34;
+    reference_section_type: ABSTRACT
+  - reference_id: file:human/KMO/KMO-uniprot.txt
+    supporting_text: &#34;Name=FAD; Xref=ChEBI:CHEBI:57692&#34;
+    reference_section_type: DATABASE_ENTRY
+  locations:
+  - id: GO:0005741
+    label: mitochondrial outer membrane
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10672018
+  title: Functional characterization and mechanism of action of recombinant human
+    kynurenine 3-hydroxylase.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Characterizes recombinant human KMO: NADPH-dependent flavin monooxygenase,
+      one non-covalently bound FAD per enzyme, pH optimum 7.5, kinetics; documents peroxide-forming
+      uncoupling. Directly supports the core catalytic, FAD-binding and OMM annotations.
+- id: PMID:23575632
+  title: Structural basis of kynurenine 3-monooxygenase inhibition.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Reports the first KMO crystal structures (yeast KMO +/- inhibitor) validated
+      against human KMO, confirms FAD-dependence and outer mitochondrial membrane localization, and
+      documents inhibitor-accelerated H2O2 formation (basis of the non-core NAD(P)H oxidase activity).
+- id: PMID:26752518
+  title: Kynurenine-3-monooxygenase inhibition prevents multiple organ failure in
+    rodent models of acute pancreatitis.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Kmo-knockout metabolic profiling establishes KMO as the gatekeeper of kynurenine
+      metabolism (loss diverts flux to kynurenic acid); characterizes human KMO activity and a potent
+      inhibitor. Supports the tryptophan-catabolism/gatekeeper role and refutes a kynurenic-acid-biosynthesis role.
+- id: PMID:29208702
+  title: Biochemistry and structural studies of kynurenine 3-monooxygenase reveal
+    allosteric inhibition by Ro 61-8048.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Biochemical/structural study of human KMO with active-site mutagenesis
+      (R85, Y99, N363, E366, M367, Y398 abolish/strongly reduce activity) and evidence that the
+      C-terminal region is essential; supports the core catalytic MF annotation.
+- id: PMID:29429898
+  title: Structural Basis for Inhibitor-Induced Hydrogen Peroxide Production by Kynurenine
+    3-Monooxygenase.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Human KMO structure (PDB 5X68) in complex with FAD; defines FAD-binding residues
+      and inhibitor-induced H2O2 production. Supports the core FAD-binding annotation and the non-core
+      NAD(P)H oxidase side activity.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified large-scale quantitative mitochondrial proteome dataset. Provides HTP-level support
+      for mitochondrial localization of KMO but is not KMO-specific; less informative than the experimental
+      outer-mitochondrial-membrane evidence.
+- id: PMID:9237672
+  title: Cloning and functional expression of human kynurenine 3-monooxygenase.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Original cloning and functional expression of human KMO; establishes it as an
+      NADPH-dependent flavin monooxygenase hydroxylating L-kynurenine, tissue expression (liver/placenta/kidney),
+      and OMM localization. Foundational support for the core catalytic and localization annotations.
+- id: Reactome:R-HSA-71200
+  title: kynurenine + O2 + NADPH + H+ =&gt; 3-hydroxykynurenine + NADP+ + H2O
+  findings: []
+- id: Reactome:R-HSA-71240
+  title: Tryptophan catabolism
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -180,6 +180,15 @@ descriptions-status organism *args="":
     uv run ai-gene-review descriptions-status {{organism}} --output-dir . {{args}}
 
 
+# LitScan: scan recent literature for candidate new members of curated modules.
+# Writes a markdown + JSON packet to reports/litscan/module-member/ for downstream
+# triage (e.g. a haiku filter). Defaults to the last 90 days; pass extra flags through.
+#   just litscan-module-member
+#   just litscan-module-member --days 365
+#   just litscan-module-member --date-from 2026-01-01 --date-to 2026-06-19
+litscan-module-member *args="":
+    uv run ai-gene-review litscan module-member {{args}}
+
 # Deep research using OpenAI (GPT models)
 # Gene symbol automatically looked up from UniProt file if --alias not provided
 # Supports --fallback PROVIDER [PROVIDER ...] and --timeout SECONDS
@@ -597,6 +606,12 @@ validate-terms-all:
         echo "Validating terms: $f"
         {{term_validator}} validate-data "$f" -s {{schema_path}} -t GeneReview --labels -c {{oak_config}}
     done
+
+# Audit references flagged full_text_unavailable whose cached publication has full text.
+# Silent defect: no validator checks the pair, and the flag discourages extracting the
+# evidence an annotation needs. Add --fix to remove them. Exits non-zero if any remain.
+audit-fulltext-flags *args="":
+    uv run ai-gene-review audit-fulltext-flags {{args}}
 
 # Reference validation (publication titles + supporting text snippets)
 [group('QC')]
@@ -2303,3 +2318,20 @@ gogpt-compare-all:
         done
     done
     echo "Total: compared $total genes"
+
+# ============== Scheduled-workflow cron profiles ==============
+
+# List the available cron cadence profiles and show the active one.
+cron-profiles:
+    uv run python scripts/apply_cron_profile.py --list
+
+# Show what a profile would change without writing anything.
+# Example: just cron-profile-preview fast
+cron-profile-preview name:
+    uv run python scripts/apply_cron_profile.py {{name}} --dry-run
+
+# Apply a cron cadence profile to the scheduled agent workflows and commit.
+# `just cron-profile off` is the kill switch: it removes every managed
+# `on.schedule` block, leaving workflow_dispatch intact.
+cron-profile name:
+    uv run python scripts/apply_cron_profile.py {{name}}

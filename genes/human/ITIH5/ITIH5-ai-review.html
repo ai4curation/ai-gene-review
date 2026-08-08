@@ -1,0 +1,3616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ITIH5 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ITIH5</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q86UX2" target="_blank" class="term-link">
+                        Q86UX2
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+
+                    <span class="badge">KIAA1953</span>
+
+                    <span class="badge">PP14776</span>
+
+                </div>
+            </div>
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ITIH5";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q86UX2" data-a="DESCRIPTION: ITIH5 is a secreted inter-alpha-inhibitor heavy-ch..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ITIH5 is a secreted inter-alpha-inhibitor heavy-chain family glycoprotein expressed prominently in placenta and adipose tissue and also by fibroblasts. It contains VIT and von Willebrand factor A domains but no Kunitz protease- inhibitor domain. In human fibroblasts, heavy chain 5 associates with bikunin and cell-surface hyaluronan in a TSG-6-dependent pericellular matrix that supports TGF-beta1-induced myofibroblast differentiation. ITIH5 also acts as an adipose-derived extracellular signal: mammalian genetic and recombinant- protein studies indicate that it restrains adipocyte differentiation, while direct treatment of human endothelium reduces leukocyte adhesion. ITIH5 expression is frequently lost through promoter methylation in several cancers, and experimental re-expression can suppress tumor-cell proliferation.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004867" target="_blank" class="term-link">
+                                    GO:0004867
+                                </a>
+                            </span>
+                            <span class="term-label">serine-type endopeptidase inhibitor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q86UX2" data-a="GO:0004867" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro electronically propagates serine-type endopeptidase inhibitor activity from the inter-alpha-inhibitor family.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct chain biochemistry assigns inhibitory activity to the 30-kDa bikunin light chain and explicitly identifies the associated heavy chains as noninhibitory. ITIH5 is a heavy-chain protein without a Kunitz inhibitor domain, so this is component-level family-complex overpropagation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2476436" target="_blank" class="term-link">
+                                        PMID:2476436
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Inter-alpha-trypsin inhibitor contains noninhibitory heavy chains of 65,000 and 70,000 Da</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ITIH5/ITIH5-deep-research-manual.md
+
+                                </span>
+
+                                <div class="support-text">ITIH5 encodes a heavy-chain family protein and has no Kunitz inhibitor domain.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q86UX2" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt subcellular-location mapping places ITIH5 in the extracellular region.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reviewed canonical precursor has a cleaved signal peptide, and direct human-fibroblast experiments place endogenous HC5 in a cell-surface hyaluronan matrix. Two independent human ECM proteomic studies provide additional localization evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27143355" target="_blank" class="term-link">
+                                        PMID:27143355
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">HC5 was released by hyaluronidase treatment, confirming its association with cell surface HA.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ITIH5/ITIH5-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   SIGNAL          1..16</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030212" target="_blank" class="term-link">
+                                    GO:0030212
+                                </a>
+                            </span>
+                            <span class="term-label">hyaluronan metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q86UX2" data-a="GO:0030212" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro transfers hyaluronan metabolic process from the inter-alpha- inhibitor heavy-chain family.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Independent direct human-fibroblast evidence validates the family-based inference. TSG-6 and bikunin are required for cell-surface HC5, HC5 is released by hyaluronidase, and blocking heavy-chain transfer or depleting HC5 disrupts the HA-dependent matrix phenotype.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27143355" target="_blank" class="term-link">
+                                        PMID:27143355
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The current study describes a novel mechanism linking the TSG-6 transfer of the newly described HC5 to the HA-dependent control of cell phenotype.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031012" target="_blank" class="term-link">
+                                    GO:0031012
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28675934" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28675934
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of the Extracellular Matrix of Normal and D...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q86UX2" data-a="GO:0031012" data-r="PMID:28675934" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ITIH5 was recovered in a mass-spectrometric analysis of ECM-enriched normal and diseased human tissues.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The HDA is consistent with canonical secretion and with direct recovery of endogenous HC5 from a hyaluronan-rich cell-surface matrix. It supports extracellular-matrix localization without implying a disease-specific role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28675934" target="_blank" class="term-link">
+                                        PMID:28675934
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">analyze ECM peptides by mass spectrometry</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031012" target="_blank" class="term-link">
+                                    GO:0031012
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25037231" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25037231
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Extracellular matrix signatures of human primary metastatic ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q86UX2" data-a="GO:0031012" data-r="PMID:25037231" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ITIH5 was recovered in ECM-enriched proteomes from human colorectal tumors, liver metastases, and matched tissues.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The HDA supports extracellular-matrix localization and is independently coherent with ITIH5 secretion and the HC5-hyaluronan matrix mechanism. It does not by itself establish a colorectal-cancer function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25037231" target="_blank" class="term-link">
+                                        PMID:25037231
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We have used enrichment of extracellular matrix (ECM) from human patient samples and proteomics</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005540" target="_blank" class="term-link">
+                                    GO:0005540
+                                </a>
+                            </span>
+                            <span class="term-label">hyaluronic acid binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27143355" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27143355
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Tumor Necrosis Factor-stimulated Gene 6 (TSG-6)-mediated Int...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q86UX2" data-a="GO:0005540" data-r="PMID:27143355" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Endogenous HC5 associates with the hyaluronan-rich surface matrix of human lung fibroblasts and is released by hyaluronidase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Hyaluronidase-sensitive retention supplies direct biochemical localization evidence for association with hyaluronan, while TSG-6/bikunin perturbations establish the expected heavy-chain matrix pathway.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27143355" target="_blank" class="term-link">
+                                        PMID:27143355
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">HC5 was released by hyaluronidase treatment, confirming its association with cell surface HA.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009986" target="_blank" class="term-link">
+                                    GO:0009986
+                                </a>
+                            </span>
+                            <span class="term-label">cell surface</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27143355" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27143355
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Tumor Necrosis Factor-stimulated Gene 6 (TSG-6)-mediated Int...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q86UX2" data-a="GO:0009986" data-r="PMID:27143355" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Endogenous HC5 was detected at the human fibroblast cell surface.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> TSG-6 or bikunin knockdown prevents HC5 surface expression, and hyaluronidase releases the surface pool, demonstrating an extracellular pericellular-matrix localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27143355" target="_blank" class="term-link">
+                                        PMID:27143355
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">its cell surface expression was prevented by siRNA inhibition of TSG-6 or bikunin.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1904762" target="_blank" class="term-link">
+                                    GO:1904762
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of myofibroblast differentiation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27143355" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27143355
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Tumor Necrosis Factor-stimulated Gene 6 (TSG-6)-mediated Int...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q86UX2" data-a="GO:1904762" data-r="PMID:27143355" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HC5 knockdown impairs TGF-beta1-induced differentiation of human lung fibroblasts to myofibroblasts.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The targeted loss-of-function phenotype directly establishes that endogenous HC5 positively supports this differentiation program.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27143355" target="_blank" class="term-link">
+                                        PMID:27143355
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">HC5 knockdown by siRNA confirmed its role in myofibroblast differentiation.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008285" target="_blank" class="term-link">
+                                    GO:0008285
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of cell population proliferation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17653090" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17653090
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The extracellular matrix protein ITIH5 is a novel prognostic...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q86UX2" data-a="GO:0008285" data-r="PMID:17653090" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Forced full-length ITIH5 expression reduces proliferation of MDA-MB-231 breast-cancer cells.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The experimental perturbation supports the term in a tumor-cell context. It is retained as non-core biology because ectopic expression in one cancer line does not establish a general physiological anti-proliferative role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17653090" target="_blank" class="term-link">
+                                        PMID:17653090
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ITIH5-expressing clones showed a 40% reduced proliferation rate compared to mock-transfected cells.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045599" target="_blank" class="term-link">
+                                    GO:0045599
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of fat cell differentiation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/39198923" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:39198923
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genetic deletion of ITIH5 leads to increased development of ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q86UX2" data-a="GO:0045599" data-r="PMID:39198923" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mouse Itih5 deletion increases adipogenic differentiation of adipose stem cells, and recombinant ITIH5 reverses the phenotype.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Knockout and protein-rescue experiments support a conserved mammalian anti-adipogenic role. ISS is used because the direct genetic cells and animals were mouse, even though the reviewed product is human ITIH5.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39198923" target="_blank" class="term-link">
+                                        PMID:39198923
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ITIH5-/- cells exhibited increased proliferation and adipogenic differentiation</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39198923" target="_blank" class="term-link">
+                                        PMID:39198923
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the application of the rITIH5 protein reversed the observed knockout effects in ASCs.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1904995" target="_blank" class="term-link">
+                                    GO:1904995
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of leukocyte adhesion to vascular endothelial cell</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/42025695" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:42025695
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Systems genetics reveals ITIH5 as a key mediator of adipocyt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q86UX2" data-a="GO:1904995" data-r="PMID:42025695" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Recombinant ITIH5 treatment reduces leukocyte adhesion to human aortic endothelial monolayers.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The direct human endothelial-cell adhesion assay precisely supports this process term and avoids overextending the broader in vivo mouse immune phenotypes.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/42025695" target="_blank" class="term-link">
+                                        PMID:42025695
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ITIH5 protein alone blunted this adhesion of leukocytes</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Secreted HC5 participates in a TSG-6- and bikunin-dependent pericellular hyaluronan matrix in human fibroblasts. Its association with cell-surface hyaluronan supports TGF-beta1-induced myofibroblast differentiation.</h3>
+                <span class="vote-buttons" data-g="Q86UX2" data-a="FUNCTION: Secreted HC5 participates in a TSG-6- and bikunin-..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005540" target="_blank" class="term-link">
+                            hyaluronic acid binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030212" target="_blank" class="term-link">
+                                hyaluronan metabolic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1904762" target="_blank" class="term-link">
+                                positive regulation of myofibroblast differentiation
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031012" target="_blank" class="term-link">
+                                extracellular matrix
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009986" target="_blank" class="term-link">
+                                cell surface
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27143355" target="_blank" class="term-link">
+                                PMID:27143355
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The interaction of HC5 with cell surface HA was essential for TGFβ1-dependent differentiation of fibroblasts to myofibroblasts</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Extracellular ITIH5 acts as an adipose-derived paracrine regulator that restrains adipocyte differentiation and limits leukocyte adhesion to vascular endothelium. The differentiation role is supported by mammalian knockout and recombinant rescue, while the endothelial effect is direct in human cells.</h3>
+                <span class="vote-buttons" data-g="Q86UX2" data-a="FUNCTION: Extracellular ITIH5 acts as an adipose-derived par..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045599" target="_blank" class="term-link">
+                                negative regulation of fat cell differentiation
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1904995" target="_blank" class="term-link">
+                                negative regulation of leukocyte adhesion to vascular endothelial cell
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/39198923" target="_blank" class="term-link">
+                                PMID:39198923
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the application of the rITIH5 protein reversed the observed knockout effects in ASCs.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/42025695" target="_blank" class="term-link">
+                                PMID:42025695
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">ITIH5 treatment in human endothelial cells reduced leukocyte recruitment.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14744536" target="_blank" class="term-link">
+                            PMID:14744536
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ITIH5, a novel member of the inter-alpha-trypsin inhibitor heavy chain family is downregulated in breast cancer.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ITIH5 contains the conserved VIT and von Willebrand factor A domains of the heavy-chain family.</div>
+
+                        <div class="finding-text">"ITIH5 contains the two domains conserved in all known ITIHs, the vault protein inter-alpha-trypsin (VIT) domain and a von Willebrand type A (vWA) domain"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ITIH5 expression is strongly reduced in breast tumors.</div>
+
+                        <div class="finding-text">"We found strong downregulation of ITIH5 expression in breast tumors"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17653090" target="_blank" class="term-link">
+                            PMID:17653090
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The extracellular matrix protein ITIH5 is a novel prognostic marker in invasive node-negative breast cancer and its aberrant expression is caused by promoter hypermethylation.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Forced full-length ITIH5 expression reduces proliferation of MDA-MB-231 breast-cancer cells.</div>
+
+                        <div class="finding-text">"ITIH5-expressing clones showed a 40% reduced proliferation rate compared to mock-transfected cells."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ITIH5 promoter methylation is associated with expression loss in breast tumors.</div>
+
+                        <div class="finding-text">"Methylation was significantly associated with mRNA loss"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/2476436" target="_blank" class="term-link">
+                            PMID:2476436
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Analysis of inter-alpha-trypsin inhibitor and a novel trypsin inhibitor, pre-alpha-trypsin inhibitor, from human plasma. Polypeptide chain stoichiometry and assembly by glycan.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Inter-alpha-inhibitor heavy chains are noninhibitory.</div>
+
+                        <div class="finding-text">"Inter-alpha-trypsin inhibitor contains noninhibitory heavy chains of 65,000 and 70,000 Da"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A distinct 30-kDa light chain carries trypsin-inhibitory activity.</div>
+
+                        <div class="finding-text">"each protein contained a single, identical, trypsin-inhibitory chain of 30,000 Da"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25037231" target="_blank" class="term-link">
+                            PMID:25037231
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Extracellular matrix signatures of human primary metastatic colon cancers and their metastases to liver.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The study used ECM enrichment and proteomics on human patient samples.</div>
+
+                        <div class="finding-text">"We have used enrichment of extracellular matrix (ECM) from human patient samples and proteomics"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27143355" target="_blank" class="term-link">
+                            PMID:27143355
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Tumor Necrosis Factor-stimulated Gene 6 (TSG-6)-mediated Interactions with the Inter-α-inhibitor Heavy Chain 5 Facilitate Tumor Growth Factor β1 (TGFβ1)-dependent Fibroblast to Myofibroblast Differentiation.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HC5 is the principal ITIH heavy chain expressed by the studied human fibroblasts.</div>
+
+                        <div class="finding-text">"The newly described HC5 was shown to be the principal HC expressed"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Hyaluronidase releases HC5 from the fibroblast surface, demonstrating association with cell-surface hyaluronan.</div>
+
+                        <div class="finding-text">"HC5 was released by hyaluronidase treatment, confirming its association with cell surface HA."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HC5 knockdown supports a causal role in myofibroblast differentiation.</div>
+
+                        <div class="finding-text">"HC5 knockdown by siRNA confirmed its role in myofibroblast differentiation."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28675934" target="_blank" class="term-link">
+                            PMID:28675934
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Characterization of the Extracellular Matrix of Normal and Diseased Tissues Using Proteomics.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The study provides an ECM-enrichment and mass-spectrometry workflow for normal and diseased human tissues.</div>
+
+                        <div class="finding-text">"analyze ECM peptides by mass spectrometry"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/39198923" target="_blank" class="term-link">
+                            PMID:39198923
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genetic deletion of ITIH5 leads to increased development of adipose tissue in mice.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Mouse Itih5 deletion increases adipose-stem-cell proliferation and adipogenic differentiation.</div>
+
+                        <div class="finding-text">"ITIH5-/- cells exhibited increased proliferation and adipogenic differentiation"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Recombinant ITIH5 reverses the knockout cellular phenotypes.</div>
+
+                        <div class="finding-text">"the application of the rITIH5 protein reversed the observed knockout effects in ASCs."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/42025695" target="_blank" class="term-link">
+                            PMID:42025695
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Systems genetics reveals ITIH5 as a key mediator of adipocyte-Endothelial crosstalk.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Recombinant ITIH5 reduces leukocyte recruitment by human endothelial cells.</div>
+
+                        <div class="finding-text">"ITIH5 treatment in human endothelial cells reduced leukocyte recruitment."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The functional monolayer assay found that ITIH5 alone blunts leukocyte adhesion.</div>
+
+                        <div class="finding-text">"ITIH5 protein alone blunted this adhesion of leukocytes"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/ITIH5/ITIH5-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB record for human ITIH5 (Q86UX2)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ITIH5 is a reviewed 942-amino-acid precursor.</div>
+
+                        <div class="finding-text">"Reviewed;         942 AA."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Canonical ITIH5 has an N-terminal signal peptide.</div>
+
+                        <div class="finding-text">"FT   SIGNAL          1..16"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt assigns a von Willebrand factor A domain.</div>
+
+                        <div class="finding-text">"FT   DOMAIN          295..478"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/ITIH5/ITIH5-notes.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual literature and annotation review notes for human ITIH5</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">All five GOA annotation groups were manually adjudicated.</div>
+
+                        <div class="finding-text">"## Existing annotation decisions"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The review distinguishes two supported extracellular roles.</div>
+
+                        <div class="finding-text">"## HC5, bikunin, and the hyaluronan matrix"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/ITIH5/ITIH5-deep-research-manual.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual literature synthesis for human ITIH5 (Q86UX2)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ITIH5 is a secreted heavy-chain protein with matrix and adipose-endothelial roles, not a protease inhibitor.</div>
+
+                        <div class="finding-text">"The best-supported core picture is of a secreted extracellular heavy-chain protein rather than a protease inhibitor."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which receptor or matrix partner transduces ITIH5 signals in adipose stem cells and vascular endothelium?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q86UX2" data-a="Q: Which receptor or matrix partner transduces ITIH5 ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How is the TSG-6/bikunin/HC5 hyaluronan pathway related to the adipose- endothelial signaling activity?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q86UX2" data-a="Q: How is the TSG-6/bikunin/HC5 hyaluronan pathway re..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which ITIH5 isoforms are secreted in fibroblasts, adipocytes, placenta, and tumors?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q86UX2" data-a="Q: Which ITIH5 isoforms are secreted in fibroblasts, ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is reduced tumor-cell proliferation a physiological ITIH5 function or a context-specific consequence of forced expression?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q86UX2" data-a="Q: Is reduced tumor-cell proliferation a physiologica..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Perform cell-surface ligand-receptor capture with recombinant ITIH5 in human adipose stem cells and aortic endothelial cells, then test candidate-receptor knockouts for loss of ITIH5-dependent differentiation and leukocyte-adhesion phenotypes with receptor rescue.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: ITIH5 binds a cell-surface receptor that is required for its anti-adipogenic and anti-adhesive endothelial effects.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: Ligand-receptor discovery and genetic epistasis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q86UX2" data-a="EXPERIMENT: Perform cell-surface ligand-receptor capture with ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare wild-type ITIH5 with cleavage/transfer-deficient and VWA-domain mutants in TSG-6/bikunin-dependent fibroblast matrices, adipose-stem-cell differentiation, and endothelial leukocyte-adhesion assays.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Covalent heavy-chain matrix transfer is required for fibroblast differentiation but dispensable for adipose-endothelial signaling.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: Separation-of-function mutagenesis and cellular rescue</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q86UX2" data-a="EXPERIMENT: Compare wild-type ITIH5 with cleavage/transfer-def..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Express each tagged isoform at matched levels, quantify secretion and subcellular localization, and perform isoform-specific rescue after endogenous ITIH5 depletion in fibroblasts and adipose stem cells.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: N-terminally truncated ITIH5 isoforms remain intracellular and have activities distinct from secreted isoform 1.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: Isoform-resolved localization and functional complementation</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q86UX2" data-a="EXPERIMENT: Express each tagged isoform at matched levels, qua..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The molecular receptor or binding partner that transduces ITIH5 signaling in adipose stromal and endothelial cells is unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Recombinant protein and genetic perturbations establish cellular effects, but no receptor, direct signaling complex, or separation-of-function allele has been identified.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Identifying the receptor is necessary to distinguish an autonomous signaling function from an indirect consequence of extracellular-matrix remodeling.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Use affinity purification and cell-surface ligand-receptor screening with recombinant ITIH5, followed by receptor knockout and rescue in adipose stem cells and human endothelium.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"The identity of any receptor and the relationship between this signaling role and covalent heavy-chain matrix chemistry remain unresolved."</em> — file:human/ITIH5/ITIH5-deep-research-manual.md</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Isoform-specific secretion and function are unresolved, particularly for isoforms 3 and 4 that lack the canonical N-terminal signal peptide.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">CC_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Sequence records define four isoforms, but the primary functional studies do not identify which endogenous protein isoforms were detected.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Isoform resolution is required to know whether all ITIH5 products enter the extracellular matrix or whether truncated forms act intracellularly.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Develop isoform-specific transcript and peptide assays, then couple secretion measurements with isoform-resolved rescue experiments.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Isoforms 3 and 4 lack the canonical N terminus and signal peptide"</em> — file:human/ITIH5/ITIH5-notes.md</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Manual</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ITIH5-deep-research-manual.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q86UX2" data-a="DEEP_RESEARCH: Manual" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">ITIH5 manual literature synthesis</span>
+
+
+                    <span class="report-badge">Manual</span>
+
+
+
+
+
+
+
+                </div>
+
+
+                <h1 id="itih5-manual-literature-synthesis">ITIH5 manual literature synthesis</h1>
+<h2 id="scope-and-method">Scope and method</h2>
+<p>This manual synthesis was prepared after both configured automated research providers failed: Falcon returned HTTP 402 and Perplexity-lite returned HTTP 401. Evidence was taken from the reviewed UniProt Q86UX2 record, locally cached publication records, and primary full text where available. The open-access full text of PMID:27143355 was inspected through its institutional repository because the local cache labels that record abstract-only.</p>
+<h2 id="high-confidence-findings">High-confidence findings</h2>
+<h3 id="hc5-is-a-hyaluronan-associated-extracellular-matrix-heavy-chain">HC5 is a hyaluronan-associated extracellular matrix heavy chain</h3>
+<p>Martin et al. studied endogenous HC5 in primary human lung fibroblasts. HC5 was present in chondroitinase-sensitive, high-molecular-weight bikunin complexes. Its cell-surface presentation depended on TSG-6 and bikunin, while hyaluronidase released it from the surface. The functional knockdown result links this matrix organization to cell state: <a href="https://pubmed.ncbi.nlm.nih.gov/27143355" title="The interaction of HC5 with cell surface HA was essential for TGFβ1-dependent differentiation of fibroblasts to myofibroblasts">PMID:27143355</a>. The most direct GO consequences are hyaluronic acid binding, cell-surface localization, hyaluronan metabolism, and positive regulation of myofibroblast differentiation.</p>
+<h3 id="itih5-is-not-itself-the-protease-inhibitor">ITIH5 is not itself the protease inhibitor</h3>
+<p>Classical biochemical work separated inhibitory bikunin from the noninhibitory heavy chains <a href="https://pubmed.ncbi.nlm.nih.gov/2476436" title="Inter-alpha-trypsin inhibitor contains noninhibitory heavy chains of 65,000 and 70,000 Da">PMID:2476436</a>. ITIH5 encodes a heavy-chain family protein and has no Kunitz inhibitor domain. The electronic serine-type endopeptidase inhibitor annotation is therefore a family-complex component error.</p>
+<h3 id="itih5-restrains-adipogenic-differentiation-in-a-mammalian-model">ITIH5 restrains adipogenic differentiation in a mammalian model</h3>
+<p>Sessler et al. found increased adipose mass in Itih5-null mice, increased proliferation and adipogenic differentiation of knockout adipose stem cells, and recombinant-protein rescue <a href="https://pubmed.ncbi.nlm.nih.gov/39198923" title="the application of the rITIH5 protein reversed the observed knockout effects in ASCs">PMID:39198923</a>. This supports negative regulation of fat cell differentiation. Because the direct genetic experiment was performed in mouse cells, the annotation on the human product is an ISS transfer.</p>
+<h3 id="itih5-suppresses-leukocyte-adhesion-to-human-endothelium">ITIH5 suppresses leukocyte adhesion to human endothelium</h3>
+<p>Zhou et al. connected adipocyte-derived ITIH5 to endothelial behavior. Recombinant ITIH5 directly reduced leukocyte adhesion to human aortic endothelial monolayers <a href="https://pubmed.ncbi.nlm.nih.gov/42025695" title="ITIH5 protein alone blunted this adhesion of leukocytes">PMID:42025695</a>. This supports negative regulation of leukocyte adhesion to vascular endothelial cell.</p>
+<h3 id="tumor-cell-proliferation-is-a-supported-but-context-specific-phenotype">Tumor-cell proliferation is a supported but context-specific phenotype</h3>
+<p>Forced ITIH5 expression in MDA-MB-231 breast-cancer cells reduced proliferation <a href="https://pubmed.ncbi.nlm.nih.gov/17653090" title="ITIH5-expressing clones showed a 40% reduced proliferation rate">PMID:17653090</a>. Promoter methylation and loss of expression are recurrent tumor observations, but the physiological generality of the anti-proliferative phenotype is uncertain. It is proposed as a non-core experimental annotation.</p>
+<h2 id="interpretation">Interpretation</h2>
+<p>The best-supported core picture is of a secreted extracellular heavy-chain protein rather than a protease inhibitor. In fibroblasts, HC5 participates in a TSG-6- and bikunin-dependent hyaluronan matrix that enables myofibroblast differentiation. Newer work supports an additional extracellular adipose/endothelial signaling role that restrains adipogenic differentiation and leukocyte-endothelial adhesion. The identity of any receptor and the relationship between this signaling role and covalent heavy-chain matrix chemistry remain unresolved.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ITIH5-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q86UX2" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="itih5-review-notes">ITIH5 review notes</h1>
+<h2 id="research-provenance">Research provenance</h2>
+<p>The automated deep-research attempt was made with Falcon and the configured Perplexity-lite fallback. Falcon returned HTTP 402 and the fallback returned HTTP 401, so this review uses the reviewed UniProt record, cached primary publications, and a manual inspection of the open-access article for PMID:27143355. Detailed evidence is recorded in ITIH5-deep-research-manual.md.</p>
+<h2 id="identity-architecture-and-isoforms">Identity, architecture, and isoforms</h2>
+<p>ITIH5 (UniProt Q86UX2) is a 942-residue inter-alpha-trypsin inhibitor heavy-chain family protein with an N-terminal signal peptide, VIT domain, and von Willebrand factor type A domain. The founding study noted that ITIH5 diverged early from the other heavy-chain subfamilies <a href="https://pubmed.ncbi.nlm.nih.gov/14744536" title="However, ITIH5 diverged early from a common ancestor of the other subfamilies.">PMID:14744536</a>. Canonical isoform 1 is predicted to enter the secretory pathway. Isoforms 3 and 4 lack the canonical N terminus and signal peptide; none of the functional studies reviewed here resolves the tested isoform.</p>
+<h2 id="hc5-bikunin-and-the-hyaluronan-matrix">HC5, bikunin, and the hyaluronan matrix</h2>
+<p>In human lung fibroblasts, HC5 forms chondroitinase-sensitive high-molecular-weight complexes with bikunin. TSG-6 and bikunin are required for cell-surface HC5, and hyaluronidase releases HC5, directly tying it to cell-surface hyaluronan <a href="https://pubmed.ncbi.nlm.nih.gov/27143355" title="HC5 was released by hyaluronidase treatment, confirming its association with cell surface HA">PMID:27143355</a>. More than 95% HC5 knockdown reduced TGF-beta1-induced alpha-smooth-muscle actin by more than half, supporting a positive role in fibroblast-to-myofibroblast differentiation. This establishes a human HC5-bikunin-TSG-6-hyaluronan matrix pathway.</p>
+<h2 id="protease-inhibitor-boundary">Protease-inhibitor boundary</h2>
+<p>The family name does not make the heavy chain a serine protease inhibitor. Biochemical work on inter-alpha-inhibitor explicitly describes the heavy subunits as noninhibitory <a href="https://pubmed.ncbi.nlm.nih.gov/2476436" title="Inter-alpha-trypsin inhibitor contains noninhibitory heavy chains of 65,000 and 70,000 Da">PMID:2476436</a>. The Kunitz-containing bikunin light chain carries protease-inhibitory activity. ITIH5 lacks a Kunitz domain, so the InterPro-derived inhibitor annotation is removed as component-level overpropagation.</p>
+<h2 id="adipose-and-endothelial-effects">Adipose and endothelial effects</h2>
+<p>Mouse Itih5 deletion increased adipose mass and caused adipose stem cells to proliferate and differentiate more strongly toward adipocytes; recombinant ITIH5 reversed the cellular phenotype <a href="https://pubmed.ncbi.nlm.nih.gov/39198923" title="ITIH5-/- cells exhibited increased proliferation and adipogenic differentiation">PMID:39198923</a>. This supports a conserved negative effect on fat-cell differentiation, transferred to human ITIH5 with ISS rather than direct human experimental evidence.</p>
+<p>A 2026 study found a direct effect of recombinant ITIH5 on human aortic endothelial monolayers: ITIH5 reduced leukocyte recruitment <a href="https://pubmed.ncbi.nlm.nih.gov/42025695" title="ITIH5 treatment in human endothelial cells reduced leukocyte recruitment">PMID:42025695</a>. The same study connects adipocyte-derived ITIH5 to endothelial and immune behavior, suggesting an extracellular signaling role that is at least partly separable from stable heavy-chain linkage to bikunin.</p>
+<h2 id="tumor-associated-evidence">Tumor-associated evidence</h2>
+<p>ITIH5 is frequently reduced by promoter methylation in breast cancer. Forced expression in MDA-MB-231 cells reduced proliferation <a href="https://pubmed.ncbi.nlm.nih.gov/17653090" title="ITIH5-expressing clones showed a 40% reduced proliferation rate">PMID:17653090</a>. This supports a context-dependent negative regulation of cell population proliferation annotation, but tumor suppression is kept outside the conserved core-function summary.</p>
+<h2 id="existing-annotation-decisions">Existing annotation decisions</h2>
+<table>
+<thead>
+<tr>
+<th>GO annotation</th>
+<th>Decision</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>serine-type endopeptidase inhibitor activity</td>
+<td>REMOVE</td>
+<td>Inhibitory activity belongs to bikunin; ITIH heavy chains are noninhibitory.</td>
+</tr>
+<tr>
+<td>extracellular region</td>
+<td>ACCEPT</td>
+<td>Signal peptide plus direct extracellular/cell-surface matrix evidence.</td>
+</tr>
+<tr>
+<td>hyaluronan metabolic process</td>
+<td>ACCEPT</td>
+<td>HC5 participates in TSG-6-dependent heavy-chain organization on hyaluronan.</td>
+</tr>
+<tr>
+<td>extracellular matrix, PMID:25037231</td>
+<td>ACCEPT</td>
+<td>Direct human matrisome proteomics.</td>
+</tr>
+<tr>
+<td>extracellular matrix, PMID:28675934</td>
+<td>ACCEPT</td>
+<td>Direct human tissue ECM proteomics.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="proposed-annotations">Proposed annotations</h2>
+<ul>
+<li>Hyaluronic acid binding (GO:0005540), IDA from the hyaluronidase-release experiment in human fibroblasts.</li>
+<li>Cell surface (GO:0009986), IDA from cell-surface HC5 detection in human fibroblasts.</li>
+<li>Positive regulation of myofibroblast differentiation (GO:1904762), IMP from human HC5 knockdown.</li>
+<li>Negative regulation of cell population proliferation (GO:0008285), IMP from forced expression in human breast-cancer cells; non-core context.</li>
+<li>Negative regulation of fat cell differentiation (GO:0045599), ISS from mouse knockout and recombinant rescue.</li>
+<li>Negative regulation of leukocyte adhesion to vascular endothelial cell (GO:1904995), IDA from recombinant ITIH5 treatment of human endothelial monolayers.</li>
+</ul>
+<h2 id="open-questions">Open questions</h2>
+<ul>
+<li>Which isoforms are secreted in fibroblasts and adipose tissue, given that isoforms 3 and 4 lack the canonical signal peptide?</li>
+<li>Is the adipocyte-endothelial activity mediated by a receptor, a matrix interaction, or both?</li>
+<li>Does human ITIH5 undergo the same covalent bikunin and hyaluronan transfer chemistry in vivo, and which residue is used?</li>
+<li>Are the anti-proliferative tumor-cell effects a direct physiological function or a consequence of ectopic expression?</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q86UX2
+gene_symbol: ITIH5
+product_type: PROTEIN
+aliases:
+- KIAA1953
+- PP14776
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  ITIH5 is a secreted inter-alpha-inhibitor heavy-chain family glycoprotein
+  expressed prominently in placenta and adipose tissue and also by fibroblasts.
+  It contains VIT and von Willebrand factor A domains but no Kunitz protease-
+  inhibitor domain. In human fibroblasts, heavy chain 5 associates with bikunin
+  and cell-surface hyaluronan in a TSG-6-dependent pericellular matrix that
+  supports TGF-beta1-induced myofibroblast differentiation. ITIH5 also acts as
+  an adipose-derived extracellular signal: mammalian genetic and recombinant-
+  protein studies indicate that it restrains adipocyte differentiation, while
+  direct treatment of human endothelium reduces leukocyte adhesion. ITIH5
+  expression is frequently lost through promoter methylation in several cancers,
+  and experimental re-expression can suppress tumor-cell proliferation.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q86UX2-1
+- name: &#39;2&#39;
+  id: Q86UX2-2
+  sequence_note: VSP_033190, VSP_033191
+- name: &#39;3&#39;
+  id: Q86UX2-3
+  sequence_note: VSP_033188, VSP_033189
+- name: &#39;4&#39;
+  id: Q86UX2-4
+  sequence_note: VSP_035727, VSP_035728, VSP_035729
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000044
+  title: &gt;-
+    Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: PMID:14744536
+  title: ITIH5, a novel member of the inter-alpha-trypsin inhibitor heavy chain family is downregulated in breast cancer.
+  full_text_unavailable: true
+  findings:
+  - statement: ITIH5 contains the conserved VIT and von Willebrand factor A domains of the heavy-chain family.
+    supporting_text: ITIH5 contains the two domains conserved in all known ITIHs, the vault protein inter-alpha-trypsin (VIT) domain and a von Willebrand type A (vWA) domain
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: ITIH5 expression is strongly reduced in breast tumors.
+    supporting_text: We found strong downregulation of ITIH5 expression in breast tumors
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and abstract were checked. This is the founding cloning,
+      domain, expression, and tumor-associated study; full text was unavailable.
+- id: PMID:17653090
+  title: The extracellular matrix protein ITIH5 is a novel prognostic marker in invasive node-negative breast cancer and its aberrant expression is caused by promoter hypermethylation.
+  full_text_unavailable: true
+  findings:
+  - statement: Forced full-length ITIH5 expression reduces proliferation of MDA-MB-231 breast-cancer cells.
+    supporting_text: ITIH5-expressing clones showed a 40% reduced proliferation rate compared to mock-transfected cells.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: ITIH5 promoter methylation is associated with expression loss in breast tumors.
+    supporting_text: Methylation was significantly associated with mRNA loss
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and abstract were checked. The forced-expression result
+      directly supports the context-specific proliferation phenotype; the
+      observational tumor associations do not by themselves establish mechanism.
+- id: PMID:2476436
+  title: Analysis of inter-alpha-trypsin inhibitor and a novel trypsin inhibitor, pre-alpha-trypsin inhibitor, from human plasma. Polypeptide chain stoichiometry and assembly by glycan.
+  full_text_unavailable: true
+  findings:
+  - statement: Inter-alpha-inhibitor heavy chains are noninhibitory.
+    supporting_text: Inter-alpha-trypsin inhibitor contains noninhibitory heavy chains of 65,000 and 70,000 Da
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: A distinct 30-kDa light chain carries trypsin-inhibitory activity.
+    supporting_text: each protein contained a single, identical, trypsin-inhibitory chain of 30,000 Da
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and abstract were checked. The direct biochemical chain
+      analysis establishes that protease inhibition is not a heavy-chain activity.
+- id: PMID:25037231
+  title: Extracellular matrix signatures of human primary metastatic colon cancers and their metastases to liver.
+  findings:
+  - statement: The study used ECM enrichment and proteomics on human patient samples.
+    supporting_text: We have used enrichment of extracellular matrix (ECM) from human patient samples and proteomics
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed/PMC identity and full text were checked. The GOA HDA records ITIH5
+      in the source human ECM proteomic data; the study is localization evidence,
+      not an ITIH5-specific mechanistic experiment.
+- id: PMID:27143355
+  title: Tumor Necrosis Factor-stimulated Gene 6 (TSG-6)-mediated Interactions with the Inter-α-inhibitor Heavy Chain 5 Facilitate Tumor Growth Factor β1 (TGFβ1)-dependent Fibroblast to Myofibroblast Differentiation.
+  full_text_unavailable: true
+  findings:
+  - statement: HC5 is the principal ITIH heavy chain expressed by the studied human fibroblasts.
+    supporting_text: The newly described HC5 was shown to be the principal HC expressed
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: Hyaluronidase releases HC5 from the fibroblast surface, demonstrating association with cell-surface hyaluronan.
+    supporting_text: HC5 was released by hyaluronidase treatment, confirming its association with cell surface HA.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: HC5 knockdown supports a causal role in myofibroblast differentiation.
+    supporting_text: HC5 knockdown by siRNA confirmed its role in myofibroblast differentiation.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and abstract were checked, and the open-access full text
+      was inspected through the Cardiff institutional repository. This is the
+      decisive direct human-cell study for HC5, bikunin, TSG-6, cell-surface
+      hyaluronan, and myofibroblast differentiation.
+- id: PMID:28675934
+  title: Characterization of the Extracellular Matrix of Normal and Diseased Tissues Using Proteomics.
+  findings:
+  - statement: The study provides an ECM-enrichment and mass-spectrometry workflow for normal and diseased human tissues.
+    supporting_text: analyze ECM peptides by mass spectrometry
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed/PMC identity and full text were checked. ITIH5 recovery in the
+      source ECM proteomic data supports extracellular-matrix localization.
+- id: PMID:39198923
+  title: Genetic deletion of ITIH5 leads to increased development of adipose tissue in mice.
+  findings:
+  - statement: Mouse Itih5 deletion increases adipose-stem-cell proliferation and adipogenic differentiation.
+    supporting_text: ITIH5-/- cells exhibited increased proliferation and adipogenic differentiation
+    reference_section_type: ABSTRACT
+  - statement: Recombinant ITIH5 reverses the knockout cellular phenotypes.
+    supporting_text: the application of the rITIH5 protein reversed the observed knockout effects in ASCs.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed/PMC identity and full text were checked. Mouse knockout plus
+      recombinant rescue supports a conserved anti-adipogenic role, transferred
+      to the human product with ISS.
+- id: PMID:42025695
+  title: Systems genetics reveals ITIH5 as a key mediator of adipocyte-Endothelial crosstalk.
+  findings:
+  - statement: Recombinant ITIH5 reduces leukocyte recruitment by human endothelial cells.
+    supporting_text: ITIH5 treatment in human endothelial cells reduced leukocyte recruitment.
+    reference_section_type: ABSTRACT
+  - statement: The functional monolayer assay found that ITIH5 alone blunts leukocyte adhesion.
+    supporting_text: ITIH5 protein alone blunted this adhesion of leukocytes
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed/PMC identity and full text were checked. Direct recombinant-protein
+      treatment of human aortic endothelial cells supports the leukocyte-adhesion
+      annotation; mouse in vivo work supplies broader physiological context.
+- id: file:human/ITIH5/ITIH5-uniprot.txt
+  title: UniProtKB record for human ITIH5 (Q86UX2)
+  findings:
+  - statement: ITIH5 is a reviewed 942-amino-acid precursor.
+    supporting_text: Reviewed;         942 AA.
+  - statement: Canonical ITIH5 has an N-terminal signal peptide.
+    supporting_text: FT   SIGNAL          1..16
+  - statement: UniProt assigns a von Willebrand factor A domain.
+    supporting_text: FT   DOMAIN          295..478
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The reviewed UniProtKB record was checked directly for sequence, isoforms,
+      signal peptide, domains, tissue expression, and literature provenance.
+- id: file:human/ITIH5/ITIH5-notes.md
+  title: Manual literature and annotation review notes for human ITIH5
+  findings:
+  - statement: All five GOA annotation groups were manually adjudicated.
+    supporting_text: &#39;## Existing annotation decisions&#39;
+  - statement: The review distinguishes two supported extracellular roles.
+    supporting_text: &#39;## HC5, bikunin, and the hyaluronan matrix&#39;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Manual synthesis of reviewed UniProt, GOA, cached primary literature, and
+      the externally inspected open-access HC5 article.
+- id: file:human/ITIH5/ITIH5-deep-research-manual.md
+  title: Manual literature synthesis for human ITIH5 (Q86UX2)
+  findings:
+  - statement: ITIH5 is a secreted heavy-chain protein with matrix and adipose-endothelial roles, not a protease inhibitor.
+    supporting_text: The best-supported core picture is of a secreted extracellular heavy-chain protein rather than a protease inhibitor.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Manual research was required after both configured automated providers
+      failed; conclusions are anchored to reviewed records and primary sources.
+existing_annotations:
+- term:
+    id: GO:0004867
+    label: serine-type endopeptidase inhibitor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro electronically propagates serine-type endopeptidase inhibitor
+      activity from the inter-alpha-inhibitor family.
+    action: REMOVE
+    reason: &gt;-
+      Direct chain biochemistry assigns inhibitory activity to the 30-kDa
+      bikunin light chain and explicitly identifies the associated heavy chains
+      as noninhibitory. ITIH5 is a heavy-chain protein without a Kunitz inhibitor
+      domain, so this is component-level family-complex overpropagation.
+    additional_reference_ids:
+    - PMID:2476436
+    - file:human/ITIH5/ITIH5-deep-research-manual.md
+    supported_by:
+    - reference_id: PMID:2476436
+      supporting_text: Inter-alpha-trypsin inhibitor contains noninhibitory heavy chains of 65,000 and 70,000 Da
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+    - reference_id: file:human/ITIH5/ITIH5-deep-research-manual.md
+      supporting_text: ITIH5 encodes a heavy-chain family protein and has no Kunitz inhibitor domain.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      UniProt subcellular-location mapping places ITIH5 in the extracellular region.
+    action: ACCEPT
+    reason: &gt;-
+      The reviewed canonical precursor has a cleaved signal peptide, and direct
+      human-fibroblast experiments place endogenous HC5 in a cell-surface
+      hyaluronan matrix. Two independent human ECM proteomic studies provide
+      additional localization evidence.
+    additional_reference_ids:
+    - PMID:27143355
+    - PMID:25037231
+    - PMID:28675934
+    - file:human/ITIH5/ITIH5-uniprot.txt
+    supported_by:
+    - reference_id: PMID:27143355
+      supporting_text: HC5 was released by hyaluronidase treatment, confirming its association with cell surface HA.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+    - reference_id: file:human/ITIH5/ITIH5-uniprot.txt
+      supporting_text: FT   SIGNAL          1..16
+- term:
+    id: GO:0030212
+    label: hyaluronan metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro transfers hyaluronan metabolic process from the inter-alpha-
+      inhibitor heavy-chain family.
+    action: ACCEPT
+    reason: &gt;-
+      Independent direct human-fibroblast evidence validates the family-based
+      inference. TSG-6 and bikunin are required for cell-surface HC5, HC5 is
+      released by hyaluronidase, and blocking heavy-chain transfer or depleting
+      HC5 disrupts the HA-dependent matrix phenotype.
+    additional_reference_ids:
+    - PMID:27143355
+    - file:human/ITIH5/ITIH5-deep-research-manual.md
+    supported_by:
+    - reference_id: PMID:27143355
+      supporting_text: The current study describes a novel mechanism linking the TSG-6 transfer of the newly described HC5 to the HA-dependent control of cell phenotype.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0031012
+    label: extracellular matrix
+  evidence_type: HDA
+  original_reference_id: PMID:28675934
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ITIH5 was recovered in a mass-spectrometric analysis of ECM-enriched normal
+      and diseased human tissues.
+    action: ACCEPT
+    reason: &gt;-
+      The HDA is consistent with canonical secretion and with direct recovery of
+      endogenous HC5 from a hyaluronan-rich cell-surface matrix. It supports
+      extracellular-matrix localization without implying a disease-specific role.
+    additional_reference_ids:
+    - PMID:27143355
+    supported_by:
+    - reference_id: PMID:28675934
+      supporting_text: analyze ECM peptides by mass spectrometry
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0031012
+    label: extracellular matrix
+  evidence_type: HDA
+  original_reference_id: PMID:25037231
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ITIH5 was recovered in ECM-enriched proteomes from human colorectal tumors,
+      liver metastases, and matched tissues.
+    action: ACCEPT
+    reason: &gt;-
+      The HDA supports extracellular-matrix localization and is independently
+      coherent with ITIH5 secretion and the HC5-hyaluronan matrix mechanism. It
+      does not by itself establish a colorectal-cancer function.
+    additional_reference_ids:
+    - PMID:27143355
+    supported_by:
+    - reference_id: PMID:25037231
+      supporting_text: We have used enrichment of extracellular matrix (ECM) from human patient samples and proteomics
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0005540
+    label: hyaluronic acid binding
+  evidence_type: IDA
+  original_reference_id: PMID:27143355
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Endogenous HC5 associates with the hyaluronan-rich surface matrix of human
+      lung fibroblasts and is released by hyaluronidase.
+    action: NEW
+    reason: &gt;-
+      Hyaluronidase-sensitive retention supplies direct biochemical localization
+      evidence for association with hyaluronan, while TSG-6/bikunin perturbations
+      establish the expected heavy-chain matrix pathway.
+    supported_by:
+    - reference_id: PMID:27143355
+      supporting_text: HC5 was released by hyaluronidase treatment, confirming its association with cell surface HA.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0009986
+    label: cell surface
+  evidence_type: IDA
+  original_reference_id: PMID:27143355
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Endogenous HC5 was detected at the human fibroblast cell surface.
+    action: NEW
+    reason: &gt;-
+      TSG-6 or bikunin knockdown prevents HC5 surface expression, and
+      hyaluronidase releases the surface pool, demonstrating an extracellular
+      pericellular-matrix localization.
+    supported_by:
+    - reference_id: PMID:27143355
+      supporting_text: its cell surface expression was prevented by siRNA inhibition of TSG-6 or bikunin.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:1904762
+    label: positive regulation of myofibroblast differentiation
+  evidence_type: IMP
+  original_reference_id: PMID:27143355
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      HC5 knockdown impairs TGF-beta1-induced differentiation of human lung
+      fibroblasts to myofibroblasts.
+    action: NEW
+    reason: &gt;-
+      The targeted loss-of-function phenotype directly establishes that
+      endogenous HC5 positively supports this differentiation program.
+    supported_by:
+    - reference_id: PMID:27143355
+      supporting_text: HC5 knockdown by siRNA confirmed its role in myofibroblast differentiation.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0008285
+    label: negative regulation of cell population proliferation
+  evidence_type: IMP
+  original_reference_id: PMID:17653090
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Forced full-length ITIH5 expression reduces proliferation of MDA-MB-231
+      breast-cancer cells.
+    action: NEW
+    reason: &gt;-
+      The experimental perturbation supports the term in a tumor-cell context.
+      It is retained as non-core biology because ectopic expression in one cancer
+      line does not establish a general physiological anti-proliferative role.
+    supported_by:
+    - reference_id: PMID:17653090
+      supporting_text: ITIH5-expressing clones showed a 40% reduced proliferation rate compared to mock-transfected cells.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0045599
+    label: negative regulation of fat cell differentiation
+  evidence_type: ISS
+  original_reference_id: PMID:39198923
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Mouse Itih5 deletion increases adipogenic differentiation of adipose stem
+      cells, and recombinant ITIH5 reverses the phenotype.
+    action: NEW
+    reason: &gt;-
+      Knockout and protein-rescue experiments support a conserved mammalian
+      anti-adipogenic role. ISS is used because the direct genetic cells and
+      animals were mouse, even though the reviewed product is human ITIH5.
+    supported_by:
+    - reference_id: PMID:39198923
+      supporting_text: ITIH5-/- cells exhibited increased proliferation and adipogenic differentiation
+      reference_section_type: ABSTRACT
+    - reference_id: PMID:39198923
+      supporting_text: the application of the rITIH5 protein reversed the observed knockout effects in ASCs.
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:1904995
+    label: negative regulation of leukocyte adhesion to vascular endothelial cell
+  evidence_type: IDA
+  original_reference_id: PMID:42025695
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Recombinant ITIH5 treatment reduces leukocyte adhesion to human aortic
+      endothelial monolayers.
+    action: NEW
+    reason: &gt;-
+      The direct human endothelial-cell adhesion assay precisely supports this
+      process term and avoids overextending the broader in vivo mouse immune
+      phenotypes.
+    supported_by:
+    - reference_id: PMID:42025695
+      supporting_text: ITIH5 protein alone blunted this adhesion of leukocytes
+      reference_section_type: RESULTS
+core_functions:
+- description: &gt;-
+    Secreted HC5 participates in a TSG-6- and bikunin-dependent pericellular
+    hyaluronan matrix in human fibroblasts. Its association with cell-surface
+    hyaluronan supports TGF-beta1-induced myofibroblast differentiation.
+  molecular_function:
+    id: GO:0005540
+    label: hyaluronic acid binding
+  directly_involved_in:
+  - id: GO:0030212
+    label: hyaluronan metabolic process
+  - id: GO:1904762
+    label: positive regulation of myofibroblast differentiation
+  locations:
+  - id: GO:0031012
+    label: extracellular matrix
+  - id: GO:0009986
+    label: cell surface
+  supported_by:
+  - reference_id: PMID:27143355
+    supporting_text: The interaction of HC5 with cell surface HA was essential for TGFβ1-dependent differentiation of fibroblasts to myofibroblasts
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+- description: &gt;-
+    Extracellular ITIH5 acts as an adipose-derived paracrine regulator that
+    restrains adipocyte differentiation and limits leukocyte adhesion to
+    vascular endothelium. The differentiation role is supported by mammalian
+    knockout and recombinant rescue, while the endothelial effect is direct in
+    human cells.
+  directly_involved_in:
+  - id: GO:0045599
+    label: negative regulation of fat cell differentiation
+  - id: GO:1904995
+    label: negative regulation of leukocyte adhesion to vascular endothelial cell
+  locations:
+  - id: GO:0005576
+    label: extracellular region
+  supported_by:
+  - reference_id: PMID:39198923
+    supporting_text: the application of the rITIH5 protein reversed the observed knockout effects in ASCs.
+    reference_section_type: ABSTRACT
+  - reference_id: PMID:42025695
+    supporting_text: ITIH5 treatment in human endothelial cells reduced leukocyte recruitment.
+    reference_section_type: ABSTRACT
+proposed_new_terms: []
+knowledge_gaps:
+- gap_statement: &gt;-
+    The molecular receptor or binding partner that transduces ITIH5 signaling
+    in adipose stromal and endothelial cells is unknown.
+  boundary: &gt;-
+    Recombinant protein and genetic perturbations establish cellular effects,
+    but no receptor, direct signaling complex, or separation-of-function allele
+    has been identified.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Identifying the receptor is necessary to distinguish an autonomous signaling
+    function from an indirect consequence of extracellular-matrix remodeling.
+  resolution: &gt;-
+    Use affinity purification and cell-surface ligand-receptor screening with
+    recombinant ITIH5, followed by receptor knockout and rescue in adipose stem
+    cells and human endothelium.
+  provenance:
+  - reference_id: file:human/ITIH5/ITIH5-deep-research-manual.md
+    supporting_text: The identity of any receptor and the relationship between this signaling role and covalent heavy-chain matrix chemistry remain unresolved.
+- gap_statement: &gt;-
+    Isoform-specific secretion and function are unresolved, particularly for
+    isoforms 3 and 4 that lack the canonical N-terminal signal peptide.
+  boundary: &gt;-
+    Sequence records define four isoforms, but the primary functional studies
+    do not identify which endogenous protein isoforms were detected.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: CC_DARK
+  status: OPEN
+  significance: &gt;-
+    Isoform resolution is required to know whether all ITIH5 products enter the
+    extracellular matrix or whether truncated forms act intracellularly.
+  resolution: &gt;-
+    Develop isoform-specific transcript and peptide assays, then couple
+    secretion measurements with isoform-resolved rescue experiments.
+  provenance:
+  - reference_id: file:human/ITIH5/ITIH5-notes.md
+    supporting_text: Isoforms 3 and 4 lack the canonical N terminus and signal peptide
+suggested_questions:
+- question: &gt;-
+    Which receptor or matrix partner transduces ITIH5 signals in adipose stem
+    cells and vascular endothelium?
+- question: &gt;-
+    How is the TSG-6/bikunin/HC5 hyaluronan pathway related to the adipose-
+    endothelial signaling activity?
+- question: &gt;-
+    Which ITIH5 isoforms are secreted in fibroblasts, adipocytes, placenta, and
+    tumors?
+- question: &gt;-
+    Is reduced tumor-cell proliferation a physiological ITIH5 function or a
+    context-specific consequence of forced expression?
+suggested_experiments:
+- hypothesis: &gt;-
+    ITIH5 binds a cell-surface receptor that is required for its anti-adipogenic
+    and anti-adhesive endothelial effects.
+  description: &gt;-
+    Perform cell-surface ligand-receptor capture with recombinant ITIH5 in human
+    adipose stem cells and aortic endothelial cells, then test candidate-receptor
+    knockouts for loss of ITIH5-dependent differentiation and leukocyte-adhesion
+    phenotypes with receptor rescue.
+  experiment_type: Ligand-receptor discovery and genetic epistasis
+- hypothesis: &gt;-
+    Covalent heavy-chain matrix transfer is required for fibroblast
+    differentiation but dispensable for adipose-endothelial signaling.
+  description: &gt;-
+    Compare wild-type ITIH5 with cleavage/transfer-deficient and VWA-domain
+    mutants in TSG-6/bikunin-dependent fibroblast matrices, adipose-stem-cell
+    differentiation, and endothelial leukocyte-adhesion assays.
+  experiment_type: Separation-of-function mutagenesis and cellular rescue
+- hypothesis: &gt;-
+    N-terminally truncated ITIH5 isoforms remain intracellular and have
+    activities distinct from secreted isoform 1.
+  description: &gt;-
+    Express each tagged isoform at matched levels, quantify secretion and
+    subcellular localization, and perform isoform-specific rescue after
+    endogenous ITIH5 depletion in fibroblasts and adipose stem cells.
+  experiment_type: Isoform-resolved localization and functional complementation
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

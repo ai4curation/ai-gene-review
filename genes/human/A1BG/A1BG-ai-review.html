@@ -1,0 +1,4515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A1BG - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>A1BG</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P04217" target="_blank" class="term-link">
+                        P04217
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "A1BG";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P04217" data-a="DESCRIPTION: A1BG (alpha-1B-glycoprotein) is an abundant, liver..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>A1BG (alpha-1B-glycoprotein) is an abundant, liver-derived secreted plasma glycoprotein built from five tandem immunoglobulin-like domains. It is synthesised with a cleaved N-terminal signal peptide and has no transmembrane segment, so although it belongs to the same immunoglobulin-superfamily branch as the leukocyte immunoglobulin-like (LILR/KIR) cell-surface receptors it is a soluble extracellular protein rather than a membrane receptor. A1BG has no known catalytic activity; it acts through its Ig-like domains as a high-affinity plasma binding partner for CAP-superfamily (cysteine-rich secretory, CRISP) proteins. It carries CRISP3 in plasma as a 1:1, nanomolar-affinity, noncovalent complex, and binding of A1BG to CRISP2 and other CAP proteins inhibits their sterol binding and abolishes their sterol-export activity; the interaction surface maps to the third of the five Ig-like domains and requires magnesium. Related plasma proteins of the same family neutralise snake-venom metalloproteinases through equivalent complexes, placing A1BG in a family of extracellular protein-sequestering and toxin-neutralising factors. A1BG is heavily N-glycosylated, is a routine constituent of plasma proteomes, extracellular vesicles and blood microparticles, and is placed in neutrophil and platelet granule-lumen exocytosis reactions by Reactome. In mouse, hepatic A1bg transcription is strongly growth-hormone dependent and sexually dimorphic, and cardiomyocyte-restricted deletion causes a female-specific dilated cardiomyopathy. Additional reported activities that are not yet independently established include stabilisation of secreted NAMPT.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P04217" data-a="GO:0005886" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Over-propagated phylogenetic inference. A1BG sits in PANTHER family PTHR11738 (&#34;MHC class I NK cell receptor&#34;), the LILR/KIR leukocyte-receptor family. Every non-A1BG source gene in this annotation&#39;s WITH/FROM field that I resolved (PANTHER:PTN002621170 plus UniProtKB:P24071 FCAR, P43626/Q14953/Q14954 KIR family, Q8N423/Q8NHL6/Q8NHJ6 LILR family) is a type-I transmembrane immune receptor; eight of the nineteen accessions were checked individually, and the family as a whole is dominated by transmembrane receptors, though it does also contain naturally soluble members. The IBA has carried the receptors&#39; plasma-membrane location onto A1BG. A1BG itself is a soluble secreted plasma protein: UniProt annotates a cleaved signal peptide (1-21) and a mature chain (22-495) comprising five immunoglobulin-like domains, with keyword &#34;Secreted&#34; and NO transmembrane feature anywhere in the sequence. The mature protein was sequenced directly from human plasma. It cannot be &#34;active in&#34; the plasma membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IBA inherited from transmembrane immune receptors in the same PANTHER family; contradicted by the absence of any transmembrane segment and by the curated &#34;Secreted&#34; subcellular location. This removes an over-propagated phylogenetic inference on biological grounds; no experimental annotation is being overruled.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                                <span class="badge">COMPARTMENT OR COMPLEX MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN002621170</span>
+
+
+
+                                    <div class="propagation-comment">LILR/KIR-like leukocyte receptor node of PTHR11738. Plasma-membrane localisation is correct for the transmembrane receptors of this node but not for A1BG, the divergent secreted member (subfamily PTHR11738:SF184).</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q8NHL6</span>
+
+
+
+                                    <div class="propagation-comment">LILRB1, a type-I transmembrane leukocyte Ig-like receptor; genuinely plasma-membrane.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:P43626</span>
+
+
+
+                                    <div class="propagation-comment">KIR2DL1, a type-I transmembrane NK receptor; genuinely plasma-membrane.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/A1BG/A1BG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Secreted.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/3458201" target="_blank" class="term-link">
+                                        PMID:3458201
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The complete amino acid sequence has been determined for alpha 1B-glycoprotein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004888" target="_blank" class="term-link">
+                                    GO:0004888
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane signaling receptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P04217" data-a="GO:0004888" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Same over-propagation problem as the plasma-membrane IBA, and from the same PANTHER node. &#34;Transmembrane signaling receptor activity&#34; requires a protein that spans the membrane and transduces a signal across it; A1BG has no transmembrane segment, no cytoplasmic signalling tail (no ITIM/ITAM), and is secreted into plasma. The activity has been inferred purely from the LILR/KIR-like receptors that dominate PTHR11738. No experimental study has reported receptor or signal-transduction activity for A1BG; the documented molecular activity is binding and sequestration of CAP/CRISP proteins in extracellular fluid.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Physically impossible for a secreted, non-membrane protein; a family-level inference that does not apply to this divergent soluble member. Replaced by the proposed GO:0140311 protein sequestering activity, which is what A1BG actually does.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                                <span class="badge">COMPARTMENT OR COMPLEX MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN002621170</span>
+
+
+
+                                    <div class="propagation-comment">LILR/KIR-like node of PTHR11738. Receptor activity is correct for the transmembrane members but A1BG lost the transmembrane anchor and became a secreted plasma protein.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:P24071</span>
+
+
+
+                                    <div class="propagation-comment">FCAR (Fc alpha receptor), a genuine transmembrane Ig-superfamily receptor.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q8N423</span>
+
+
+
+                                    <div class="propagation-comment">LILRB2, a genuine transmembrane inhibitory receptor with cytoplasmic ITIMs.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q99706</span>
+
+
+
+                                    <div class="propagation-comment">KIR2DL4, a type-I transmembrane NK receptor; genuinely a transmembrane signalling receptor. Present in this annotation&#39;s WITH/FROM field but not in that of the plasma-membrane IBA.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/A1BG/A1BG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PANTHER; PTHR11738; MHC CLASS I NK CELL RECEPTOR; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/A1BG/A1BG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Secreted.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060396" target="_blank" class="term-link">
+                                    GO:0060396
+                                </a>
+                            </span>
+                            <span class="term-label">growth hormone receptor signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P04217" data-a="GO:0060396" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IBA propagates from a genuine ortholog rather than a paralog - the WITH/FROM field cites PANTHER:PTN000200788 and MGI:MGI:2152878, which is mouse A1bg itself, carrying an MGI IMP annotation to the same term from PMID:16723264. Tracing that source annotation shows the problem is at the source, not in the transfer. The mouse paper isolated A1bg (&#34;cDNA #5&#34;) in a subtractive screen for transcripts induced in the liver of growth-hormone transgenic mice, and found the mRNA absent from GH-deficient dwarf mice, from GH-antagonist mice and from GH-receptor knockouts. That is evidence that A1bg is a transcriptional TARGET downstream of an intact GH-GH receptor axis, not evidence that the A1BG protein is a component of the GH receptor signalling cascade. GO:0060396 is defined as the series of molecular signals generated as a consequence of the GH receptor binding growth hormone; a secreted liver product whose gene is GH-inducible is not part of that cascade. No human data connect A1BG to GH signalling at all, and A1BG has no cytokine-receptor architecture (no transmembrane segment, no box1/box2 JAK-binding motifs).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The propagation is mechanically legitimate (true mouse ortholog) but the source MGI IMP conflates &#34;expression responds to GH&#34; with &#34;participates in GH receptor signalling&#34;. The defensible term for the mouse observation would be a response term such as GO:0060416 response to growth hormone, and even that has no human evidence. Removing rather than modifying, because there is no human experimental support for any GH-related annotation on A1BG.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">SOURCE BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">ROLE CONFLATION</span>
+
+                                <span class="badge">CONTEXT OR TISSUE MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">MGI:MGI:2152878</span>
+
+
+
+                                    <div class="propagation-comment">Mouse A1bg, the true ortholog. Its MGI IMP to GO:0060396 (PMID:16723264) rests on GH-dependent hepatic mRNA induction, i.e. the gene is a GH target, not a pathway component. The source annotation itself should be a response term.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN000200788</span>
+
+
+
+                                    <div class="propagation-comment">A1BG-specific PANTHER node; the term entered the tree solely from the single mouse IMP above, so the phylogenetic support is one gene deep.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16723264" target="_blank" class="term-link">
+                                        PMID:16723264
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These findings suggest that induction of mRNA #5 in the liver requires a continuous pattern of GH secretion and an intact GH-GH receptor-signaling complex.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16723264" target="_blank" class="term-link">
+                                        PMID:16723264
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">By performing subtractive hybridization analysis on liver cDNAs of GH transgenic and non-transgenic mice, differentially expressed cDNAs were obtained.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P04217" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automatic mapping from the UniProt &#34;Secreted&#34; subcellular-location term. This is the correct core localisation for A1BG, a constitutively secreted plasma glycoprotein purified directly from human plasma.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/A1BG/A1BG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Secreted.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27559042" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27559042
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Glycoproteomics Reveals Decorin Peptides With Anti-Myostatin...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P04217" data-a="GO:0005576" data-r="PMID:27559042" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mass-spectrometry survey of glycoproteins in the human cardiac extracellular matrix, from which the BHF-UCL group made this HDA assignment. A1BG is not named in the abstract - it is one of many proteins in the identified set - so the annotation rests on the curator&#39;s reading of the dataset rather than on a statement in the text. The assignment is consistent with the core extracellular localisation independently established by the IDA and UniProt SubCell entries.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27559042" target="_blank" class="term-link">
+                                        PMID:27559042
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We used proteomics to profile glycoproteins in the human cardiac extracellular matrix (ECM).</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/A1BG/A1BG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Secreted.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27068509" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27068509
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Extracellular matrix remodelling in response to venous hyper...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P04217" data-a="GO:0005576" data-r="PMID:27068509" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proteomic analysis of extracellular matrix from normal and varicose human veins, the dataset behind this HDA assignment. As with the other high-throughput localisation entries, A1BG appears in the identified protein set rather than in the abstract text. Correct core location for an abundant secreted plasma protein, and consistent with the direct plasma-purification evidence.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27068509" target="_blank" class="term-link">
+                                        PMID:27068509
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">normal and varicose veins were evaluated using proteomics approaches targeting</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/A1BG/A1BG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Secreted.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034774" target="_blank" class="term-link">
+                                    GO:0034774
+                                </a>
+                            </span>
+                            <span class="term-label">secretory granule lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6798748
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P04217" data-a="GO:0034774" data-r="Reactome:R-HSA-6798748" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> From the Reactome &#34;Exocytosis of secretory granule lumen proteins&#34; reaction within the neutrophil degranulation pathway; Reactome placing A1BG in that reaction is the whole of the evidence here. It is at least plausible, since A1BG&#39;s established ligand CRISP3 is a genuine neutrophil specific-granule protein, but the location is peripheral to A1BG&#39;s role as a circulating plasma protein.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/A1BG/A1BG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reactome; R-HSA-6798695; Neutrophil degranulation.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1904813" target="_blank" class="term-link">
+                                    GO:1904813
+                                </a>
+                            </span>
+                            <span class="term-label">ficolin-1-rich granule lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6800434
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P04217" data-a="GO:1904813" data-r="Reactome:R-HSA-6800434" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome neutrophil-degranulation reaction placing A1BG in the ficolin-1-rich (specific) granule lumen. Same status as the general secretory-granule term: consistent with granule proteomics and with CRISP3 co-localisation, but not a core aspect of A1BG biology.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/A1BG/A1BG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reactome; R-HSA-6798695; Neutrophil degranulation.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031093" target="_blank" class="term-link">
+                                    GO:0031093
+                                </a>
+                            </span>
+                            <span class="term-label">platelet alpha granule lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-481007
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P04217" data-a="GO:0031093" data-r="Reactome:R-HSA-481007" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome platelet-degranulation reaction. Abundant plasma proteins are routinely recovered from platelet alpha-granule proteomes, since alpha granules take up plasma proteins by endocytosis, so this is credible but is not evidence of a dedicated granule function; non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/A1BG/A1BG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reactome; R-HSA-114608; Platelet degranulation.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-481007
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P04217" data-a="GO:0005576" data-r="Reactome:R-HSA-481007" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome places the released A1BG in the extracellular region following platelet alpha-granule exocytosis. Correct core localisation for a secreted plasma glycoprotein.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/A1BG/A1BG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Secreted.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6798748
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P04217" data-a="GO:0005576" data-r="Reactome:R-HSA-6798748" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome secretory-granule exocytosis reaction placing A1BG in the extracellular region. Correct core localisation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/A1BG/A1BG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Secreted.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6800434
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P04217" data-a="GO:0005576" data-r="Reactome:R-HSA-6800434" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome ficolin-rich granule exocytosis reaction placing A1BG in the extracellular region. Correct core localisation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/A1BG/A1BG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Secreted.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23533145
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In-depth proteomic analyses of exosomes isolated from expres...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P04217" data-a="GO:0070062" data-r="PMID:23533145" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Shotgun proteomics of exosomes isolated from expressed prostatic secretions in urine, the dataset behind this HDA assignment. Highly abundant plasma and secretome proteins are routinely recovered in vesicle preparations, so this does not establish specific vesicle targeting; correct but non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                                        PMID:23533145
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">characterized by a shotgun proteomics procedure. In pooled EPS-urine exosome</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/A1BG/A1BG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">GO:0070062; C:extracellular exosome; HDA:UniProtKB.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16502470" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16502470
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human colostrum: identification of minor proteins in the aqu...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P04217" data-a="GO:0005576" data-r="PMID:16502470" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proteomic survey of low-abundance proteins in the aqueous phase of human colostrum, the dataset behind this HDA assignment - an abundant secreted plasma protein appearing in an exocrine secretion. A1BG is one of the 151 identified proteins rather than a named finding in the abstract. Correct core extracellular location, on high-throughput evidence.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16502470" target="_blank" class="term-link">
+                                        PMID:16502470
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">One hundred and fifty-one proteins were identified, 83 of which have not been previously reported in human colostrum, or milk.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/A1BG/A1BG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Secreted.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0072562" target="_blank" class="term-link">
+                                    GO:0072562
+                                </a>
+                            </span>
+                            <span class="term-label">blood microparticle</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22516433" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22516433
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Proteomic analysis of microvesicles from plasma of healthy d...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P04217" data-a="GO:0072562" data-r="PMID:22516433" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proteomic analysis of sub-220 nm microvesicles purified from the plasma of healthy donors, in which 161 microvesicle-associated proteins were detected. Recovery of A1BG is expected for one of the more abundant plasma proteins; a co-isolation observation rather than evidence of a microparticle-specific role. Non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22516433" target="_blank" class="term-link">
+                                        PMID:22516433
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we have purified microvesicles smaller than 220nm from plasma of healthy donors and performed proteomic, ultra-structural, biochemical and functional analyses.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/A1BG/A1BG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">GO:0072562; C:blood microparticle; HDA:UniProtKB.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19056867
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Large-scale proteomics and phosphoproteomics of urinary exos...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P04217" data-a="GO:0070062" data-r="PMID:19056867" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Second exosome proteomics dataset, this time LC-MS/MS profiling of human urinary exosomes (1132 proteins identified). Same assessment as the other exosome annotation: consistent with a secreted plasma protein, not evidence of dedicated exosomal targeting. Non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                                        PMID:19056867
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Here, we used LC-MS/MS to profile the proteome of human urinary exosomes.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/A1BG/A1BG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">GO:0070062; C:extracellular exosome; HDA:UniProtKB.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/3458201" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:3458201
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Amino acid sequence of human plasma alpha 1B-glycoprotein: h...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P04217" data-a="GO:0005576" data-r="PMID:3458201" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The strongest localisation evidence: A1BG was purified from human plasma and its complete amino acid sequence determined by direct protein sequencing, establishing it as a bona fide circulating extracellular protein. This is the core cellular component annotation for the gene.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/3458201" target="_blank" class="term-link">
+                                        PMID:3458201
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The complete amino acid sequence has been determined for alpha 1B-glycoprotein (alpha 1B), a protein of unknown function present in human plasma.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140311" target="_blank" class="term-link">
+                                    GO:0140311
+                                </a>
+                            </span>
+                            <span class="term-label">protein sequestering activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/39433128" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:39433128
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Alpha-1-B glycoprotein (A1BG) inhibits sterol-binding and ex...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P04217" data-a="GO:0140311" data-r="PMID:39433128" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new molecular function. After removing the incorrect receptor IBA, GOA leaves A1BG with no molecular function term at all, yet its activity is experimentally defined: A1BG binds CAP-superfamily (CRISP) proteins through the third of its five immunoglobulin-like domains in a magnesium-dependent manner, and this binding inhibits CRISP2 sterol binding in vitro and abolishes CAP-protein sterol export in vivo in a yeast reconstitution system [PMID:39433128]. Independently, A1BG is the high-affinity (nanomolar Kd), 1:1 plasma carrier of CRISP3, holding it in a noncovalent complex in the circulation [PMID:15461460]. Binding a partner protein so as to block that partner&#39;s own ligand binding and export function is precisely GO:0140311 &#34;protein sequestering activity&#34; - binding to a protein to prevent it from interacting with other partners or to inhibit its localization to the area where it is active. Related A1BG-like plasma proteins of opossum neutralise snake-venom metalloproteinases by the same complex-formation mechanism, supporting a family-wide extracellular sequestering role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Fills the molecular-function gap left by removing GO:0004888, and is more specific and more informative than a bare protein-binding term or than the coarse &#34;molecular function regulator activity&#34; grounding offered by the affinage report.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39433128" target="_blank" class="term-link">
+                                        PMID:39433128
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Coexpression of A1BG with CAP proteins abolished their sterol export function in yeast and their interaction inhibits sterol-binding in vitro.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39433128" target="_blank" class="term-link">
+                                        PMID:39433128
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We map the interaction between A1BG and CRISP2 to the third of five repeated immunoglobulin-like domains within A1BG.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15461460" target="_blank" class="term-link">
+                                        PMID:15461460
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We demonstrate that CRISP-3 is a specific and high-affinity ligand of A1BG with a dissociation constant in the nanomolar range as evidenced by surface plasmon resonance.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/A1BG/A1BG-deep-research-affinage.md
+
+                                </span>
+
+                                <div class="support-text">this interaction inhibits CRISP2 sterol-binding in vitro and abolishes its sterol export function in yeast</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Extracellular sequestration of CAP-superfamily (CRISP) proteins. A1BG circulates in plasma and uses the third of its five immunoglobulin-like domains to bind CRISP proteins in a magnesium-dependent, high-affinity, 1:1 noncovalent complex. Complex formation blocks the partner&#39;s own activity - it inhibits CRISP2 sterol binding and abolishes CAP-protein sterol export - and holds CRISP3 in the circulation. The same mechanism in related plasma proteins of this family neutralises snake-venom metalloproteinases.</h3>
+                <span class="vote-buttons" data-g="P04217" data-a="FUNCTION: Extracellular sequestration of CAP-superfamily (CR..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140311" target="_blank" class="term-link">
+                            protein sequestering activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/39433128" target="_blank" class="term-link">
+                                PMID:39433128
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Coexpression of A1BG with CAP proteins abolished their sterol export function in yeast and their interaction inhibits sterol-binding in vitro.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15461460" target="_blank" class="term-link">
+                                PMID:15461460
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">We demonstrate that CRISP-3 is a specific and high-affinity ligand of A1BG with a dissociation constant in the nanomolar range as evidenced by surface plasmon resonance.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/A1BG/A1BG-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Interacts with CRISP3.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16502470" target="_blank" class="term-link">
+                            PMID:16502470
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Human colostrum: identification of minor proteins in the aqueous phase by proteomics.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                            PMID:19056867
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Large-scale proteomics and phosphoproteomics of urinary exosomes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22516433" target="_blank" class="term-link">
+                            PMID:22516433
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Proteomic analysis of microvesicles from plasma of healthy donors reveals high individual variability.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                            PMID:23533145
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27068509" target="_blank" class="term-link">
+                            PMID:27068509
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Extracellular matrix remodelling in response to venous hypertension: proteomics of human varicose veins.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27559042" target="_blank" class="term-link">
+                            PMID:27559042
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Glycoproteomics Reveals Decorin Peptides With Anti-Myostatin Activity in Human Atrial Fibrillation.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/3458201" target="_blank" class="term-link">
+                            PMID:3458201
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Amino acid sequence of human plasma alpha 1B-glycoprotein: homology to the immunoglobulin supergene family.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A1BG was purified from human plasma and completely sequenced, establishing it as a circulating plasma protein of unknown function.</div>
+
+                        <div class="finding-text">"The complete amino acid sequence has been determined for alpha 1B-glycoprotein (alpha 1B), a protein of unknown function present in human plasma."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The protein is built from five repeated immunoglobulin-like structural domains arising by internal duplication, placing it in the immunoglobulin supergene family.</div>
+
+                        <div class="finding-text">"consists of five repeating structural domains, each containing about 95 amino acids and one disulfide bond"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15461460" target="_blank" class="term-link">
+                            PMID:15461460
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cysteine-rich secretory protein 3 is a ligand of alpha1B-glycoprotein in human plasma.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">CRISP3 circulates in human plasma bound to A1BG; the complex is specific, noncovalent, 1:1 and of nanomolar affinity.</div>
+
+                        <div class="finding-text">"We demonstrate that CRISP-3 is a specific and high-affinity ligand of A1BG with a dissociation constant in the nanomolar range as evidenced by surface plasmon resonance."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16723264" target="_blank" class="term-link">
+                            PMID:16723264
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A liver specific gene that is expressed in growth hormone transgenic mice and in normal female mice as a function of age.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Mouse A1bg (&#34;cDNA #5&#34;) was isolated as a transcript induced in the liver of growth hormone transgenic mice and absent from GH-deficient, GH-antagonist and GH-receptor-knockout mice, showing that its expression requires an intact GH-GH receptor axis.</div>
+
+                        <div class="finding-text">"These findings suggest that induction of mRNA #5 in the liver requires a continuous pattern of GH secretion and an intact GH-GH receptor-signaling complex."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The encoded protein has five immunoglobulin-related domains and is similar to rat and human alpha-1-B glycoprotein, an acidic serum protein of unknown function.</div>
+
+                        <div class="finding-text">"P5 has five immunoglobulin related domains thus allowing it to be classified as a member of the immunoglobulin super family (IGSF)."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/39433128" target="_blank" class="term-link">
+                            PMID:39433128
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Alpha-1-B glycoprotein (A1BG) inhibits sterol-binding and export by CRISP2.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A1BG binding to CAP-superfamily proteins inhibits their sterol binding in vitro and abolishes their sterol export function in a yeast reconstitution system.</div>
+
+                        <div class="finding-text">"Coexpression of A1BG with CAP proteins abolished their sterol export function in yeast and their interaction inhibits sterol-binding in vitro."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The CRISP2 contact site is the third of the five immunoglobulin-like domains of A1BG and the interaction requires magnesium.</div>
+
+                        <div class="finding-text">"We map the interaction between A1BG and CRISP2 to the third of five repeated immunoglobulin-like domains within A1BG."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40270023" target="_blank" class="term-link">
+                            PMID:40270023
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Sex-specific response to A1BG loss results in female dilated cardiomyopathy.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Conditional cardiomyocyte deletion of A1bg in mice causes dilated cardiomyopathy in females but not males, indicating a sex-specific cardiac requirement.</div>
+
+                        <div class="finding-text">"The glycoprotein A1BG has emerged as a female-specific regulator of cardiac structure and integrity"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40560034" target="_blank" class="term-link">
+                            PMID:40560034
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Adipocytes Promote Cisplatin Resistance through Secreting A1BG and Regulating NAMPT/PARP1 Axis-Mediated DNA Repair in Osteosarcoma.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Adipocyte-secreted A1BG binds NAMPT directly, stabilising it and raising NAD+ levels, which enhances PARP1-dependent DNA repair and cisplatin resistance.</div>
+
+                        <div class="finding-text">"Further investigation revealed a direct interaction between A1BG and NAMPT, leading to the stabilization of NAMPT and an increased NAD+ production."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-481007
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Exocytosis of platelet alpha granule contents</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6798748
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Exocytosis of secretory granule lumen proteins</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6800434
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Exocytosis of ficolin-rich granule lumen proteins</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/A1BG/A1BG-deep-research-affinage.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Affinage mechanistic annotation for A1BG (human)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Machine-fetched Affinage record (trust gates passed; accession P04217 matches the local UniProt entry) describing A1BG as a secreted immunoglobulin-like plasma glycoprotein acting through protein-protein interactions with CRISP2 and NAMPT. It contains no membrane-receptor or growth-hormone-signalling content, independently corroborating the IBA removals.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the A1BG-CRISP complex physiologically inhibitory in human plasma, or primarily a carrier/reservoir? The CRISP2 sterol-export result was obtained by heterologous reconstitution in yeast; a direct demonstration that plasma A1BG restrains a human CRISP activity in vivo would settle whether protein sequestering activity or a carrier-type function is the better molecular-function call.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P04217" data-a="Q: Is the A1BG-CRISP complex physiologically inhibito..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does A1BG neutralise snake-venom CRISP toxins in humans, as the A1BG-like opossum plasma proteins do for venom metalloproteinases? This would give A1BG a defensible defence-response biological-process annotation, which it currently lacks entirely.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P04217" data-a="Q: Does A1BG neutralise snake-venom CRISP toxins in h..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should mouse A1bg&#39;s IMP annotation to GO:0060396 (growth hormone receptor signaling pathway) be re-curated as a response term? The underlying data (PMID:16723264) show GH-dependent hepatic induction of the transcript, which is a downstream target relationship rather than participation in the receptor signalling cascade, and the human IBA inherits the same conflation.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P04217" data-a="Q: Should mouse A1bg&#39;s IMP annotation to GO:0060396 (..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the reported A1BG-NAMPT interaction and NAMPT stabilisation (PMID:40560034) reproducible outside the adipocyte/osteosarcoma chemoresistance setting? If so, a protein-stabilisation function would need to be annotated alongside the sequestering activity.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P04217" data-a="Q: Is the reported A1BG-NAMPT interaction and NAMPT s..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What explains the female-specific cardiomyocyte requirement for A1bg in mice (PMID:40270023) for a protein that is secreted and liver-enriched in humans? Is there a genuine intracellular or autocrine cardiomyocyte pool of A1BG, or is the phenotype secondary to loss of a circulating pool?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P04217" data-a="Q: What explains the female-specific cardiomyocyte re..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Surface plasmon resonance and isothermal titration calorimetry with purified human A1BG against a panel of human CAP-superfamily proteins (CRISP1, CRISP2, CRISP3, GLIPR1, GAPR1), with and without Mg2+, and with an Ig-domain-3 deletion/point-mutant series, to define the sequestering specificity in a purely human system.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: A1BG is a general extracellular sequestering factor for CAP-superfamily proteins, with magnesium-dependent specificity determined by Ig domain 3.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: binding assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P04217" data-a="EXPERIMENT: Surface plasmon resonance and isothermal titration..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Structure determination by cryo-EM or crystallography of the A1BG Ig-domain-3/CRISP2 complex, to establish how the Ig domain engages the CAP domain relative to its sterol-binding cavity and its conserved Mg2+-coordinating tetrad.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: A1BG blocks CAP-protein function by occluding the sterol-binding cavity of the CAP domain.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: structural biology</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P04217" data-a="EXPERIMENT: Structure determination by cryo-EM or crystallogra..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Assay plasma from A1bg-null mice (and, if available, from humans with A1BG loss-of-function variants) for free versus A1BG-complexed CRISP3 by size-exclusion chromatography and immunoprecipitation, and test CRISP-dependent sterol transfer activity in the two fractions.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Loss of A1BG releases functionally active CRISP into the circulation.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: genetic and biochemical</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P04217" data-a="EXPERIMENT: Assay plasma from A1bg-null mice (and, if availabl..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Immunoprecipitate endogenous A1BG from human plasma and quantify co-purifying proteins by label-free or isotope-labelled mass spectrometry, to determine whether CRISP proteins dominate stoichiometrically or whether NAMPT and other reported partners are also present at meaningful levels.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: CRISP proteins are the dominant physiological ligands of circulating A1BG.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: interaction proteomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P04217" data-a="EXPERIMENT: Immunoprecipitate endogenous A1BG from human plasm..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Affinage</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(A1BG-deep-research-affinage.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P04217" data-a="DEEP_RESEARCH: Affinage" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Affinage mechanistic annotation for A1BG (human)</span>
+
+
+                    <span class="report-badge">Affinage</span>
+
+
+                    <span class="report-badge">Affinage (Claude Sonnet reading pass + Opus synthesis pass)</span>
+
+
+                    <span class="report-badge">6 citations</span>
+
+
+
+
+
+                </div>
+
+
+                <h1 id="affinage-mechanistic-annotation-for-a1bg-human">Affinage mechanistic annotation for A1BG (human)</h1>
+<h2 id="current-model-mechanistic-narrative">Current model (mechanistic narrative)</h2>
+<p>A1BG is a secreted immunoglobulin-like domain plasma glycoprotein that functions through protein–protein interactions to regulate the activity and stability of partner proteins across diverse physiological contexts [PMID:39433128, PMID:40560034]. Its third of five repeated immunoglobulin-like domains binds CAP-superfamily proteins such as CRISP2 in a magnesium-dependent manner, and this interaction inhibits CRISP2 sterol-binding in vitro and abolishes its sterol export function in yeast <a href="https://pubmed.ncbi.nlm.nih.gov/39433128">PMID:39433128</a>. In a distinct context, adipocyte-secreted A1BG binds and stabilizes NAMPT, raising NAD+ production to enhance PARP1/ATM-mediated DNA repair and thereby drive cisplatin resistance in osteosarcoma <a href="https://pubmed.ncbi.nlm.nih.gov/40560034">PMID:40560034</a>. A1BG also has a sex-specific cardiac role: cardiomyocyte-specific deletion causes dilated cardiomyopathy with disrupted intercalated disc architecture and altered glucose-6-phosphate and acetyl-CoA metabolism in female but not male mice, consistent with sex-specific cardiac interactomes <a href="https://pubmed.ncbi.nlm.nih.gov/40270023">PMID:40270023</a>. Beyond these interaction-based roles, the broader signaling and regulatory logic linking A1BG's partners across tissues has not been characterized in the available corpus.</p>
+<h2 id="affinage-mechanism-profile-affinages-own-goreactome-grounding">Affinage mechanism profile (Affinage's own GO/Reactome grounding)</h2>
+<ul>
+<li><strong>molecular_activity:</strong> GO:0098772 molecular function regulator activity</li>
+<li><strong>localization:</strong> GO:0005576 extracellular region</li>
+<li><strong>pathway (Reactome):</strong> <em>(none)</em></li>
+<li><strong>partners:</strong> CRISP2, NAMPT</li>
+<li><strong>complexes:</strong> <em>(none)</em></li>
+</ul>
+<h2 id="dated-findings-citation-anchored">Dated findings (citation-anchored)</h2>
+<table>
+<thead>
+<tr>
+<th>Year</th>
+<th>Confidence</th>
+<th>Finding</th>
+<th>PMIDs</th>
+<th>Journal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2024</td>
+<td>High</td>
+<td>A1BG directly interacts with CRISP2 (and related CAP superfamily members), and this interaction inhibits sterol-binding by CRISP2 in vitro and abolishes sterol export function in yeast. The interaction is mapped to the third of five repeated immunoglobulin-like domains within A1BG and requires magnesium, implicating coordination of Mg2+ by conserved tetrad residues in the CAP domain as essential for stable complex formation.</td>
+<td>PMID:39433128</td>
+<td>The Journal of biological chemistry</td>
+</tr>
+<tr>
+<td>2025</td>
+<td>High</td>
+<td>Adipocyte-secreted A1BG directly interacts with NAMPT, stabilizing NAMPT protein and increasing NAD+ production, which in turn enhances PARP1 activity and DNA repair via the PARP1/ATM pathway, thereby promoting cisplatin resistance in osteosarcoma cells. A1BG depletion in adipocytes restored cisplatin sensitivity, and recombinant A1BG recapitulated resistance.</td>
+<td>PMID:40560034</td>
+<td>Advanced science (Weinheim, Baden-Wurttemberg, Germany)</td>
+</tr>
+<tr>
+<td>2025</td>
+<td>High</td>
+<td>Loss of A1BG specifically in cardiomyocytes (conditional knockout) causes dilated cardiomyopathy in female but not male mice, with left ventricular dilation, wall thinning, and disruption of intercalated disc architecture. Transcriptomic analysis revealed A1BG regulates metabolic pathways (glucose-6-phosphate and acetyl-CoA metabolism) in female cardiomyocytes. Mass spectrometry identified sex-specific A1BG cardiac interactomes.</td>
+<td>PMID:40270023</td>
+<td>Biology of sex differences</td>
+</tr>
+<tr>
+<td>2024</td>
+<td>Medium</td>
+<td>Loss of A1BG in cardiomyocytes leads to dilated cardiomyopathy in female but not male mice (preprint version of the peer-reviewed finding above), with sex-specific A1BG cardiac interactomes identified by mass spectrometry and sex-specific disruption of intercalated discs.</td>
+<td>PMID:39070637</td>
+<td>Research square (preprint)</td>
+</tr>
+<tr>
+<td>2019</td>
+<td>Low</td>
+<td>Bioinformatic analysis attributed A1BG to the leukocyte receptor cluster (LRC) of eutherian mammals, placing it among immunoglobulin-like domain-containing receptors that evolved from ancestral LRC genes through exon shuffling and sequence divergence.</td>
+<td>PMID:31106814</td>
+<td>Genome biology and evolution</td>
+</tr>
+<tr>
+<td>1989</td>
+<td>Medium</td>
+<td>Genetic linkage analysis assigned the A1BG locus to human chromosome 19, linked to the Lutheran (LU) blood group system.</td>
+<td>PMID:2591067</td>
+<td>Clinical genetics</td>
+</tr>
+</tbody>
+</table>
+<h2 id="citations">Citations</h2>
+<ul>
+<li>PMID:2591067</li>
+<li>PMID:31106814</li>
+<li>PMID:39070637</li>
+<li>PMID:39433128</li>
+<li>PMID:40270023</li>
+<li>PMID:40560034</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(A1BG-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P04217" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="a1bg-alpha-1b-glycoprotein-review-notes">A1BG (alpha-1B-glycoprotein) — review notes</h1>
+<p>Reviewed as part of the PAINT human no-IBA project, using the <code>affinage</code> deep-research<br />
+provider (<code>A1BG-deep-research-affinage.md</code>) plus UniProt P04217, the GOA TSV, and the<br />
+primary literature.</p>
+<h2 id="what-the-protein-is">What the protein is</h2>
+<p>A1BG is an abundant <strong>secreted plasma glycoprotein</strong> of unknown catalytic function. The<br />
+mature chain (residues 22–495) follows a cleaved signal peptide and is built from <strong>five<br />
+tandem immunoglobulin-like domains</strong>; there is <strong>no transmembrane segment</strong> anywhere in the<br />
+protein and UniProt lists <code>SUBCELLULAR LOCATION: Secreted</code> with keyword <code>Secreted</code><br />
+[file:human/A1BG/A1BG-uniprot.txt, "SUBCELLULAR LOCATION: Secreted."].</p>
+<p>The complete protein sequence was determined directly from <em>plasma</em>-purified protein<br />
+[PMID:3458201, "The complete amino acid sequence has been determined for alpha<br />
+1B-glycoprotein"], which also established the five-domain internal duplication and the<br />
+immunoglobulin-superfamily relationship [PMID:3458201, "consists of five repeating<br />
+structural domains, each containing about 95 amino acids and one disulfide bond"].</p>
+<h2 id="why-the-iba-annotations-are-wrong-for-this-gene">Why the IBA annotations are wrong for this gene</h2>
+<p>This is the central curation finding for A1BG.</p>
+<p>PANTHER places A1BG in <strong>PTHR11738 ("MHC class I NK cell receptor")</strong>, the LILR/KIR<br />
+leukocyte-receptor family (subfamily <code>PTHR11738:SF184</code>), and InterPro assigns<br />
+<code>IPR016332 A1B_glyco/leuk_Ig-like_rcpt</code> and <code>IPR050412 Ig-like_Receptors_ImmuneReg</code><br />
+[file:human/A1BG/A1BG-uniprot.txt, "PANTHER; PTHR11738; MHC CLASS I NK CELL RECEPTOR; 1."].<br />
+The other members of that family are <strong>type-I transmembrane immune receptors</strong>. A1BG is the<br />
+divergent, <strong>soluble, secreted</strong> member — it kept the Ig ectodomain repeats but has no<br />
+transmembrane anchor and no cytoplasmic signalling tail.</p>
+<p>The three GO_Central IBA annotations therefore propagate receptor biology that A1BG<br />
+physically cannot perform:</p>
+<table>
+<thead>
+<tr>
+<th>IBA term</th>
+<th>Problem</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GO:0005886</code> plasma membrane (<code>is_active_in</code>)</td>
+<td>A1BG is secreted; no TM domain (UniProt FT lists SIGNAL 1..21, CHAIN 22..495, five DOMAINs, <strong>no TRANSMEM</strong>)</td>
+</tr>
+<tr>
+<td><code>GO:0004888</code> transmembrane signaling receptor activity</td>
+<td>requires a transmembrane protein; A1BG has none</td>
+</tr>
+<tr>
+<td><code>GO:0060396</code> growth hormone receptor signaling pathway</td>
+<td>different root cause — see below</td>
+</tr>
+</tbody>
+</table>
+<p>The first two are straightforward <strong>PROPAGATION_BAD</strong>: the source annotations are correct<br />
+for the transmembrane receptors they came from, but the term must not transfer to the<br />
+secreted member.</p>
+<h3 id="the-growth-hormone-iba-is-a-source-problem-not-a-transfer-problem">The growth-hormone IBA is a <em>source</em> problem, not a transfer problem</h3>
+<p>I initially assumed <code>GO:0060396</code> was another family over-propagation, but tracing the<br />
+WITH/FROM field disproves that. It cites <code>PANTHER:PTN000200788</code> and <code>MGI:MGI:2152878</code> —<br />
+and MGI:2152878 is <strong>mouse <em>A1bg</em> itself</strong>, i.e. the true ortholog, which carries an MGI<br />
+<strong>IMP</strong> to the same term. So the transfer is mechanically legitimate; the defect is in the<br />
+source annotation.</p>
+<p>The mouse IMP rests on PMID:16723264, which isolated <em>A1bg</em> ("cDNA #5") in a subtractive<br />
+screen for transcripts induced in the liver of GH-transgenic mice, and found it absent from<br />
+GH-deficient dwarf mice, GH-antagonist mice, and GH-receptor knockouts<br />
+[PMID:16723264, "These findings suggest that induction of mRNA #5 in the liver requires a<br />
+continuous pattern of GH secretion and an intact GH-GH receptor-signaling complex."].</p>
+<p>That demonstrates A1bg is a <strong>transcriptional target downstream of</strong> the GH axis. GO:0060396<br />
+is defined as the molecular signals generated as a consequence of the GH receptor binding<br />
+growth hormone — a GH-inducible secreted liver product is not part of that cascade. This is<br />
+a <code>ROLE_CONFLATION</code> at the source (response-to-X read as participates-in-X-pathway). The<br />
+defensible term for the mouse data would be a response term such as <code>GO:0060416 response to
+growth hormone</code>; there is no human evidence for even that, so the human IBA is removed<br />
+rather than modified. Flagged as a <code>suggested_question</code> so the mouse source annotation can<br />
+be re-curated upstream.</p>
+<p>All three IBAs are therefore recommended for <code>REMOVE</code>, each with a <code>propagation_review</code><br />
+recording the root cause. None of these is second-guessing a human experimental curator.</p>
+<h2 id="what-a1bg-actually-does">What A1BG actually does</h2>
+<p>A1BG works through its Ig-like domains as a <strong>plasma binding/sequestering partner for<br />
+CAP-superfamily (CRISP) proteins</strong>.</p>
+<ul>
+<li><strong>CRISP3.</strong> CRISP3 circulates in plasma bound to A1BG; the complex is 1:1, noncovalent,<br />
+  electrostatically held, with a nanomolar dissociation constant<br />
+  [PMID:15461460, "We demonstrate that CRISP-3 is a specific and high-affinity ligand of A1BG<br />
+  with a dissociation constant in the nanomolar range as evidenced by surface plasmon<br />
+  resonance."]. UniProt records this as the sole curated <code>SUBUNIT</code> interaction<br />
+  [file:human/A1BG/A1BG-uniprot.txt, "Interacts with CRISP3."]. The same paper notes that the<br />
+  analogous complexes between snake-venom toxins and A1BG-like opossum plasma proteins<br />
+  neutralise toxin activity — i.e. this protein family is a plasma sequestering/neutralising<br />
+  system.</li>
+<li><strong>CRISP2 / CAP proteins.</strong> Co-expression of A1BG with CAP proteins <strong>abolished their sterol<br />
+  export function</strong> and A1BG <strong>inhibits their sterol binding in vitro</strong><br />
+  [PMID:39433128, "Coexpression of A1BG with CAP proteins abolished their sterol export<br />
+  function in yeast and their interaction inhibits sterol-binding in vitro."]. The contact is<br />
+  mapped to <strong>the third of the five Ig-like domains</strong> and requires Mg²⁺<br />
+  [PMID:39433128, "We map the interaction between A1BG and CRISP2 to the third of five<br />
+  repeated immunoglobulin-like domains within A1BG."].</li>
+</ul>
+<p>This is a coherent molecular function — binding a partner protein so as to block that<br />
+partner's own ligand-binding/export activity — and maps onto <code>GO:0140311 protein sequestering
+activity</code> ("Binding to a protein to prevent it from interacting with other partners or to<br />
+inhibit its localization to the area of the cell or complex where it is active"). It is<br />
+proposed as a <code>NEW</code> annotation because GOA currently gives A1BG <strong>no</strong> molecular function at<br />
+all other than the incorrect receptor IBA.</p>
+<h2 id="other-reported-activities-recorded-not-annotated-as-core">Other reported activities (recorded, not annotated as core)</h2>
+<ul>
+<li><strong>NAMPT stabilisation / chemoresistance.</strong> Adipocyte-secreted A1BG binds NAMPT and stabilises<br />
+  it, raising NAD⁺ and boosting PARP1-dependent DNA repair, driving cisplatin resistance in<br />
+  osteosarcoma [PMID:40560034, "Further investigation revealed a direct interaction between<br />
+  A1BG and NAMPT, leading to the stabilization of NAMPT and an increased NAD+ production."].<br />
+  Single-paper, cancer-context; noted in <code>suggested_questions</code> rather than annotated.</li>
+<li><strong>Female-specific cardiac role.</strong> Cardiomyocyte-restricted <em>A1bg</em> knockout gives dilated<br />
+  cardiomyopathy in female but not male mice [PMID:40270023, "The glycoprotein A1BG has emerged<br />
+  as a female-specific regulator of cardiac structure and integrity"]. Mouse phenotype; not<br />
+  used for a human GO process annotation here.</li>
+</ul>
+<h2 id="localisation-calls">Localisation calls</h2>
+<p><code>GO:0005576 extracellular region</code> is the core location and is supported by direct isolation<br />
+from plasma (IDA), by UniProt SubCell, and by several independent proteomics datasets. The<br />
+granule-lumen terms (<code>GO:0034774</code>, <code>GO:1904813</code>, <code>GO:0031093</code>) come from Reactome<br />
+degranulation reactions and the exosome/blood-microparticle terms from HDA proteomics; all are<br />
+consistent with an abundant secreted plasma protein but are peripheral, so they are kept as<br />
+non-core.</p>
+<h2 id="affinage-assessment">Affinage assessment</h2>
+<p>The affinage report passed its trust gates at fetch time (accession P04217 matching the local<br />
+UniProt record, no non-human organism token; it carries no <code>self_evaluation_pairwise</code> score) and its narrative — secreted Ig-domain plasma protein acting through<br />
+protein–protein interactions with CRISP2 and NAMPT — agrees with the primary literature. Its<br />
+own <code>mechanism_profile</code> grounding (<code>GO:0098772 molecular function regulator activity</code>,<br />
+<code>GO:0005576 extracellular region</code>) is correct but coarse; <code>GO:0140311</code> was chosen instead as<br />
+the specific descendant supported by the CRISP2/CRISP3 experiments. Notably the affinage<br />
+narrative independently contains <strong>nothing</strong> about membrane receptors or growth-hormone<br />
+signalling, corroborating the IBA removals.</p>
+<p>Limitation worth recording: affinage gave no signal <em>at all</em> about the incorrect IBAs — it<br />
+simply does not mention them. The IBA root-cause analysis above required going outside the<br />
+deep-research report, to the GOA WITH/FROM field, the mouse ortholog's own GO record, and<br />
+the source paper. Affinage is useful for establishing what a gene <em>does</em>; it does not audit<br />
+what GO already says.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P04217
+gene_symbol: A1BG
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  A1BG (alpha-1B-glycoprotein) is an abundant, liver-derived secreted plasma
+  glycoprotein built from five tandem immunoglobulin-like domains. It is
+  synthesised with a cleaved N-terminal signal peptide and has no transmembrane
+  segment, so although it belongs to the same immunoglobulin-superfamily branch as
+  the leukocyte immunoglobulin-like (LILR/KIR) cell-surface receptors it is a
+  soluble extracellular protein rather than a membrane receptor. A1BG has no known
+  catalytic activity; it acts through its Ig-like domains as a high-affinity plasma
+  binding partner for CAP-superfamily (cysteine-rich secretory, CRISP) proteins. It
+  carries CRISP3 in plasma as a 1:1, nanomolar-affinity, noncovalent complex, and
+  binding of A1BG to CRISP2 and other CAP proteins inhibits their sterol binding
+  and abolishes their sterol-export activity; the interaction surface maps to the
+  third of the five Ig-like domains and requires magnesium. Related plasma proteins
+  of the same family neutralise snake-venom metalloproteinases through equivalent
+  complexes, placing A1BG in a family of extracellular protein-sequestering and
+  toxin-neutralising factors. A1BG is heavily N-glycosylated, is a routine
+  constituent of plasma proteomes, extracellular vesicles and blood microparticles,
+  and is placed in neutrophil and platelet granule-lumen exocytosis reactions by
+  Reactome. In mouse, hepatic
+  A1bg transcription is strongly growth-hormone dependent and sexually dimorphic,
+  and cardiomyocyte-restricted deletion causes a female-specific dilated
+  cardiomyopathy. Additional reported activities that are not yet independently
+  established include stabilisation of secreted NAMPT.
+alternative_products:
+- name: &#39;1&#39;
+  id: P04217-1
+- name: &#39;2&#39;
+  id: P04217-2
+  sequence_note: VSP_040323
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Over-propagated phylogenetic inference. A1BG sits in PANTHER family PTHR11738
+      (&#34;MHC class I NK cell receptor&#34;), the LILR/KIR leukocyte-receptor family. Every
+      non-A1BG source gene in this annotation&#39;s WITH/FROM field that I resolved
+      (PANTHER:PTN002621170 plus UniProtKB:P24071 FCAR, P43626/Q14953/Q14954 KIR
+      family, Q8N423/Q8NHL6/Q8NHJ6 LILR family) is a type-I transmembrane immune
+      receptor; eight of the nineteen accessions were checked individually, and the
+      family as a whole is dominated by transmembrane receptors, though it does also
+      contain naturally soluble members. The IBA has carried the receptors&#39;
+      plasma-membrane location onto A1BG. A1BG
+      itself is a soluble secreted plasma protein: UniProt annotates a cleaved signal
+      peptide (1-21) and a mature chain (22-495) comprising five immunoglobulin-like
+      domains, with keyword &#34;Secreted&#34; and NO transmembrane feature anywhere in the
+      sequence. The mature protein was sequenced directly from human plasma. It cannot
+      be &#34;active in&#34; the plasma membrane.
+    action: REMOVE
+    reason: &gt;-
+      IBA inherited from transmembrane immune receptors in the same PANTHER family;
+      contradicted by the absence of any transmembrane segment and by the curated
+      &#34;Secreted&#34; subcellular location. This removes an over-propagated phylogenetic
+      inference on biological grounds; no experimental annotation is being overruled.
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - FUNCTIONAL_DIVERGENCE
+      - COMPARTMENT_OR_COMPLEX_MISMATCH
+      source_entities:
+      - source_id: PANTHER:PTN002621170
+        comment: &gt;-
+          LILR/KIR-like leukocyte receptor node of PTHR11738. Plasma-membrane
+          localisation is correct for the transmembrane receptors of this node but not
+          for A1BG, the divergent secreted member (subfamily PTHR11738:SF184).
+      - source_id: UniProtKB:Q8NHL6
+        comment: LILRB1, a type-I transmembrane leukocyte Ig-like receptor; genuinely plasma-membrane.
+      - source_id: UniProtKB:P43626
+        comment: KIR2DL1, a type-I transmembrane NK receptor; genuinely plasma-membrane.
+    supported_by:
+    - reference_id: file:human/A1BG/A1BG-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Secreted.&#34;
+    - reference_id: PMID:3458201
+      supporting_text: &gt;-
+        The complete amino acid sequence has been determined for alpha
+        1B-glycoprotein
+- term:
+    id: GO:0004888
+    label: transmembrane signaling receptor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Same over-propagation problem as the plasma-membrane IBA, and from the same
+      PANTHER node. &#34;Transmembrane signaling receptor activity&#34; requires a protein that
+      spans the membrane and transduces a signal across it; A1BG has no transmembrane
+      segment, no cytoplasmic signalling tail (no ITIM/ITAM), and is secreted into
+      plasma. The activity has been inferred purely from the LILR/KIR-like receptors
+      that dominate PTHR11738. No experimental study has reported receptor or
+      signal-transduction activity for A1BG; the documented molecular activity is
+      binding and sequestration of CAP/CRISP proteins in extracellular fluid.
+    action: REMOVE
+    reason: &gt;-
+      Physically impossible for a secreted, non-membrane protein; a family-level
+      inference that does not apply to this divergent soluble member. Replaced by the
+      proposed GO:0140311 protein sequestering activity, which is what A1BG actually
+      does.
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - FUNCTIONAL_DIVERGENCE
+      - COMPARTMENT_OR_COMPLEX_MISMATCH
+      source_entities:
+      - source_id: PANTHER:PTN002621170
+        comment: &gt;-
+          LILR/KIR-like node of PTHR11738. Receptor activity is correct for the
+          transmembrane members but A1BG lost the transmembrane anchor and became a
+          secreted plasma protein.
+      - source_id: UniProtKB:P24071
+        comment: FCAR (Fc alpha receptor), a genuine transmembrane Ig-superfamily receptor.
+      - source_id: UniProtKB:Q8N423
+        comment: LILRB2, a genuine transmembrane inhibitory receptor with cytoplasmic ITIMs.
+      - source_id: UniProtKB:Q99706
+        comment: &gt;-
+          KIR2DL4, a type-I transmembrane NK receptor; genuinely a transmembrane signalling
+          receptor. Present in this annotation&#39;s WITH/FROM field but not in that of the
+          plasma-membrane IBA.
+    supported_by:
+    - reference_id: file:human/A1BG/A1BG-uniprot.txt
+      supporting_text: &#34;PANTHER; PTHR11738; MHC CLASS I NK CELL RECEPTOR; 1.&#34;
+    - reference_id: file:human/A1BG/A1BG-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Secreted.&#34;
+- term:
+    id: GO:0060396
+    label: growth hormone receptor signaling pathway
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      This IBA propagates from a genuine ortholog rather than a paralog - the WITH/FROM
+      field cites PANTHER:PTN000200788 and MGI:MGI:2152878, which is mouse A1bg itself,
+      carrying an MGI IMP annotation to the same term from PMID:16723264. Tracing that
+      source annotation shows the problem is at the source, not in the transfer. The
+      mouse paper isolated A1bg (&#34;cDNA #5&#34;) in a subtractive screen for transcripts
+      induced in the liver of growth-hormone transgenic mice, and found the mRNA absent
+      from GH-deficient dwarf mice, from GH-antagonist mice and from GH-receptor
+      knockouts. That is evidence that A1bg is a transcriptional TARGET downstream of an
+      intact GH-GH receptor axis, not evidence that the A1BG protein is a component of
+      the GH receptor signalling cascade. GO:0060396 is defined as the series of
+      molecular signals generated as a consequence of the GH receptor binding growth
+      hormone; a secreted liver product whose gene is GH-inducible is not part of that
+      cascade. No human data connect A1BG to GH signalling at all, and A1BG has no
+      cytokine-receptor architecture (no transmembrane segment, no box1/box2 JAK-binding
+      motifs).
+    action: REMOVE
+    reason: &gt;-
+      The propagation is mechanically legitimate (true mouse ortholog) but the source
+      MGI IMP conflates &#34;expression responds to GH&#34; with &#34;participates in GH receptor
+      signalling&#34;. The defensible term for the mouse observation would be a response
+      term such as GO:0060416 response to growth hormone, and even that has no human
+      evidence. Removing rather than modifying, because there is no human experimental
+      support for any GH-related annotation on A1BG.
+    propagation_review:
+      root_cause: SOURCE_BAD
+      failure_modes:
+      - ROLE_CONFLATION
+      - CONTEXT_OR_TISSUE_MISMATCH
+      source_entities:
+      - source_id: MGI:MGI:2152878
+        comment: &gt;-
+          Mouse A1bg, the true ortholog. Its MGI IMP to GO:0060396 (PMID:16723264) rests
+          on GH-dependent hepatic mRNA induction, i.e. the gene is a GH target, not a
+          pathway component. The source annotation itself should be a response term.
+      - source_id: PANTHER:PTN000200788
+        comment: &gt;-
+          A1BG-specific PANTHER node; the term entered the tree solely from the single
+          mouse IMP above, so the phylogenetic support is one gene deep.
+    additional_reference_ids:
+    - PMID:16723264
+    supported_by:
+    - reference_id: PMID:16723264
+      supporting_text: &gt;-
+        These findings suggest that induction of mRNA #5 in the liver requires a
+        continuous pattern of GH secretion and an intact GH-GH receptor-signaling
+        complex.
+    - reference_id: PMID:16723264
+      supporting_text: &gt;-
+        By performing subtractive hybridization analysis on liver cDNAs
+        of GH transgenic and non-transgenic mice, differentially expressed cDNAs were
+        obtained.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Automatic mapping from the UniProt &#34;Secreted&#34; subcellular-location term. This is
+      the correct core localisation for A1BG, a constitutively secreted plasma
+      glycoprotein purified directly from human plasma.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/A1BG/A1BG-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Secreted.&#34;
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: HDA
+  original_reference_id: PMID:27559042
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Mass-spectrometry survey of glycoproteins in the human cardiac extracellular matrix,
+      from which the BHF-UCL group made this HDA assignment. A1BG is not named in the
+      abstract - it is one of many proteins in the identified set - so the annotation rests
+      on the curator&#39;s reading of the dataset rather than on a statement in the text. The
+      assignment is consistent with the core extracellular localisation independently
+      established by the IDA and UniProt SubCell entries.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:27559042
+      supporting_text: &gt;-
+        We used proteomics to profile glycoproteins in the human cardiac extracellular
+        matrix (ECM).
+    - reference_id: file:human/A1BG/A1BG-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Secreted.&#34;
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: HDA
+  original_reference_id: PMID:27068509
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Proteomic analysis of extracellular matrix from normal and varicose human veins, the
+      dataset behind this HDA assignment. As with the other high-throughput localisation
+      entries, A1BG appears in the identified protein set rather than in the abstract text.
+      Correct core location for an abundant secreted plasma protein, and consistent with
+      the direct plasma-purification evidence.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:27068509
+      supporting_text: &gt;-
+        normal and varicose veins were evaluated using proteomics approaches targeting
+    - reference_id: file:human/A1BG/A1BG-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Secreted.&#34;
+- term:
+    id: GO:0034774
+    label: secretory granule lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6798748
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      From the Reactome &#34;Exocytosis of secretory granule lumen proteins&#34; reaction within
+      the neutrophil degranulation pathway; Reactome placing A1BG in that reaction is the
+      whole of the evidence here. It is at least plausible, since A1BG&#39;s established ligand
+      CRISP3 is a genuine neutrophil specific-granule protein, but the location is
+      peripheral to A1BG&#39;s role as a circulating plasma protein.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/A1BG/A1BG-uniprot.txt
+      supporting_text: &#34;Reactome; R-HSA-6798695; Neutrophil degranulation.&#34;
+- term:
+    id: GO:1904813
+    label: ficolin-1-rich granule lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6800434
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome neutrophil-degranulation reaction placing A1BG in the ficolin-1-rich
+      (specific) granule lumen. Same status as the general secretory-granule term:
+      consistent with granule proteomics and with CRISP3 co-localisation, but not a core
+      aspect of A1BG biology.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/A1BG/A1BG-uniprot.txt
+      supporting_text: &#34;Reactome; R-HSA-6798695; Neutrophil degranulation.&#34;
+- term:
+    id: GO:0031093
+    label: platelet alpha granule lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-481007
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome platelet-degranulation reaction. Abundant plasma proteins are routinely
+      recovered from platelet alpha-granule proteomes, since alpha granules take up
+      plasma proteins by endocytosis, so this is credible but is not evidence of a
+      dedicated granule function; non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/A1BG/A1BG-uniprot.txt
+      supporting_text: &#34;Reactome; R-HSA-114608; Platelet degranulation.&#34;
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-481007
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome places the released A1BG in the extracellular region following platelet
+      alpha-granule exocytosis. Correct core localisation for a secreted plasma
+      glycoprotein.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/A1BG/A1BG-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Secreted.&#34;
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6798748
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome secretory-granule exocytosis reaction placing A1BG in the extracellular
+      region. Correct core localisation.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/A1BG/A1BG-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Secreted.&#34;
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6800434
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome ficolin-rich granule exocytosis reaction placing A1BG in the
+      extracellular region. Correct core localisation.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/A1BG/A1BG-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Secreted.&#34;
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:23533145
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Shotgun proteomics of exosomes isolated from expressed prostatic secretions in urine,
+      the dataset behind this HDA assignment. Highly abundant plasma and secretome proteins
+      are routinely recovered in vesicle preparations, so this does not establish specific
+      vesicle targeting; correct but non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:23533145
+      supporting_text: &gt;-
+        characterized by a shotgun proteomics procedure. In pooled EPS-urine exosome
+    - reference_id: file:human/A1BG/A1BG-uniprot.txt
+      supporting_text: &#34;GO:0070062; C:extracellular exosome; HDA:UniProtKB.&#34;
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: HDA
+  original_reference_id: PMID:16502470
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Proteomic survey of low-abundance proteins in the aqueous phase of human colostrum,
+      the dataset behind this HDA assignment - an abundant secreted plasma protein
+      appearing in an exocrine secretion. A1BG is one of the 151 identified proteins rather
+      than a named finding in the abstract. Correct core extracellular location, on
+      high-throughput evidence.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:16502470
+      supporting_text: &gt;-
+        One hundred and fifty-one proteins were identified, 83 of which have not been
+        previously reported in human colostrum, or milk.
+    - reference_id: file:human/A1BG/A1BG-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Secreted.&#34;
+- term:
+    id: GO:0072562
+    label: blood microparticle
+  evidence_type: HDA
+  original_reference_id: PMID:22516433
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Proteomic analysis of sub-220 nm microvesicles purified from the plasma of healthy
+      donors, in which 161 microvesicle-associated proteins were detected. Recovery of A1BG
+      is expected for one of the more abundant plasma proteins; a co-isolation observation
+      rather than evidence of a microparticle-specific role. Non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:22516433
+      supporting_text: &gt;-
+        we have purified microvesicles smaller than 220nm from plasma of healthy donors
+        and performed proteomic, ultra-structural, biochemical and functional analyses.
+    - reference_id: file:human/A1BG/A1BG-uniprot.txt
+      supporting_text: &#34;GO:0072562; C:blood microparticle; HDA:UniProtKB.&#34;
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:19056867
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Second exosome proteomics dataset, this time LC-MS/MS profiling of human urinary
+      exosomes (1132 proteins identified). Same assessment as the other exosome annotation:
+      consistent with a secreted plasma protein, not evidence of dedicated exosomal
+      targeting. Non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:19056867
+      supporting_text: &gt;-
+        Here, we used LC-MS/MS to profile the proteome of human urinary exosomes.
+    - reference_id: file:human/A1BG/A1BG-uniprot.txt
+      supporting_text: &#34;GO:0070062; C:extracellular exosome; HDA:UniProtKB.&#34;
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IDA
+  original_reference_id: PMID:3458201
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      The strongest localisation evidence: A1BG was purified from human plasma and its
+      complete amino acid sequence determined by direct protein sequencing, establishing
+      it as a bona fide circulating extracellular protein. This is the core cellular
+      component annotation for the gene.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:3458201
+      supporting_text: &gt;-
+        The complete amino acid sequence has been determined for alpha 1B-glycoprotein
+        (alpha 1B), a protein of unknown function present in human plasma.
+- term:
+    id: GO:0140311
+    label: protein sequestering activity
+  evidence_type: IDA
+  original_reference_id: PMID:39433128
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Proposed new molecular function. After removing the incorrect receptor IBA, GOA
+      leaves A1BG with no molecular function term at all, yet its activity is
+      experimentally defined: A1BG binds CAP-superfamily (CRISP) proteins through the
+      third of its five immunoglobulin-like domains in a magnesium-dependent manner, and
+      this binding inhibits CRISP2 sterol binding in vitro and abolishes CAP-protein
+      sterol export in vivo in a yeast reconstitution system [PMID:39433128].
+      Independently, A1BG is the high-affinity (nanomolar Kd), 1:1 plasma carrier of
+      CRISP3, holding it in a noncovalent complex in the circulation [PMID:15461460].
+      Binding a partner protein so as to block that partner&#39;s own ligand binding and
+      export function is precisely GO:0140311 &#34;protein sequestering activity&#34; - binding
+      to a protein to prevent it from interacting with other partners or to inhibit its
+      localization to the area where it is active. Related A1BG-like plasma proteins of
+      opossum neutralise snake-venom metalloproteinases by the same complex-formation
+      mechanism, supporting a family-wide extracellular sequestering role.
+    action: NEW
+    reason: &gt;-
+      Fills the molecular-function gap left by removing GO:0004888, and is more specific
+      and more informative than a bare protein-binding term or than the coarse
+      &#34;molecular function regulator activity&#34; grounding offered by the affinage report.
+    additional_reference_ids:
+    - PMID:15461460
+    supported_by:
+    - reference_id: PMID:39433128
+      supporting_text: &gt;-
+        Coexpression of A1BG with CAP proteins abolished their sterol export function in
+        yeast and their interaction inhibits sterol-binding in vitro.
+    - reference_id: PMID:39433128
+      supporting_text: &gt;-
+        We map the interaction between A1BG and CRISP2 to the third of five repeated
+        immunoglobulin-like domains within A1BG.
+    - reference_id: PMID:15461460
+      supporting_text: &gt;-
+        We demonstrate that CRISP-3 is a specific and high-affinity ligand of A1BG with
+        a dissociation constant in the nanomolar range as evidenced by surface plasmon
+        resonance.
+    - reference_id: file:human/A1BG/A1BG-deep-research-affinage.md
+      supporting_text: &gt;-
+        this interaction inhibits CRISP2 sterol-binding in vitro and abolishes its
+        sterol export function in yeast
+core_functions:
+- description: &gt;-
+    Extracellular sequestration of CAP-superfamily (CRISP) proteins. A1BG circulates in
+    plasma and uses the third of its five immunoglobulin-like domains to bind CRISP
+    proteins in a magnesium-dependent, high-affinity, 1:1 noncovalent complex. Complex
+    formation blocks the partner&#39;s own activity - it inhibits CRISP2 sterol binding and
+    abolishes CAP-protein sterol export - and holds CRISP3 in the circulation. The same
+    mechanism in related plasma proteins of this family neutralises snake-venom
+    metalloproteinases.
+  molecular_function:
+    id: GO:0140311
+    label: protein sequestering activity
+  locations:
+  - id: GO:0005576
+    label: extracellular region
+  supported_by:
+  - reference_id: PMID:39433128
+    supporting_text: &gt;-
+      Coexpression of A1BG with CAP proteins abolished their sterol export function in
+      yeast and their interaction inhibits sterol-binding in vitro.
+  - reference_id: PMID:15461460
+    supporting_text: &gt;-
+      We demonstrate that CRISP-3 is a specific and high-affinity ligand of A1BG with a
+      dissociation constant in the nanomolar range as evidenced by surface plasmon
+      resonance.
+  - reference_id: file:human/A1BG/A1BG-uniprot.txt
+    supporting_text: &#34;Interacts with CRISP3.&#34;
+suggested_questions:
+- question: &gt;-
+    Is the A1BG-CRISP complex physiologically inhibitory in human plasma, or primarily a
+    carrier/reservoir? The CRISP2 sterol-export result was obtained by heterologous
+    reconstitution in yeast; a direct demonstration that plasma A1BG restrains a human
+    CRISP activity in vivo would settle whether protein sequestering activity or a
+    carrier-type function is the better molecular-function call.
+- question: &gt;-
+    Does A1BG neutralise snake-venom CRISP toxins in humans, as the A1BG-like opossum
+    plasma proteins do for venom metalloproteinases? This would give A1BG a defensible
+    defence-response biological-process annotation, which it currently lacks entirely.
+- question: &gt;-
+    Should mouse A1bg&#39;s IMP annotation to GO:0060396 (growth hormone receptor signaling
+    pathway) be re-curated as a response term? The underlying data (PMID:16723264) show
+    GH-dependent hepatic induction of the transcript, which is a downstream target
+    relationship rather than participation in the receptor signalling cascade, and the
+    human IBA inherits the same conflation.
+- question: &gt;-
+    Is the reported A1BG-NAMPT interaction and NAMPT stabilisation (PMID:40560034)
+    reproducible outside the adipocyte/osteosarcoma chemoresistance setting? If so, a
+    protein-stabilisation function would need to be annotated alongside the sequestering
+    activity.
+- question: &gt;-
+    What explains the female-specific cardiomyocyte requirement for A1bg in mice
+    (PMID:40270023) for a protein that is secreted and liver-enriched in humans? Is there
+    a genuine intracellular or autocrine cardiomyocyte pool of A1BG, or is the phenotype
+    secondary to loss of a circulating pool?
+suggested_experiments:
+- hypothesis: &gt;-
+    A1BG is a general extracellular sequestering factor for CAP-superfamily proteins,
+    with magnesium-dependent specificity determined by Ig domain 3.
+  description: &gt;-
+    Surface plasmon resonance and isothermal titration calorimetry with purified human
+    A1BG against a panel of human CAP-superfamily proteins (CRISP1, CRISP2, CRISP3,
+    GLIPR1, GAPR1), with and without Mg2+, and with an Ig-domain-3 deletion/point-mutant
+    series, to define the sequestering specificity in a purely human system.
+  experiment_type: binding assay
+- hypothesis: &gt;-
+    A1BG blocks CAP-protein function by occluding the sterol-binding cavity of the CAP
+    domain.
+  description: &gt;-
+    Structure determination by cryo-EM or crystallography of the A1BG Ig-domain-3/CRISP2
+    complex, to establish how the Ig domain engages the CAP domain relative to its
+    sterol-binding cavity and its conserved Mg2+-coordinating tetrad.
+  experiment_type: structural biology
+- hypothesis: &gt;-
+    Loss of A1BG releases functionally active CRISP into the circulation.
+  description: &gt;-
+    Assay plasma from A1bg-null mice (and, if available, from humans with A1BG
+    loss-of-function variants) for free versus A1BG-complexed CRISP3 by size-exclusion
+    chromatography and immunoprecipitation, and test CRISP-dependent sterol transfer
+    activity in the two fractions.
+  experiment_type: genetic and biochemical
+- hypothesis: &gt;-
+    CRISP proteins are the dominant physiological ligands of circulating A1BG.
+  description: &gt;-
+    Immunoprecipitate endogenous A1BG from human plasma and quantify co-purifying
+    proteins by label-free or isotope-labelled mass spectrometry, to determine whether
+    CRISP proteins dominate stoichiometrically or whether NAMPT and other reported
+    partners are also present at meaningful levels.
+  experiment_type: interaction proteomics
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: PMID:16502470
+  title: &#39;Human colostrum: identification of minor proteins in the aqueous phase by
+    proteomics.&#39;
+  findings: []
+  full_text_unavailable: true
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cached record title matches the citation. Proteomic identification of A1BG in
+      colostrum; supports extracellular localisation only.
+- id: PMID:19056867
+  title: Large-scale proteomics and phosphoproteomics of urinary exosomes.
+  findings: []
+  full_text_unavailable: true
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cached record title matches. High-throughput exosome dataset; localisation support
+      only.
+- id: PMID:22516433
+  title: Proteomic analysis of microvesicles from plasma of healthy donors reveals
+    high individual variability.
+  findings: []
+  full_text_unavailable: true
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cached record title matches. Plasma microvesicle proteomics; localisation support
+      only.
+- id: PMID:23533145
+  title: In-depth proteomic analyses of exosomes isolated from expressed prostatic
+    secretions in urine.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cached record title matches. High-throughput exosome dataset; localisation support
+      only.
+- id: PMID:27068509
+  title: &#39;Extracellular matrix remodelling in response to venous hypertension: proteomics
+    of human varicose veins.&#39;
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cached record title matches. Tissue ECM proteomics; localisation support only.
+- id: PMID:27559042
+  title: Glycoproteomics Reveals Decorin Peptides With Anti-Myostatin Activity in
+    Human Atrial Fibrillation.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cached record title matches. The paper is about decorin; A1BG appears only as one
+      of many identified glycoproteins, supporting extracellular localisation.
+- id: PMID:3458201
+  title: &#39;Amino acid sequence of human plasma alpha 1B-glycoprotein: homology to the
+    immunoglobulin supergene family.&#39;
+  findings:
+  - statement: &gt;-
+      A1BG was purified from human plasma and completely sequenced, establishing it as a
+      circulating plasma protein of unknown function.
+    supporting_text: &gt;-
+      The complete amino acid sequence has been determined for alpha 1B-glycoprotein
+      (alpha 1B), a protein of unknown function present in human plasma.
+  - statement: &gt;-
+      The protein is built from five repeated immunoglobulin-like structural domains
+      arising by internal duplication, placing it in the immunoglobulin supergene family.
+    supporting_text: &gt;-
+      consists of five repeating structural domains, each containing about 95 amino
+      acids and one disulfide bond
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cached record title matches. Defining structural and biochemical paper for A1BG and
+      the direct source of the IDA extracellular-region annotation; also the basis for
+      rejecting a transmembrane-receptor interpretation.
+- id: PMID:15461460
+  title: Cysteine-rich secretory protein 3 is a ligand of alpha1B-glycoprotein in human
+    plasma.
+  findings:
+  - statement: &gt;-
+      CRISP3 circulates in human plasma bound to A1BG; the complex is specific,
+      noncovalent, 1:1 and of nanomolar affinity.
+    supporting_text: &gt;-
+      We demonstrate that CRISP-3 is a specific and high-affinity ligand of A1BG with a
+      dissociation constant in the nanomolar range as evidenced by surface plasmon
+      resonance.
+  full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cached record title matches. Abstract-only, but the binding data quoted are stated
+      in the abstract. This is the interaction curated by UniProt (&#34;Interacts with
+      CRISP3&#34;) and a primary support for the proposed protein-sequestering activity.
+- id: PMID:16723264
+  title: A liver specific gene that is expressed in growth hormone transgenic mice and
+    in normal female mice as a function of age.
+  findings:
+  - statement: &gt;-
+      Mouse A1bg (&#34;cDNA #5&#34;) was isolated as a transcript induced in the liver of growth
+      hormone transgenic mice and absent from GH-deficient, GH-antagonist and
+      GH-receptor-knockout mice, showing that its expression requires an intact GH-GH
+      receptor axis.
+    supporting_text: &gt;-
+      These findings suggest that induction of mRNA #5 in the liver requires a
+      continuous pattern of GH secretion and an intact GH-GH receptor-signaling complex.
+  - statement: &gt;-
+      The encoded protein has five immunoglobulin-related domains and is similar to rat
+      and human alpha-1-B glycoprotein, an acidic serum protein of unknown function.
+    supporting_text: &gt;-
+      P5 has five immunoglobulin related domains thus allowing it to be classified as a
+      member of the immunoglobulin super family (IGSF).
+  full_text_unavailable: true
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cached record title matches the citation, and the paper is genuinely about the A1BG
+      ortholog. VERIFIED refers to its use *in this document*, where it is cited only for
+      GH-dependent hepatic induction of mouse A1bg, which it does support. The problem is
+      upstream, not here: this paper is the sole support for the mouse MGI IMP to GO:0060396
+      (growth hormone receptor signaling pathway), from which the human IBA derives, yet it
+      demonstrates only transcriptional induction - a downstream target relationship, not
+      participation in the GH receptor signalling cascade. That critique is recorded in the
+      annotation&#39;s propagation_review and in suggested_questions rather than as a
+      correctness flag here, so that flag aggregation is not misled. Note the cache is
+      abstract-only, so the critique is built from the abstract; the abstract is however
+      explicit about the experimental design (subtractive hybridisation for
+      GH-transgene-induced liver transcripts).
+- id: PMID:39433128
+  title: Alpha-1-B glycoprotein (A1BG) inhibits sterol-binding and export by CRISP2.
+  findings:
+  - statement: &gt;-
+      A1BG binding to CAP-superfamily proteins inhibits their sterol binding in vitro
+      and abolishes their sterol export function in a yeast reconstitution system.
+    supporting_text: &gt;-
+      Coexpression of A1BG with CAP proteins abolished their sterol export function in
+      yeast and their interaction inhibits sterol-binding in vitro.
+  - statement: &gt;-
+      The CRISP2 contact site is the third of the five immunoglobulin-like domains of
+      A1BG and the interaction requires magnesium.
+    supporting_text: &gt;-
+      We map the interaction between A1BG and CRISP2 to the third of five repeated
+      immunoglobulin-like domains within A1BG.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cached full text matches the cited title. Provides functional (not merely binding)
+      evidence that A1BG blocks a partner protein&#39;s activity, which is the basis for the
+      GO:0140311 proposal.
+- id: PMID:40270023
+  title: Sex-specific response to A1BG loss results in female dilated cardiomyopathy.
+  findings:
+  - statement: &gt;-
+      Conditional cardiomyocyte deletion of A1bg in mice causes dilated cardiomyopathy
+      in females but not males, indicating a sex-specific cardiac requirement.
+    supporting_text: &gt;-
+      The glycoprotein A1BG has emerged as a female-specific regulator of cardiac
+      structure and integrity
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cached full text matches the cited title. Mouse genetics; recorded as a knowledge
+      gap rather than used for a human GO process annotation, since the mechanism linking
+      a secreted plasma protein to a cardiomyocyte-autonomous phenotype is unresolved.
+- id: PMID:40560034
+  title: Adipocytes Promote Cisplatin Resistance through Secreting A1BG and Regulating
+    NAMPT/PARP1 Axis-Mediated DNA Repair in Osteosarcoma.
+  findings:
+  - statement: &gt;-
+      Adipocyte-secreted A1BG binds NAMPT directly, stabilising it and raising NAD+
+      levels, which enhances PARP1-dependent DNA repair and cisplatin resistance.
+    supporting_text: &gt;-
+      Further investigation revealed a direct interaction between A1BG and NAMPT,
+      leading to the stabilization of NAMPT and an increased NAD+ production.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cached record title matches. Single-study, cancer-context mechanism; noted but not
+      annotated, pending independent replication.
+- id: Reactome:R-HSA-481007
+  title: Exocytosis of platelet alpha granule contents
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome degranulation reaction; source of the platelet alpha-granule lumen and an
+      extracellular-region annotation.
+- id: Reactome:R-HSA-6798748
+  title: Exocytosis of secretory granule lumen proteins
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome neutrophil-degranulation reaction; source of the secretory granule lumen
+      annotation.
+- id: Reactome:R-HSA-6800434
+  title: Exocytosis of ficolin-rich granule lumen proteins
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome neutrophil-degranulation reaction; source of the ficolin-1-rich granule
+      lumen annotation.
+- id: file:human/A1BG/A1BG-deep-research-affinage.md
+  title: Affinage mechanistic annotation for A1BG (human)
+  findings:
+  - statement: &gt;-
+      Machine-fetched Affinage record (trust gates passed; accession P04217 matches the
+      local UniProt entry) describing A1BG as a secreted immunoglobulin-like plasma
+      glycoprotein acting through protein-protein interactions with CRISP2 and NAMPT. It
+      contains no membrane-receptor or growth-hormone-signalling content, independently
+      corroborating the IBA removals.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      External precomputed LLM research, treated as a preliminary source. Every claim
+      used here was re-verified against the cited primary PMIDs. Its own GO grounding
+      (GO:0098772 molecular function regulator activity) was deliberately not imported;
+      the specific descendant GO:0140311 was used instead.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

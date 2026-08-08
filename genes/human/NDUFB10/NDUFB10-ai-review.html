@@ -1,0 +1,4562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NDUFB10 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>NDUFB10</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O96000" target="_blank" class="term-link">
+                        O96000
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "NDUFB10";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O96000" data-a="DESCRIPTION: NDUFB10 (also known as PDSW / Complex I-PDSW) is a..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>NDUFB10 (also known as PDSW / Complex I-PDSW) is a nuclear-encoded accessory (supernumerary) subunit of mitochondrial respiratory chain Complex I (NADH:ubiquinone oxidoreductase), the first enzyme of the electron transport chain. It is a small (~172 aa, ~20.8 kDa) twin-CX9C-type protein that resides in the membrane arm of Complex I, in the distal P_D domain, lying parallel to the inner-membrane surface on the intermembrane-space face and spanning the ND4 and ND5 subunits; unlike most other P_D accessory subunits it lacks a transmembrane helix. NDUFB10 is imported into the intermembrane space and oxidatively folded by the CHCHD4/MIA40 disulfide-relay system, acquiring intramolecular disulfide bonds that are required for its stable incorporation into the holoenzyme. As a non-catalytic structural subunit it contributes to the structural integrity, assembly and stability of the mature Complex I holoenzyme rather than performing an independent enzymatic reaction; the NADH-dehydrogenase and proton-pumping activities are properties of the assembled complex. Biallelic loss-of-function mutations in NDUFB10 cause isolated mitochondrial complex I deficiency (nuclear type 35, MC1DN35), presenting with fatal infantile lactic acidosis and cardiomyopathy. The gene is expressed most highly in oxidative tissues such as heart and skeletal muscle.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045271" target="_blank" class="term-link">
+                                    GO:0045271
+                                </a>
+                            </span>
+                            <span class="term-label">respiratory chain complex I</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0045271" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred (IBA) membership in respiratory chain complex I. NDUFB10 is a bona fide, structurally resolved subunit of Complex I, so this cellular-component location is correct and represents a core aspect of the gene. Consistent with the experimental IDA/IPI annotations to the same term.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NDUFB10/NDUFB10-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Complex I is composed of 45 different subunits</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0005739" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA) annotation to the parent term mitochondrion. Correct but less specific than the experimentally supported mitochondrial inner membrane / respiratory chain complex I locations. Kept as non-core because it is subsumed by the more precise localizations.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NDUFB10/NDUFB10-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0005743" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation to mitochondrial inner membrane, matching the curated UniProt subcellular location and the experimental IDA/IMP annotations to the same term. NDUFB10 is a peripheral inner-membrane protein on the matrix/IMS interface as part of the Complex I membrane arm.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NDUFB10/NDUFB10-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902600" target="_blank" class="term-link">
+                                    GO:1902600
+                                </a>
+                            </span>
+                            <span class="term-label">proton transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000108
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:1902600" data-r="GO_REF:0000108" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Logically inferred (GO_REF:0000108) from the complex-level NADH dehydrogenase activity term. Proton translocation is a property of the assembled Complex I holoenzyme carried out largely by the core ND4/ND5/ND2 antiporter-like subunits, not by this non-catalytic accessory subunit lacking a transmembrane domain. Over-attribution of a complex-level activity to a single supernumerary subunit.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28040730" target="_blank" class="term-link">
+                                        PMID:28040730
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">does not contain a transmembrane domain</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17500595" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17500595
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Huntingtin interacting proteins are genetic modifiers of neu...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0005515" data-r="PMID:17500595" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a large-scale huntingtin-interactor screen for genetic modifiers of neurodegeneration. The term is uninformative about NDUFB10&#39;s molecular function and the interaction does not inform its role as a Complex I subunit. Experimental IPI, so not removed; marked as over-annotated (uninformative).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a proteome-scale human binary interactome (high-throughput Y2H). Uninformative about molecular function; NDUFB10 appears as one of many nodes. Experimental IPI, retained but marked as over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from the reference human binary interactome (HuRI, high-throughput Y2H). Does not specify an informative molecular function. Experimental IPI, retained but marked as over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32814053
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interactome Mapping Provides a Network of Neurodegenerative ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0005515" data-r="PMID:32814053" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a neurodegenerative-disease interactome map focused on protein aggregation. Uninformative about NDUFB10&#39;s molecular function. Experimental IPI, retained but marked as over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045271" target="_blank" class="term-link">
+                                    GO:0045271
+                                </a>
+                            </span>
+                            <span class="term-label">respiratory chain complex I</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0045271" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (IEA) membership in respiratory chain complex I. Correct and redundant with the experimental IDA/IPI annotations to the same term; represents the core cellular-component location.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NDUFB10/NDUFB10-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Complex I is composed of 45 different subunits</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28844695" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28844695
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of Human Mitochondrial Respiratory Megacomplex ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0005743" data-r="PMID:28844695" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (ComplexPortal, cryo-EM of the human respiratory megacomplex) places NDUFB10 in the inner membrane as a resolved Complex I subunit. Correct and consistent with the curated UniProt location.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009060" target="_blank" class="term-link">
+                                    GO:0009060
+                                </a>
+                            </span>
+                            <span class="term-label">aerobic respiration</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30030361" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30030361
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Assembly of mammalian oxidative phosphorylation complexes I-...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0009060" data-r="PMID:30030361" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author statement (ComplexPortal) that Complex I participates in aerobic respiration. True at the complex level; for NDUFB10 this is a broad downstream process rather than the gene&#39;s specific function. Kept as non-core; the more precise BP is mitochondrial electron transport, NADH to ubiquinone (GO:0006120).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042776" target="_blank" class="term-link">
+                                    GO:0042776
+                                </a>
+                            </span>
+                            <span class="term-label">proton motive force-driven mitochondrial ATP synthesis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30030361" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30030361
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Assembly of mammalian oxidative phosphorylation complexes I-...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0042776" data-r="PMID:30030361" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author statement (ComplexPortal) linking Complex I to proton-motive-force ATP synthesis. This is an OXPHOS system-level / downstream outcome, not a function of this non-catalytic accessory subunit (ATP synthesis is performed by Complex V). Over-attribution of a pathway-level process to a single subunit.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045271" target="_blank" class="term-link">
+                                    GO:0045271
+                                </a>
+                            </span>
+                            <span class="term-label">respiratory chain complex I</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28844695" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28844695
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of Human Mitochondrial Respiratory Megacomplex ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0045271" data-r="PMID:28844695" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal IPI assignment of NDUFB10 as a component of respiratory chain complex I, from the cryo-EM megacomplex structure. Correct core cellular-component annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0005739" data-r="PMID:34800366" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mitochondrial proteome study confirming mitochondrial localization. Correct but less specific than the inner-membrane / Complex I locations; kept as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045271" target="_blank" class="term-link">
+                                    GO:0045271
+                                </a>
+                            </span>
+                            <span class="term-label">respiratory chain complex I</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12611891" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12611891
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The subunit composition of the human NADH dehydrogenase obta...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0045271" data-r="PMID:12611891" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct identification of NDUFB10 as a subunit of the human NADH dehydrogenase (Complex I) by one-step immunopurification and mass spectrometry. Strong experimental support for this core cellular-component annotation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12611891" target="_blank" class="term-link">
+                                        PMID:12611891
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we can resolve and identify the human homologues of 42 polypeptides</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045271" target="_blank" class="term-link">
+                                    GO:0045271
+                                </a>
+                            </span>
+                            <span class="term-label">respiratory chain complex I</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27626371" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27626371
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Accessory subunits are integral for assembly and function of...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0045271" data-r="PMID:27626371" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct identification of NDUFB10 within Complex I in the systematic accessory-subunit knockout study. Confirms NDUFB10 as an integral accessory subunit of the complex. Core cellular-component annotation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27626371" target="_blank" class="term-link">
+                                        PMID:27626371
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Accessory subunits are integral for assembly and function of human mitochondrial complex I</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045271" target="_blank" class="term-link">
+                                    GO:0045271
+                                </a>
+                            </span>
+                            <span class="term-label">respiratory chain complex I</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9878551" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9878551
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    cDNA of eight nuclear encoded subunits of NADH:ubiquinone ox...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0045271" data-r="PMID:9878551" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Non-traceable author statement from the cDNA characterization paper that NDUFB10 is a subunit of Complex I (localized within the hydrophobic protein fraction). Correct and redundant with the experimental IDA annotations to this term.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9878551" target="_blank" class="term-link">
+                                        PMID:9878551
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">all located within the hydrophobic protein (HP) fraction of complex I</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28040730" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28040730
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in the accessory subunit NDUFB10 result in isolate...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0005515" data-r="PMID:28040730" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI &#34;protein binding&#34; with interactor Q8N4Q1 (CHCHD4/MIA40). This is the one functionally meaningful interaction: NDUFB10 transiently binds the IMS disulfide-relay oxidoreductase CHCHD4 during import and oxidative folding. However, the bare &#34;protein binding&#34; term is uninformative; experimental IPI so retained, but marked over-annotated. The biology is captured in core_functions (structural molecule activity / Complex I assembly) and notes.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28040730" target="_blank" class="term-link">
+                                        PMID:28040730
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">during its mitochondrial import and maturation NDUFB10 transiently interacts with CHCHD4 and acquires disulfide bonds</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28040730" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28040730
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in the accessory subunit NDUFB10 result in isolate...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0005743" data-r="PMID:28040730" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP-supported inner-membrane localization from the disease study: wild-type NDUFB10 localizes completely to mitochondria (and integrates into the membrane-arm of Complex I), whereas the C107S variant is retained in the cytosol. Correct core localization.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28040730" target="_blank" class="term-link">
+                                        PMID:28040730
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the wild type protein was completely localized to mitochondria</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-163217
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0005743" data-r="Reactome:R-HSA-163217" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable annotation for the inner-membrane location in the context of the Complex I NADH to NAD+/CoQ reaction. Correct localization, redundant with experimental IDA/IMP annotations.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6799178
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0005743" data-r="Reactome:R-HSA-6799178" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable annotation (Complex I biogenesis) for the inner-membrane location. Correct, redundant with experimental annotations.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6799179
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0005743" data-r="Reactome:R-HSA-6799179" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable annotation (Complex I biogenesis) for the inner-membrane location. Correct, redundant with experimental annotations.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6799191
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0005743" data-r="Reactome:R-HSA-6799191" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable annotation (Complex I biogenesis) for the inner-membrane location. Correct, redundant with experimental annotations.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6799196
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0005743" data-r="Reactome:R-HSA-6799196" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable annotation (Complex I biogenesis) for the inner-membrane location. Correct, redundant with experimental annotations.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6799197
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0005743" data-r="Reactome:R-HSA-6799197" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable annotation (Complex I biogenesis) for the inner-membrane location. Correct, redundant with experimental annotations.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6799202
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0005743" data-r="Reactome:R-HSA-6799202" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable annotation (Complex I biogenesis) for the inner-membrane location. Correct, redundant with experimental annotations.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14557246" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14557246
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    AIP is a mitochondrial import mediator that binds to both im...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0005515" data-r="PMID:14557246" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from the AIP/Tom20 import study, where NDUFB10 was used as a control mitochondrial preprotein and shown to bind the import receptors Tom20 and Tom22 in vitro. A real import-machinery interaction but the bare term is uninformative about molecular function. Experimental IPI, retained but marked over-annotated.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14557246" target="_blank" class="term-link">
+                                        PMID:14557246
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">other mitochondrial preproteins, ATP/ADP carrier protein and NDUFB10, which lack a cleavable presequence, also bound to AIP as well as to Tom20</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006120" target="_blank" class="term-link">
+                                    GO:0006120
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial electron transport, NADH to ubiquinone</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9878551" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9878551
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    cDNA of eight nuclear encoded subunits of NADH:ubiquinone ox...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0006120" data-r="PMID:9878551" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author statement that NDUFB10, as a Complex I subunit, participates in the transfer of electrons from NADH to ubiquinone. This is the specific biological process of Complex I and an appropriate core BP for a genuine structural subunit, understood as contributory participation rather than NDUFB10 itself catalyzing electron transfer.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9878551" target="_blank" class="term-link">
+                                        PMID:9878551
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Its main function is the transport of electrons from NADH to ubiquinone</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008137" target="_blank" class="term-link">
+                                    GO:0008137
+                                </a>
+                            </span>
+                            <span class="term-label">NADH dehydrogenase (ubiquinone) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9878551" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9878551
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    cDNA of eight nuclear encoded subunits of NADH:ubiquinone ox...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0008137" data-r="PMID:9878551" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author statement assigning the complex-level NADH dehydrogenase (ubiquinone) catalytic activity directly to NDUFB10 via the &#34;enables&#34; qualifier. NDUFB10 is a non-catalytic accessory subunit lacking the redox cofactors (flavin, Fe-S clusters) required for this activity; the activity belongs to the assembled holoenzyme. NDUFB10 contributes_to but does not enable it. Best captured as contributes_to_molecular_function in core_functions; the direct &#34;enables&#34; annotation is an over-annotation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27626371" target="_blank" class="term-link">
+                                        PMID:27626371
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Bacterial and human complex I share 14 core subunits that are essential for enzymatic function</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                                    GO:0005198
+                                </a>
+                            </span>
+                            <span class="term-label">structural molecule activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28040730" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28040730
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in the accessory subunit NDUFB10 result in isolate...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0005198" data-r="PMID:28040730" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new molecular-function annotation capturing the honest, subunit-specific MF of NDUFB10: it is a non-catalytic structural subunit that contributes to the structural integrity of Complex I. This replaces the over-annotated complex-level NADH dehydrogenase activity as the appropriate MF for this accessory subunit (it contributes_to GO:0008137).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28040730" target="_blank" class="term-link">
+                                        PMID:28040730
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the bovine homolog PDSW of human NDUFB10 appears to be located parallel to the membrane on the IMS face spanning ND4 and ND5</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032981" target="_blank" class="term-link">
+                                    GO:0032981
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex I assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28040730" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28040730
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in the accessory subunit NDUFB10 result in isolate...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="O96000" data-a="GO:0032981" data-r="PMID:28040730" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new biological-process annotation. NDUFB10 is required for assembly of the Complex I holoenzyme: loss-of-function mutations perturb assembly at the ~830 kDa stage, and knockdown reduces the amount of fully assembled complex I. This is a core function of the gene not currently captured in GOA.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28040730" target="_blank" class="term-link">
+                                        PMID:28040730
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">resulting in the perturbed assembly of the holoenzyme at the 830 kDa stage</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Non-catalytic structural subunit that contributes to the structural integrity, assembly and stability of the Complex I holoenzyme, and thereby to the complex-level NADH:ubiquinone oxidoreductase activity; NDUFB10 sits in the membrane arm (distal P_D domain) as a twin-CX9C protein oxidatively folded on the IMS face.</h3>
+                <span class="vote-buttons" data-g="O96000" data-a="FUNCTION: Non-catalytic structural subunit that contributes ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                            structural molecule activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032981" target="_blank" class="term-link">
+                                mitochondrial respiratory chain complex I assembly
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006120" target="_blank" class="term-link">
+                                mitochondrial electron transport, NADH to ubiquinone
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                mitochondrial inner membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045271" target="_blank" class="term-link">
+                            respiratory chain complex I
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28040730" target="_blank" class="term-link">
+                                PMID:28040730
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the bovine homolog PDSW of human NDUFB10 appears to be located parallel to the membrane on the IMS face spanning ND4 and ND5</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27626371" target="_blank" class="term-link">
+                                PMID:27626371
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Accessory subunits are integral for assembly and function of human mitochondrial complex I</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12611891" target="_blank" class="term-link">
+                            PMID:12611891
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The subunit composition of the human NADH dehydrogenase obtained by rapid one-step immunopurification.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Immunopurification plus mass spectrometry of the human NADH dehydrogenase identified 42 subunit polypeptides, establishing NDUFB10 as a genuine component of Complex I.</div>
+
+                        <div class="finding-text">"we can resolve and identify the human homologues of 42 polypeptides"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14557246" target="_blank" class="term-link">
+                            PMID:14557246
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">AIP is a mitochondrial import mediator that binds to both import receptor Tom20 and preproteins.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">NDUFB10 is a nuclear-encoded mitochondrial preprotein lacking a cleavable presequence that binds the import receptors Tom20 and Tom22 in vitro (used as a control substrate in this AIP study).</div>
+
+                        <div class="finding-text">"other mitochondrial preproteins, ATP/ADP carrier protein and NDUFB10, which lack a cleavable presequence, also bound to AIP as well as to Tom20"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17500595" target="_blank" class="term-link">
+                            PMID:17500595
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Huntingtin interacting proteins are genetic modifiers of neurodegeneration.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27626371" target="_blank" class="term-link">
+                            PMID:27626371
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Accessory subunits are integral for assembly and function of human mitochondrial complex I.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human Complex I has 14 conserved core subunits essential for enzymatic function plus 31 accessory subunits (including NDUFB10) whose loss destabilizes co-module subunits and impairs assembly of a functional complex.</div>
+
+                        <div class="finding-text">"Bacterial and human complex I share 14 core subunits that are essential for enzymatic function"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28040730" target="_blank" class="term-link">
+                            PMID:28040730
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mutations in the accessory subunit NDUFB10 result in isolated complex I deficiency and illustrate the critical role of intermembrane space import for complex I holoenzyme assembly.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Biallelic NDUFB10 mutations cause isolated complex I deficiency (fatal infantile lactic acidosis, cardiomyopathy); NDUFB10 is a P_D-domain accessory subunit imported and oxidatively folded by CHCHD4/MIA40, and its loss perturbs holoenzyme assembly at the ~830 kDa stage.</div>
+
+                        <div class="finding-text">"which encodes an accessory subunit located within the"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">NDUFB10 lies parallel to the membrane on the IMS face spanning ND4 and ND5 and, unlike most P_D accessory subunits, has no transmembrane domain.</div>
+
+                        <div class="finding-text">"the bovine homolog PDSW of human NDUFB10 appears to be located parallel to the membrane on the IMS face spanning ND4 and ND5"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28844695" target="_blank" class="term-link">
+                            PMID:28844695
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Architecture of Human Mitochondrial Respiratory Megacomplex I(2)III(2)IV(2).</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cryo-EM of the human respiratory megacomplex resolved individual Complex I subunits, confirming NDUFB10 as a component located in the inner membrane.</div>
+
+                        <div class="finding-text">"the precise assignment of individual subunits of human CI and CIII"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30030361" target="_blank" class="term-link">
+                            PMID:30030361
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Assembly of mammalian oxidative phosphorylation complexes I-V and supercomplexes.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Review of OXPHOS complex assembly; core proteins perform catalysis while supernumerary subunits play essential roles in assembly, regulation and stability.</div>
+
+                        <div class="finding-text">"a large number of &#39;supernumerary&#39; subunits that play essential roles in assembly, regulation and stability"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                            PMID:32814053
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread Protein Aggregation in Affected Brains.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">NDUFB10 is detected in the high-confidence human mitochondrial proteome, confirming its mitochondrial localization.</div>
+
+                        <div class="finding-text">"Quantitative high-confidence human mitochondrial proteome"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9878551" target="_blank" class="term-link">
+                            PMID:9878551
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">cDNA of eight nuclear encoded subunits of NADH:ubiquinone oxidoreductase: human complex I cDNA characterization completed.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Characterized the cDNA of NDUFB10 as one of the nuclear-encoded Complex I subunits in the hydrophobic-protein fraction; the complex transports electrons from NADH to ubiquinone coupled to proton translocation.</div>
+
+                        <div class="finding-text">"all located within the hydrophobic protein (HP) fraction of complex I"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-163217
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Complex I oxidises NADH to NAD+, reduces CoQ to CoQH2</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6799178
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Intermediate 1 binds HP subcomplex to form Intermediate 2</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6799179
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Peripheral arm subunits bind the 815kDa complex to form a 980kDa complex</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6799191
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Intermediate 2 binds MT-ND1:NDUFAF5:NDUFAF6 to form a 315kDa subcomplex</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6799196
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The MCIA complex, NDUFAF2-7 all dissociate from the 980kDa complex, resulting in Complex I</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6799197
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ND4, ND5 bind the 550kDa complex to form the 815kDa complex</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6799202
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The 315kDa subcomplex binds the 370kDa subcomplex to form the 550kDa complex</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(NDUFB10-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O96000" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ndufb10-pdsw-gene-review-notes">NDUFB10 (PDSW) — gene review notes</h1>
+<h2 id="identity-and-family">Identity and family</h2>
+<ul>
+<li>UniProt <strong>O96000</strong> (NDUBA_HUMAN); HGNC:7696; gene <strong>NDUFB10</strong> (aliases PDSW, "Complex I-PDSW", "NADH-ubiquinone oxidoreductase PDSW subunit"). 172 aa, ~20.8 kDa. [file:human/NDUFB10/NDUFB10-uniprot.txt "RecName: Full=NADH dehydrogenase [ubiquinone] 1 beta subcomplex subunit 10"; "AltName: Full=Complex I-PDSW"]</li>
+<li>Belongs to the "complex I NDUFB10 subunit family". [file:human/NDUFB10/NDUFB10-uniprot.txt "SIMILARITY: Belongs to the complex I NDUFB10 subunit family."]</li>
+<li>One of the 45 subunits of human mitochondrial respiratory chain Complex I (NADH:ubiquinone oxidoreductase). [file:human/NDUFB10/NDUFB10-uniprot.txt "SUBUNIT: Complex I is composed of 45 different subunits"]</li>
+</ul>
+<h2 id="core-biology-accessory-supernumerary-subunit-non-catalytic">Core biology: accessory (supernumerary) subunit, non-catalytic</h2>
+<ul>
+<li>NDUFB10 is an <strong>accessory subunit</strong>, NOT one of the 14 conserved catalytic core subunits. Bacterial and human complex I share 14 core subunits that are essential for enzymatic function; the remaining 31 human accessory subunits (including NDUFB10) have roles in assembly/stability. <a href="https://pubmed.ncbi.nlm.nih.gov/27626371" title="Bacterial and human complex I share 14 core subunits that are essential for enzymatic function; however, the role and necessity of the remaining 31 human accessory subunits is unclear.">PMID:27626371</a></li>
+<li>It resides in the <strong>membrane arm</strong>, specifically the distal P_D domain (the "hydrophobic protein / HP fraction"). <a href="https://pubmed.ncbi.nlm.nih.gov/28040730" title="which encodes an accessory subunit located within the PD part of complex I">PMID:28040730</a> <a href="https://pubmed.ncbi.nlm.nih.gov/9878551" title="all located within the hydrophobic protein (HP) fraction of complex I">PMID:9878551</a></li>
+<li>Structurally NDUFB10 lies <strong>parallel to the membrane on the IMS face spanning ND4 and ND5</strong> (i.e., not transmembrane; the bovine homolog is PDSW). <a href="https://pubmed.ncbi.nlm.nih.gov/28040730" title="the bovine homolog PDSW of human NDUFB10 appears to be located parallel to the membrane on the IMS face spanning ND4 and ND5">PMID:28040730</a> <a href="https://pubmed.ncbi.nlm.nih.gov/28040730" title="In contrast to most PD accessory subunits, it does not contain a transmembrane domain">PMID:28040730</a></li>
+<li>UniProt FUNCTION: "Accessory subunit that is involved in the functional assembly of the mitochondrial respiratory chain complex I." The NADH dehydrogenase activity is a property of the <em>complex</em>, not of NDUFB10 itself. [file:human/NDUFB10/NDUFB10-uniprot.txt "FUNCTION: Accessory subunit that is involved in the functional assembly"; "Complex I has an NADH"]</li>
+</ul>
+<h2 id="assembly-role-and-disease">Assembly role and disease</h2>
+<ul>
+<li>Loss of NDUFB10 (and most accessory subunits) reduces the amount of fully assembled complex I. <a href="https://pubmed.ncbi.nlm.nih.gov/28040730" title="Knockdown of most accessory subunits, including NDUFB10, in HEK293T cells resulted in decrease in fully assembled complex I">PMID:28040730</a></li>
+<li>Human biallelic NDUFB10 mutations cause <strong>isolated complex I deficiency (MC1DN35, MIM:619003)</strong>: an infant with fatal infantile lactic acidosis and cardiomyopathy; compound heterozygous mutations (a premature stop → absent protein, and C107S). <a href="https://pubmed.ncbi.nlm.nih.gov/28040730" title="An infant presented with fatal infantile lactic acidosis and cardiomyopathy, and was found to have profoundly decreased activity of respiratory chain complex I">PMID:28040730</a> [file:human/NDUFB10/NDUFB10-uniprot.txt "DISEASE: Mitochondrial complex I deficiency, nuclear type 35 (MC1DN35)"]</li>
+<li>Disruption disrupts the assembly of the membrane arm; assembly stalls at a late (~830 kDa) stage. <a href="https://pubmed.ncbi.nlm.nih.gov/28040730" title="resulting in the perturbed assembly of the holoenzyme at the 830 kDa stage">PMID:28040730</a> <a href="https://pubmed.ncbi.nlm.nih.gov/28040730" title="NDUFB10 is important for the assembly of complex I at the late stage where the PD domain is being assembled">PMID:28040730</a></li>
+</ul>
+<h2 id="twin-cx9c-mia40-chchd4-import">Twin-CX9C / MIA40 (CHCHD4) import</h2>
+<ul>
+<li>NDUFB10 is imported into the mitochondrial IMS by the disulfide-relay oxidoreductase <strong>CHCHD4/MIA40</strong>; it transiently interacts with CHCHD4 and acquires intramolecular disulfide bonds. <a href="https://pubmed.ncbi.nlm.nih.gov/28040730" title="NDUFB10 was identified together with three other complex I subunits as a substrate of the intermembrane space oxidoreductase CHCHD4 (also known as Mia40)">PMID:28040730</a> <a href="https://pubmed.ncbi.nlm.nih.gov/28040730" title="during its mitochondrial import and maturation NDUFB10 transiently interacts with CHCHD4 and acquires disulfide bonds">PMID:28040730</a></li>
+<li>The disulfide bonds are required for folding, import, and function in complex I assembly. [file:human/NDUFB10/NDUFB10-uniprot.txt "PTM: The formation of intramolecular disulfide bonds is assisted by"]</li>
+<li>The C107S disease variant impairs CHCHD4-mediated oxidation → protein stays in cytosol / is degraded → loss of function. <a href="https://pubmed.ncbi.nlm.nih.gov/28040730" title="NDUFB10 C107S localized largely to the cytosol, while the wild type protein was completely localized to mitochondria">PMID:28040730</a></li>
+<li>The GOA-recorded interactor for the PMID:28040730 IPI (UniProtKB:Q8N4Q1) is CHCHD4/MIA40 — a biologically meaningful, function-relevant interaction (the import/oxidoreductase partner). Distinct from the many high-throughput "protein binding" hits.</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Mitochondrion inner membrane; peripheral membrane protein; matrix side (UniProt). Present in curated ComplexPortal CPX-577 (Mitochondrial respiratory chain complex I). [file:human/NDUFB10/NDUFB10-uniprot.txt "SUBCELLULAR LOCATION: Mitochondrion inner membrane"]</li>
+<li>Identified as a genuine complex I subunit by immunopurification + MS of the human enzyme. <a href="https://pubmed.ncbi.nlm.nih.gov/12611891" title="we can resolve and identify the human homologues of 42 polypeptides">PMID:12611891</a></li>
+<li>Confirmed subunit in cryo-EM megacomplex (PMID:28844695) and multiple PDB structures (5XTC, 9CWT, 9I4I, etc.). [file:human/NDUFB10/NDUFB10-uniprot.txt "PDB; 9CWT; EM"]</li>
+</ul>
+<h2 id="interaction-protein-binding-ipi-annotations-assessment">Interaction (protein binding IPI) annotations — assessment</h2>
+<p>The GOA "protein binding" (GO:0005515) IPI annotations mostly come from large-scale interactome / neurodegeneration-screen datasets in which NDUFB10 appears as one of many prey/bait, and do NOT establish a specific NDUFB10 molecular function:<br />
+- PMID:17500595 — Huntingtin interacting proteins are genetic modifiers of neurodegeneration (HTT screen). Not NDUFB10-specific function.<br />
+- PMID:25416956 — proteome-scale human interactome (Rolland et al., HI-II-14). High-throughput Y2H.<br />
+- PMID:32296183 — reference human binary interactome (HuRI). High-throughput Y2H.<br />
+- PMID:32814053 — neurodegenerative-disease interactome map (aggregation-focused). High-throughput.<br />
+- PMID:14557246 (AIP/Tom20 study) — here NDUFB10 is used as a control mitochondrial preprotein that binds the import receptors Tom20 and Tom22 in vitro. <a href="https://pubmed.ncbi.nlm.nih.gov/14557246" title="other mitochondrial preproteins, ATP/ADP carrier protein and NDUFB10, which lack a cleavable presequence, also bound to AIP as well as to Tom20.">PMID:14557246</a> This is a real import-machinery interaction but still contributes an uninformative bare "protein binding" term.<br />
+- PMID:28040730 IPI (with Q8N4Q1 = CHCHD4/MIA40) is the one functionally meaningful interaction (import/oxidoreductase partner); still a bare "protein binding" term.</p>
+<p>Per curation policy, none of these experimental IPI annotations is REMOVED; all bare GO:0005515 terms are marked over-annotated (uninformative), with the biology captured instead in <code>core_functions</code> and BP terms.</p>
+<h2 id="curation-conclusions">Curation conclusions</h2>
+<ul>
+<li>Honest molecular function = <strong>structural molecule activity (GO:0005198)</strong> — NDUFB10 contributes to the structural integrity of complex I; it is non-catalytic.</li>
+<li>It <strong>contributes_to</strong> the complex-level <strong>NADH dehydrogenase (ubiquinone) activity (GO:0008137)</strong> but does NOT directly enable it. The GOA <code>enables GO:0008137</code> (NAS, PMID:9878551) is an over-annotation of a complex-level activity to a single accessory subunit.</li>
+<li>Core BP: <strong>mitochondrial respiratory chain complex I assembly (GO:0032981)</strong> and participation in <strong>mitochondrial electron transport, NADH to ubiquinone (GO:0006120)</strong>.</li>
+<li>Core CC: <strong>respiratory chain complex I (GO:0045271)</strong> (part_of), located in mitochondrial inner membrane (GO:0005743).</li>
+<li>The IEA <code>involved_in proton transmembrane transport (GO:1902600)</code> (inferred logically from the complex-level GO:0008137) and NAS <code>proton motive force-driven mitochondrial ATP synthesis (GO:0042776)</code> over-attribute complex-level / downstream OXPHOS activities to this accessory subunit; kept as non-core / over-annotated rather than as direct functions.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O96000
+gene_symbol: NDUFB10
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  NDUFB10 (also known as PDSW / Complex I-PDSW) is a nuclear-encoded accessory
+  (supernumerary) subunit of mitochondrial respiratory chain Complex I
+  (NADH:ubiquinone oxidoreductase), the first enzyme of the electron transport
+  chain. It is a small (~172 aa, ~20.8 kDa) twin-CX9C-type protein that resides
+  in the membrane arm of Complex I, in the distal P_D domain, lying parallel to
+  the inner-membrane surface on the intermembrane-space face and spanning the
+  ND4 and ND5 subunits; unlike most other P_D accessory subunits it lacks a
+  transmembrane helix. NDUFB10 is imported into the intermembrane space and
+  oxidatively folded by the CHCHD4/MIA40 disulfide-relay system, acquiring
+  intramolecular disulfide bonds that are required for its stable incorporation
+  into the holoenzyme. As a non-catalytic structural subunit it contributes to
+  the structural integrity, assembly and stability of the mature Complex I
+  holoenzyme rather than performing an independent enzymatic reaction; the
+  NADH-dehydrogenase and proton-pumping activities are properties of the
+  assembled complex. Biallelic loss-of-function mutations in NDUFB10 cause
+  isolated mitochondrial complex I deficiency (nuclear type 35, MC1DN35),
+  presenting with fatal infantile lactic acidosis and cardiomyopathy. The gene
+  is expressed most highly in oxidative tissues such as heart and skeletal
+  muscle.
+alternative_products:
+- name: &#39;1&#39;
+  id: O96000-1
+- name: &#39;2&#39;
+  id: O96000-2
+  sequence_note: VSP_056555
+existing_annotations:
+- term:
+    id: GO:0045271
+    label: respiratory chain complex I
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Phylogenetically inferred (IBA) membership in respiratory chain complex I.
+      NDUFB10 is a bona fide, structurally resolved subunit of Complex I, so
+      this cellular-component location is correct and represents a core aspect
+      of the gene. Consistent with the experimental IDA/IPI annotations to the
+      same term.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/NDUFB10/NDUFB10-uniprot.txt
+      supporting_text: Complex I is composed of 45 different subunits
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic (ARBA) annotation to the parent term mitochondrion. Correct but
+      less specific than the experimentally supported mitochondrial inner
+      membrane / respiratory chain complex I locations. Kept as non-core because
+      it is subsumed by the more precise localizations.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/NDUFB10/NDUFB10-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Mitochondrion inner membrane&#39;
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic annotation to mitochondrial inner membrane, matching the
+      curated UniProt subcellular location and the experimental IDA/IMP
+      annotations to the same term. NDUFB10 is a peripheral inner-membrane
+      protein on the matrix/IMS interface as part of the Complex I membrane arm.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/NDUFB10/NDUFB10-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Mitochondrion inner membrane&#39;
+- term:
+    id: GO:1902600
+    label: proton transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Logically inferred (GO_REF:0000108) from the complex-level NADH
+      dehydrogenase activity term. Proton translocation is a property of the
+      assembled Complex I holoenzyme carried out largely by the core ND4/ND5/ND2
+      antiporter-like subunits, not by this non-catalytic accessory subunit
+      lacking a transmembrane domain. Over-attribution of a complex-level
+      activity to a single supernumerary subunit.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:28040730
+      supporting_text: does not contain a transmembrane domain
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:17500595
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a large-scale huntingtin-interactor screen for
+      genetic modifiers of neurodegeneration. The term is uninformative about
+      NDUFB10&#39;s molecular function and the interaction does not inform its role
+      as a Complex I subunit. Experimental IPI, so not removed; marked as
+      over-annotated (uninformative).
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a proteome-scale human binary interactome
+      (high-throughput Y2H). Uninformative about molecular function; NDUFB10
+      appears as one of many nodes. Experimental IPI, retained but marked as
+      over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from the reference human binary interactome (HuRI,
+      high-throughput Y2H). Does not specify an informative molecular function.
+      Experimental IPI, retained but marked as over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32814053
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a neurodegenerative-disease interactome map
+      focused on protein aggregation. Uninformative about NDUFB10&#39;s molecular
+      function. Experimental IPI, retained but marked as over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0045271
+    label: respiratory chain complex I
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Electronic (IEA) membership in respiratory chain complex I. Correct and
+      redundant with the experimental IDA/IPI annotations to the same term;
+      represents the core cellular-component location.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/NDUFB10/NDUFB10-uniprot.txt
+      supporting_text: Complex I is composed of 45 different subunits
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IDA
+  original_reference_id: PMID:28844695
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct assay (ComplexPortal, cryo-EM of the human respiratory megacomplex)
+      places NDUFB10 in the inner membrane as a resolved Complex I subunit.
+      Correct and consistent with the curated UniProt location.
+    action: ACCEPT
+- term:
+    id: GO:0009060
+    label: aerobic respiration
+  evidence_type: NAS
+  original_reference_id: PMID:30030361
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Author statement (ComplexPortal) that Complex I participates in aerobic
+      respiration. True at the complex level; for NDUFB10 this is a broad
+      downstream process rather than the gene&#39;s specific function. Kept as
+      non-core; the more precise BP is mitochondrial electron transport, NADH to
+      ubiquinone (GO:0006120).
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0042776
+    label: proton motive force-driven mitochondrial ATP synthesis
+  evidence_type: NAS
+  original_reference_id: PMID:30030361
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Author statement (ComplexPortal) linking Complex I to proton-motive-force
+      ATP synthesis. This is an OXPHOS system-level / downstream outcome, not a
+      function of this non-catalytic accessory subunit (ATP synthesis is
+      performed by Complex V). Over-attribution of a pathway-level process to a
+      single subunit.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0045271
+    label: respiratory chain complex I
+  evidence_type: IPI
+  original_reference_id: PMID:28844695
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      ComplexPortal IPI assignment of NDUFB10 as a component of respiratory
+      chain complex I, from the cryo-EM megacomplex structure. Correct core
+      cellular-component annotation.
+    action: ACCEPT
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput mitochondrial proteome study confirming mitochondrial
+      localization. Correct but less specific than the inner-membrane / Complex
+      I locations; kept as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0045271
+    label: respiratory chain complex I
+  evidence_type: IDA
+  original_reference_id: PMID:12611891
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Direct identification of NDUFB10 as a subunit of the human NADH
+      dehydrogenase (Complex I) by one-step immunopurification and mass
+      spectrometry. Strong experimental support for this core cellular-component
+      annotation.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:12611891
+      supporting_text: we can resolve and identify the human homologues of 42 polypeptides
+- term:
+    id: GO:0045271
+    label: respiratory chain complex I
+  evidence_type: IDA
+  original_reference_id: PMID:27626371
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Direct identification of NDUFB10 within Complex I in the systematic
+      accessory-subunit knockout study. Confirms NDUFB10 as an integral
+      accessory subunit of the complex. Core cellular-component annotation.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:27626371
+      supporting_text: &gt;-
+        Accessory subunits are integral for assembly and function of human
+        mitochondrial complex I
+- term:
+    id: GO:0045271
+    label: respiratory chain complex I
+  evidence_type: NAS
+  original_reference_id: PMID:9878551
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Non-traceable author statement from the cDNA characterization paper that
+      NDUFB10 is a subunit of Complex I (localized within the hydrophobic
+      protein fraction). Correct and redundant with the experimental IDA
+      annotations to this term.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:9878551
+      supporting_text: all located within the hydrophobic protein (HP) fraction of complex I
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28040730
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI &#34;protein binding&#34; with interactor Q8N4Q1 (CHCHD4/MIA40). This is the
+      one functionally meaningful interaction: NDUFB10 transiently binds the
+      IMS disulfide-relay oxidoreductase CHCHD4 during import and oxidative
+      folding. However, the bare &#34;protein binding&#34; term is uninformative;
+      experimental IPI so retained, but marked over-annotated. The biology is
+      captured in core_functions (structural molecule activity / Complex I
+      assembly) and notes.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:28040730
+      supporting_text: &gt;-
+        during its mitochondrial import and maturation NDUFB10 transiently
+        interacts with CHCHD4 and acquires disulfide bonds
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IMP
+  original_reference_id: PMID:28040730
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      IMP-supported inner-membrane localization from the disease study:
+      wild-type NDUFB10 localizes completely to mitochondria (and integrates
+      into the membrane-arm of Complex I), whereas the C107S variant is retained
+      in the cytosol. Correct core localization.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:28040730
+      supporting_text: the wild type protein was completely localized to mitochondria
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-163217
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable annotation for the inner-membrane location in the
+      context of the Complex I NADH to NAD+/CoQ reaction. Correct localization,
+      redundant with experimental IDA/IMP annotations.
+    action: ACCEPT
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6799178
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable annotation (Complex I biogenesis) for the
+      inner-membrane location. Correct, redundant with experimental annotations.
+    action: ACCEPT
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6799179
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable annotation (Complex I biogenesis) for the
+      inner-membrane location. Correct, redundant with experimental annotations.
+    action: ACCEPT
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6799191
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable annotation (Complex I biogenesis) for the
+      inner-membrane location. Correct, redundant with experimental annotations.
+    action: ACCEPT
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6799196
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable annotation (Complex I biogenesis) for the
+      inner-membrane location. Correct, redundant with experimental annotations.
+    action: ACCEPT
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6799197
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable annotation (Complex I biogenesis) for the
+      inner-membrane location. Correct, redundant with experimental annotations.
+    action: ACCEPT
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6799202
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable annotation (Complex I biogenesis) for the
+      inner-membrane location. Correct, redundant with experimental annotations.
+    action: ACCEPT
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:14557246
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from the AIP/Tom20 import study, where NDUFB10 was
+      used as a control mitochondrial preprotein and shown to bind the import
+      receptors Tom20 and Tom22 in vitro. A real import-machinery interaction
+      but the bare term is uninformative about molecular function. Experimental
+      IPI, retained but marked over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:14557246
+      supporting_text: &gt;-
+        other mitochondrial preproteins, ATP/ADP carrier protein and NDUFB10,
+        which lack a cleavable presequence, also bound to AIP as well as to Tom20
+- term:
+    id: GO:0006120
+    label: mitochondrial electron transport, NADH to ubiquinone
+  evidence_type: NAS
+  original_reference_id: PMID:9878551
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Author statement that NDUFB10, as a Complex I subunit, participates in the
+      transfer of electrons from NADH to ubiquinone. This is the specific
+      biological process of Complex I and an appropriate core BP for a genuine
+      structural subunit, understood as contributory participation rather than
+      NDUFB10 itself catalyzing electron transfer.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:9878551
+      supporting_text: Its main function is the transport of electrons from NADH to ubiquinone
+- term:
+    id: GO:0008137
+    label: NADH dehydrogenase (ubiquinone) activity
+  evidence_type: NAS
+  original_reference_id: PMID:9878551
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Author statement assigning the complex-level NADH dehydrogenase
+      (ubiquinone) catalytic activity directly to NDUFB10 via the &#34;enables&#34;
+      qualifier. NDUFB10 is a non-catalytic accessory subunit lacking the redox
+      cofactors (flavin, Fe-S clusters) required for this activity; the activity
+      belongs to the assembled holoenzyme. NDUFB10 contributes_to but does not
+      enable it. Best captured as contributes_to_molecular_function in
+      core_functions; the direct &#34;enables&#34; annotation is an over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:27626371
+      supporting_text: &gt;-
+        Bacterial and human complex I share 14 core subunits that are essential
+        for enzymatic function
+- term:
+    id: GO:0005198
+    label: structural molecule activity
+  evidence_type: IDA
+  original_reference_id: PMID:28040730
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Proposed new molecular-function annotation capturing the honest,
+      subunit-specific MF of NDUFB10: it is a non-catalytic structural subunit
+      that contributes to the structural integrity of Complex I. This replaces
+      the over-annotated complex-level NADH dehydrogenase activity as the
+      appropriate MF for this accessory subunit (it contributes_to GO:0008137).
+    action: NEW
+    supported_by:
+    - reference_id: PMID:28040730
+      supporting_text: &gt;-
+        the bovine homolog PDSW of human NDUFB10 appears to be located parallel
+        to the membrane on the IMS face spanning ND4 and ND5
+- term:
+    id: GO:0032981
+    label: mitochondrial respiratory chain complex I assembly
+  evidence_type: IMP
+  original_reference_id: PMID:28040730
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proposed new biological-process annotation. NDUFB10 is required for
+      assembly of the Complex I holoenzyme: loss-of-function mutations perturb
+      assembly at the ~830 kDa stage, and knockdown reduces the amount of fully
+      assembled complex I. This is a core function of the gene not currently
+      captured in GOA.
+    action: NEW
+    supported_by:
+    - reference_id: PMID:28040730
+      supporting_text: &gt;-
+        resulting in the perturbed assembly of the holoenzyme at the 830 kDa
+        stage
+core_functions:
+- description: &gt;-
+    Non-catalytic structural subunit that contributes to the structural
+    integrity, assembly and stability of the Complex I holoenzyme, and thereby
+    to the complex-level NADH:ubiquinone oxidoreductase activity; NDUFB10 sits
+    in the membrane arm (distal P_D domain) as a twin-CX9C protein oxidatively
+    folded on the IMS face.
+  molecular_function:
+    id: GO:0005198
+    label: structural molecule activity
+  contributes_to_molecular_function:
+    id: GO:0008137
+    label: NADH dehydrogenase (ubiquinone) activity
+  directly_involved_in:
+  - id: GO:0032981
+    label: mitochondrial respiratory chain complex I assembly
+  - id: GO:0006120
+    label: mitochondrial electron transport, NADH to ubiquinone
+  locations:
+  - id: GO:0005743
+    label: mitochondrial inner membrane
+  in_complex:
+    id: GO:0045271
+    label: respiratory chain complex I
+  supported_by:
+  - reference_id: PMID:28040730
+    supporting_text: &gt;-
+      the bovine homolog PDSW of human NDUFB10 appears to be located parallel to
+      the membrane on the IMS face spanning ND4 and ND5
+  - reference_id: PMID:27626371
+    supporting_text: &gt;-
+      Accessory subunits are integral for assembly and function of human
+      mitochondrial complex I
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology links
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12611891
+  title: The subunit composition of the human NADH dehydrogenase obtained by rapid one-step immunopurification.
+  findings:
+  - statement: &gt;-
+      Immunopurification plus mass spectrometry of the human NADH dehydrogenase
+      identified 42 subunit polypeptides, establishing NDUFB10 as a genuine
+      component of Complex I.
+    reference_section_type: ABSTRACT
+    supporting_text: we can resolve and identify the human homologues of 42 polypeptides
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache; verified as the immunopurification/MS study cited in
+      UniProt for identification of NDUFB10 in the complex.
+- id: PMID:14557246
+  title: AIP is a mitochondrial import mediator that binds to both import receptor Tom20 and preproteins.
+  findings:
+  - statement: &gt;-
+      NDUFB10 is a nuclear-encoded mitochondrial preprotein lacking a cleavable
+      presequence that binds the import receptors Tom20 and Tom22 in vitro (used
+      as a control substrate in this AIP study).
+    reference_section_type: RESULTS
+    supporting_text: &gt;-
+      other mitochondrial preproteins, ATP/ADP carrier protein and NDUFB10,
+      which lack a cleavable presequence, also bound to AIP as well as to Tom20
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text available; NDUFB10 is only a control substrate. Supports an
+      import-machinery interaction but not a specific NDUFB10 function; source
+      of a bare protein-binding IPI.
+- id: PMID:17500595
+  title: Huntingtin interacting proteins are genetic modifiers of neurodegeneration.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale huntingtin-interactor screen; NDUFB10 appears as a hit. Source
+      of an uninformative protein-binding IPI, not relevant to core function.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput binary interactome (Y2H). Source of an uninformative
+      protein-binding IPI.
+- id: PMID:27626371
+  title: Accessory subunits are integral for assembly and function of human mitochondrial complex I.
+  findings:
+  - statement: &gt;-
+      Human Complex I has 14 conserved core subunits essential for enzymatic
+      function plus 31 accessory subunits (including NDUFB10) whose loss
+      destabilizes co-module subunits and impairs assembly of a functional
+      complex.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      Bacterial and human complex I share 14 core subunits that are essential
+      for enzymatic function
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache; establishes NDUFB10 as a non-catalytic accessory
+      subunit important for complex assembly/stability.
+- id: PMID:28040730
+  title: Mutations in the accessory subunit NDUFB10 result in isolated complex I deficiency and illustrate the critical role of intermembrane space import for complex I holoenzyme assembly.
+  findings:
+  - statement: &gt;-
+      Biallelic NDUFB10 mutations cause isolated complex I deficiency (fatal
+      infantile lactic acidosis, cardiomyopathy); NDUFB10 is a P_D-domain
+      accessory subunit imported and oxidatively folded by CHCHD4/MIA40, and its
+      loss perturbs holoenzyme assembly at the ~830 kDa stage.
+    reference_section_type: ABSTRACT
+    supporting_text: which encodes an accessory subunit located within the
+  - statement: &gt;-
+      NDUFB10 lies parallel to the membrane on the IMS face spanning ND4 and ND5
+      and, unlike most P_D accessory subunits, has no transmembrane domain.
+    reference_section_type: DISCUSSION
+    supporting_text: &gt;-
+      the bovine homolog PDSW of human NDUFB10 appears to be located parallel to
+      the membrane on the IMS face spanning ND4 and ND5
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text available; the definitive functional/disease study for NDUFB10,
+      including CHCHD4 import, disulfide bonds, structure, and MC1DN35.
+- id: PMID:28844695
+  title: Architecture of Human Mitochondrial Respiratory Megacomplex I(2)III(2)IV(2).
+  findings:
+  - statement: &gt;-
+      Cryo-EM of the human respiratory megacomplex resolved individual Complex I
+      subunits, confirming NDUFB10 as a component located in the inner membrane.
+    reference_section_type: ABSTRACT
+    supporting_text: the precise assignment of individual subunits of human CI and CIII
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache; structural confirmation of NDUFB10 as a resolved
+      Complex I subunit (also basis of ComplexPortal annotations).
+- id: PMID:30030361
+  title: Assembly of mammalian oxidative phosphorylation complexes I-V and supercomplexes.
+  findings:
+  - statement: &gt;-
+      Review of OXPHOS complex assembly; core proteins perform catalysis while
+      supernumerary subunits play essential roles in assembly, regulation and
+      stability.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      a large number of &#39;supernumerary&#39; subunits that play essential roles in
+      assembly, regulation and stability
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache; review used by ComplexPortal for aerobic-respiration
+      / ATP-synthesis process annotations at the complex level.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      HuRI high-throughput binary interactome. Source of uninformative
+      protein-binding IPIs.
+- id: PMID:32814053
+  title: Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread Protein Aggregation in Affected Brains.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput neurodegeneration interactome. Source of uninformative
+      protein-binding IPIs.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.
+  findings:
+  - statement: &gt;-
+      NDUFB10 is detected in the high-confidence human mitochondrial proteome,
+      confirming its mitochondrial localization.
+    reference_section_type: ABSTRACT
+    supporting_text: Quantitative high-confidence human mitochondrial proteome
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text available; high-throughput proteome basis for the mitochondrion
+      HTP annotation.
+- id: PMID:9878551
+  title: &#39;cDNA of eight nuclear encoded subunits of NADH:ubiquinone oxidoreductase: human complex I cDNA characterization completed.&#39;
+  findings:
+  - statement: &gt;-
+      Characterized the cDNA of NDUFB10 as one of the nuclear-encoded Complex I
+      subunits in the hydrophobic-protein fraction; the complex transports
+      electrons from NADH to ubiquinone coupled to proton translocation.
+    reference_section_type: ABSTRACT
+    supporting_text: all located within the hydrophobic protein (HP) fraction of complex I
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache; original cDNA characterization, basis of the NAS
+      complex-membership and process annotations. Note the enables GO:0008137
+      annotation over-attributes complex-level catalysis.
+- id: Reactome:R-HSA-163217
+  title: Complex I oxidises NADH to NAD+, reduces CoQ to CoQH2
+  findings: []
+- id: Reactome:R-HSA-6799178
+  title: Intermediate 1 binds HP subcomplex to form Intermediate 2
+  findings: []
+- id: Reactome:R-HSA-6799179
+  title: Peripheral arm subunits bind the 815kDa complex to form a 980kDa complex
+  findings: []
+- id: Reactome:R-HSA-6799191
+  title: Intermediate 2 binds MT-ND1:NDUFAF5:NDUFAF6 to form a 315kDa subcomplex
+  findings: []
+- id: Reactome:R-HSA-6799196
+  title: The MCIA complex, NDUFAF2-7 all dissociate from the 980kDa complex, resulting in Complex I
+  findings: []
+- id: Reactome:R-HSA-6799197
+  title: ND4, ND5 bind the 550kDa complex to form the 815kDa complex
+  findings: []
+- id: Reactome:R-HSA-6799202
+  title: The 315kDa subcomplex binds the 370kDa subcomplex to form the 550kDa complex
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,2399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>murD - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>murD</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88N78" target="_blank" class="term-link">
+                        Q88N78
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "murD";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88N78" data-a="DESCRIPTION: MurD is the cytoplasmic UDP-N-acetylmuramoyl-L-ala..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>MurD is the cytoplasmic UDP-N-acetylmuramoyl-L-alanine-D-glutamate ligase of Pseudomonas putida KT2440. It uses ATP to add D-glutamate to the MurC product during assembly of the peptidoglycan stem peptide.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N78" data-a="GO:0005524" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct ATP-binding property ancillary to the ligase reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> MurD consumes ATP, but its substrate-specific ligase activity is the core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/murD/murD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=UDP-N-acetyl-alpha-D-muramoyl-L-alanine + D-glutamate + ATP =</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N78" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct localization for soluble stem-peptide precursor synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt explicitly assigns Q88N78 to the cytoplasm.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/murD/murD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008360" target="_blank" class="term-link">
+                                    GO:0008360
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of cell shape</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N78" data-a="GO:0008360" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Indirect phenotype-level annotation propagated from cell-wall synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> MurD directly synthesizes a peptidoglycan precursor. Effects on cell shape follow from loss of the wall and do not establish a regulatory molecular role.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008764" target="_blank" class="term-link">
+                                    GO:0008764
+                                </a>
+                            </span>
+                            <span class="term-label">UDP-N-acetylmuramoylalanine-D-glutamate ligase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N78" data-a="GO:0008764" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct and specific core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns EC 6.3.2.9 and the ATP-dependent addition of D-glutamate to UDP-N-acetylmuramoyl-L-alanine.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/murD/murD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=UDP-N-acetyl-alpha-D-muramoyl-L-alanine + D-glutamate + ATP =</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009252" target="_blank" class="term-link">
+                                    GO:0009252
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N78" data-a="GO:0009252" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt places Q88N78 in peptidoglycan biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/murD/murD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Cell wall biogenesis; peptidoglycan biosynthesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016881" target="_blank" class="term-link">
+                                    GO:0016881
+                                </a>
+                            </span>
+                            <span class="term-label">acid-amino acid ligase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N78" data-a="GO:0016881" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad catalytic parent of the substrate-specific MurD activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0008764 identifies the nucleotide-peptide substrate and D-glutamate addition, avoiding a redundant generic ligase annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/murD/murD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=UDP-N-acetylmuramoylalanine--D-glutamate ligase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051301" target="_blank" class="term-link">
+                                    GO:0051301
+                                </a>
+                            </span>
+                            <span class="term-label">cell division</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N78" data-a="GO:0051301" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Indirect phenotype-level annotation propagated from an essential wall enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Peptidoglycan synthesis is required for division, but MurD catalyzes precursor ligation rather than a division-specific regulatory or mechanical step.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Uses ATP to add D-glutamate to UDP-N-acetylmuramoyl-L-alanine during cytoplasmic assembly of the peptidoglycan stem peptide.</h3>
+                <span class="vote-buttons" data-g="Q88N78" data-a="FUNCTION: Uses ATP to add D-glutamate to UDP-N-acetylmuramoy..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008764" target="_blank" class="term-link">
+                            UDP-N-acetylmuramoylalanine-D-glutamate ligase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009252" target="_blank" class="term-link">
+                                peptidoglycan biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/murD/murD-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=UDP-N-acetyl-alpha-D-muramoyl-L-alanine + D-glutamate + ATP =</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/murD/murD-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">encodes **MurD**, the enzyme **UDP-N-acetylmuramoyl-L-alanine—D-glutamate ligase** (EC 6.3.2.9)</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/murD/murD-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88N78 for Pseudomonas putida KT2440 murD</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt assigns the ATP-dependent MurD ligase reaction.</div>
+
+                        <div class="finding-text">"Reaction=UDP-N-acetyl-alpha-D-muramoyl-L-alanine + D-glutamate + ATP ="</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt places MurD in peptidoglycan synthesis.</div>
+
+                        <div class="finding-text">"PATHWAY: Cell wall biogenesis; peptidoglycan biosynthesis."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/murD/murD-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep-research report for PSEPK murD</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report identifies Q88N78 as the ATP-dependent MurD ligase that adds D-glutamate to the MurC product.</div>
+
+                        <div class="finding-text">"encodes **MurD**, the enzyme **UDP-N-acetylmuramoyl-L-alanine—D-glutamate ligase** (EC 6.3.2.9)"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Detailed kinetics, stereospecificity, and structure have not been measured directly for Q88N78.</div>
+
+                        <div class="finding-text">"The *P. putida* KT2440 MurD (Q88N78) has not, to the knowledge captured here, been purified, assayed, or crystallized."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the quantitative D-glutamate/L-glutamate discrimination of KT2440 MurD?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88N78" data-a="Q: What is the quantitative D-glutamate/L-glutamate d..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare purified Q88N78 ligation kinetics with D- and L-glutamate and quantify stem-peptide products in conditional murD depletion strains.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88N78" data-a="EXPERIMENT: Compare purified Q88N78 ligation kinetics with D- ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(murD-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88N78" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *murD* (Q88N78, PP_1335) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">7 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-23T14:15:36.694815</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="murD-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="murD-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-murd-q88n78-pp_1335-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>murD</em> (Q88N78, PP_1335) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>murD</strong> (UniProt accession <strong>Q88N78</strong>; ordered locus name <strong>PP_1335</strong>) of <em>Pseudomonas putida</em> strain KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950) encodes <strong>MurD</strong>, the enzyme <strong>UDP-N-acetylmuramoyl-L-alanine—D-glutamate ligase</strong> (EC 6.3.2.9), also named the <strong>D-glutamic acid-adding enzyme</strong> or <strong>UDP-N-acetylmuramoyl-L-alanyl-D-glutamate synthetase</strong>. MurD is an ATP-dependent, amide-bond-forming ligase belonging to the <strong>MurCDEF (Mur ligase) family</strong>. It catalyzes the second amino-acid-adding step in the cytoplasmic assembly of the peptidoglycan precursor, specifically the stereospecific addition of <strong>D-glutamate</strong> onto the growing UDP-MurNAc stem peptide. The gene identity was verified against the UniProt record: the gene symbol, organism, EC number, family membership (MurCDEF), and diagnostic InterPro domain signatures—the MurD-specific signature IPR005762 together with the Mur ligase central domain (IPR013221) and C-terminal domain (IPR004101)—are all mutually consistent, confirming that the correct protein is being described. The identity is unambiguous.</p>
+<p>The reaction catalyzed is: <strong>UDP-MurNAc-L-Ala + D-glutamate + ATP → UDP-MurNAc-L-Ala-D-Glu + ADP + Pi.</strong> The best-characterized ortholog, <em>Escherichia coli</em> MurD, has been studied extensively by kinetics, crystallography, and computational chemistry and provides the mechanistic template for the <em>P. putida</em> enzyme. Catalysis proceeds by an <strong>ordered mechanism</strong>: the C-terminal carboxylate of UDP-MurNAc-L-Ala is first activated by phosphoryl transfer from ATP to form an <strong>acyl-phosphate intermediate</strong>, which is then attacked by the amino group of D-glutamate to give a <strong>tetrahedral intermediate</strong> that collapses to form the new amide bond and release inorganic phosphate. MurD is a <strong>three-domain protein</strong> that undergoes a large substrate-induced domain closure to bring the reactants into catalytically competent geometry.</p>
+<p>Functionally, MurD operates in the <strong>bacterial cytoplasm</strong> as the second of four consecutive Mur ligases (MurC→MurD→MurE→MurF) that build the UDP-MurNAc-pentapeptide, the soluble precursor subsequently handed to the membrane enzymes MraY and MurG. This intracellular pathway is coordinated with the divisome and elongasome machineries that govern cell division and cell-wall elongation. Because peptidoglycan biosynthesis is essential and specific to bacteria—with no human homolog—MurD is a well-recognized and validated <strong>target for antibacterial drug design</strong>.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-murd-is-the-atp-dependent-d-glutamate-adding-ligase-ec-6329-of-peptidoglycan-biosynthesis">Finding 1 — MurD is the ATP-dependent D-glutamate-adding ligase (EC 6.3.2.9) of peptidoglycan biosynthesis</h3>
+<p>The primary function of the <em>murD</em> gene product is unambiguous. UniProt Q88N78 annotates the <em>P. putida</em> KT2440 gene <em>murD</em> (PP_1335) as <strong>UDP-N-acetylmuramoylalanine—D-glutamate ligase, EC 6.3.2.9</strong>, a member of the <strong>MurCDEF family</strong>, carrying the MurD-specific domain signature <strong>IPR005762</strong> and the Mur ligase central and C-terminal domains (<strong>IPR013221</strong>, <strong>IPR004101</strong>). These signatures are diagnostic of the Mur ligase fold; IPR005762 in particular identifies the enzyme specifically as MurD rather than one of its paralogs (MurC, MurE, MurF).</p>
+<p>The biochemical reaction is defined by studies of characterized orthologs. A crystallographic study of MurD states directly that "<em>MurD catalyzes the addition of D-glutamic acid to UDP-MurNAc-L-Ala in the presence of ATP</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/27031227/">PMID: 27031227</a>). A dedicated review of MurD enzymes reinforces the substrate specificity and cofactor requirement: "<em>MurD is responsible for the ATP-dependent addition of d-glutamic acid to UDP-MurNAc-l-Ala</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/25436755/">PMID: 25436755</a>). The net transformation is:</p>
+<div class="codehilite"><pre><span></span><code>UDP-MurNAc-L-Ala  +  D-glutamate  +  ATP
+│
+▼   MurD (EC 6.3.2.9)
+UDP-MurNAc-L-Ala-D-Glu  +  ADP  +  Pi
+</code></pre></div>
+
+<p>Two aspects of substrate specificity deserve emphasis. First, MurD is <strong>stereospecific for the D-isomer of glutamate</strong>—the acceptor amino acid is D-glutamic acid, a non-proteinogenic amino acid characteristic of the bacterial cell wall (the D-Glu is supplied <em>in vivo</em> by glutamate racemase, MurI). This stereospecificity is the basis of D-Glu-scaffold inhibitor design against MurD (<a href="https://pubmed.ncbi.nlm.nih.gov/23990043/">PMID: 23990043</a>). Second, MurD acts only after MurC has added L-alanine; its acceptor substrate is the UDP-MurNAc-L-Ala product of the preceding step. This strict ordering gives the Mur ligase pathway its defined, sequential architecture.</p>
+<h3 id="finding-2-murd-uses-an-ordered-atp-driven-mechanism-through-acyl-phosphate-and-tetrahedral-intermediates">Finding 2 — MurD uses an ordered, ATP-driven mechanism through acyl-phosphate and tetrahedral intermediates</h3>
+<p>MurD's catalytic mechanism has been dissected in the <em>E. coli</em> ortholog and is shared across the Mur ligase family. The C-terminal (L-Ala) carboxylate of UDP-MurNAc-L-Ala is activated by phosphoryl transfer from the ATP γ-phosphate, generating a reactive <strong>acyl-phosphate intermediate</strong>. The amino group of the incoming D-glutamate then performs a nucleophilic attack on this activated carbonyl, forming a high-energy <strong>tetrahedral intermediate</strong>. Collapse of the tetrahedral intermediate expels inorganic phosphate and forms the amide (peptide) bond, while ATP is consumed to ADP + Pi.</p>
+<p>The MurD review states this directly: the enzyme carries out "<em>the ATP-dependent addition of d-glutamic acid to UDP-MurNAc-l-Ala, a reaction which involves acyl-phosphate and tetrahedral intermediates</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/25436755/">PMID: 25436755</a>). Direct experimental evidence for the acyl-phosphate intermediate comes from a comparative study of the <em>E. coli</em> MurC and MurD synthetases, which found that "<em>MurD, but not MurC, catalyses the synthesis of adenosine 5'-tetraphosphate from the acyl phosphate, thereby substantiating its existence</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/10403366/">PMID: 10403366</a>). The ability of MurD to convert the acyl-phosphate into adenosine 5′-tetraphosphate is a chemical signature that could arise only if the acyl-phosphate is a genuine on-pathway species.</p>
+<p>The full stepwise pathway has also been examined computationally. A hybrid quantum-mechanical/molecular-mechanical (QM/MM) replica-path study of <em>E. coli</em> MurD proposed "<em>a stepwise catalytic mechanism that commences with a formation of the acyl-phosphate intermediate, followed by a nucleophilic attack of D-glutamate that, through the formation of a tetrahedral reaction intermediate and subsequent phosphate dissociation, affords the final product</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/18704940/">PMID: 18704940</a>). The convergence of kinetic, chemical-trapping, and computational evidence makes MurD's mechanism one of the best-understood among the Mur ligases. Kinetically, MurD follows an <strong>ordered mechanism</strong> (UDP-MurNAc-L-Ala binds first, then ATP, then D-Glu), with substrate binding driving active-site closure.</p>
+<div class="codehilite"><pre><span></span><code>Step 1 (activation):   UDP-MurNAc-L-Ala-COO⁻  +  ATP
+            │
+            ▼
+       UDP-MurNAc-L-Ala-CO-OPO₃²⁻  (acyl-phosphate)  +  ADP
+
+Step 2 (attack):       + D-Glu-NH₂  →  tetrahedral intermediate
+
+Step 3 (collapse):     → UDP-MurNAc-L-Ala-D-Glu (amide bond)  +  Pi
+</code></pre></div>
+
+<h3 id="finding-3-murd-is-a-three-domain-enzyme-that-closes-around-its-substrates-during-catalysis">Finding 3 — MurD is a three-domain enzyme that closes around its substrates during catalysis</h3>
+<p>MurD is built from <strong>three consecutive α/β domains</strong>: (1) an N-terminal domain that binds the UDP-MurNAc moiety and adopts a Rossmann-like fold; (2) a central mononucleotide-binding domain that binds ATP; and (3) a C-terminal dinucleotide-binding domain. <em>E. coli</em> MurD was the first Mur ligase whose three-dimensional structure was solved, making it the structural prototype for the entire family: "<em>Escherichia coli MurD has been the first Mur ligase for which the tridimensional (3D) structure was solved</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/25436755/">PMID: 25436755</a>).</p>
+<p>A defining feature of MurD is a <strong>large substrate-induced conformational change</strong>. Binding of substrates drives closure of the active-site cleft, bringing the three domains together into a catalytically competent arrangement. Crystallographic analysis emphasizes that this closure is exquisitely sensitive: the study of domain movement "<em>reveals that minor structural modifications contribute to major overall conformation alterations</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/27031227/">PMID: 27031227</a>). In other words, small local changes at the substrate-binding interface propagate into a large rigid-body domain rotation that opens or closes the enzyme.</p>
+<p>The conserved fold organization is shared across the family. The crystal structure of <em>E. coli</em> MurF—the D-alanyl-D-alanine-adding enzyme that acts two steps downstream—shows the same modular architecture: "<em>its central and C-terminal domains exhibit similar mononucleotide and dinucleotide-binding folds</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/11090285/">PMID: 11090285</a>). This homology across MurC/D/E/F supports the inference that the <em>P. putida</em> MurD adopts the same three-domain, closure-competent architecture, even though its own structure has not been experimentally solved. Notably, these domains correspond exactly to Q88N78's annotated InterPro domains (IPR013221 central; IPR004101 C-terminal; IPR036565 Mur-like catalytic superfamily; IPR005762 MurD-specific), so <em>P. putida</em> MurD is expected to share this substrate-clamping catalytic architecture.</p>
+<h3 id="finding-4-murd-acts-in-the-cytoplasm-during-the-intracellular-stage-of-peptidoglycan-precursor-assembly-and-is-a-validated-antibacterial-target">Finding 4 — MurD acts in the cytoplasm during the intracellular stage of peptidoglycan precursor assembly and is a validated antibacterial target</h3>
+<p>MurD carries out its function in the <strong>bacterial cytosol</strong>, at the intracellular stage of peptidoglycan biosynthesis. The Mur ligases collectively build the soluble nucleotide-sugar precursor before it is exported to the membrane. As described in a crystallographic review, "<em>Peptidoglycan precursors are synthesized in the bacterial cytosol by various enzymes including the ATP-hydrolyzing Mur ligases, which catalyze the stepwise addition of amino acids to a UDP-MurNAc precursor to yield UDP-MurNAc-pentapeptide</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/27031227/">PMID: 27031227</a>).</p>
+<p>MurD is the second of four Mur ligases in the assembly line:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">MurA</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">MurB</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">MurC</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="o">[</span><span class="n">MurD</span><span class="o">]</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">MurE</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">MurF</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="p">(</span><span class="n">MraY</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">MurG</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">membrane</span><span class="o">/</span><span class="n">periplasm</span><span class="p">)</span>
+<span class="err">│</span><span class="w">        </span><span class="err">│</span><span class="w">        </span><span class="err">│</span><span class="w">       </span><span class="err">│</span>
+<span class="w">     </span><span class="o">+</span><span class="w"> </span><span class="n">L</span><span class="o">-</span><span class="n">Ala</span><span class="w">  </span><span class="o">+</span><span class="w"> </span><span class="n">D</span><span class="o">-</span><span class="n">Glu</span><span class="w">  </span><span class="o">+</span><span class="w"> </span><span class="n">m</span><span class="o">-</span><span class="n">DAP</span><span class="w">  </span><span class="o">+</span><span class="w"> </span><span class="n">D</span><span class="o">-</span><span class="n">Ala</span><span class="o">-</span><span class="n">D</span><span class="o">-</span><span class="n">Ala</span>
+</code></pre></div>
+
+<p>MurC adds L-alanine, <strong>MurD adds D-glutamate</strong>, MurE adds the diamino acid (meso-diaminopimelate in Gram-negative bacteria such as <em>P. putida</em>), and MurF adds the D-Ala-D-Ala dipeptide, yielding UDP-MurNAc-pentapeptide. This soluble product is then transferred by the membrane enzyme MraY to the lipid carrier (forming lipid I), and MurG adds GlcNAc (forming lipid II), which is flipped across the membrane for polymerization into mature peptidoglycan.</p>
+<p>Beyond being a single enzymatic step, MurD and its fellow cytoplasmic biosynthesis proteins are integrated into higher-order cellular machineries. As reviewed in a study of protein-protein interactions in cell-wall biogenesis, these are "<em>proteins that are involved in multi-member complexes which are essential for cell division (the 'divisome') and/or cell wall elongation (the 'elongasome')</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/27136593/">PMID: 27136593</a>). This coupling ensures that precursor supply is spatially and temporally matched to the sites of active wall synthesis.</p>
+<p>Finally, the essentiality and bacterial specificity of MurD make it an attractive drug target. The MurD review concludes that "<em>MurD constitutes an attractive target for the design and synthesis of new antibacterial agents</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/25436755/">PMID: 25436755</a>). Structure-based inhibitor design efforts, particularly around D-glutamate-mimetic scaffolds, have been pursued using MurD structural and dynamic data (<a href="https://pubmed.ncbi.nlm.nih.gov/23990043/">PMID: 23990043</a>).</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>Integrating the four findings yields a coherent picture of MurD as a <strong>cytoplasmic, ATP-dependent, stereospecific amide ligase</strong> occupying a defined position in the linear peptidoglycan precursor pathway.</p>
+<ul>
+<li><strong>Where it acts:</strong> MurD is a soluble cytoplasmic enzyme. It operates before any membrane-bound step, working on the nucleotide-sugar-peptide intermediate while it is still fully soluble in the cytosol.</li>
+<li><strong>What it does:</strong> It ligates D-glutamate to the L-alanine terminus of UDP-MurNAc-L-Ala, forming a peptide bond and extending the stem peptide by one residue.</li>
+<li><strong>How it does it:</strong> The reaction is powered by ATP hydrolysis, using the conserved Mur ligase chemistry of carboxylate activation (acyl-phosphate) followed by amine attack (tetrahedral intermediate) and product release. The enzyme's three-domain architecture acts as a molecular clamp that closes on the substrates, aligning the ATP γ-phosphate, the UDP-MurNAc-L-Ala carboxylate, and the D-glutamate amine.</li>
+</ul>
+<p>The following table summarizes the enzyme's key properties:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value / Description</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene / locus</td>
+<td><em>murD</em> / PP_1335</td>
+<td>UniProt Q88N78</td>
+</tr>
+<tr>
+<td>Protein</td>
+<td>UDP-N-acetylmuramoyl-L-alanine—D-glutamate ligase</td>
+<td>UniProt Q88N78</td>
+</tr>
+<tr>
+<td>EC number</td>
+<td>6.3.2.9</td>
+<td>UniProt; <a href="https://pubmed.ncbi.nlm.nih.gov/25436755/">PMID: 25436755</a></td>
+</tr>
+<tr>
+<td>Family</td>
+<td>MurCDEF (Mur ligases)</td>
+<td>UniProt; IPR005762</td>
+</tr>
+<tr>
+<td>Reaction</td>
+<td>UDP-MurNAc-L-Ala + D-Glu + ATP → UDP-MurNAc-L-Ala-D-Glu + ADP + Pi</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27031227/">PMID: 27031227</a></td>
+</tr>
+<tr>
+<td>Cofactor / energy</td>
+<td>ATP (hydrolyzed to ADP + Pi)</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25436755/">PMID: 25436755</a></td>
+</tr>
+<tr>
+<td>Substrate specificity</td>
+<td>Acceptor = UDP-MurNAc-L-Ala; amino donor = D-glutamate (D-stereospecific)</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27031227/">PMID: 27031227</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/23990043/">PMID: 23990043</a></td>
+</tr>
+<tr>
+<td>Intermediates</td>
+<td>Acyl-phosphate, tetrahedral</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10403366/">PMID: 10403366</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/18704940/">PMID: 18704940</a></td>
+</tr>
+<tr>
+<td>Architecture</td>
+<td>Three α/β domains (UDP-binding, ATP-binding, dinucleotide-binding)</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25436755/">PMID: 25436755</a></td>
+</tr>
+<tr>
+<td>Conformational behavior</td>
+<td>Large substrate-induced domain closure</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27031227/">PMID: 27031227</a></td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Cytoplasm (intracellular precursor stage)</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27031227/">PMID: 27031227</a></td>
+</tr>
+<tr>
+<td>Cellular context</td>
+<td>Divisome / elongasome coupling</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27136593/">PMID: 27136593</a></td>
+</tr>
+<tr>
+<td>Druggability</td>
+<td>Validated antibacterial target; no human homolog</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25436755/">PMID: 25436755</a></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Basis for the <em>P. putida</em> annotation:</strong> The functional assignment for the <em>P. putida</em> KT2440 enzyme rests primarily on <strong>orthology and domain-signature inference</strong>. UniProt classifies Q88N78 in the MurCDEF family with the MurD-specific InterPro signature (IPR005762), and the biochemically and structurally characterized <em>E. coli</em> MurD serves as the mechanistic reference. Given the very high conservation of the Mur ligase pathway across Gram-negative bacteria and the presence of the diagnostic MurD domain architecture, the assignment is robust. It should be noted, however, that the specific enzymatic and structural characterizations cited here were performed on the <em>E. coli</em> ortholog (and, for architecture, the MurF paralog) rather than on the <em>P. putida</em> protein itself.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title</th>
+<th>Contribution to this report</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25436755/">25436755</a></td>
+<td><em>MurD enzymes: some recent developments.</em></td>
+<td>Authoritative review; establishes the reaction, ATP dependence, acyl-phosphate/tetrahedral intermediates, three-domain architecture (first Mur ligase structure), and drug-target status.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27031227/">27031227</a></td>
+<td><em>Crystallographic Study of Peptidoglycan Biosynthesis Enzyme MurD: Domain Movement Revisited.</em></td>
+<td>Confirms the exact reaction and substrate; documents cytosolic Mur-ligase assembly of UDP-MurNAc-pentapeptide; shows minor structural changes drive major domain-closure motions.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10403366/">10403366</a></td>
+<td><em>Formation of adenosine 5′-tetraphosphate from the acyl phosphate intermediate: a difference between the MurC and MurD synthetases of E. coli.</em></td>
+<td>Direct chemical evidence for the acyl-phosphate intermediate in MurD, distinguishing MurD from MurC.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18704940/">18704940</a></td>
+<td><em>MurD ligase from E. coli: Tetrahedral intermediate formation study by hybrid QM/MM replica path method.</em></td>
+<td>Computational support for the stepwise mechanism: acyl-phosphate → nucleophilic attack by D-Glu → tetrahedral intermediate → phosphate dissociation → product.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11090285/">11090285</a></td>
+<td><em>Crystal structure of E. coli MurF at 2.3 Å resolution.</em></td>
+<td>Shows the conserved mononucleotide/dinucleotide-binding fold organization shared across the Mur ligase family (supports inference for MurD architecture).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27136593/">27136593</a></td>
+<td><em>Structural Insights into Protein-Protein Interactions Involved in Bacterial Cell Wall Biogenesis.</em></td>
+<td>Places cytoplasmic peptidoglycan enzymes in the divisome/elongasome multi-protein complexes coordinating division and elongation.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23990043/">23990043</a></td>
+<td><em>Molecular dynamics simulation and linear interaction energy study of D-Glu-based inhibitors of the MurD ligase.</em></td>
+<td>Illustrates MurD as a validated antibacterial target and the D-Glu paradigm for inhibitor design; confirms MurD acts at the intracellular stage of peptidoglycan construction.</td>
+</tr>
+</tbody>
+</table>
+<p>Overall, the evidence base is internally consistent and mutually reinforcing. The primary functional claims (reaction, substrate specificity, cofactor, intermediates) are supported by multiple independent lines of evidence—kinetic, chemical-trapping, crystallographic, and computational—converging on the same mechanism. No cited source contradicts the annotation.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct experimental characterization of the <em>P. putida</em> protein.</strong> All mechanistic, kinetic, and structural evidence cited derives from the <em>E. coli</em> ortholog (and, for architecture, the MurF paralog). The <em>P. putida</em> KT2440 MurD (Q88N78) has not, to the knowledge captured here, been purified, assayed, or crystallized. Its function is assigned by orthology and domain signature. While the Mur ligase pathway is highly conserved and the inference is strong, organism-specific kinetic parameters (Km, kcat), pH optima, and metal-ion requirements remain unmeasured for the <em>P. putida</em> enzyme.</p>
+</li>
+<li>
+<p><strong>Diamino-acid context is inferred, not directly shown here.</strong> <em>P. putida</em> is a Gram-negative bacterium expected to use meso-diaminopimelate at the MurE step; this places MurD's D-Glu product in a specific downstream context, but the exact stem-peptide composition of <em>P. putida</em> peptidoglycan was not independently verified in this investigation.</p>
+</li>
+<li>
+<p><strong>Quantitative in-vivo data are absent.</strong> Expression levels, essentiality confirmation by targeted knockout, and any regulation of <em>murD</em> (PP_1335) specifically in <em>P. putida</em> were not examined. Essentiality is inferred from the general essentiality of peptidoglycan biosynthesis.</p>
+</li>
+<li>
+<p><strong>Protein-protein interaction specifics.</strong> While the general divisome/elongasome coupling of Mur enzymes is documented, the specific interaction partners and complex stoichiometry for the <em>P. putida</em> MurD are not defined by the reviewed literature.</p>
+</li>
+<li>
+<p><strong>Literature scope.</strong> The investigation reviewed seven papers focused on the Mur ligase family; a broader survey (e.g., structural genomics entries, AlphaFold models, or <em>Pseudomonas</em>-specific cell-wall studies) could refine organism-specific details.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Structural modeling of the <em>P. putida</em> enzyme.</strong> Retrieve or generate an AlphaFold model of Q88N78 and superpose it on the <em>E. coli</em> MurD crystal structure to confirm conservation of the three-domain architecture, the ATP-binding P-loop, and the D-Glu-binding pocket residues. This low-cost bioinformatic step would directly test the orthology-based inference.</p>
+</li>
+<li>
+<p><strong>Active-site residue conservation analysis.</strong> Perform a multiple sequence alignment of <em>P. putida</em> MurD against biochemically characterized MurD orthologs to verify conservation of catalytic residues (phosphate-binding loop, Mg²⁺-coordinating residues, D-Glu carboxylate-recognition residues), confirming mechanistic transferability.</p>
+</li>
+<li>
+<p><strong>Recombinant expression and enzyme assay.</strong> Clone PP_1335, express and purify the protein, and measure D-glutamate-adding activity (e.g., by ADP/Pi release or LC-MS detection of UDP-MurNAc-L-Ala-D-Glu) to obtain organism-specific kinetic constants and confirm D-stereospecificity.</p>
+</li>
+<li>
+<p><strong>Essentiality confirmation.</strong> Attempt a conditional knockout or CRISPRi knockdown of <em>murD</em> in <em>P. putida</em> KT2440 to confirm essentiality and characterize the morphological/lytic phenotype expected of peptidoglycan-precursor depletion.</p>
+</li>
+<li>
+<p><strong>Peptidoglycan composition analysis.</strong> Determine the muropeptide composition of <em>P. putida</em> cell wall by HPLC/MS to confirm the D-Glu at position 2 and the identity of the position-3 diamino acid, closing the loop on the downstream context of the MurD product.</p>
+</li>
+<li>
+<p><strong>Inhibitor susceptibility.</strong> Given MurD's status as an antibacterial target, test whether known D-Glu-based MurD inhibitors (cf. <a href="https://pubmed.ncbi.nlm.nih.gov/23990043/">PMID: 23990043</a>) inhibit the <em>P. putida</em> enzyme, informing the breadth of the D-Glu inhibitor paradigm across Gram-negative species.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>The gene <em>murD</em> (Q88N78, PP_1335) of <em>Pseudomonas putida</em> KT2440 encodes <strong>MurD, the ATP-dependent UDP-N-acetylmuramoyl-L-alanine:D-glutamate ligase (EC 6.3.2.9)</strong>, a cytoplasmic three-domain enzyme of the MurCDEF family. It catalyzes the stereospecific addition of D-glutamate to UDP-MurNAc-L-Ala—the second amino-acid-adding step in the cytoplasmic assembly of the UDP-MurNAc-pentapeptide peptidoglycan precursor—via acyl-phosphate and tetrahedral intermediates, accompanied by a large substrate-induced domain closure. It functions in coordination with the divisome and elongasome machineries, and as an essential enzyme with no human homolog it is a validated antibacterial drug target. The assignment is strongly supported by domain-signature and orthology inference from the extensively characterized <em>E. coli</em> MurD, though direct experimental characterization of the <em>P. putida</em> enzyme itself remains an open task.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="murD-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="murD-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:27031227</li>
+<li>PMID:25436755</li>
+<li>PMID:23990043</li>
+<li>PMID:10403366</li>
+<li>PMID:18704940</li>
+<li>PMID:11090285</li>
+<li>PMID:27136593</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(murD-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88N78" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="murd-curation-notes">murD curation notes</h1>
+<p>Q88N78/PP_1335 adds D-glutamate to the MurC product during peptidoglycan<br />
+stem-peptide assembly<br />
+[UniProtKB:Q88N78, "Reaction=UDP-N-acetyl-alpha-D-muramoyl-L-alanine +<br />
+D-glutamate + ATP ="; "PATHWAY: Cell wall biogenesis; peptidoglycan<br />
+biosynthesis."].</p>
+<p>ATP binding is ancillary and generic ligase activity is replaced by the exact<br />
+MurD function. Cell-division and cell-shape terms are marked over-annotated:<br />
+they describe downstream consequences of impaired peptidoglycan synthesis, not<br />
+direct MurD regulatory roles.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88N78
+gene_symbol: murD
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  MurD is the cytoplasmic UDP-N-acetylmuramoyl-L-alanine-D-glutamate ligase of
+  Pseudomonas putida KT2440. It uses ATP to add D-glutamate to the MurC product
+  during assembly of the peptidoglycan stem peptide.
+existing_annotations:
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct ATP-binding property ancillary to the ligase reaction.
+    action: KEEP_AS_NON_CORE
+    reason: MurD consumes ATP, but its substrate-specific ligase activity is the core function.
+    supported_by:
+    - reference_id: file:PSEPK/murD/murD-uniprot.txt
+      supporting_text: &#39;Reaction=UDP-N-acetyl-alpha-D-muramoyl-L-alanine + D-glutamate + ATP =&#39;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Correct localization for soluble stem-peptide precursor synthesis.
+    action: ACCEPT
+    reason: UniProt explicitly assigns Q88N78 to the cytoplasm.
+    supported_by:
+    - reference_id: file:PSEPK/murD/murD-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0008360
+    label: regulation of cell shape
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Indirect phenotype-level annotation propagated from cell-wall synthesis.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      MurD directly synthesizes a peptidoglycan precursor. Effects on cell
+      shape follow from loss of the wall and do not establish a regulatory
+      molecular role.
+- term:
+    id: GO:0008764
+    label: UDP-N-acetylmuramoylalanine-D-glutamate ligase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct and specific core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt assigns EC 6.3.2.9 and the ATP-dependent addition of D-glutamate
+      to UDP-N-acetylmuramoyl-L-alanine.
+    supported_by:
+    - reference_id: file:PSEPK/murD/murD-uniprot.txt
+      supporting_text: &#39;Reaction=UDP-N-acetyl-alpha-D-muramoyl-L-alanine + D-glutamate + ATP =&#39;
+- term:
+    id: GO:0009252
+    label: peptidoglycan biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Correct core biological process.
+    action: ACCEPT
+    reason: UniProt places Q88N78 in peptidoglycan biosynthesis.
+    supported_by:
+    - reference_id: file:PSEPK/murD/murD-uniprot.txt
+      supporting_text: &#39;PATHWAY: Cell wall biogenesis; peptidoglycan biosynthesis.&#39;
+- term:
+    id: GO:0016881
+    label: acid-amino acid ligase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Broad catalytic parent of the substrate-specific MurD activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0008764 identifies the nucleotide-peptide substrate and D-glutamate
+      addition, avoiding a redundant generic ligase annotation.
+    supported_by:
+    - reference_id: file:PSEPK/murD/murD-uniprot.txt
+      supporting_text: &#39;RecName: Full=UDP-N-acetylmuramoylalanine--D-glutamate ligase&#39;
+- term:
+    id: GO:0051301
+    label: cell division
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Indirect phenotype-level annotation propagated from an essential wall enzyme.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Peptidoglycan synthesis is required for division, but MurD catalyzes
+      precursor ligation rather than a division-specific regulatory or
+      mechanical step.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/murD/murD-uniprot.txt
+  title: UniProtKB entry Q88N78 for Pseudomonas putida KT2440 murD
+  findings:
+  - statement: UniProt assigns the ATP-dependent MurD ligase reaction.
+    supporting_text: &#39;Reaction=UDP-N-acetyl-alpha-D-muramoyl-L-alanine + D-glutamate + ATP =&#39;
+    reference_section_type: RESULTS
+  - statement: UniProt places MurD in peptidoglycan synthesis.
+    supporting_text: &#39;PATHWAY: Cell wall biogenesis; peptidoglycan biosynthesis.&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Exact target accession with a specific HAMAP MurD assignment and
+      internally consistent reaction, location, and pathway.
+- id: file:PSEPK/murD/murD-deep-research-openscientist.md
+  title: OpenScientist deep-research report for PSEPK murD
+  findings:
+  - statement: The report identifies Q88N78 as the ATP-dependent MurD ligase that adds D-glutamate to the MurC product.
+    supporting_text: &#39;encodes **MurD**, the enzyme **UDP-N-acetylmuramoyl-L-alanine—D-glutamate ligase** (EC 6.3.2.9)&#39;
+    reference_section_type: RESULTS
+  - statement: Detailed kinetics, stereospecificity, and structure have not been measured directly for Q88N78.
+    supporting_text: &#39;The *P. putida* KT2440 MurD (Q88N78) has not, to the knowledge captured here, been purified, assayed, or crystallized.&#39;
+    reference_section_type: DISCUSSION
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      Provider-generated gene report. The exact accession, MurD family,
+      reaction, location, and pathway agree with the local UniProt record;
+      detailed mechanism and substrate discrimination derive from orthologs.
+core_functions:
+- description: &gt;-
+    Uses ATP to add D-glutamate to
+    UDP-N-acetylmuramoyl-L-alanine during cytoplasmic assembly of the
+    peptidoglycan stem peptide.
+  molecular_function:
+    id: GO:0008764
+    label: UDP-N-acetylmuramoylalanine-D-glutamate ligase activity
+  directly_involved_in:
+  - id: GO:0009252
+    label: peptidoglycan biosynthetic process
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: file:PSEPK/murD/murD-uniprot.txt
+    supporting_text: &#39;Reaction=UDP-N-acetyl-alpha-D-muramoyl-L-alanine + D-glutamate + ATP =&#39;
+  - reference_id: file:PSEPK/murD/murD-deep-research-openscientist.md
+    supporting_text: &#39;encodes **MurD**, the enzyme **UDP-N-acetylmuramoyl-L-alanine—D-glutamate ligase** (EC 6.3.2.9)&#39;
+suggested_questions:
+- question: What is the quantitative D-glutamate/L-glutamate discrimination of KT2440 MurD?
+suggested_experiments:
+- description: &gt;-
+    Compare purified Q88N78 ligation kinetics with D- and L-glutamate and
+    quantify stem-peptide products in conditional murD depletion strains.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

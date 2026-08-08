@@ -1,0 +1,3521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AAR2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AAR2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9Y312" target="_blank" class="term-link">
+                        Q9Y312
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "AAR2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9Y312" data-a="DESCRIPTION: AAR2 (C20orf4) is the human ortholog of yeast Aar2..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>AAR2 (C20orf4) is the human ortholog of yeast Aar2p and functions as an assembly factor for the U5 small nuclear ribonucleoprotein particle, controlling the timing of spliceosome maturation. It is a component of a cytoplasmic precursor U5 snRNP containing PRPF8, EFTUD2/Snu114, U5 snRNA and the Sm proteins, but is excluded from the mature tri-snRNP and from the assembled spliceosome. AAR2 binds the RNase H-like domain of PRPF8 and acts as a placeholder and checkpoint: it occupies the surface that the SNRNP200/Brr2 helicase must ultimately engage and blocks loading of U4/U6 di-snRNA, so premature spliceosome activation is prevented. In yeast, where the mechanism was solved structurally, Aar2p and Brr2p are mutually exclusive binders of Prp8 and Aar2p is exchanged for Brr2p to yield the mature particle, with the handoff governed by phosphorylation. The human protein appears to differ in an important respect: human AAR2 co-purifies with all four members of the RNA-free heterotetrameric complex, which suggests it stays associated until that complex is fully formed rather than being displaced at the SNRNP200 step, and the human AAR2-PRPF8 interaction itself is structurally distinct from the yeast one. Structural work on the human complex also indicates a role beyond simple steric placeholding, since AAR2 locks the PRPF8 RNase H domain in a conformation compatible only with the first transesterification step of splicing and blocks the switch to the step-2 conformation.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005682" target="_blank" class="term-link">
+                                    GO:0005682
+                                </a>
+                            </span>
+                            <span class="term-label">U5 snRNP</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y312" data-a="GO:0005682" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Well-founded phylogenetic inference. The WITH/FROM field cites SGD:S000000170, which is budding yeast AAR2 - the ortholog in which this protein&#39;s role was originally defined - together with the PANTHER node PTN000294070. Yeast Aar2p is an established component of the cytoplasmic precursor U5 snRNP, and the human protein has since been shown directly to be a true ortholog that binds the same PRPF8 RNase H domain. Core cellular component.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26527271" target="_blank" class="term-link">
+                                        PMID:26527271
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">as a true Aar2 orthologue which binds to the RH domain (hsRH) of Prp8 and</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AAR2/AAR2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FUNCTION: Component of the U5 snRNP complex that is required for</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045292" target="_blank" class="term-link">
+                                    GO:0045292
+                                </a>
+                            </span>
+                            <span class="term-label">mRNA cis splicing, via spliceosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y312" data-a="GO:0045292" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference from PomBase:SPAC3H5.04 (fission yeast) via PANTHER node PTN000294070. Correct: AAR2 is required for pre-mRNA splicing through its role in producing a mature, catalytically competent U5 snRNP. Note this is an indirect contribution - AAR2 is excluded from the assembled spliceosome and does not participate in the splicing reaction itself - but &#34;involved_in&#34; is appropriate for an assembly factor that the process requires.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AAR2/AAR2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FUNCTION: Component of the U5 snRNP complex that is required for</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16189514" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16189514
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Towards a proteome-scale map of the human protein-protein in...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y312" data-a="GO:0005515" data-r="PMID:16189514" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Interaction with EAPP (UniProtKB:Q56P03) from an early proteome-scale two-hybrid map. EAPP is best known as the E2F-associated phosphoprotein, but it is NOT unconnected to this gene&#39;s biology: PMID:34131137 - the same paper that establishes TSSC4 as a U5 chaperone - describes EAPP as &#34;a putative chaperone EAPP that has been shown to interact with U5 proteins PRPF8 and EFTUD2&#34;. So the AAR2-EAPP interaction is at least compartmentally and functionally plausible, and it should not be dismissed as a cross-pathway artefact.
+It is nonetheless marked over-annotated, on narrower grounds: EAPP&#39;s own U5 role is explicitly &#34;putative&#34;, the AAR2-EAPP pair specifically has never been followed up in any focused study, and bare &#34;protein binding&#34; conveys nothing about AAR2&#39;s activity regardless of whether the partner is real. This is a weaker verdict than &#34;wrong partner&#34; - if EAPP&#39;s U5 chaperone role is confirmed, these annotations would deserve upgrading to an informative term rather than discounting.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative term for a pair that has never been characterised. Not dismissed as cross-pathway: EAPP is a putative U5 chaperone, so this may be real and merely under-annotated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34131137" target="_blank" class="term-link">
+                                        PMID:34131137
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a putative chaperone EAPP that has been shown to interact with U5 proteins PRPF8 and EFTUD2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28514442
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of the human interactome defines protein commun...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y312" data-a="GO:0005515" data-r="PMID:28514442" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Second large-scale recovery of the AAR2-EAPP (UniProtKB:Q56P03) interaction. Repetition across screens makes the physical interaction more likely to be real, and EAPP is a putative U5 chaperone reported to interact with PRPF8 and EFTUD2, so the pairing is plausible. It remains uninformative as annotated: the AAR2-EAPP pair itself has not been pursued, and the term conveys nothing.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reproducible but uncharacterised interaction under an uninformative term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34131137" target="_blank" class="term-link">
+                                        PMID:34131137
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a putative chaperone EAPP that has been shown to interact with U5 proteins PRPF8 and EFTUD2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y312" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Third recovery of AAR2-EAPP (UniProtKB:Q56P03), this time by BioPlex affinity-purification mass spectrometry - methodologically orthogonal to the two-hybrid screens, which strengthens the case that the interaction is physically real. Combined with EAPP&#39;s reported association with PRPF8 and EFTUD2, the interaction is quite likely genuine; what is missing is a study characterising it, and a term that says anything.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reproducible but functionally uncharacterised high-throughput hit under an uninformative term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34131137" target="_blank" class="term-link">
+                                        PMID:34131137
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a putative chaperone EAPP that has been shown to interact with U5 proteins PRPF8 and EFTUD2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000387" target="_blank" class="term-link">
+                                    GO:0000387
+                                </a>
+                            </span>
+                            <span class="term-label">spliceosomal snRNP assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36322420" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36322420
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural and functional investigation of the human snRNP a...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y312" data-a="GO:0000387" data-r="PMID:36322420" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct and core: AAR2 is a U5 snRNP assembly factor, which is the whole of its known function. The evidence code understates the source badly, though. PMID:36322420 is a structure-function study of the human AAR2-PRPF8 RNase H complex - it reports a crystal structure, designed interface variants that fail to bind PRPF8 in vitro, and size-exclusion interaction mapping against U5 proteins. Those are direct experimental results on the human protein, not a non-traceable author statement. Accepted as a core process, with the evidence-code question raised in suggested_questions.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36322420" target="_blank" class="term-link">
+                                        PMID:36322420
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Protein-interaction studies of AAR2 with U5 proteins using size-exclusion chromatography reveal similarities and marked differences in the interaction patterns compared with yeast Aar2p</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AAR2/AAR2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FUNCTION: Component of the U5 snRNP complex that is required for</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005682" target="_blank" class="term-link">
+                                    GO:0005682
+                                </a>
+                            </span>
+                            <span class="term-label">U5 snRNP</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36322420" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36322420
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural and functional investigation of the human snRNP a...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y312" data-a="GO:0005682" data-r="PMID:36322420" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core localisation, and the same evidence-code observation applies as for the snRNP-assembly annotation from this reference. AAR2 is a component of the precursor U5 snRNP, though notably not of the mature tri-snRNP or of the assembled spliceosome. When it leaves is species-dependent: in yeast Aar2p is exchanged for Brr2p, whereas human AAR2 co-purifies with all four members of the RNA-free heterotetrameric complex, indicating it stays bound until that complex is fully assembled.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26527271" target="_blank" class="term-link">
+                                        PMID:26527271
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">as a true Aar2 orthologue which binds to the RH domain (hsRH) of Prp8 and</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34131137" target="_blank" class="term-link">
+                                        PMID:34131137
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In yeast, Aar2p is exchanged with Brr2p13,14, while in humans AAR2 co-purifies with all four RHC members12, which indicates that AAR2 stays associated until the whole RHC is formed.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048025" target="_blank" class="term-link">
+                                    GO:0048025
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of mRNA splicing, via spliceosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36322420" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36322420
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural and functional investigation of the human snRNP a...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y312" data-a="GO:0048025" data-r="PMID:36322420" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Counter-intuitive for a splicing assembly factor, but correct, and worth stating why. AAR2&#39;s function is genuinely inhibitory at the molecular level: it occupies the PRPF8 surface that the SNRNP200/Brr2 helicase must engage and blocks U4/U6 di-snRNA loading, holding the particle in an immature state until the handoff (phosphorylation-triggered in yeast; the human exchange step is less clear, since AAR2 co-purifies with the whole heterotetrameric complex). The human structural work sharpens this further - AAR2 locks the PRPF8 RNase H domain in a conformation compatible only with the first transesterification step and blocks the switch to the step-2 conformation. The negative regulation is the mechanism by which AAR2 enforces assembly order, not an incidental side effect.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36322420" target="_blank" class="term-link">
+                                        PMID:36322420
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">seems to lock PRPF8 RH in a conformation that is only compatible with the first</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AAR2/AAR2-deep-research-affinage.md
+
+                                </span>
+
+                                <div class="support-text">sterically occludes the binding sites for the Brr2/SNRNP200 helicase while also occupying the RNase H RNA-binding surface to block U4/U6 di-snRNA loading, thereby preventing premature spliceosome activation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34131137" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34131137
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    TSSC4 is a component of U5 snRNP that promotes tri-snRNP for...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y312" data-a="GO:0005515" data-r="PMID:34131137" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This one is different from the other three protein-binding annotations and should not be dismissed with them. The partner is TSSC4 (UniProtKB:Q9Y5U2), and the source is not a screen but a dedicated functional study establishing TSSC4 as a U5 snRNP component and chaperone that promotes tri-snRNP formation, interacting with the U5-specific proteins PRPF8, EFTUD2 and SNRNP200. AAR2 and TSSC4 are therefore both U5 snRNP assembly chaperones acting on the same particle with overlapping partners, so the interaction is what the biology predicts rather than an unexplained hit.
+On the replacement term, one caveat is recorded rather than glossed. GO:0044877 protein-containing complex binding normally expects a complex in the WITH/FROM field, whereas this row&#39;s WITH/FROM is a single protein accession, and the AAR2-specific datum in the source is IP-MS co-purification with the paper explicitly declining to establish direct contacts. The term is chosen because the interaction demonstrably occurs in the context of the U5 particle rather than as an isolated pair - which is exactly what co-purification shows and what a bare pairwise term misses - but a curator may reasonably prefer to leave the row as GO:0005515 until a direct AAR2-TSSC4 contact is demonstrated. Flagged in suggested_questions.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A real, mechanistically expected interaction recorded under an uninformative term. GO:0044877 is used because TSSC4 is engaged in the context of the U5 snRNP particle, which is what the co-purification evidence supports; a term for snRNP assembly-factor binding would be better still.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044877" target="_blank" class="term-link">
+                                    protein-containing complex binding
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34131137" target="_blank" class="term-link">
+                                        PMID:34131137
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Specifically, TSSC4 interacts with U5-specific proteins PRPF8, EFTUD2</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34131137" target="_blank" class="term-link">
+                                        PMID:34131137
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">TSSC4 emerges as a specific chaperone that acts in U5 snRNP de novo</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000244" target="_blank" class="term-link">
+                                    GO:0000244
+                                </a>
+                            </span>
+                            <span class="term-label">spliceosomal tri-snRNP complex assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y312" data-a="GO:0000244" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity transfer from yeast Aar2p (UniProtKB:P32357). Appropriate: AAR2 acts upstream of tri-snRNP formation by holding the precursor U5 snRNP in an immature state and then being displaced, and human AAR2 has been confirmed as a true ortholog of the yeast protein binding the same PRPF8 domain. Note the direction of AAR2&#39;s contribution - it does not build the tri-snRNP so much as gate the step that permits it.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26527271" target="_blank" class="term-link">
+                                        PMID:26527271
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">as a true Aar2 orthologue which binds to the RH domain (hsRH) of Prp8 and</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AAR2/AAR2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FUNCTION: Component of the U5 snRNP complex that is required for</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005682" target="_blank" class="term-link">
+                                    GO:0005682
+                                </a>
+                            </span>
+                            <span class="term-label">U5 snRNP</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y312" data-a="GO:0005682" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity transfer of U5 snRNP membership from yeast Aar2p (UniProtKB:P32357). Redundant with the IBA and NAS annotations to the same term but correct, and it rests on the same well-established orthology that UniProt uses for its own ECO:0000250 FUNCTION statement.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AAR2/AAR2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FUNCTION: Component of the U5 snRNP complex that is required for</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>U5 snRNP assembly factor acting as a placeholder and conformational checkpoint. AAR2 binds the RNase H-like domain of PRPF8 in the precursor U5 snRNP, occupying the surface that the SNRNP200/Brr2 helicase must ultimately engage and blocking U4/U6 di-snRNA loading, so that premature spliceosome activation cannot occur; AAR2 is absent from the tri-snRNP and the assembled spliceosome. The exchange step is species-qualified: in yeast, Aar2p and Brr2p are mutually exclusive Prp8 binders and Aar2p is displaced by Brr2p, whereas human AAR2 co-purifies with all four RNA-free heterotetrameric complex members, suggesting it remains bound until that complex is complete. In the human complex AAR2 additionally locks the PRPF8 RNase H domain in a conformation compatible only with the first transesterification step, indicating a regulatory role beyond steric placeholding. On the reading used here, GO:0045292 mRNA cis splicing is retained in directly_involved_in as the process this assembly factor is required for, in the same sense as the GO:0045292 IBA row above: AAR2 contributes by producing a catalytically competent U5 snRNP, not by acting in the splicing reaction, from which it is excluded. Both statements describe the same indirect contribution.</h3>
+                <span class="vote-buttons" data-g="Q9Y312" data-a="FUNCTION: U5 snRNP assembly factor acting as a placeholder a..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044877" target="_blank" class="term-link">
+                            protein-containing complex binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000387" target="_blank" class="term-link">
+                                spliceosomal snRNP assembly
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048025" target="_blank" class="term-link">
+                                negative regulation of mRNA splicing, via spliceosome
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045292" target="_blank" class="term-link">
+                                mRNA cis splicing, via spliceosome
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000244" target="_blank" class="term-link">
+                                spliceosomal tri-snRNP complex assembly
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005682" target="_blank" class="term-link">
+                            U5 snRNP
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26527271" target="_blank" class="term-link">
+                                PMID:26527271
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">as a true Aar2 orthologue which binds to the RH domain (hsRH) of Prp8 and</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36322420" target="_blank" class="term-link">
+                                PMID:36322420
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">seems to lock PRPF8 RH in a conformation that is only compatible with the first</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/AAR2/AAR2-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">SUBUNIT: Interacts with PRPF8 (via RNase H homology domain)</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16189514" target="_blank" class="term-link">
+                            PMID:16189514
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Towards a proteome-scale map of the human protein-protein interaction network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                            PMID:28514442
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Architecture of the human interactome defines protein communities and disease networks.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34131137" target="_blank" class="term-link">
+                            PMID:34131137
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TSSC4 is a component of U5 snRNP that promotes tri-snRNP formation.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">TSSC4 is a U5 snRNP component and specific chaperone acting in de novo U5 snRNP biogenesis and in post-splicing recycling.</div>
+
+                        <div class="finding-text">"TSSC4 emerges as a specific chaperone that acts in U5 snRNP de novo"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">TSSC4 interacts with the U5-specific proteins PRPF8, EFTUD2 and SNRNP200 - the same particle and overlapping partners as AAR2.</div>
+
+                        <div class="finding-text">"Specifically, TSSC4 interacts with U5-specific proteins PRPF8, EFTUD2"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">EAPP is described in the U5 literature as a putative chaperone interacting with PRPF8 and EFTUD2, so the AAR2-EAPP interactions are not cross-pathway artefacts even though they remain uncharacterised.</div>
+
+                        <div class="finding-text">"a putative chaperone EAPP that has been shown to interact with U5 proteins PRPF8 and EFTUD2"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human and yeast differ in when AAR2 leaves: yeast Aar2p is exchanged for Brr2p, whereas human AAR2 co-purifies with all four RNA-free heterotetrameric complex members.</div>
+
+                        <div class="finding-text">"In yeast, Aar2p is exchanged with Brr2p13,14, while in humans AAR2 co-purifies with all four RHC members12, which indicates that AAR2 stays associated until the whole RHC is formed."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36322420" target="_blank" class="term-link">
+                            PMID:36322420
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural and functional investigation of the human snRNP assembly factor AAR2 in complex with the RNase H-like domain of PRPF8.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">In vitro, human AAR2 locks the PRPF8 RNase H domain in a conformation compatible only with the first transesterification step of splicing, blocking the switch to the step-2 conformation - a regulatory role beyond acting as an SNRNP200 placeholder.</div>
+
+                        <div class="finding-text">"seems to lock PRPF8 RH in a conformation that is only compatible with the first"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Size-exclusion interaction studies of AAR2 with U5 proteins show similarities and marked differences relative to yeast Aar2p, and imply phosphorylation-dependent regulation analogous to that in yeast.</div>
+
+                        <div class="finding-text">"Protein-interaction studies of AAR2 with U5 proteins using size-exclusion chromatography reveal similarities and marked differences in the interaction patterns compared with yeast Aar2p"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26527271" target="_blank" class="term-link">
+                            PMID:26527271
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Crystallization and biochemical characterization of the human spliceosomal Aar2-Prp8(RNaseH) complex.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human C20ORF4 is a true Aar2 orthologue that binds the RNase H domain of PRP8, establishing an evolutionary link between yeast and human AAR2 function and providing the human AAR2-PRPF8 complex structure.</div>
+
+                        <div class="finding-text">"as a true Aar2 orthologue which binds to the RH domain (hsRH) of Prp8 and"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/AAR2/AAR2-deep-research-affinage.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Affinage mechanistic annotation for AAR2 (human)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Machine-fetched Affinage record describing AAR2 as a U5 snRNP assembly factor that binds the PRPF8 RNase H domain, sterically occludes the SNRNP200/Brr2 binding sites and blocks U4/U6 di-snRNA loading, preventing premature spliceosome activation, with the handoff governed by phosphorylation.</div>
+
+                        <div class="finding-text">"sterically occludes the binding sites for the Brr2/SNRNP200 helicase while also occupying the RNase H RNA-binding surface to block U4/U6 di-snRNA loading, thereby preventing premature spliceosome activation"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should the three NAS annotations from PMID:36322420 be upgraded? That paper is a structure-function study of the human AAR2-PRPF8 RNase H complex, with a crystal structure, designed interface variants that fail to bind PRPF8 in vitro, and size-exclusion interaction mapping. Its results support GO:0000387, GO:0005682 and GO:0048025 directly, so IDA or IPI would reflect the evidence better than a non-traceable author statement.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9Y312" data-a="Q: Should the three NAS annotations from PMID:3632242..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does AAR2 have a molecular function term it should carry? Its activity is well defined - binding the PRPF8 RNase H domain so as to exclude SNRNP200 and block di-snRNA loading - yet GOA records only bare protein binding. This is the same gap seen for AAGAB in this campaign: assembly chaperones and placeholder factors have no molecular-function vocabulary in GO beyond binding terms.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9Y312" data-a="Q: Does AAR2 have a molecular function term it should..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the AAR2-TSSC4 interaction direct? The evidence is IP-MS co-purification within U5 particles and the source paper explicitly declines to establish direct contacts, describing &#34;multiple weak contacts&#34;. That distinction determines whether GO:0044877 protein-containing complex binding is the right replacement term for that row, or whether it should stay as bare protein binding pending a demonstrated direct contact.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9Y312" data-a="Q: Is the AAR2-TSSC4 interaction direct? The evidence..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does human AAR2 leave the particle at the same step as yeast Aar2p? In yeast, Aar2p is exchanged for Brr2p, but human AAR2 co-purifies with all four members of the RNA-free heterotetrameric complex, indicating it stays bound until that complex is complete. The human AAR2-PRPF8 structure also differs from the yeast one. Resolving this determines whether the SNRNP200-displacement model transfers to human at all.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9Y312" data-a="Q: Does human AAR2 leave the particle at the same ste..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which kinases actually control the AAR2-PRPF8 handoff in human cells? CK2alpha1 and SGK2 have been proposed as candidates that abrogate the interaction, and the yeast S253E phospho-mimetic lowers Aar2p affinity for Prp8. Establishing the physiological kinase and site would allow a specific phosphorylation-dependent regulatory annotation.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9Y312" data-a="Q: Which kinases actually control the AAR2-PRPF8 hand..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is EAPP&#39;s putative U5 chaperone role real, and is the AAR2-EAPP interaction an assembly-context contact? PMID:34131137 describes EAPP as &#34;a putative chaperone EAPP that has been shown to interact with U5 proteins PRPF8 and EFTUD2&#34;, which places it in the same pathway as AAR2 rather than only in the E2F pathway it is better known for. The AAR2-EAPP pair is reproducible across three screens including an orthogonal AP-MS method, but has never been followed up directly, and EAPP&#39;s U5 role is still labelled putative. Confirming it would turn three uninformative protein-binding rows into an assembly-context annotation.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9Y312" data-a="Q: Is EAPP&#39;s putative U5 chaperone role real, and is ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How do AAR2 and TSSC4 divide labour? Both are U5 snRNP assembly chaperones binding overlapping sets of U5 proteins, and they interact with each other, but whether they act sequentially, competitively or as a complex during de novo biogenesis versus post-splicing recycling is unresolved.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9Y312" data-a="Q: How do AAR2 and TSSC4 divide labour? Both are U5 s..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Deplete AAR2 in human cells and characterise the resulting U5 particles by gradient fractionation and mass spectrometry, asking specifically whether SNRNP200 loads onto PRPF8 early and whether U4/U6 di-snRNA associates prematurely, rather than only quantifying tri-snRNP yield.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: AAR2 enforces the order of U5 snRNP maturation, so bypassing it produces prematurely activated particles rather than simply fewer particles.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: cell biology and proteomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9Y312" data-a="EXPERIMENT: Deplete AAR2 in human cells and characterise the r..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Map AAR2 phosphosites by mass spectrometry in human cells, test the candidate kinases CK2alpha1 and SGK2 by targeted inhibition and knockdown, and assay phospho-mimetic and phospho-dead AAR2 variants for PRPF8 binding and for the ability to support tri-snRNP formation.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The AAR2-PRPF8 handoff is triggered by phosphorylation at a defined site by a specific kinase.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: phosphoproteomics and biochemistry</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9Y312" data-a="EXPERIMENT: Map AAR2 phosphosites by mass spectrometry in huma..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Determine whether AAR2 and TSSC4 occupy the same particle simultaneously or sequentially, using sequential immunoprecipitation and cryo-EM of isolated precursor particles, and test whether depletion of one is compensated by the other in de novo biogenesis versus post-splicing recycling.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: AAR2 and TSSC4 act at distinct steps of U5 snRNP biogenesis rather than redundantly.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: structural and cell biology</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9Y312" data-a="EXPERIMENT: Determine whether AAR2 and TSSC4 occupy the same p..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Use the designed AAR2 interface variants that fail to bind PRPF8, plus variants that bind but do not impose the step-1 conformation, to test in cells whether the conformational lock is required for splicing fidelity as opposed to merely for particle assembly.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The human-specific conformational lock on the PRPF8 RNase H domain is functionally important, not a crystallisation artefact.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: structure-function</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9Y312" data-a="EXPERIMENT: Use the designed AAR2 interface variants that fail..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Affinage</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(AAR2-deep-research-affinage.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9Y312" data-a="DEEP_RESEARCH: Affinage" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Affinage mechanistic annotation for AAR2 (human)</span>
+
+
+                    <span class="report-badge">Affinage</span>
+
+
+                    <span class="report-badge">Affinage (Claude Sonnet reading pass + Opus synthesis pass)</span>
+
+
+                    <span class="report-badge">10 citations</span>
+
+
+
+
+
+                </div>
+
+
+                <h1 id="affinage-mechanistic-annotation-for-aar2-human">Affinage mechanistic annotation for AAR2 (human)</h1>
+<h2 id="current-model-mechanistic-narrative">Current model (mechanistic narrative)</h2>
+<p>AAR2 (yeast Aar2p / human C20ORF4) is an assembly factor for the U5 small nuclear ribonucleoprotein (snRNP) that controls the timing of spliceosome maturation, first identified through its requirement for pre-mRNA splicing in yeast <a href="https://pubmed.ncbi.nlm.nih.gov/1922071">PMID:1922071</a>. It is a component of a cytoplasmic precursor U5 snRNP containing Prp8, Snu114, U5 snRNA, and Sm proteins, but is excluded from the tri-snRNP and assembled spliceosome, and its loss impairs snRNP recycling across rounds of splicing [PMID:11720285, PMID:16945917]. Mechanistically, Aar2 binds the RNase H domain of Prp8 and, by extending its C terminus to dock the Jab1/MPN domain onto a composite Aar2-RNase H platform, sterically occludes the binding sites for the Brr2/SNRNP200 helicase while also occupying the RNase H RNA-binding surface to block U4/U6 di-snRNA loading, thereby preventing premature spliceosome activation [PMID:21764848, PMID:23442228]. Crystal structures of the Aar2-Prp8 assembly establish that Aar2 and Brr2 are mutually exclusive binders of Prp8, so that upon nuclear import Brr2 displaces Aar2 to generate the mature, catalytically competent U5 snRNP [PMID:23442228, PMID:23727230]. This handoff is governed by phosphorylation: a phospho-mimetic substitution (S253E in yeast) lowers Aar2 affinity for Prp8 and shifts the equilibrium toward Brr2-Prp8 and U4/U6 binding, and CK2α1 and SGK2 are candidate kinases that abrogate the AAR2-PRPF8 interaction in human cells [PMID:21764848, PMID:23442228, PMID:35225431]. Human AAR2 is a conserved ortholog that binds the PRPF8 RNase H domain, but its structure reveals a distinct interaction in which AAR2 locks PRPF8 RH in a conformation compatible only with the first transesterification step, indicating a regulatory role beyond simple placeholder activity for SNRNP200 [PMID:26527271, PMID:36322420].</p>
+<h2 id="affinage-mechanism-profile-affinages-own-goreactome-grounding">Affinage mechanism profile (Affinage's own GO/Reactome grounding)</h2>
+<ul>
+<li><strong>molecular_activity:</strong> GO:0098772 molecular function regulator activity, GO:0060090 molecular adaptor activity</li>
+<li><strong>localization:</strong> GO:0005829 cytosol, GO:0005634 nucleus</li>
+<li><strong>pathway (Reactome):</strong> R-HSA-8953854 Metabolism of RNA</li>
+<li><strong>partners:</strong> PRPF8, SNRNP200, SNU114, CSNK2A1, SGK2</li>
+<li><strong>complexes:</strong> precursor (16S) U5 snRNP</li>
+</ul>
+<h2 id="dated-findings-citation-anchored">Dated findings (citation-anchored)</h2>
+<table>
+<thead>
+<tr>
+<th>Year</th>
+<th>Confidence</th>
+<th>Finding</th>
+<th>PMIDs</th>
+<th>Journal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1991</td>
+<td>Medium</td>
+<td>AAR2 (yeast) is required for splicing of the two introns in MATa1 pre-mRNA; aar2 mutants accumulate unspliced a1 pre-mRNA but not unspliced ACT1 pre-mRNA, establishing a role in pre-mRNA splicing with some substrate specificity.</td>
+<td>PMID:1922071</td>
+<td>Molecular and cellular biology</td>
+</tr>
+<tr>
+<td>2001</td>
+<td>High</td>
+<td>Aar2p is a component of a simple 16S U5 snRNP (containing Prp8p, Snu114p, and Sm proteins) that is co-isolated with U1 snRNP; Aar2p is not present in the [U4/U6.U5] tri-snRNP or spliceosomal complexes, and depletion of Aar2p interferes with later rounds of splicing (snRNP recycling), but it is not required for in vitro splicing.</td>
+<td>PMID:11720285</td>
+<td>RNA</td>
+</tr>
+<tr>
+<td>2006</td>
+<td>Medium</td>
+<td>A mutant allele of AAR2 was identified as a suppressor of splicing defects caused by mutations in Prp38p and Prp8p, placing Aar2p in a spliceosome recycling/turnover pathway; Aar2p is found in a complex with Spp382p recovered with a mutant Prp8p.</td>
+<td>PMID:16945917</td>
+<td>Proceedings of the National Academy of Sciences of the United States of America</td>
+</tr>
+<tr>
+<td>2011</td>
+<td>High</td>
+<td>Aar2p binds to the RNaseH domain of Prp8p, while Brr2p binds to the Jab1/MPN domain; the Aar2p-RNaseH complex sequesters the Jab1/MPN domain, sterically preventing Brr2p binding. Aar2p is phosphorylated in vivo, and a phospho-mimetic S253E mutation disrupts the Aar2p-Prp8p complex in favor of Brr2p-Prp8p complex formation, establishing Aar2p as a phosphorylation-controlled U5 snRNP assembly factor.</td>
+<td>PMID:21764848</td>
+<td>Genes &amp; development</td>
+</tr>
+<tr>
+<td>2013</td>
+<td>High</td>
+<td>Crystal structure of yeast Prp8 (residues 885–2413) in complex with Aar2 revealed that Aar2 contacts Prp8 within its C-terminal region; the structure showed active site cavity formed by reverse transcriptase thumb, endonuclease-like and RNaseH-like domains.</td>
+<td>PMID:23354046</td>
+<td>Nature</td>
+</tr>
+<tr>
+<td>2013</td>
+<td>High</td>
+<td>Crystal structure of yeast Aar2p in complex with Prp8p RNase H and Jab1/MPN domains shows Aar2p binds one side of the RNase H domain and extends its C terminus to dock the Jab1/MPN domain onto a composite Aar2p-RNase H platform, sterically blocking known Brr2p interaction sites. Aar2p also occupies known RNA-binding sites of the RNase H domain and interferes with binding of U4/U6 di-snRNA to Prp8p C-terminal region. Phospho-mimetic mutations reduce Aar2p affinity for Prp8p, allowing Brr2p and U4/U6 binding.</td>
+<td>PMID:23442228</td>
+<td>Genes &amp; development</td>
+</tr>
+<tr>
+<td>2013</td>
+<td>High</td>
+<td>In the cytoplasm, Prp8 forms a precursor U5 snRNP complex with Aar2 (and U5 snRNA, Sm proteins, Snu114); after nuclear import, Brr2 replaces Aar2 to form mature U5 snRNP. Crystal structure and mutagenesis of the Brr2-Prp8 Jab1/MPN complex confirmed that Aar2 and Brr2 are mutually exclusive binders of Prp8.</td>
+<td>PMID:23727230</td>
+<td>Structure</td>
+</tr>
+<tr>
+<td>2015</td>
+<td>Medium</td>
+<td>Human AAR2 (C20ORF4) is expressed in HeLa cells and binds to the RNase H domain of human PRPF8, establishing it as a true ortholog of yeast Aar2p with conserved binding to Prp8. Initial crystal structure of human AAR2-PRPF8 RH complex obtained at 2.35 Å resolution.</td>
+<td>PMID:26527271</td>
+<td>Acta crystallographica. Section F, Structural biology communications</td>
+</tr>
+<tr>
+<td>2022</td>
+<td>Medium</td>
+<td>CK2α1 and SGK2 kinases can abrogate the interaction between spliceosomal proteins AAR2 and PRPF8 in a phospho-yeast two-hybrid assay, identifying candidate kinases that mediate the phosphorylation-dependent regulation of AAR2-PRPF8 complex assembly.</td>
+<td>PMID:35225431</td>
+<td>Molecular systems biology</td>
+</tr>
+<tr>
+<td>2022</td>
+<td>High</td>
+<td>Crystal structure of human AAR2 in complex with the RNase H-like domain of PRPF8 revealed a significantly different interaction compared to yeast. AAR2 variants designed based on the structure failed to stably bind PRPF8 in vitro. AAR2 appears to lock PRPF8 RH in a conformation compatible only with the first transesterification step and blocks a conformational switch to the step-2-like Mg2+-coordinated conformation, suggesting a function beyond SNRNP200 (Brr2) placeholder activity. Phosphorylation-dependent regulation is conserved from yeast to human.</td>
+<td>PMID:36322420</td>
+<td>Acta crystallographica. Section D, Structural biology</td>
+</tr>
+</tbody>
+</table>
+<h2 id="citations">Citations</h2>
+<ul>
+<li>PMID:11720285</li>
+<li>PMID:16945917</li>
+<li>PMID:1922071</li>
+<li>PMID:21764848</li>
+<li>PMID:23354046</li>
+<li>PMID:23442228</li>
+<li>PMID:23727230</li>
+<li>PMID:26527271</li>
+<li>PMID:35225431</li>
+<li>PMID:36322420</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(AAR2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9Y312" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="aar2-protein-aar2-homolog-c20orf4-review-notes">AAR2 (protein AAR2 homolog, C20orf4) — review notes</h1>
+<p>PAINT no-IBA project review, using the <code>affinage</code> deep-research provider<br />
+(<code>AAR2-deep-research-affinage.md</code>) plus UniProt Q9Y312, the GOA TSV and the primary<br />
+literature.</p>
+<h2 id="provider-note-the-trust-gate-is-a-false-positive-here">Provider note: the trust gate is a false positive here</h2>
+<p>The affinage record <strong>tripped its symbol-collision gate</strong> — the narrative opens on yeast, and<br />
+the gate flags a non-human token in a human record (the ADA failure mode). Checked, and it is a<br />
+false positive of an interesting kind: the narrative correctly covers yeast <strong>Aar2p</strong>, where<br />
+the mechanism was worked out structurally, <em>and</em> human <strong>AAR2</strong>, which is the genuine ortholog.<br />
+UniProt itself annotates the human FUNCTION as <code>ECO:0000250|UniProtKB:P32357</code> — by similarity<br />
+to the yeast protein — so a yeast-centred narrative is the <em>right</em> description of this gene's<br />
+literature, not a symbol collision.</p>
+<p>Worth recording as a gate-behaviour class for the campaign: <strong>for genes whose mechanism was<br />
+established in yeast and transferred to human, the non-human-token gate will fire spuriously.</strong><br />
+The gate is still doing its job (it made me check); it just needs the curator to adjudicate<br />
+rather than to discount the record.</p>
+<h2 id="what-aar2-does">What AAR2 does</h2>
+<p>AAR2 is a <strong>U5 snRNP assembly factor</strong> and, specifically, a <strong>placeholder/checkpoint</strong> protein.<br />
+The mechanism, from yeast structures and now confirmed in human:</p>
+<ul>
+<li>It binds the <strong>RNase H-like (RH) domain of PRPF8</strong><br />
+  [file:human/AAR2/AAR2-uniprot.txt, "SUBUNIT: Interacts with PRPF8 (via RNase H homology domain)"],<br />
+  and the human protein was shown to be a genuine ortholog doing the same thing<br />
+  [PMID:26527271, "as a true Aar2 orthologue which binds to the RH domain (hsRH) of Prp8 and"].</li>
+<li>It occupies the site the <strong>SNRNP200/Brr2 helicase</strong> must eventually take, and blocks U4/U6<br />
+  di-snRNA loading — so it prevents premature spliceosome activation.</li>
+<li><strong>Species caveat, corrected during review.</strong> I originally stated the displacement model as<br />
+  human fact. It is yeast-established: Aar2p and Brr2p are mutually exclusive Prp8 binders and<br />
+  Brr2p displaces Aar2p. Human appears to differ —<br />
+  [PMID:34131137, "In yeast, Aar2p is exchanged with Brr2p13,14, while in humans AAR2<br />
+  co-purifies with all four RHC members12, which indicates that AAR2 stays associated until the<br />
+  whole RHC is formed."] and PMID:36322420 reports a structurally distinct human interaction<br />
+  with "marked differences" in SEC interaction patterns. So <em>when</em> AAR2 leaves is an open<br />
+  question in human, now flagged in <code>suggested_questions</code>.</li>
+<li>It is a component of the <strong>cytoplasmic precursor U5 snRNP</strong> and is <em>excluded</em> from the<br />
+  tri-snRNP and the assembled spliceosome.</li>
+<li>The handoff is <strong>phosphoregulated</strong>.</li>
+</ul>
+<p>The human-specific result is that AAR2 is more than a placeholder:<br />
+[PMID:36322420, "seems to lock PRPF8 RH in a conformation that is only compatible with the first"]<br />
+transesterification step, blocking the switch to the step-2 conformation — i.e. a<br />
+conformational checkpoint, not just steric occupancy.</p>
+<h2 id="curation-the-nas-annotations-understate-a-structural-paper">Curation: the NAS annotations understate a structural paper</h2>
+<p>Three annotations (<code>GO:0000387</code>, <code>GO:0005682</code>, <code>GO:0048025</code>) are <code>NAS</code> from PMID:36322420. NAS<br />
+is "non-traceable author statement" — but that paper is a <strong>structure-function study of human<br />
+AAR2</strong> with a crystal structure, designed interface variants that fail to bind PRPF8, and SEC<br />
+interaction mapping. Its own results support these terms directly. All three are <code>ACCEPT</code>ed<br />
+with the evidence-code gap flagged in <code>suggested_questions</code>.</p>
+<p><code>GO:0048025 negative regulation of mRNA splicing, via spliceosome</code> deserves a note: it sounds<br />
+odd for a splicing assembly factor, but it is right. AAR2's function <em>is</em> inhibitory — it<br />
+occludes the Brr2 site and blocks di-snRNA loading, holding the particle in an immature state<br />
+until the handoff. Negative regulation is the mechanism, not a side effect.</p>
+<h2 id="the-protein-binding-set-and-here-the-pattern-breaks">The <code>protein binding</code> set — and here the pattern breaks</h2>
+<p>Four <code>GO:0005515</code> IPIs. Resolving the WITH/FROM accessions:</p>
+<table>
+<thead>
+<tr>
+<th>Partner</th>
+<th>Screens</th>
+<th>Assessment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>EAPP</strong> (Q56P03)</td>
+<td>PMID:16189514, 28514442, 33961781</td>
+<td>a <strong>putative U5 chaperone</strong> — plausible, but the pair is uncharacterised</td>
+</tr>
+<tr>
+<td><strong>TSSC4</strong> (Q9Y5U2)</td>
+<td>PMID:34131137</td>
+<td><strong>A real, functionally characterised U5 snRNP partner</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Correction made during review.</strong> My first draft dismissed EAPP as "a cell-cycle and E2F-pathway<br />
+protein with no described connection to splicing or snRNP assembly". That is wrong, and the<br />
+refutation was in a paper I had already cited: PMID:34131137 describes <em>"a putative chaperone<br />
+EAPP that has been shown to interact with U5 proteins PRPF8 and EFTUD2"</em>. EAPP is in the U5<br />
+literature. I had judged it on its best-known identity rather than checking it in the context of<br />
+this gene's own biology — the same error as pattern-matching the partner set, just applied to a<br />
+single accession.</p>
+<p>The <code>MARK_AS_OVER_ANNOTATED</code> verdict survives but on much narrower grounds: EAPP's U5 role is<br />
+explicitly <em>"putative"</em>, the AAR2–EAPP pair specifically has never been pursued, and the term is<br />
+uninformative regardless. If EAPP's U5 chaperone role is confirmed these rows deserve upgrading,<br />
+not discounting.</p>
+<p>This is still the first gene in this campaign where a <code>GO:0005515</code> annotation points at genuine,<br />
+mechanistically pursued biology. PMID:34131137 is not a screen — it is a dedicated study<br />
+showing [PMID:34131137, "TSSC4 emerges as a specific chaperone that acts in U5 snRNP de novo"]<br />
+biogenesis and recycling, and that<br />
+[PMID:34131137, "Specifically, TSSC4 interacts with U5-specific proteins PRPF8, EFTUD2"]<br />
+and SNRNP200. AAR2 and TSSC4 are <strong>both U5 snRNP assembly chaperones</strong>, so their interaction is<br />
+exactly what the biology predicts.</p>
+<p>So the four IPIs split: the three EAPP entries are <code>MARK_AS_OVER_ANNOTATED</code>, while the TSSC4<br />
+entry is <code>MODIFY</code> to <code>GO:0044877 protein-containing complex binding</code> — since TSSC4 is bound in<br />
+the context of the U5 snRNP particle — with the specific partner named in the summary.</p>
+<p>Worth stating plainly because the previous four genes made the opposite case: high-throughput<br />
+binding records are <em>often</em> disjoint from the characterised biology, but not always, and the<br />
+check is to resolve the accessions, not to assume.</p>
+<h2 id="actions">Actions</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Evidence</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GO:0005682</code> U5 snRNP</td>
+<td>IBA, NAS, ISS</td>
+<td>ACCEPT (core)</td>
+</tr>
+<tr>
+<td><code>GO:0045292</code> mRNA cis splicing, via spliceosome</td>
+<td>IBA</td>
+<td>ACCEPT</td>
+</tr>
+<tr>
+<td><code>GO:0000387</code> spliceosomal snRNP assembly</td>
+<td>NAS</td>
+<td>ACCEPT (core)</td>
+</tr>
+<tr>
+<td><code>GO:0048025</code> negative regulation of mRNA splicing</td>
+<td>NAS</td>
+<td>ACCEPT — the inhibition <em>is</em> the mechanism</td>
+</tr>
+<tr>
+<td><code>GO:0000244</code> spliceosomal tri-snRNP complex assembly</td>
+<td>ISS</td>
+<td>ACCEPT</td>
+</tr>
+<tr>
+<td><code>GO:0005515</code> protein binding ×3 (EAPP)</td>
+<td>IPI</td>
+<td>MARK_AS_OVER_ANNOTATED</td>
+</tr>
+<tr>
+<td><code>GO:0005515</code> protein binding (TSSC4)</td>
+<td>IPI</td>
+<td>MODIFY → <code>GO:0044877</code></td>
+</tr>
+</tbody>
+</table>
+<p>No <code>NEW</code> terms proposed. Unusually for this campaign, the existing record already covers the<br />
+biology well; the issues are evidence codes (three NAS that a structural paper could support<br />
+much better) rather than missing content.</p>
+<h2 id="schema-note">Schema note</h2>
+<p><code>GO:0005682 U5 snRNP</code> belongs in <code>core_functions.in_complex</code>, <strong>not</strong> <code>locations</code> — the schema<br />
+is explicit that complex membership uses <code>in_complex</code> (bound to <code>GOProteinContainingComplexEnum</code>)<br />
+while <code>locations</code> is bound to <code>GOCellularLocationEnum</code>. Putting it in <code>locations</code> fails term<br />
+validation with "not in dynamic enum 'GOCellularLocationEnum'", which is the validator working<br />
+correctly rather than an ontology-version problem. Worth remembering for any complex-component<br />
+gene in this campaign.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9Y312
+gene_symbol: AAR2
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  AAR2 (C20orf4) is the human ortholog of yeast Aar2p and functions as an assembly
+  factor for the U5 small nuclear ribonucleoprotein particle, controlling the timing
+  of spliceosome maturation. It is a component of a cytoplasmic precursor U5 snRNP
+  containing PRPF8, EFTUD2/Snu114, U5 snRNA and the Sm proteins, but is excluded
+  from the mature tri-snRNP and from the assembled spliceosome. AAR2 binds the
+  RNase H-like domain of PRPF8 and acts as a placeholder and checkpoint: it occupies
+  the surface that the SNRNP200/Brr2 helicase must ultimately engage and blocks
+  loading of U4/U6 di-snRNA, so premature spliceosome activation is prevented. In
+  yeast, where the mechanism was solved structurally, Aar2p and Brr2p are mutually
+  exclusive binders of Prp8 and Aar2p is exchanged for Brr2p to yield the mature
+  particle, with the handoff governed by phosphorylation. The human protein appears
+  to differ in an important respect: human AAR2 co-purifies with all four members of
+  the RNA-free heterotetrameric complex, which suggests it stays associated until
+  that complex is fully formed rather than being displaced at the SNRNP200 step, and
+  the human AAR2-PRPF8 interaction itself is structurally distinct from the yeast
+  one. Structural work on the human complex also indicates a role beyond simple
+  steric placeholding, since AAR2 locks the PRPF8 RNase H domain in a conformation
+  compatible only with the first transesterification step of splicing and blocks the
+  switch to the step-2 conformation.
+existing_annotations:
+- term:
+    id: GO:0005682
+    label: U5 snRNP
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Well-founded phylogenetic inference. The WITH/FROM field cites SGD:S000000170, which is
+      budding yeast AAR2 - the ortholog in which this protein&#39;s role was originally defined -
+      together with the PANTHER node PTN000294070. Yeast Aar2p is an established component of
+      the cytoplasmic precursor U5 snRNP, and the human protein has since been shown directly
+      to be a true ortholog that binds the same PRPF8 RNase H domain. Core cellular component.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:26527271
+      supporting_text: &gt;-
+        as a true Aar2 orthologue which binds to the RH domain (hsRH) of Prp8 and
+    - reference_id: file:human/AAR2/AAR2-uniprot.txt
+      supporting_text: &#34;FUNCTION: Component of the U5 snRNP complex that is required for&#34;
+- term:
+    id: GO:0045292
+    label: mRNA cis splicing, via spliceosome
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic inference from PomBase:SPAC3H5.04 (fission yeast) via PANTHER node
+      PTN000294070. Correct: AAR2 is required for pre-mRNA splicing through its role in
+      producing a mature, catalytically competent U5 snRNP. Note this is an indirect
+      contribution - AAR2 is excluded from the assembled spliceosome and does not participate
+      in the splicing reaction itself - but &#34;involved_in&#34; is appropriate for an assembly factor
+      that the process requires.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/AAR2/AAR2-uniprot.txt
+      supporting_text: &#34;FUNCTION: Component of the U5 snRNP complex that is required for&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16189514
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Interaction with EAPP (UniProtKB:Q56P03) from an early proteome-scale two-hybrid map.
+      EAPP is best known as the E2F-associated phosphoprotein, but it is NOT unconnected to
+      this gene&#39;s biology: PMID:34131137 - the same paper that establishes TSSC4 as a U5
+      chaperone - describes EAPP as &#34;a putative chaperone EAPP that has been shown to interact
+      with U5 proteins PRPF8 and EFTUD2&#34;. So the AAR2-EAPP interaction is at least
+      compartmentally and functionally plausible, and it should not be dismissed as a
+      cross-pathway artefact.
+
+      It is nonetheless marked over-annotated, on narrower grounds: EAPP&#39;s own U5 role is
+      explicitly &#34;putative&#34;, the AAR2-EAPP pair specifically has never been followed up in any
+      focused study, and bare &#34;protein binding&#34; conveys nothing about AAR2&#39;s activity
+      regardless of whether the partner is real. This is a weaker verdict than &#34;wrong partner&#34;
+      - if EAPP&#39;s U5 chaperone role is confirmed, these annotations would deserve upgrading to
+      an informative term rather than discounting.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative term for a pair that has never been characterised. Not dismissed as
+      cross-pathway: EAPP is a putative U5 chaperone, so this may be real and merely
+      under-annotated.
+    supported_by:
+    - reference_id: PMID:34131137
+      supporting_text: &gt;-
+        a putative chaperone EAPP that has been shown to interact with U5 proteins PRPF8 and
+        EFTUD2
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28514442
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Second large-scale recovery of the AAR2-EAPP (UniProtKB:Q56P03) interaction. Repetition
+      across screens makes the physical interaction more likely to be real, and EAPP is a
+      putative U5 chaperone reported to interact with PRPF8 and EFTUD2, so the pairing is
+      plausible. It remains uninformative as annotated: the AAR2-EAPP pair itself has not been
+      pursued, and the term conveys nothing.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Reproducible but uncharacterised interaction under an uninformative term.
+    supported_by:
+    - reference_id: PMID:34131137
+      supporting_text: &gt;-
+        a putative chaperone EAPP that has been shown to interact with U5 proteins PRPF8 and
+        EFTUD2
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Third recovery of AAR2-EAPP (UniProtKB:Q56P03), this time by BioPlex
+      affinity-purification mass spectrometry - methodologically orthogonal to the two-hybrid
+      screens, which strengthens the case that the interaction is physically real. Combined
+      with EAPP&#39;s reported association with PRPF8 and EFTUD2, the interaction is quite likely
+      genuine; what is missing is a study characterising it, and a term that says anything.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Reproducible but functionally uncharacterised high-throughput hit under an uninformative
+      term.
+    supported_by:
+    - reference_id: PMID:34131137
+      supporting_text: &gt;-
+        a putative chaperone EAPP that has been shown to interact with U5 proteins PRPF8 and
+        EFTUD2
+- term:
+    id: GO:0000387
+    label: spliceosomal snRNP assembly
+  evidence_type: NAS
+  original_reference_id: PMID:36322420
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Correct and core: AAR2 is a U5 snRNP assembly factor, which is the whole of its known
+      function. The evidence code understates the source badly, though. PMID:36322420 is a
+      structure-function study of the human AAR2-PRPF8 RNase H complex - it reports a crystal
+      structure, designed interface variants that fail to bind PRPF8 in vitro, and
+      size-exclusion interaction mapping against U5 proteins. Those are direct experimental
+      results on the human protein, not a non-traceable author statement. Accepted as a core
+      process, with the evidence-code question raised in suggested_questions.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:36322420
+      supporting_text: &gt;-
+        Protein-interaction studies of AAR2 with U5 proteins using size-exclusion
+        chromatography reveal similarities and marked differences in the interaction
+        patterns compared with yeast Aar2p
+    - reference_id: file:human/AAR2/AAR2-uniprot.txt
+      supporting_text: &#34;FUNCTION: Component of the U5 snRNP complex that is required for&#34;
+- term:
+    id: GO:0005682
+    label: U5 snRNP
+  evidence_type: NAS
+  original_reference_id: PMID:36322420
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Correct core localisation, and the same evidence-code observation applies as for the
+      snRNP-assembly annotation from this reference. AAR2 is a component of the precursor U5
+      snRNP, though notably not of the mature tri-snRNP or of the assembled spliceosome. When
+      it leaves is species-dependent: in yeast Aar2p is exchanged for Brr2p, whereas human AAR2
+      co-purifies with all four members of the RNA-free heterotetrameric complex, indicating it
+      stays bound until that complex is fully assembled.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:26527271
+      supporting_text: &gt;-
+        as a true Aar2 orthologue which binds to the RH domain (hsRH) of Prp8 and
+    - reference_id: PMID:34131137
+      supporting_text: &gt;-
+        In yeast, Aar2p is exchanged with Brr2p13,14, while in humans AAR2 co-purifies with
+        all four RHC members12, which indicates that AAR2 stays associated until the whole RHC
+        is formed.
+- term:
+    id: GO:0048025
+    label: negative regulation of mRNA splicing, via spliceosome
+  evidence_type: NAS
+  original_reference_id: PMID:36322420
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Counter-intuitive for a splicing assembly factor, but correct, and worth stating why.
+      AAR2&#39;s function is genuinely inhibitory at the molecular level: it occupies the PRPF8
+      surface that the SNRNP200/Brr2 helicase must engage and blocks U4/U6 di-snRNA loading,
+      holding the particle in an immature state until the handoff (phosphorylation-triggered in
+      yeast; the human exchange step is less clear, since AAR2 co-purifies with the whole
+      heterotetrameric complex). The human structural work sharpens this further - AAR2 locks the PRPF8
+      RNase H domain in a conformation compatible only with the first transesterification step
+      and blocks the switch to the step-2 conformation. The negative regulation is the
+      mechanism by which AAR2 enforces assembly order, not an incidental side effect.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:36322420
+      supporting_text: &gt;-
+        seems to lock PRPF8 RH in a conformation that is only compatible with the first
+    - reference_id: file:human/AAR2/AAR2-deep-research-affinage.md
+      supporting_text: &gt;-
+        sterically occludes the binding sites for the Brr2/SNRNP200 helicase while also
+        occupying the RNase H RNA-binding surface to block U4/U6 di-snRNA loading, thereby
+        preventing premature spliceosome activation
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:34131137
+  qualifier: enables
+  review:
+    summary: &gt;-
+      This one is different from the other three protein-binding annotations and should not be
+      dismissed with them. The partner is TSSC4 (UniProtKB:Q9Y5U2), and the source is not a
+      screen but a dedicated functional study establishing TSSC4 as a U5 snRNP component and
+      chaperone that promotes tri-snRNP formation, interacting with the U5-specific proteins
+      PRPF8, EFTUD2 and SNRNP200. AAR2 and TSSC4 are therefore both U5 snRNP assembly
+      chaperones acting on the same particle with overlapping partners, so the interaction is
+      what the biology predicts rather than an unexplained hit.
+
+      On the replacement term, one caveat is recorded rather than glossed. GO:0044877
+      protein-containing complex binding normally expects a complex in the WITH/FROM field,
+      whereas this row&#39;s WITH/FROM is a single protein accession, and the AAR2-specific datum
+      in the source is IP-MS co-purification with the paper explicitly declining to establish
+      direct contacts. The term is chosen because the interaction demonstrably occurs in the
+      context of the U5 particle rather than as an isolated pair - which is exactly what
+      co-purification shows and what a bare pairwise term misses - but a curator may reasonably
+      prefer to leave the row as GO:0005515 until a direct AAR2-TSSC4 contact is demonstrated.
+      Flagged in suggested_questions.
+    action: MODIFY
+    reason: &gt;-
+      A real, mechanistically expected interaction recorded under an uninformative term.
+      GO:0044877 is used because TSSC4 is engaged in the context of the U5 snRNP particle,
+      which is what the co-purification evidence supports; a term for snRNP assembly-factor
+      binding would be better still.
+    proposed_replacement_terms:
+    - id: GO:0044877
+      label: protein-containing complex binding
+    supported_by:
+    - reference_id: PMID:34131137
+      supporting_text: &gt;-
+        Specifically, TSSC4 interacts with U5-specific proteins PRPF8, EFTUD2
+    - reference_id: PMID:34131137
+      supporting_text: &gt;-
+        TSSC4 emerges as a specific chaperone that acts in U5 snRNP de novo
+- term:
+    id: GO:0000244
+    label: spliceosomal tri-snRNP complex assembly
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Sequence-similarity transfer from yeast Aar2p (UniProtKB:P32357). Appropriate: AAR2 acts
+      upstream of tri-snRNP formation by holding the precursor U5 snRNP in an immature state
+      and then being displaced, and human AAR2 has been confirmed as a true ortholog of the
+      yeast protein binding the same PRPF8 domain. Note the direction of AAR2&#39;s contribution -
+      it does not build the tri-snRNP so much as gate the step that permits it.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:26527271
+      supporting_text: &gt;-
+        as a true Aar2 orthologue which binds to the RH domain (hsRH) of Prp8 and
+    - reference_id: file:human/AAR2/AAR2-uniprot.txt
+      supporting_text: &#34;FUNCTION: Component of the U5 snRNP complex that is required for&#34;
+- term:
+    id: GO:0005682
+    label: U5 snRNP
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Sequence-similarity transfer of U5 snRNP membership from yeast Aar2p (UniProtKB:P32357).
+      Redundant with the IBA and NAS annotations to the same term but correct, and it rests on
+      the same well-established orthology that UniProt uses for its own ECO:0000250 FUNCTION
+      statement.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/AAR2/AAR2-uniprot.txt
+      supporting_text: &#34;FUNCTION: Component of the U5 snRNP complex that is required for&#34;
+core_functions:
+- description: &gt;-
+    U5 snRNP assembly factor acting as a placeholder and conformational checkpoint. AAR2 binds
+    the RNase H-like domain of PRPF8 in the precursor U5 snRNP, occupying the surface that the
+    SNRNP200/Brr2 helicase must ultimately engage and blocking U4/U6 di-snRNA loading, so that
+    premature spliceosome activation cannot occur; AAR2 is absent from the tri-snRNP and the
+    assembled spliceosome. The exchange step is species-qualified: in yeast, Aar2p and Brr2p
+    are mutually exclusive Prp8 binders and Aar2p is displaced by Brr2p, whereas human AAR2
+    co-purifies with all four RNA-free heterotetrameric complex members, suggesting it remains
+    bound until that complex is complete. In the human complex AAR2 additionally locks the
+    PRPF8 RNase H domain in a conformation compatible only with the first transesterification
+    step, indicating a regulatory role beyond steric placeholding. On the reading used here,
+    GO:0045292 mRNA cis splicing is retained in directly_involved_in as the process this
+    assembly factor is required for, in the same sense as the GO:0045292 IBA row above: AAR2
+    contributes by producing a catalytically competent U5 snRNP, not by acting in the splicing
+    reaction, from which it is excluded. Both statements describe the same indirect
+    contribution.
+  molecular_function:
+    id: GO:0044877
+    label: protein-containing complex binding
+  directly_involved_in:
+  - id: GO:0000387
+    label: spliceosomal snRNP assembly
+  - id: GO:0048025
+    label: negative regulation of mRNA splicing, via spliceosome
+  - id: GO:0045292
+    label: mRNA cis splicing, via spliceosome
+  - id: GO:0000244
+    label: spliceosomal tri-snRNP complex assembly
+  in_complex:
+    id: GO:0005682
+    label: U5 snRNP
+  supported_by:
+  - reference_id: PMID:26527271
+    supporting_text: &gt;-
+      as a true Aar2 orthologue which binds to the RH domain (hsRH) of Prp8 and
+  - reference_id: PMID:36322420
+    supporting_text: &gt;-
+      seems to lock PRPF8 RH in a conformation that is only compatible with the first
+  - reference_id: file:human/AAR2/AAR2-uniprot.txt
+    supporting_text: &#34;SUBUNIT: Interacts with PRPF8 (via RNase H homology domain)&#34;
+suggested_questions:
+- question: &gt;-
+    Should the three NAS annotations from PMID:36322420 be upgraded? That paper is a
+    structure-function study of the human AAR2-PRPF8 RNase H complex, with a crystal structure,
+    designed interface variants that fail to bind PRPF8 in vitro, and size-exclusion
+    interaction mapping. Its results support GO:0000387, GO:0005682 and GO:0048025 directly, so
+    IDA or IPI would reflect the evidence better than a non-traceable author statement.
+- question: &gt;-
+    Does AAR2 have a molecular function term it should carry? Its activity is well defined -
+    binding the PRPF8 RNase H domain so as to exclude SNRNP200 and block di-snRNA loading - yet
+    GOA records only bare protein binding. This is the same gap seen for AAGAB in this
+    campaign: assembly chaperones and placeholder factors have no molecular-function vocabulary
+    in GO beyond binding terms.
+- question: &gt;-
+    Is the AAR2-TSSC4 interaction direct? The evidence is IP-MS co-purification within U5
+    particles and the source paper explicitly declines to establish direct contacts, describing
+    &#34;multiple weak contacts&#34;. That distinction determines whether GO:0044877
+    protein-containing complex binding is the right replacement term for that row, or whether
+    it should stay as bare protein binding pending a demonstrated direct contact.
+- question: &gt;-
+    Does human AAR2 leave the particle at the same step as yeast Aar2p? In yeast, Aar2p is
+    exchanged for Brr2p, but human AAR2 co-purifies with all four members of the RNA-free
+    heterotetrameric complex, indicating it stays bound until that complex is complete. The
+    human AAR2-PRPF8 structure also differs from the yeast one. Resolving this determines
+    whether the SNRNP200-displacement model transfers to human at all.
+- question: &gt;-
+    Which kinases actually control the AAR2-PRPF8 handoff in human cells? CK2alpha1 and SGK2
+    have been proposed as candidates that abrogate the interaction, and the yeast S253E
+    phospho-mimetic lowers Aar2p affinity for Prp8. Establishing the physiological kinase and
+    site would allow a specific phosphorylation-dependent regulatory annotation.
+- question: &gt;-
+    Is EAPP&#39;s putative U5 chaperone role real, and is the AAR2-EAPP interaction an
+    assembly-context contact? PMID:34131137 describes EAPP as &#34;a putative chaperone EAPP that
+    has been shown to interact with U5 proteins PRPF8 and EFTUD2&#34;, which places it in the same
+    pathway as AAR2 rather than only in the E2F pathway it is better known for. The AAR2-EAPP
+    pair is reproducible across three screens including an orthogonal AP-MS method, but has
+    never been followed up directly, and EAPP&#39;s U5 role is still labelled putative. Confirming
+    it would turn three uninformative protein-binding rows into an assembly-context annotation.
+- question: &gt;-
+    How do AAR2 and TSSC4 divide labour? Both are U5 snRNP assembly chaperones binding
+    overlapping sets of U5 proteins, and they interact with each other, but whether they act
+    sequentially, competitively or as a complex during de novo biogenesis versus post-splicing
+    recycling is unresolved.
+suggested_experiments:
+- hypothesis: &gt;-
+    AAR2 enforces the order of U5 snRNP maturation, so bypassing it produces prematurely
+    activated particles rather than simply fewer particles.
+  description: &gt;-
+    Deplete AAR2 in human cells and characterise the resulting U5 particles by gradient
+    fractionation and mass spectrometry, asking specifically whether SNRNP200 loads onto PRPF8
+    early and whether U4/U6 di-snRNA associates prematurely, rather than only quantifying
+    tri-snRNP yield.
+  experiment_type: cell biology and proteomics
+- hypothesis: &gt;-
+    The AAR2-PRPF8 handoff is triggered by phosphorylation at a defined site by a specific
+    kinase.
+  description: &gt;-
+    Map AAR2 phosphosites by mass spectrometry in human cells, test the candidate kinases
+    CK2alpha1 and SGK2 by targeted inhibition and knockdown, and assay phospho-mimetic and
+    phospho-dead AAR2 variants for PRPF8 binding and for the ability to support tri-snRNP
+    formation.
+  experiment_type: phosphoproteomics and biochemistry
+- hypothesis: &gt;-
+    AAR2 and TSSC4 act at distinct steps of U5 snRNP biogenesis rather than redundantly.
+  description: &gt;-
+    Determine whether AAR2 and TSSC4 occupy the same particle simultaneously or sequentially,
+    using sequential immunoprecipitation and cryo-EM of isolated precursor particles, and test
+    whether depletion of one is compensated by the other in de novo biogenesis versus
+    post-splicing recycling.
+  experiment_type: structural and cell biology
+- hypothesis: &gt;-
+    The human-specific conformational lock on the PRPF8 RNase H domain is functionally
+    important, not a crystallisation artefact.
+  description: &gt;-
+    Use the designed AAR2 interface variants that fail to bind PRPF8, plus variants that bind
+    but do not impose the step-1 conformation, to test in cells whether the conformational lock
+    is required for splicing fidelity as opposed to merely for particle assembly.
+  experiment_type: structure-function
+references:
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: PMID:16189514
+  title: Towards a proteome-scale map of the human protein-protein interaction network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cached record title matches. Early proteome-scale two-hybrid map; source of the first
+      AAR2-EAPP protein-binding annotation, which has no functional follow-up.
+- id: PMID:28514442
+  title: Architecture of the human interactome defines protein communities and disease
+    networks.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cached record title matches. Large-scale interactome; second recovery of AAR2-EAPP.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cached record title matches. BioPlex AP-MS; third and methodologically orthogonal
+      recovery of AAR2-EAPP, which makes the physical interaction credible without making it
+      informative.
+- id: PMID:34131137
+  title: TSSC4 is a component of U5 snRNP that promotes tri-snRNP formation.
+  findings:
+  - statement: &gt;-
+      TSSC4 is a U5 snRNP component and specific chaperone acting in de novo U5 snRNP
+      biogenesis and in post-splicing recycling.
+    supporting_text: &gt;-
+      TSSC4 emerges as a specific chaperone that acts in U5 snRNP de novo
+  - statement: &gt;-
+      TSSC4 interacts with the U5-specific proteins PRPF8, EFTUD2 and SNRNP200 - the same
+      particle and overlapping partners as AAR2.
+    supporting_text: &gt;-
+      Specifically, TSSC4 interacts with U5-specific proteins PRPF8, EFTUD2
+  - statement: &gt;-
+      EAPP is described in the U5 literature as a putative chaperone interacting with PRPF8 and
+      EFTUD2, so the AAR2-EAPP interactions are not cross-pathway artefacts even though they
+      remain uncharacterised.
+    supporting_text: &gt;-
+      a putative chaperone EAPP that has been shown to interact with U5 proteins PRPF8 and
+      EFTUD2
+  - statement: &gt;-
+      Human and yeast differ in when AAR2 leaves: yeast Aar2p is exchanged for Brr2p, whereas
+      human AAR2 co-purifies with all four RNA-free heterotetrameric complex members.
+    supporting_text: &gt;-
+      In yeast, Aar2p is exchanged with Brr2p13,14, while in humans AAR2 co-purifies with all
+      four RHC members12, which indicates that AAR2 stays associated until the whole RHC is
+      formed.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cached full text matches the cited title. This is the reference that distinguishes the
+      TSSC4 protein-binding annotation from the three EAPP ones: it is a dedicated functional
+      study rather than a screen, and it establishes TSSC4 as a U5 snRNP assembly chaperone,
+      making the AAR2-TSSC4 interaction mechanistically expected.
+- id: PMID:36322420
+  title: Structural and functional investigation of the human snRNP assembly factor
+    AAR2 in complex with the RNase H-like domain of PRPF8.
+  findings:
+  - statement: &gt;-
+      In vitro, human AAR2 locks the PRPF8 RNase H domain in a conformation compatible only
+      with the first transesterification step of splicing, blocking the switch to the step-2
+      conformation - a regulatory role beyond acting as an SNRNP200 placeholder.
+    supporting_text: &gt;-
+      seems to lock PRPF8 RH in a conformation that is only compatible with the first
+  - statement: &gt;-
+      Size-exclusion interaction studies of AAR2 with U5 proteins show similarities and marked
+      differences relative to yeast Aar2p, and imply phosphorylation-dependent regulation
+      analogous to that in yeast.
+    supporting_text: &gt;-
+      Protein-interaction studies of AAR2 with U5 proteins using size-exclusion
+      chromatography reveal similarities and marked differences in the interaction
+      patterns compared with yeast Aar2p
+  full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cached record title matches the citation; abstract-only, but the quoted results are
+      stated there. Flagged in this review because GOA codes all three of its annotations
+      (GO:0000387, GO:0005682, GO:0048025) as NAS, whereas the paper reports a crystal
+      structure, designed interface variants that fail to bind PRPF8, and SEC interaction
+      mapping - direct experimental results on the human protein.
+- id: PMID:26527271
+  title: Crystallization and biochemical characterization of the human spliceosomal
+    Aar2-Prp8(RNaseH) complex.
+  findings:
+  - statement: &gt;-
+      Human C20ORF4 is a true Aar2 orthologue that binds the RNase H domain of PRP8,
+      establishing an evolutionary link between yeast and human AAR2 function and providing
+      the human AAR2-PRPF8 complex structure.
+    supporting_text: &gt;-
+      as a true Aar2 orthologue which binds to the RH domain (hsRH) of Prp8 and
+  full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cached record title matches the citation. This is the paper that justifies transferring
+      the yeast Aar2p mechanism to the human protein, and therefore underpins the IBA and ISS
+      annotations. It is also the UniProt SUBUNIT evidence (ECO:0000269|PubMed:26527271).
+      Abstract-only, but the orthology claim quoted is explicit there.
+- id: file:human/AAR2/AAR2-deep-research-affinage.md
+  title: Affinage mechanistic annotation for AAR2 (human)
+  findings:
+  - statement: &gt;-
+      Machine-fetched Affinage record describing AAR2 as a U5 snRNP assembly factor that binds
+      the PRPF8 RNase H domain, sterically occludes the SNRNP200/Brr2 binding sites and blocks
+      U4/U6 di-snRNA loading, preventing premature spliceosome activation, with the handoff
+      governed by phosphorylation.
+    supporting_text: &gt;-
+      sterically occludes the binding sites for the Brr2/SNRNP200 helicase while also
+      occupying the RNase H RNA-binding surface to block U4/U6 di-snRNA loading, thereby
+      preventing premature spliceosome activation
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Trust gate TRIPPED, but on inspection this is a false positive worth recording. The gate
+      fires when the narrative&#39;s opening names a non-human organism in a human record - the ADA
+      symbol-collision failure mode - and here it names yeast. It is not a collision: the
+      narrative correctly covers yeast Aar2p, in which the mechanism was established
+      structurally, and human AAR2, its genuine ortholog. UniProt itself annotates the human
+      FUNCTION as ECO:0000250|UniProtKB:P32357, by similarity to the yeast protein, so a
+      yeast-centred account is the correct description of this gene&#39;s literature. Every claim
+      used here was re-verified against the cited PMIDs. The gate did its job by prompting the
+      check; it simply needs curator adjudication for genes whose mechanism was worked out in
+      yeast.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

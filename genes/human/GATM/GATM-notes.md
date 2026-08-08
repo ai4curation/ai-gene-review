@@ -96,4 +96,27 @@ Supporting/peripheral:
 
 References to cite: 9218780, 3800397, 9266688, 36543883, 27233232, 26490222, 28844881,
 23533145, 32814053, 34800366, plus GO_REFs and Reactome already in stub.
+
+## QA re-review 2026-07-23 (conservative)
+
+Re-validated `GATM-ai-review.yaml`: `ai-gene-review validate` returns "✓ Valid", no
+warnings. Audited all 25 annotations plus core_functions. No changes made — the review is
+biologically and curatorially sound.
+
+Checks performed:
+- `protein binding` (GO:0005515, IPI, PMID:32814053) is correctly `MARK_AS_OVER_ANNOTATED`,
+  not ACCEPT (bare protein binding from an HT interactome; no defined GATM complex). OK.
+- All 10 cited PMIDs are cached; every `supporting_text` verifies as a verbatim
+  (whitespace-normalized) substring of its cached publication. Labels match GOA terms.
+- No action/reason contradictions found; MARK_AS_OVER_ANNOTATED / KEEP_AS_NON_CORE reasons
+  each give positive justification (learning-or-memory & muscle-atrophy are distal disease
+  consequences; cold-induced thermogenesis is tissue/context-specific mouse phenotype;
+  extracellular exosome is HT co-purification).
+- core_functions ids are all in the correct GO aspect: GO:0015068 & GO:0015067 (MF),
+  GO:0006601 (BP, directly_involved_in), GO:0005758 (CC, locations). Core glycine
+  amidinotransferase activity → creatine biosynthesis in the mitochondrial IMS is captured
+  as core and not over-generalized; the parent GO:0015067 as a second core_function is
+  justified by the experimentally documented promiscuity (PMID:36543883).
+- Left alone (conservative): all EXP/IDA/IMP experimental annotations retained per their
+  authors; no REMOVE issued; no existing-annotation term ids rewritten.
 </content>

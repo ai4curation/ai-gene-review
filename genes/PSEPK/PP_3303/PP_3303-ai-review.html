@@ -1,0 +1,2208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_3303 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_3303</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88HQ0" target="_blank" class="term-link">
+                        Q88HQ0
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_3303";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88HQ0" data-a="DESCRIPTION: PP_3303 is a second predicted 3-oxoacyl-ACP syntha..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PP_3303 is a second predicted 3-oxoacyl-ACP synthase II-family enzyme in Pseudomonas putida KT2440. Its conserved condensing-enzyme architecture is consistent with malonyl-ACP-dependent chain elongation in type-II fatty-acid synthesis, but its substrate range and physiological division of labor with the canonical FabF protein remain unresolved.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004315" target="_blank" class="term-link">
+                                    GO:0004315
+                                </a>
+                            </span>
+                            <span class="term-label">3-oxoacyl-[acyl-carrier-protein] synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HQ0" data-a="GO:0004315" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Supported core catalytic assignment for this KAS-II-family paralog.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns the KAS-II family and the general acyl-ACP condensation reaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_3303/PP_3303-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">InterPro; IPR017568; 3-oxoacyl-ACP_synth-2.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_3303/PP_3303-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">PP_3303&#39;s **molecular function is unambiguously KAS II condensation**</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HQ0" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct expected location for a soluble FAS-II condensing enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PP_3303 acts on soluble ACP-bound substrates and has no membrane-targeting features.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006633" target="_blank" class="term-link">
+                                    GO:0006633
+                                </a>
+                            </span>
+                            <span class="term-label">fatty acid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HQ0" data-a="GO:0006633" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Supported broad pathway assignment, with paralog-specific role unresolved.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns PP_3303 to type-II fatty-acid elongation. This does not establish equivalence to FabF or define its preferred chain length.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_3303/PP_3303-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Involved in the type II fatty acid elongation cycle.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016746" target="_blank" class="term-link">
+                                    GO:0016746
+                                </a>
+                            </span>
+                            <span class="term-label">acyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HQ0" data-a="GO:0016746" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct parent activity but redundant with the specific KAS term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The 3-oxoacyl-ACP synthase term captures substrate class and chemistry.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016747" target="_blank" class="term-link">
+                                    GO:0016747
+                                </a>
+                            </span>
+                            <span class="term-label">acyltransferase activity, transferring groups other than amino-acyl groups</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HQ0" data-a="GO:0016747" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct parent activity but redundant with the specific KAS term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The 3-oxoacyl-ACP synthase term captures substrate class and chemistry.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Predicted KAS-II-family enzyme contributing malonyl-ACP-dependent acyl-chain elongation, with paralog-specific substrate range unresolved.</h3>
+                <span class="vote-buttons" data-g="Q88HQ0" data-a="FUNCTION: Predicted KAS-II-family enzyme contributing malony..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004315" target="_blank" class="term-link">
+                            3-oxoacyl-[acyl-carrier-protein] synthase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006633" target="_blank" class="term-link">
+                                fatty acid biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_3303/PP_3303-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">InterPro; IPR017568; 3-oxoacyl-ACP_synth-2.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_3303/PP_3303-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">PP_3303&#39;s **molecular function is unambiguously KAS II condensation**</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_3303/PP_3303-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88HQ0 for Pseudomonas putida KT2440 PP_3303</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt assigns PP_3303 to the KAS-II family.</div>
+
+                        <div class="finding-text">"InterPro; IPR017568; 3-oxoacyl-ACP_synth-2."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt places the protein in type-II fatty-acid elongation.</div>
+
+                        <div class="finding-text">"Involved in the type II fatty acid elongation cycle."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_3303/PP_3303-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research for PSEPK PP_3303</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report supports KAS-II condensation while identifying PP_3303 as an accessory paralog.</div>
+
+                        <div class="finding-text">"PP_3303&#39;s **molecular function is unambiguously KAS II condensation**"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">No direct KT2440 biochemical or genetic characterization was found.</div>
+
+                        <div class="finding-text">"Direct **biochemical or genetic characterization of PP_3303 specifically in *P. putida* KT2440 is not available in the literature**"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is PP_3303 redundant with FabF or specialized for a particular acyl-ACP branch?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88HQ0" data-a="Q: Is PP_3303 redundant with FabF or specialized for ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare single and double fabF/PP_3303 mutants by acyl-ACP and membrane lipid profiling across carbon sources and temperatures.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88HQ0" data-a="EXPERIMENT: Compare single and double fabF/PP_3303 mutants by ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_3303-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88HQ0" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: PP_3303 (Q88HQ0) — β-Ketoacyl-[ACP] Synthase II (KAS II / FabF)</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-23T09:29:45.887853</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_3303-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_3303-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-pp_3303-q88hq0-ketoacyl-acp-synthase-ii-kas-ii-fabf">Functional Annotation Report: PP_3303 (Q88HQ0) — β-Ketoacyl-[ACP] Synthase II (KAS II / FabF)</h1>
+<p><strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / KT2440), PSEPK<br />
+<strong>Gene / locus:</strong> PP_3303 · <strong>UniProt:</strong> Q88HQ0 · <strong>Length:</strong> 437 aa · <strong>EC:</strong> 2.3.1.179<br />
+<strong>Family:</strong> Thiolase-like superfamily; β-ketoacyl-ACP synthase I/II (KAS). Domains: Beta-ketoacyl_synthase (IPR000794), Ketoacyl_synth_N (IPR014030), Ketoacyl_synth_C (IPR014031), 3-oxoacyl-ACP_synth-2 (IPR017568), Ketoacyl_synth_AS (IPR018201).</p>
+<hr />
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (Answer to the Research Question)</h2>
+<p>PP_3303 encodes <strong>β-ketoacyl-[acyl-carrier-protein] synthase II (KAS II, the FabF condensing enzyme; EC 2.3.1.179)</strong>, a soluble <strong>cytoplasmic</strong> enzyme of the dissociated <strong>type II fatty acid synthase (FAS-II)</strong>. Its primary function is to catalyze the <strong>carbon–carbon bond-forming, decarboxylative Claisen condensation</strong> that elongates a growing fatty acyl chain by two carbons in each turn of the FAS-II elongation cycle: it transfers the acyl group from <strong>acyl-ACP</strong> onto an active-site cysteine and condenses it with a <strong>malonyl-ACP</strong> extender unit to yield a <strong>3-oxoacyl-ACP</strong> (β-ketoacyl-ACP), releasing holo-ACP and CO₂. Its diagnostic, curated substrate reaction is the elongation of <strong>palmitoleoyl-ACP (C16:1 cis-9)</strong> to the <strong>β-keto precursor of cis-vaccenoyl-ACP (C18:1 cis-11)</strong>, identifying it as the KAS II isoform responsible for <strong>cis-vaccenic acid</strong> production and hence for the <strong>temperature-dependent tuning of membrane fatty-acid (homeoviscous) composition</strong>.</p>
+<hr />
+<h2 id="2-verified-identity">2. Verified Identity</h2>
+<p>The target was cross-checked against the supplied UniProt record and confirmed unambiguous:</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value (confirmed)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Protein name</td>
+<td>3-oxoacyl-[ACP] synthase 2 (KAS II / FabF)</td>
+</tr>
+<tr>
+<td>EC number</td>
+<td>2.3.1.179 (KAS II) — distinct from EC 2.3.1.41 (KAS I/FabB) and EC 2.3.1.180 (KAS III/FabH)</td>
+</tr>
+<tr>
+<td>Length</td>
+<td>437 residues</td>
+</tr>
+<tr>
+<td>N-terminal thiolase motif</td>
+<td><code>...IVVTGTGVVSPLGC...</code> (conserved KAS Cys-cap region)</td>
+</tr>
+<tr>
+<td>Curated reaction (specific)</td>
+<td>(9Z)-hexadecenoyl-[ACP] + malonyl-[ACP] + H⁺ = 3-oxo-(11Z)-octadecenoyl-[ACP] + holo-[ACP] + CO₂</td>
+</tr>
+<tr>
+<td>Curated reaction (general)</td>
+<td>acyl-[ACP] + malonyl-[ACP] + H⁺ = 3-oxoacyl-[ACP] + holo-[ACP] + CO₂</td>
+</tr>
+<tr>
+<td>Pathway</td>
+<td>Lipid metabolism; fatty acid biosynthesis</td>
+</tr>
+</tbody>
+</table>
+<p>Because the annotated reaction and EC number are the <strong>hallmark KAS II activity</strong> (elongation of long, including C16:1, acyl-ACP; production of the cis-vaccenate precursor), there is no gene-symbol ambiguity: this is genuinely a bacterial FabF/KAS II from <em>P. putida</em> KT2440.</p>
+<p><strong>Sequence-level confirmation of the catalytic apparatus (this work):</strong> Direct inspection of the 437-aa sequence recovers all diagnostic elongating-KAS motifs — the N-terminal thiolase signature <strong>TGTGVVSPLGC</strong> (res. 20–30), the nucleophilic <strong>Cys184</strong> in the acyl-cysteine motif <code>APVTAC184AAGV</code>, the first catalytic histidine <strong>His325</strong> in the <code>NAH325ATST</code> motif, and the second catalytic histidine <strong>His361</strong> in the strictly conserved elongation signature <code>KSATGH361LLGAAG</code> (KSxxGHxxG). This reconstitutes the canonical <strong>Cys-His-His triad</strong> (cf. <em>E. coli</em> FabF Cys163/His303/His340), giving direct sequence evidence — not merely orthology — that PP_3303 is a catalytically competent KAS II.</p>
+<p><strong>Phylogenetic placement (this work):</strong> Global pairwise-identity comparison places PP_3303 firmly in the <strong>FabF/KAS II clade</strong>: it is most similar to <em>E. coli</em> FabF/KAS II (48.7%) and to the KT2440 housekeeping fabF PP_1916 (49.8%), clearly less similar to KAS I/FabB (<em>E. coli</em> 41.7%; KT2440 PP_4175 39.7%), and least similar to KAS III/FabH (29.1%). This independently corroborates the EC 2.3.1.179 assignment and <strong>excludes</strong> a FabB (KAS I) or FabH (KAS III) identity. The ~50% identity to PP_1916 indicates the two are anciently diverged KAS-II paralogs rather than recent duplicates.</p>
+<h3 id="2a-paralog-census-and-genomic-context-important-caveat">2a. Paralog census and genomic context (important caveat)</h3>
+<p>A UniProt census of <em>P. putida</em> KT2440 FAS-II condensing enzymes shows PP_3303 is <strong>one of several KAS-family paralogs</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>UniProt</th>
+<th>Annotation</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_4175</td>
+<td>Q88FC3</td>
+<td>FabB / KAS I (EC 2.3.1.41)</td>
+<td>unsaturated FA initiation</td>
+</tr>
+<tr>
+<td><strong>PP_1916</strong></td>
+<td>Q88LL4</td>
+<td><strong>FabF / KAS II (EC 2.3.1.179)</strong></td>
+<td><strong>housekeeping fabF, in fab cluster beside fabG (PP_1914)</strong></td>
+</tr>
+<tr>
+<td><strong>PP_3303</strong></td>
+<td><strong>Q88HQ0</strong></td>
+<td><strong>KAS II (EC 2.3.1.179)</strong></td>
+<td><strong>this study; standalone paralog</strong></td>
+</tr>
+<tr>
+<td>PP_2780</td>
+<td>Q88J69</td>
+<td>KAS-II-like</td>
+<td>accessory paralog</td>
+</tr>
+<tr>
+<td>PP_2778</td>
+<td>Q88J71</td>
+<td>KAS-II-like</td>
+<td>accessory paralog</td>
+</tr>
+</tbody>
+</table>
+<p>Critically, PP_3303 is <strong>not</strong> located in the core fatty-acid biosynthesis operon. Its genomic neighborhood (PP_3300–PP_3305) is an <strong>efflux/stress-response island</strong>: a TetR-family transcriptional regulator (PP_3300), RND efflux transporter + membrane-fusion components (PP_3301/PP_3302), a Bcr/CflA-family efflux transporter (PP_3304), and a TerC-family membrane protein (PP_3305). The canonical housekeeping elongation synthase is instead <strong>PP_1916 (fabF)</strong>, co-clustered with <strong>fabG (PP_1914)</strong>. This indicates that while PP_3303's <strong>molecular function is unambiguously KAS II condensation</strong>, its <strong>in vivo physiological deployment may be accessory or condition/stress-responsive</strong> rather than the primary housekeeping elongation role — a distinction that should temper direct transfer of <em>E. coli</em> fabF phenotypes to PP_3303.</p>
+<hr />
+<h2 id="3-primary-function-the-reaction-catalyzed">3. Primary Function — The Reaction Catalyzed</h2>
+<p>FAS-II synthesizes fatty acids on the small acyl carrier protein (ACP) through iterative two-carbon elongation cycles (condensation → ketoreduction → dehydration → enoyl reduction). PP_3303 performs the <strong>committed condensation (C–C bond-forming) step</strong> of the cycle [PMID 39175097]. KAS enzymes catalyze a <strong>decarboxylative Claisen condensation</strong> by a <strong>two-step ping-pong mechanism</strong>: (1) the acyl donor acylates the active-site cysteine (acyl-enzyme intermediate); (2) malonyl-ACP is decarboxylated to a carbanion/enolate that attacks the acyl-enzyme, forming the new C–C bond and yielding β-ketoacyl-ACP [PMID 22017312]. The <strong>elongating</strong> synthases KAS I (FabB) and KAS II (FabF) use an <strong>acyl-ACP</strong> donor (in contrast to the priming KAS III/FabH, which uses acyl-CoA) [PMID 22017312].</p>
+<hr />
+<h2 id="4-substrate-specificity">4. Substrate Specificity</h2>
+<p>The curated Q88HQ0 reaction — <strong>palmitoleoyl-ACP (C16:1Δ9) + malonyl-ACP → 3-oxo-cis-vaccenoyl-ACP (C18:1Δ11) + CO₂</strong> — is the defining KAS II activity. Biochemically, <strong>FabF/KAS II efficiently elongates saturated C14 and unsaturated C16:1 acyl-ACP substrates</strong>, whereas the paralogous <strong>KAS I (FabB) has reduced activity beyond C12</strong> [PMID 36048156]. This chain-length preference places PP_3303 at the <strong>terminal, long-chain elongation steps</strong> of FAS-II and makes it the enzyme that produces <strong>cis-vaccenic acid (C18:1 cis-11)</strong>, the principal long-chain monounsaturated fatty acid of enterobacterial and pseudomonad membranes. Recent structural work shows FabF achieves substrate selectivity through hydrophobic cavities and "front/middle/back door" gating residues that stabilize specific acyl chain lengths [PMID 39175097], with mobile active-site loops enforcing an ordered "gating" mechanism [PMID 32265440].</p>
+<hr />
+<h2 id="5-catalytic-mechanism-active-site">5. Catalytic Mechanism &amp; Active Site</h2>
+<p>PP_3303 adopts the <strong>thiolase fold</strong> and employs a conserved <strong>Cys-His-His catalytic triad</strong> [PMID 11286890]. Detailed mutagenesis of a KAS II (<em>S. pneumoniae</em> FabF) assigns the roles [PMID 16618705]:<br />
+- <strong>Nucleophilic active-site cysteine</strong> — required for acyl-enzyme formation and overall condensation (UniProt annotates the KAS active-site residue on Q88HQ0).<br />
+- <strong>Two histidines with distinct electronic states</strong> — one (His337 in Sp numbering) stabilizes the malonyl thioester oxyanion in the transition state; the other (His303) deprotonates a structured active-site water to drive decarboxylation and bicarbonate release.<br />
+- <strong>A conserved lysine</strong> controls the histidine electronic state; a <strong>gatekeeper phenylalanine (Phe396)</strong> enforces ordered substrate addition.</p>
+<p>Quantum-chemical analysis of <em>E. coli</em> FabF corroborates that conserved <strong>Lys and His residues facilitate proton transfer during C–C bond formation</strong> [PMID 39175097]. The catalytic cysteine's reactivity is directly demonstrated by the antibiotic <strong>cerulenin</strong>, which is <strong>covalently bonded to the active-site cysteine</strong> [PMID 10037680]; FabF is likewise the target of platensimycin-class antibacterials [PMID 18336284], underscoring both the mechanism and druggability of this enzyme class.</p>
+<hr />
+<h2 id="6-subcellular-localization">6. Subcellular Localization</h2>
+<p>As a component of the <strong>soluble, dissociated FAS-II system</strong>, PP_3303 operates in the <strong>cytoplasm</strong>, acting on substrates tethered to the phosphopantetheine arm of ACP. Its β-ketoacyl-ACP products are processed by the downstream cytosolic tailoring enzymes (FabG, FabA/FabZ, FabI) and ultimately channelled into <strong>membrane phospholipid</strong> biosynthesis at the inner membrane. There is no signal peptide or membrane-spanning domain in the sequence, consistent with a cytoplasmic assignment.</p>
+<hr />
+<h2 id="7-pathway-context-physiological-role">7. Pathway Context &amp; Physiological Role</h2>
+<p><strong>Pathway:</strong> Bacterial type II fatty acid biosynthesis (FAS-II) → membrane phospholipid acyl chains. PP_3303 is the elongation condensing enzyme that governs production of long-chain (C18) unsaturated fatty acids.</p>
+<p><strong>Homeoviscous / thermal regulation:</strong> Classic <em>E. coli</em> genetics established that <strong>fabF-null mutants lack both cis-vaccenic acid synthesis and thermal regulation</strong>, and that <strong>synthase II (FabF) is "the sole enzyme regulating the temperature-dependent composition of the membrane phospholipid acyl chains"</strong> [PMID 6337151]. At lower temperatures FabF activity increases the proportion of the longer C18:1 (cis-vaccenate) chain, maintaining membrane fluidity — a role directly attributable to PP_3303's substrate preference.</p>
+<p><strong>Relevance to <em>P. putida</em> physiology:</strong> In the solvent-tolerant <em>P. putida</em> lineage, the very unsaturated fatty acid produced by FabF (<strong>cis-vaccenate</strong>) is the substrate for the periplasmic <strong>cis/trans isomerase (Cti)</strong>, which converts cis- to trans-unsaturated fatty acids as the principal <strong>short-term adaptation to organic solvents</strong>, complemented by longer-term cardiolipin changes [PMID 17564601]. Adaptive remodeling of membrane fatty-acid and phospholipid composition is a well-documented solvent-tolerance mechanism in <em>P. putida</em> and related pseudomonads [PMID 12142492, PMID 11030576]. Thus PP_3303 supplies the biosynthetic precursor pool that underlies both <strong>temperature</strong> and <strong>solvent-stress</strong> membrane adaptation in this biotechnologically important organism.</p>
+<hr />
+<h2 id="8-supported-vs-refuted-hypotheses">8. Supported vs. Refuted Hypotheses</h2>
+<table>
+<thead>
+<tr>
+<th>Hypothesis</th>
+<th>Status</th>
+<th>Basis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_3303 is a KAS II/FabF condensing enzyme (EC 2.3.1.179)</td>
+<td><strong>Supported</strong></td>
+<td>UniProt curated EC/reaction; domain architecture [PMID 22017312, 39175097]</td>
+</tr>
+<tr>
+<td>It elongates palmitoleoyl-ACP → cis-vaccenate precursor (long-chain specificity)</td>
+<td><strong>Supported</strong></td>
+<td>Curated reaction; FabF C14/C16:1 preference [PMID 36048156]</td>
+</tr>
+<tr>
+<td>Uses Cys-His-His triad, ping-pong Claisen condensation</td>
+<td><strong>Supported</strong></td>
+<td>[PMID 16618705, 11286890, 39175097, 10037680]</td>
+</tr>
+<tr>
+<td>Cytoplasmic FAS-II enzyme</td>
+<td><strong>Supported</strong></td>
+<td>Type II FAS biology; no signal/TM segment</td>
+</tr>
+<tr>
+<td>Governs temperature-dependent membrane fatty-acid composition</td>
+<td><strong>Supported (by orthology)</strong></td>
+<td><em>E. coli</em> fabF genetics [PMID 6337151]</td>
+</tr>
+<tr>
+<td>It is KAS I (FabB, EC 2.3.1.41) or KAS III (FabH)</td>
+<td><strong>Refuted</strong></td>
+<td>EC 2.3.1.179 and the C16:1→C18:1 reaction are KAS II-specific</td>
+</tr>
+<tr>
+<td>Catalytic Cys-His-His triad intact in the actual Q88HQ0 sequence</td>
+<td><strong>Supported</strong></td>
+<td>Cys184/His325/His361 + KSATGH &amp; thiolase motifs (this work)</td>
+</tr>
+<tr>
+<td>PP_3303 is the sole/housekeeping fabF of KT2440</td>
+<td><strong>Refuted / qualified</strong></td>
+<td>Housekeeping fabF is PP_1916 (in fabG cluster); PP_3303 is a standalone paralog in an efflux/stress island (this work)</td>
+</tr>
+<tr>
+<td>PP_3303 belongs to KAS II (FabF) clade, not KAS I/III</td>
+<td><strong>Supported</strong></td>
+<td>Global identity: 48.7% EcFabF, 41.7% EcFabB, 29.1% EcFabH (this work)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="9-limitations-future-directions">9. Limitations &amp; Future Directions</h2>
+<ul>
+<li>Direct <strong>biochemical or genetic characterization of PP_3303 specifically in <em>P. putida</em> KT2440 is not available in the literature</strong>; functional assignment rests on the curated UniProt reaction, direct sequence verification of the catalytic triad, and strong orthology to extensively characterized <em>E. coli</em>, <em>S. pneumoniae</em>, and <em>Synechocystis</em> KAS II enzymes. The catalytic identity is robust; the <em>in vivo</em> physiological role is inference-by-homology.</li>
+<li><strong>PP_3303 is a paralog, not the housekeeping fabF.</strong> KT2440 encodes a dedicated fabF (PP_1916, in the fabG cluster), a FabB/KAS I (PP_4175), and two further KAS-II-like genes (PP_2778/PP_2780). PP_3303 sits in an efflux/stress genomic island. The <strong>division of labor, relative flux, expression conditions, and possible functional redundancy</strong> among these paralogs have not been experimentally dissected, so the cis-vaccenate/thermal-regulation role (established for the single <em>E. coli</em> fabF) may in KT2440 be carried primarily by PP_1916, with PP_3303 accessory or condition-specific.</li>
+<li>Future work: paralog-resolved knockouts (ΔPP_3303 vs ΔPP_1916, and double mutants) with temperature/solvent-shift lipidomics; RNA-seq to define the condition-dependence of PP_3303 (given its efflux-island context and adjacent TetR regulator); enzyme kinetics on defined acyl-ACP substrates; structural determination to confirm the gating residues.</li>
+</ul>
+<hr />
+<h2 id="references-pmids">References (PMIDs)</h2>
+<ul>
+<li>39175097 — FabF catalyzes C–C bond formation; bimodal specificity; catalytic Lys/His (2024)</li>
+<li>36048156 — FabB/FabF substrate selectivity; FabF elongates C14/C16:1 (2022)</li>
+<li>32265440 — Gating mechanism of elongating β-ketoacyl-ACP synthases (2020)</li>
+<li>22017312 — Substrate recognition by β-ketoacyl-ACP synthases; ping-pong/Claisen (2011)</li>
+<li>16618705 — Active-site residues (Cys/His/His/Lys/Phe) of KAS II FabF mechanism (2006)</li>
+<li>11286890 — KAS I structure; Cys-His-His triad shared by KAS II (2001)</li>
+<li>11152607 — KAS II crystal structure (Synechocystis), condensing-enzyme classification (2001)</li>
+<li>10037680 — Cerulenin covalently bound to active-site cysteine of KAS (1999)</li>
+<li>18336284 — Platensimycin targets FabF/FabB (2008)</li>
+<li>6337151 — FabF/synthase II is the sole thermal regulator of membrane acyl-chain composition (1983)</li>
+<li>17564601 — cis/trans isomerase and cardiolipin in <em>P. putida</em> membrane adaptation (2007)</li>
+<li>12142492 — Mechanisms of solvent tolerance in Gram-negative bacteria (2002)</li>
+<li>11030576 — Phospholipid compositional changes in pseudomonads with toluene (2000)</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PP_3303-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="PP_3303-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_3303-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88HQ0" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pp_3303-curation-notes">PP_3303 curation notes</h1>
+<ul>
+<li>UniProt accession Q88HQ0 has the diagnostic KAS-II InterPro assignment<br />
+  [file:PSEPK/PP_3303/PP_3303-uniprot.txt,<br />
+  "InterPro; IPR017568; 3-oxoacyl-ACP_synth-2."].</li>
+<li>The exact 3-oxoacyl-ACP synthase activity and broad fatty-acid biosynthetic<br />
+  process are accepted from convergent family/rule evidence.</li>
+<li>This first pass does not treat PP_3303 as equivalent to FabF. The target's<br />
+  preferred chain length, conditional use, and possible specialized branch<br />
+  remain unresolved.</li>
+<li>Generic acyltransferase parents are replaced by the specific KAS term.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88HQ0
+gene_symbol: PP_3303
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  PP_3303 is a second predicted 3-oxoacyl-ACP synthase II-family enzyme in
+  Pseudomonas putida KT2440. Its conserved condensing-enzyme architecture is
+  consistent with malonyl-ACP-dependent chain elongation in type-II fatty-acid
+  synthesis, but its substrate range and physiological division of labor with
+  the canonical FabF protein remain unresolved.
+existing_annotations:
+- term:
+    id: GO:0004315
+    label: 3-oxoacyl-[acyl-carrier-protein] synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Supported core catalytic assignment for this KAS-II-family paralog.
+    action: ACCEPT
+    reason: UniProt assigns the KAS-II family and the general acyl-ACP condensation reaction.
+    supported_by:
+    - reference_id: file:PSEPK/PP_3303/PP_3303-uniprot.txt
+      supporting_text: &#39;InterPro; IPR017568; 3-oxoacyl-ACP_synth-2.&#39;
+    - reference_id: file:PSEPK/PP_3303/PP_3303-deep-research-openscientist.md
+      supporting_text: PP_3303&#39;s **molecular function is unambiguously KAS II condensation**
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: Correct expected location for a soluble FAS-II condensing enzyme.
+    action: ACCEPT
+    reason: PP_3303 acts on soluble ACP-bound substrates and has no membrane-targeting features.
+- term:
+    id: GO:0006633
+    label: fatty acid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Supported broad pathway assignment, with paralog-specific role unresolved.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt assigns PP_3303 to type-II fatty-acid elongation. This does not
+      establish equivalence to FabF or define its preferred chain length.
+    supported_by:
+    - reference_id: file:PSEPK/PP_3303/PP_3303-uniprot.txt
+      supporting_text: &#39;Involved in the type II fatty acid elongation cycle.&#39;
+- term:
+    id: GO:0016746
+    label: acyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Correct parent activity but redundant with the specific KAS term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The 3-oxoacyl-ACP synthase term captures substrate class and chemistry.
+- term:
+    id: GO:0016747
+    label: acyltransferase activity, transferring groups other than amino-acyl groups
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct parent activity but redundant with the specific KAS term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The 3-oxoacyl-ACP synthase term captures substrate class and chemistry.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/PP_3303/PP_3303-uniprot.txt
+  title: UniProtKB entry Q88HQ0 for Pseudomonas putida KT2440 PP_3303
+  findings:
+  - statement: UniProt assigns PP_3303 to the KAS-II family.
+    supporting_text: &#39;InterPro; IPR017568; 3-oxoacyl-ACP_synth-2.&#39;
+    reference_section_type: RESULTS
+  - statement: UniProt places the protein in type-II fatty-acid elongation.
+    supporting_text: &#39;Involved in the type II fatty acid elongation cycle.&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Exact target accession. The catalytic and pathway assignments are
+      rule-based and do not resolve substrate specialization relative to FabF.
+- id: file:PSEPK/PP_3303/PP_3303-deep-research-openscientist.md
+  title: OpenScientist deep research for PSEPK PP_3303
+  findings:
+  - statement: The report supports KAS-II condensation while identifying PP_3303 as an accessory paralog.
+    supporting_text: PP_3303&#39;s **molecular function is unambiguously KAS II condensation**
+    reference_section_type: CONCLUSIONS
+  - statement: No direct KT2440 biochemical or genetic characterization was found.
+    supporting_text: &gt;-
+      Direct **biochemical or genetic characterization of PP_3303 specifically
+      in *P. putida* KT2440 is not available in the literature**
+    reference_section_type: CONCLUSIONS
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      The family-level catalytic synthesis agrees with UniProt. Claims that
+      PP_3303 specifically controls cis-vaccenate production, temperature
+      adaptation, or solvent response are orthology transfers and are not
+      incorporated as established KT2440 functions.
+core_functions:
+- description: &gt;-
+    Predicted KAS-II-family enzyme contributing malonyl-ACP-dependent
+    acyl-chain elongation, with paralog-specific substrate range unresolved.
+  molecular_function:
+    id: GO:0004315
+    label: 3-oxoacyl-[acyl-carrier-protein] synthase activity
+  directly_involved_in:
+  - id: GO:0006633
+    label: fatty acid biosynthetic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:PSEPK/PP_3303/PP_3303-uniprot.txt
+    supporting_text: &#39;InterPro; IPR017568; 3-oxoacyl-ACP_synth-2.&#39;
+  - reference_id: file:PSEPK/PP_3303/PP_3303-deep-research-openscientist.md
+    supporting_text: PP_3303&#39;s **molecular function is unambiguously KAS II condensation**
+suggested_questions:
+- question: Is PP_3303 redundant with FabF or specialized for a particular acyl-ACP branch?
+suggested_experiments:
+- description: &gt;-
+    Compare single and double fabF/PP_3303 mutants by acyl-ACP and membrane
+    lipid profiling across carbon sources and temperatures.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

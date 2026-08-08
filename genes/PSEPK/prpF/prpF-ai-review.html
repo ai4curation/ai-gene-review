@@ -1,0 +1,2128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>prpF - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>prpF</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88KF3" target="_blank" class="term-link">
+                        Q88KF3
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "prpF";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88KF3" data-a="DESCRIPTION: PrpF is the methylaconitate positional isomerase o..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PrpF is the methylaconitate positional isomerase of the two-component AcnD/PrpF branch of the 2-methylcitrate cycle in Pseudomonas putida KT2440. It rearranges the distinct methylaconitate product of AcnD to the 2-methyl-cis-aconitate substrate accepted by the downstream aconitase-family hydration step.</p>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>2-methylaconitate isomerase activity</h3>
+                <span class="vote-buttons" data-g="Q88KF3" data-a="2-methylaconitate isomerase activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+
+            <p><strong>Definition:</strong> Catalysis of the isomerization of an AcnD-derived methylaconitate isomer to 2-methyl-cis-aconitate.</p>
+
+
+
+            <p><strong>Justification:</strong> The available generic isomerase term does not capture the PrpF substrate or its role in coupling AcnD to the downstream aconitase-family enzyme. The existing aconitate delta-isomerase term describes unmethylated trans-aconitate and is not an exact substitute.</p>
+
+
+
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016859" target="_blank" class="term-link">
+                    cis-trans isomerase activity
+                </a>
+            </p>
+
+
+
+
+
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+
+                <li>
+
+                    file:projects/P_PUTIDA/deep-research/PSEPK__methylcitrate_cycle__ppu00640-deep-research-openscientist.md
+
+
+                    : Its product is 2-methyl-*trans*-aconitate, which PrpF (2-methylaconitate isomerase, EC 5.3.3.-) converts to the 2-methyl-*cis*-aconitate accepted by aconitase
+
+                </li>
+
+                <li>
+
+                    file:PSEPK/prpF/prpF-deep-research-openscientist.md
+
+
+                    : **2-methyl-*trans*-aconitate ⇌ 2-methyl-*cis*-aconitate** (EC 5.3.3.-, KEGG K09788)
+
+                </li>
+
+                <li>
+
+                    file:modules/methylcitrate_cycle-deep-research-openscientist.md
+
+
+                    : points to **4-methylaconitate**, but the precise structure/stereochemistry
+
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016853" target="_blank" class="term-link">
+                                    GO:0016853
+                                </a>
+                            </span>
+                            <span class="term-label">isomerase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KF3" data-a="GO:0016853" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct available parent function for the PrpF rearrangement.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt names Q88KF3 an aconitate isomerase, and the pathway-level family analysis identifies it as the PrpF that converts the AcnD product to the cis methylaconitate intermediate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/prpF/prpF-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SubName: Full=Aconitate isomerase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:projects/P_PUTIDA/deep-research/PSEPK__methylcitrate_cycle__ppu00640-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">Its product is 2-methyl-*trans*-aconitate, which PrpF (2-methylaconitate isomerase, EC 5.3.3.-) converts to the 2-methyl-*cis*-aconitate accepted by aconitase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019543" target="_blank" class="term-link">
+                                    GO:0019543
+                                </a>
+                            </span>
+                            <span class="term-label">propionate catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KF3" data-a="GO:0019543" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct pathway assignment for the PrpF isomerization component.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PrpF is encoded beside the AcnD-family enzyme in the prp cluster.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/prpF/prpF-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=prpF</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:projects/P_PUTIDA/deep-research/PSEPK__methylcitrate_cycle__ppu00640-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">Presence of PrpF is itself strong evidence the AcnD route is functional.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Isomerizes the AcnD-derived methylaconitate product to 2-methyl-cis-aconitate in the two-component dehydration implementation of the 2-methylcitrate cycle.</h3>
+                <span class="vote-buttons" data-g="Q88KF3" data-a="FUNCTION: Isomerizes the AcnD-derived methylaconitate produc..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016853" target="_blank" class="term-link">
+                            isomerase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019543" target="_blank" class="term-link">
+                                propionate catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/prpF/prpF-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">SubName: Full=Aconitate isomerase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:projects/P_PUTIDA/deep-research/PSEPK__methylcitrate_cycle__ppu00640-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">Its product is 2-methyl-*trans*-aconitate, which PrpF (2-methylaconitate isomerase, EC 5.3.3.-) converts to the 2-methyl-*cis*-aconitate accepted by aconitase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/prpF/prpF-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">**2-methyl-*trans*-aconitate ⇌ 2-methyl-*cis*-aconitate** (EC 5.3.3.-, KEGG K09788)</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/prpF/prpF-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88KF3 for Pseudomonas putida KT2440 prpF</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies Q88KF3 as the PrpF aconitate isomerase.</div>
+
+                        <div class="finding-text">"SubName: Full=Aconitate isomerase"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:projects/P_PUTIDA/deep-research/PSEPK__methylcitrate_cycle__ppu00640-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist PSEPK 2-methylcitrate-cycle pathway report</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The pathway analysis defines the trans-to-cis methylaconitate rearrangement performed by PrpF.</div>
+
+                        <div class="finding-text">"Its product is 2-methyl-*trans*-aconitate, which PrpF (2-methylaconitate isomerase, EC 5.3.3.-) converts to the 2-methyl-*cis*-aconitate accepted by aconitase"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/prpF/prpF-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep-research report for PSEPK prpF</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report assigns PrpF the methylaconitate cis-trans isomerization that connects AcnD to the downstream aconitase.</div>
+
+                        <div class="finding-text">"**2-methyl-*trans*-aconitate ⇌ 2-methyl-*cis*-aconitate** (EC 5.3.3.-, KEGG K09788)"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Direct characterization is available for a close ortholog rather than Q88KF3 itself.</div>
+
+                        <div class="finding-text">"Direct enzymatic characterization exists for the *S. oneidensis* ortholog, not for *P. putida* Q88KF3 specifically"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:modules/methylcitrate_cycle-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist review of the 2-methylcitrate cycle</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The module review cautions that the precise structure of the AcnD substrate presented to PrpF remains inferred.</div>
+
+                        <div class="finding-text">"points to **4-methylaconitate**, but the precise structure/stereochemistry"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How do KT2440 PrpF kinetics compare between the physiological methylaconitate isomer and unmethylated trans-aconitate?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88KF3" data-a="Q: How do KT2440 PrpF kinetics compare between the ph..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Generate the physiological AcnD product enzymatically, assay purified PrpF against it and unmethylated trans-aconitate, and identify products by targeted LC-MS and NMR.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88KF3" data-a="EXPERIMENT: Generate the physiological AcnD product enzymatica..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(prpF-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88KF3" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: PrpF (Q88KF3 / PP_2337)</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-23T13:42:07.726197</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="prpF-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="prpF-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-prpf-q88kf3-pp_2337">Functional Annotation Report: PrpF (Q88KF3 / PP_2337)</h1>
+<p><strong>Gene:</strong> prpF · <strong>Locus:</strong> PP_2337 · <strong>UniProt:</strong> Q88KF3 (Q88KF3_PSEPK)<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950)<br />
+<strong>Family/domains:</strong> PrpF family; Pfam PF04303 (PrpF); InterPro IPR012709 (PrpF), IPR007400 (PrpF-like)<br />
+<strong>Length:</strong> 396 aa · <strong>KEGG ortholog:</strong> K09788 (2-methylaconitate isomerase, EC 5.3.3.-)</p>
+<hr />
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (Answer to the Research Question)</h2>
+<p><strong>PrpF (PP_2337) is a cofactor-independent 2-methylaconitate (cis–trans) isomerase that functions in the cytoplasm as an essential accessory enzyme of the AcnD-dependent branch of the 2-methylcitric acid cycle (2-MCC), the route by which <em>Pseudomonas putida</em> catabolizes propionate.</strong> Its specific reaction is the geometric isomerization of the 2-methyl-<em>trans</em>-aconitate produced by the Fe/S dehydratase AcnD (PP_2336) into 2-methyl-<em>cis</em>-aconitate, the only isomer that the housekeeping aconitase (AcnB) can hydrate to 2-methyl-D-isocitrate. Without PrpF the AcnD dehydration step is a metabolic dead end. This assignment is transferred with high confidence from the experimentally characterized, 83.9%-identical <em>Shewanella oneidensis</em> ortholog and is reinforced by the enzyme's location in a complete methylcitrate operon and by perfect conservation of the catalytic residues Lys73 and Cys107.</p>
+<hr />
+<h2 id="2-gene-identity-verification">2. Gene Identity Verification</h2>
+<p>The target was rigorously confirmed as the correct protein:</p>
+<ul>
+<li><strong>Symbol match:</strong> UniProt lists gene name <code>prpF</code>, ordered locus <code>PP_2337</code>; the submitted protein name "Aconitate isomerase" is consistent with the characterized PrpF function.</li>
+<li><strong>Family match:</strong> Pfam PF04303 and InterPro IPR012709/IPR007400 all define the <strong>PrpF family</strong>, matching the target's stated domains exactly.</li>
+<li><strong>Orthology match:</strong> Global Needleman–Wunsch alignment against the reviewed Swiss-Prot entry <strong>Q8EJW4 (PRPF_SHEON, "2-methyl-aconitate isomerase," PE=1)</strong> gives <strong>83.9% identity (328/391 positions)</strong>. The literature I found describes exactly this protein/family — there is <strong>no gene-symbol ambiguity</strong>.</li>
+<li><strong>Organism match:</strong> UniProt proteome UP000000556, KEGG <code>ppu:PP_2337</code>, chromosome-encoded — all <em>P. putida</em> KT2440.</li>
+</ul>
+<p>The functional evidence below is therefore drawn from direct experimental studies on close PrpF orthologs (<em>S. oneidensis</em>, <em>Salmonella enterica</em> complementation system) combined with organism-specific bioinformatic/genomic-context evidence for <em>P. putida</em>.</p>
+<hr />
+<h2 id="3-primary-function-the-reaction-catalyzed">3. Primary Function: The Reaction Catalyzed</h2>
+<h3 id="31-metabolic-problem-prpf-solves">3.1 Metabolic problem PrpF solves</h3>
+<p>Bacteria degrade propionate (and odd-chain fatty-acid–derived propionyl-CoA) via the <strong>2-methylcitric acid cycle</strong>: propionyl-CoA + oxaloacetate → 2-methylcitrate (PrpC) → <strong>2-methyl-<em>cis</em>-aconitate</strong> (a dehydration) → 2-methyl-D-isocitrate (aconitase) → pyruvate + succinate (PrpB). The dehydration of 2-methylcitrate is carried out by one of two alternative enzyme systems:</p>
+<ul>
+<li><strong>PrpD</strong> — a cofactor-less 2-methylcitrate dehydratase (EC 4.2.1.79) that directly yields <strong>2-methyl-<em>cis</em>-aconitate</strong>, the aconitase substrate. Organisms using PrpD do <strong>not</strong> need PrpF.</li>
+<li><strong>AcnD</strong> — an Fe/S, aconitase-like 2-methylcitrate dehydratase (EC 4.2.1.117) that yields a <strong>different geometric isomer</strong> of 2-methylaconitate (2-methyl-<em>trans</em>-aconitate), which aconitase <strong>cannot</strong> use. Organisms using AcnD <strong>require PrpF</strong> (Grimek &amp; Escalante-Semerena, <em>J. Bacteriol.</em> 2004, <strong>PMID 14702315</strong>).</li>
+</ul>
+<h3 id="32-prpfs-catalytic-role">3.2 PrpF's catalytic role</h3>
+<p>PrpF is the isomerase that reconciles the AcnD product with aconitase:</p>
+<blockquote>
+<p>"the SoPrpF protein isomerizes the product of the AcnD reaction into the PrpD product (2-MCA], a known substrate of the housekeeping aconitase (AcnB]" — Rocco <em>et al.</em>, <em>J. Bacteriol.</em> 2017 (<strong>PMID 29145506</strong>).</p>
+</blockquote>
+<p>Thus PrpF catalyzes:</p>
+<p><strong>2-methyl-<em>trans</em>-aconitate ⇌ 2-methyl-<em>cis</em>-aconitate</strong> (EC 5.3.3.-, KEGG K09788)</p>
+<p>Mechanistically it is a <strong>non-PLP, cofactor-less cis–trans isomerase</strong>: a base-catalyzed proton abstraction coupled to rotation about the C2–C3 bond of 2-methylaconitate (Garvey <em>et al.</em>, <em>Protein Sci.</em> 2007, <strong>PMID 17567742</strong>). On the unmethylated analog PrpF interconverts <strong>trans-aconitate ⇌ cis-aconitate</strong> in vitro, the assay used to demonstrate its activity:</p>
+<blockquote>
+<p>"Results from in vitro studies show that PrpF isomerizes trans-aconitate to cis-aconitate" (PMID 17567742).</p>
+</blockquote>
+<p>Careful in-vitro/NMR work refined the model: AcnD dehydrates 2-methylcitrate to an isomer of 2-methyl-<em>cis</em>-aconitate (proposed to be 4-methylaconitate / 2-methyl-<em>trans</em>-aconitate), which is not an aconitase substrate; PrpF converts it to the productive isomer (PMID 29145506; PMID 14702315).</p>
+<h3 id="33-substrate-specificity">3.3 Substrate specificity</h3>
+<p>The physiological substrate is the <strong>C7 branched tricarboxylate 2-methylaconitate</strong> (both geometric isomers). PrpF also acts on the non-methylated <strong>aconitate</strong> (citrate-derived) as a model substrate, consistent with a tricarboxylic-acid isomerase active site. There is <strong>no aconitase (hydratase) activity</strong> — PrpF only isomerizes; it does not add/remove water:</p>
+<blockquote>
+<p>"No aconitase-like activity was found for PrpF" (PMID 14702315).</p>
+</blockquote>
+<h3 id="34-catalytic-residues-structuralbioinformatic-evidence">3.4 Catalytic residues (structural/bioinformatic evidence)</h3>
+<p>The <em>S. oneidensis</em> PrpF crystal structure (2.0 Å, with bound trans-aconitate; and 1.22 Å K73E variant with trans-aconitate/malonate) shows a <strong>two-domain, pseudo-2-fold fold of the PLP-independent isomerase superfamily</strong> — closely resembling diaminopimelate epimerase and proline racemase (PMID 17567742; PMID 29145506). Catalysis uses a pair of general acid/base residues; <strong>Lys73</strong> and <strong>Cys107</strong> are essential:</p>
+<blockquote>
+<p>"SoPrpF variants with substitutions of residues K73 or C107 failed to support growth with propionate" (PMID 29145506).</p>
+</blockquote>
+<p>In my alignment, <strong>both Lys73 and Cys107 are perfectly conserved in the <em>P. putida</em> ortholog</strong> (identical alignment columns), providing strong bioinformatic support that Q88KF3 uses the same catalytic machinery and reaction.</p>
+<hr />
+<h2 id="4-biological-process-pathway-context">4. Biological Process &amp; Pathway Context</h2>
+<p>PrpF operates within the <strong>2-methylcitric acid cycle for propionate degradation</strong>. In <em>P. putida</em> KT2440 the entire pathway is encoded in a single chromosomal operon around PP_2337 (KEGG genome annotation):</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Gene</th>
+<th>Enzyme</th>
+<th>EC / KO</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_2333</td>
+<td>prpR</td>
+<td>GntR-family transcriptional regulator</td>
+<td>—</td>
+</tr>
+<tr>
+<td>PP_2334</td>
+<td>prpB</td>
+<td>2-methylisocitrate lyase</td>
+<td>4.1.3.30 / K03417</td>
+</tr>
+<tr>
+<td>PP_2335</td>
+<td>prpC</td>
+<td>2-methylcitrate synthase</td>
+<td>2.3.3.5 / K01659</td>
+</tr>
+<tr>
+<td>PP_2336</td>
+<td><strong>acnD</strong></td>
+<td>2-methylcitrate dehydratase (2-methyl-<em>trans</em>-aconitate forming), Fe/S</td>
+<td>4.2.1.117 / K20455</td>
+</tr>
+<tr>
+<td><strong>PP_2337</strong></td>
+<td><strong>prpF</strong></td>
+<td><strong>2-methylaconitate isomerase</strong></td>
+<td><strong>5.3.3.- / K09788</strong></td>
+</tr>
+<tr>
+<td>PP_2338</td>
+<td>prpD</td>
+<td>2-methylcitrate dehydratase (cofactor-less)</td>
+<td>4.2.1.79 / K01720</td>
+</tr>
+<tr>
+<td>PP_2339</td>
+<td>acnB</td>
+<td>aconitate hydratase 2 / 2-methylisocitrate dehydratase</td>
+<td>4.2.1.3 / 4.2.1.99 / K01682</td>
+</tr>
+</tbody>
+</table>
+<p>PrpF (PP_2337) is <strong>immediately adjacent to and co-operonic with acnD (PP_2336)</strong> — the exact genomic pairing seen where the AcnD/PrpF partnership was experimentally proven. This is decisive functional-context evidence. The presence of the enzyme in this operon means PrpF is co-regulated with the propionate-catabolic machinery (2-MCC operons are typically induced by propionate/2-methylcitrate via the PrpR regulator).</p>
+<p><strong>Pathway flux with PrpF:</strong><br />
+propionyl-CoA → (PrpC) 2-methylcitrate → (AcnD) 2-methyl-<em>trans</em>-aconitate → <strong>(PrpF) 2-methyl-<em>cis</em>-aconitate</strong> → (AcnB aconitase) 2-methyl-D-isocitrate → (PrpB) pyruvate + succinate.</p>
+<p>The physiological importance of this pathway in <em>Pseudomonas</em> is underscored by studies showing that disrupting 2-MCC enzymes (e.g., prpB) redirects propionate/propionyl-CoA into polyhydroxyalkanoate (PHA) synthesis, altering odd-chain monomer content (PMID 37995793) — evidence that the 2-MCC (of which PrpF is part) is the principal propionate-oxidation route in these bacteria.</p>
+<hr />
+<h2 id="5-subcellular-localization">5. Subcellular Localization</h2>
+<p>PrpF is a <strong>soluble cytoplasmic enzyme</strong>. Evidence: (i) all 2-MCC reactions occur in the cytosol where propionyl-CoA and TCA-cycle intermediates reside; (ii) the protein has no predicted signal peptide, no transmembrane segment, and no membrane/secretion annotation (UniProt keywords are only "Isomerase" and "Reference proteome"); (iii) the characterized orthologs were purified and assayed as soluble proteins from cytoplasmic extracts (PMID 18295882, PMID 14702315). It carries out its function in the cytoplasm, in direct metabolic coupling with the cytoplasmic dehydratase AcnD and aconitase AcnB.</p>
+<hr />
+<h2 id="6-evidence-summary">6. Evidence Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Evidence type</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PrpF = 2-methylaconitate cis–trans isomerase</td>
+<td>Direct in vitro enzymology (ortholog)</td>
+<td>PMID 14702315, 17567742, 29145506</td>
+</tr>
+<tr>
+<td>Isomerizes AcnD product → aconitase substrate</td>
+<td>In vitro + NMR (ortholog)</td>
+<td>PMID 29145506</td>
+</tr>
+<tr>
+<td>Required with AcnD for propionate growth</td>
+<td>In vivo complementation (<em>S. enterica</em>)</td>
+<td>PMID 14702315</td>
+</tr>
+<tr>
+<td>Cofactor-less; PLP-independent isomerase fold</td>
+<td>X-ray crystallography (ortholog)</td>
+<td>PMID 17567742, 29145506</td>
+</tr>
+<tr>
+<td>Catalytic residues Lys73, Cys107</td>
+<td>Mutagenesis + structure; conserved in Q88KF3</td>
+<td>PMID 29145506 + this analysis (83.9% id; K73/C107 conserved)</td>
+</tr>
+<tr>
+<td>Membership in 2-MCC operon with acnD in <em>P. putida</em></td>
+<td>Genomic context (KEGG)</td>
+<td>KEGG ppu:PP_2333–2339</td>
+</tr>
+<tr>
+<td>Cytoplasmic localization</td>
+<td>Sequence features + biochemical purification</td>
+<td>UniProt Q88KF3; PMID 18295882</td>
+</tr>
+<tr>
+<td>2-MCC is main propionate route in <em>Pseudomonas</em></td>
+<td>Mutant physiology</td>
+<td>PMID 37995793</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="7-supported-and-refuted-hypotheses">7. Supported and Refuted Hypotheses</h2>
+<ul>
+<li><strong>Supported:</strong> PrpF is a 2-methylaconitate isomerase acting in the AcnD-dependent 2-methylcitrate cycle (converts 2-methyl-<em>trans</em>- to 2-methyl-<em>cis</em>-aconitate). ✔</li>
+<li><strong>Supported:</strong> PrpF is a cytoplasmic, cofactor-independent (non-PLP, non-metal) enzyme with catalytic Lys73/Cys107. ✔</li>
+<li><strong>Supported:</strong> In <em>P. putida</em> KT2440, prpF is genomically embedded in a complete methylcitrate operon adjacent to acnD. ✔</li>
+<li><strong>Refuted:</strong> PrpF is itself an aconitase/hydratase — no hydratase activity was detected; it is strictly an isomerase. ✘</li>
+<li><strong>Refuted (superseded model):</strong> PrpF's role is merely to protect the AcnD Fe/S cluster from oxidative damage (an early hypothesis in PMID 14702315). Later enzymology (PMID 29145506) established the direct isomerase mechanism as the primary function.</li>
+</ul>
+<hr />
+<h2 id="8-limitations-future-directions">8. Limitations &amp; Future Directions</h2>
+<ul>
+<li>Direct enzymatic characterization exists for the <em>S. oneidensis</em> ortholog, not for <em>P. putida</em> Q88KF3 specifically; the assignment relies on very high sequence identity (83.9%), conserved catalytic residues, and conserved operon context — strong but inferential.</li>
+<li>The precise identity of the AcnD product isomer (2-methyl-<em>trans</em>-aconitate vs. 4-methylaconitate) remains a point of mechanistic refinement in the literature.</li>
+<li><em>P. putida</em> KT2440 encodes <strong>both</strong> PrpF/AcnD and a PrpD homolog (PP_2338); the relative in-vivo flux through each branch and any conditional regulation is not established and would benefit from targeted deletion + metabolomic studies.</li>
+<li>No experimental subcellular-localization or structural study of the <em>P. putida</em> protein has been reported; an AlphaFold model plus a <em>P. putida</em> prpF knockout growth phenotype on propionate would close the remaining gaps.</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="prpF-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="prpF-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(prpF-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88KF3" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="prpf-curation-notes">prpF curation notes</h1>
+<ul>
+<li>UniProt accession Q88KF3 names the target <code>Aconitate isomerase</code><br />
+  [file:PSEPK/prpF/prpF-uniprot.txt,<br />
+  "SubName: Full=Aconitate isomerase"].</li>
+<li>Pathway-level family and locus analysis identifies it as PrpF, acting after<br />
+  AcnD to convert a methyl-trans-aconitate intermediate to<br />
+  2-methyl-cis-aconitate.</li>
+<li>The existing generic isomerase and propionate-catabolic-process annotations<br />
+  are accepted. A specific <code>2-methylaconitate isomerase activity</code> term is<br />
+  proposed because the existing unmethylated aconitate delta-isomerase term<br />
+  does not describe the PrpF substrate.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88KF3
+gene_symbol: prpF
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  PrpF is the methylaconitate positional isomerase of the two-component
+  AcnD/PrpF branch of the 2-methylcitrate cycle in Pseudomonas putida KT2440.
+  It rearranges the distinct methylaconitate product of AcnD to the
+  2-methyl-cis-aconitate substrate accepted by the downstream
+  aconitase-family hydration step.
+existing_annotations:
+- term:
+    id: GO:0016853
+    label: isomerase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Correct available parent function for the PrpF rearrangement.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt names Q88KF3 an aconitate isomerase, and the pathway-level
+      family analysis identifies it as the PrpF that converts the AcnD product
+      to the cis methylaconitate intermediate.
+    supported_by:
+    - reference_id: file:PSEPK/prpF/prpF-uniprot.txt
+      supporting_text: &#39;SubName: Full=Aconitate isomerase&#39;
+    - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__methylcitrate_cycle__ppu00640-deep-research-openscientist.md
+      supporting_text: &#39;Its product is 2-methyl-*trans*-aconitate, which PrpF (2-methylaconitate isomerase, EC 5.3.3.-) converts to the 2-methyl-*cis*-aconitate accepted by aconitase&#39;
+- term:
+    id: GO:0019543
+    label: propionate catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Correct pathway assignment for the PrpF isomerization component.
+    action: ACCEPT
+    reason: PrpF is encoded beside the AcnD-family enzyme in the prp cluster.
+    supported_by:
+    - reference_id: file:PSEPK/prpF/prpF-uniprot.txt
+      supporting_text: &#39;Name=prpF&#39;
+    - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__methylcitrate_cycle__ppu00640-deep-research-openscientist.md
+      supporting_text: &#39;Presence of PrpF is itself strong evidence the AcnD route is functional.&#39;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: file:PSEPK/prpF/prpF-uniprot.txt
+  title: UniProtKB entry Q88KF3 for Pseudomonas putida KT2440 prpF
+  findings:
+  - statement: UniProt identifies Q88KF3 as the PrpF aconitate isomerase.
+    supporting_text: &#39;SubName: Full=Aconitate isomerase&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Exact target accession; the submitted name is genome-derived.
+- id: file:projects/P_PUTIDA/deep-research/PSEPK__methylcitrate_cycle__ppu00640-deep-research-openscientist.md
+  title: OpenScientist PSEPK 2-methylcitrate-cycle pathway report
+  findings:
+  - statement: The pathway analysis defines the trans-to-cis methylaconitate rearrangement performed by PrpF.
+    supporting_text: &#39;Its product is 2-methyl-*trans*-aconitate, which PrpF (2-methylaconitate isomerase, EC 5.3.3.-) converts to the 2-methyl-*cis*-aconitate accepted by aconitase&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      Provider-generated pathway report used for first-pass chemistry
+      assignment; the exact target is independently in the PrpF family and prp
+      locus.
+- id: file:PSEPK/prpF/prpF-deep-research-openscientist.md
+  title: OpenScientist deep-research report for PSEPK prpF
+  findings:
+  - statement: The report assigns PrpF the methylaconitate cis-trans isomerization that connects AcnD to the downstream aconitase.
+    supporting_text: &#39;**2-methyl-*trans*-aconitate ⇌ 2-methyl-*cis*-aconitate** (EC 5.3.3.-, KEGG K09788)&#39;
+    reference_section_type: RESULTS
+  - statement: Direct characterization is available for a close ortholog rather than Q88KF3 itself.
+    supporting_text: &#39;Direct enzymatic characterization exists for the *S. oneidensis* ortholog, not for *P. putida* Q88KF3 specifically&#39;
+    reference_section_type: DISCUSSION
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      Provider-generated gene report. The target accession, PrpF-family
+      assignment, and locus context agree with local records; the exact
+      reaction and catalytic-residue evidence are transferred from the
+      experimentally characterized close ortholog.
+- id: file:modules/methylcitrate_cycle-deep-research-openscientist.md
+  title: OpenScientist review of the 2-methylcitrate cycle
+  findings:
+  - statement: The module review cautions that the precise structure of the AcnD substrate presented to PrpF remains inferred.
+    supporting_text: &#39;points to **4-methylaconitate**, but the precise structure/stereochemistry&#39;
+    reference_section_type: DISCUSSION
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      Provider-generated generic module review used to limit the reaction claim
+      to an AcnD-derived methylaconitate isomer pending direct structural
+      resolution.
+core_functions:
+- description: &gt;-
+    Isomerizes the AcnD-derived methylaconitate product to
+    2-methyl-cis-aconitate in the two-component dehydration implementation of
+    the 2-methylcitrate cycle.
+  molecular_function:
+    id: GO:0016853
+    label: isomerase activity
+  directly_involved_in:
+  - id: GO:0019543
+    label: propionate catabolic process
+  supported_by:
+  - reference_id: file:PSEPK/prpF/prpF-uniprot.txt
+    supporting_text: &#39;SubName: Full=Aconitate isomerase&#39;
+  - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__methylcitrate_cycle__ppu00640-deep-research-openscientist.md
+    supporting_text: &#39;Its product is 2-methyl-*trans*-aconitate, which PrpF (2-methylaconitate isomerase, EC 5.3.3.-) converts to the 2-methyl-*cis*-aconitate accepted by aconitase&#39;
+  - reference_id: file:PSEPK/prpF/prpF-deep-research-openscientist.md
+    supporting_text: &#39;**2-methyl-*trans*-aconitate ⇌ 2-methyl-*cis*-aconitate** (EC 5.3.3.-, KEGG K09788)&#39;
+proposed_new_terms:
+- proposed_name: 2-methylaconitate isomerase activity
+  proposed_definition: &gt;-
+    Catalysis of the isomerization of an AcnD-derived methylaconitate isomer to
+    2-methyl-cis-aconitate.
+  justification: &gt;-
+    The available generic isomerase term does not capture the PrpF substrate
+    or its role in coupling AcnD to the downstream aconitase-family enzyme.
+    The existing aconitate delta-isomerase term describes unmethylated
+    trans-aconitate and is not an exact substitute.
+  proposed_parent:
+    id: GO:0016859
+    label: cis-trans isomerase activity
+  supported_by:
+  - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__methylcitrate_cycle__ppu00640-deep-research-openscientist.md
+    supporting_text: &#39;Its product is 2-methyl-*trans*-aconitate, which PrpF (2-methylaconitate isomerase, EC 5.3.3.-) converts to the 2-methyl-*cis*-aconitate accepted by aconitase&#39;
+  - reference_id: file:PSEPK/prpF/prpF-deep-research-openscientist.md
+    supporting_text: &#39;**2-methyl-*trans*-aconitate ⇌ 2-methyl-*cis*-aconitate** (EC 5.3.3.-, KEGG K09788)&#39;
+  - reference_id: file:modules/methylcitrate_cycle-deep-research-openscientist.md
+    supporting_text: &#39;points to **4-methylaconitate**, but the precise structure/stereochemistry&#39;
+suggested_questions:
+- question: How do KT2440 PrpF kinetics compare between the physiological methylaconitate isomer and unmethylated trans-aconitate?
+suggested_experiments:
+- description: &gt;-
+    Generate the physiological AcnD product enzymatically, assay purified PrpF
+    against it and unmethylated trans-aconitate, and identify products by
+    targeted LC-MS and NMR.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

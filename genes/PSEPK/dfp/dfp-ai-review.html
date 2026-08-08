@@ -1,0 +1,2729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dfp - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>dfp</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88C96" target="_blank" class="term-link">
+                        Q88C96
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "dfp";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88C96" data-a="DESCRIPTION: dfp (PP_5285), also called coaBC, encodes a bifunc..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>dfp (PP_5285), also called coaBC, encodes a bifunctional bacterial coenzyme A biosynthesis enzyme. Its C-terminal CoaB region uses CTP to ligate cysteine to 4&#39;-phosphopantothenate, and its N-terminal FMN-dependent CoaC region then decarboxylates phosphopantothenoylcysteine to 4&#39;-phosphopantetheine. Q88C96 therefore performs reactions 2 and 3 of the five-reaction conversion of pantothenate to CoA. Its sequence has the expected fused CoaC-CoaB domain architecture, although direct KT2440 enzyme assays have not been reported.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C96" data-a="GO:0003824" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic catalytic activity should be replaced by both specific CoaBC reactions.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Q88C96 contains distinct CoaB ligase and CoaC decarboxylase regions, and both exact molecular-function terms are already supported independently in GOA. The parent catalytic-activity term is true but uninformative.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004632" target="_blank" class="term-link">
+                                    phosphopantothenate--cysteine ligase activity
+                                </a>
+                            </span>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004633" target="_blank" class="term-link">
+                                    phosphopantothenoylcysteine decarboxylase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dfp/dfp-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0003824	catalytic activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dfp/dfp-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=Coenzyme A biosynthesis bifunctional protein CoaBC</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004632" target="_blank" class="term-link">
+                                    GO:0004632
+                                </a>
+                            </span>
+                            <span class="term-label">phosphopantothenate--cysteine ligase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C96" data-a="GO:0004632" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The CoaB ligase reaction is one of the two core functions of Dfp.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The C-terminal region belongs to the CoaB/PPC synthetase family, carries conserved CTP-binding features, and is assigned the exact Rhea reaction by HAMAP and RuleBase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dfp/dfp-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0004632	phosphopantothenate--cysteine ligase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dfp/dfp-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=(R)-4&#39;-phosphopantothenate + L-cysteine + CTP</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dfp/dfp-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">In the C-terminal section; belongs to the PPC synthetase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11278255" target="_blank" class="term-link">
+                                        PMID:11278255
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">also has phosphopantothenoylcysteine synthetase activity, using CTP rather than ATP</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004633" target="_blank" class="term-link">
+                                    GO:0004633
+                                </a>
+                            </span>
+                            <span class="term-label">phosphopantothenoylcysteine decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C96" data-a="GO:0004633" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The FMN-dependent CoaC reaction is the second core function of Dfp.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The N-terminal region is an HFCD-family flavoprotein with the conserved catalytic architecture, and UniProt records the exact phosphopantothenoylcysteine decarboxylation reaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dfp/dfp-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0004633	phosphopantothenoylcysteine decarboxylase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dfp/dfp-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=N-[(R)-4-phosphopantothenoyl]-L-cysteine + H(+)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dfp/dfp-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">In the N-terminal section; belongs to the HFCD</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11278255" target="_blank" class="term-link">
+                                        PMID:11278255
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the NH(2)-terminal domain of the Dfp protein from bacteria catalyzes the next step in CoA biosynthesis, the decarboxylation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010181" target="_blank" class="term-link">
+                                    GO:0010181
+                                </a>
+                            </span>
+                            <span class="term-label">FMN binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C96" data-a="GO:0010181" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FMN is the catalytic cofactor of the CoaC region but is not a standalone core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt specifies one FMN per subunit, consistent with the flavin-dependent CoaC mechanism. The substrate-specific decarboxylase activity is the informative core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dfp/dfp-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0010181	FMN binding</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dfp/dfp-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Note=Binds 1 FMN per subunit.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                    GO:0015937
+                                </a>
+                            </span>
+                            <span class="term-label">coenzyme A biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C96" data-a="GO:0015937" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Fused CoaBC performs steps 2 and 3 of coenzyme A biosynthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Both sequential reactions convert the product of pantothenate kinase to 4&#39;-phosphopantetheine for CoaD, and UniProt places Q88C96 at both steps 2 and 3 of the five-step pathway.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dfp/dfp-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0015937	coenzyme A biosynthetic process</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dfp/dfp-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CoA from (R)-pantothenate: step 2/5.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dfp/dfp-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CoA from (R)-pantothenate: step 3/5.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">| 2. PPCS (CoaB) | 6.3.2.5 | **dfp** (CoaBC) | PP_5285 / Q88C96</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015941" target="_blank" class="term-link">
+                                    GO:0015941
+                                </a>
+                            </span>
+                            <span class="term-label">pantothenate catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C96" data-a="GO:0015941" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CoaBC uses a phosphorylated pantothenate intermediate biosynthetically rather than catabolizing pantothenate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Dfp channels 4&#39;-phosphopantothenate forward toward CoA. InterPro&#39;s pantothenate-catabolism mapping reverses the biological direction and conflicts with the two exact CoA-biosynthetic pathway assignments.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dfp/dfp-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0015941	pantothenate catabolic process</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dfp/dfp-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes two sequential steps in the biosynthesis of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071513" target="_blank" class="term-link">
+                                    GO:0071513
+                                </a>
+                            </span>
+                            <span class="term-label">phosphopantothenoylcysteine decarboxylase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C96" data-a="GO:0071513" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The oligomeric CoaBC assembly is a phosphopantothenoylcysteine decarboxylase complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0071513 is defined by the complex&#39;s decarboxylase reaction rather than a fixed subunit architecture. Full-length bacterial CoaBC family members form oligomeric complexes whose CoaC regions catalyze this reaction; direct structural work shows a dodecameric fused CoaBC assembly.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dfp/dfp-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0071513	phosphopantothenoylcysteine decarboxylase complex</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33420031" target="_blank" class="term-link">
+                                        PMID:33420031
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both M. tuberculosis CoaBC (MtbCoaBC) (Supplementary Fig. 1a) and M. smegmatis CoaBC (MsmCoaBC) (Supplementary Fig. 1b) exclusively exhibited a dodecameric assembly</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>CTP-dependent phosphopantothenate--cysteine ligase activity of the C-terminal CoaB region, producing phosphopantothenoylcysteine in CoA biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88C96" data-a="FUNCTION: CTP-dependent phosphopantothenate--cysteine ligase..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004632" target="_blank" class="term-link">
+                            phosphopantothenate--cysteine ligase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                coenzyme A biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/dfp/dfp-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">In the C-terminal section; belongs to the PPC synthetase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/dfp/dfp-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">GO:0004632	phosphopantothenate--cysteine ligase activity</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11278255" target="_blank" class="term-link">
+                                PMID:11278255
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">using CTP rather than ATP as the activating nucleoside 5&#39;-triphosphate</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FMN-dependent phosphopantothenoylcysteine decarboxylase activity of the N-terminal CoaC region, producing 4&#39;-phosphopantetheine in CoA biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88C96" data-a="FUNCTION: FMN-dependent phosphopantothenoylcysteine decarbox..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004633" target="_blank" class="term-link">
+                            phosphopantothenoylcysteine decarboxylase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                coenzyme A biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071513" target="_blank" class="term-link">
+                            phosphopantothenoylcysteine decarboxylase complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/dfp/dfp-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">In the N-terminal section; belongs to the HFCD</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/dfp/dfp-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">GO:0004633	phosphopantothenoylcysteine decarboxylase activity</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11278255" target="_blank" class="term-link">
+                                PMID:11278255
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">decarboxylation of (R)-4&#39;-phospho-N-pantothenoylcysteine to form 4&#39;-phosphopantetheine</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33420031" target="_blank" class="term-link">
+                            PMID:33420031
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Inhibiting Mycobacterium tuberculosis CoaBC by targeting an allosteric site.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">In most prokaryotes a single fused CoaBC protein performs reactions 2 and 3 of CoA biosynthesis and assembles as an oligomeric complex.</div>
+
+                        <div class="finding-text">"the second and third steps being catalysed in the vast majority of prokaryotes"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11278255" target="_blank" class="term-link">
+                            PMID:11278255
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Phosphopantothenoylcysteine synthetase from Escherichia coli. Identification and characterization of the last unidentified coenzyme A biosynthetic enzyme in bacteria.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">E. coli Dfp combines phosphopantothenoylcysteine decarboxylase with a CTP-dependent phosphopantothenoylcysteine synthetase activity.</div>
+
+                        <div class="finding-text">"the protein encoded by the dfp gene, here renamed coaBC, also has phosphopantothenoylcysteine synthetase activity, using CTP rather than ATP"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/dfp/dfp-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for dfp</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt assigns both exact reactions, both pathway positions, FMN and magnesium cofactors, and the expected CoaB/CoaC domain architecture to Q88C96.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/dfp/dfp-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for dfp</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the seven annotations reviewed for dfp.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/dfp/dfp-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for dfp</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report supports the bifunctional domain assignment and CTP/FMN reaction chemistry, while finding no direct KT2440 enzymology. Claims about essentiality, oligomeric state, and feedback regulation remain ortholog-based and are not promoted into Q88C96 core functions.</div>
+
+                        <div class="finding-text">"No *P. putida* KT2440-specific enzymological study was located"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist pathway research for PSEPK pantothenate and CoA biosynthesis</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The pathway report identifies one KT2440 dfp/coaBC protein as satisfying both the ligase and decarboxylase reactions.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are both catalytic regions of KT2440 Q88C96 active with the predicted CTP, cysteine, and FMN requirements despite the UniProt feature-propagation caution?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88C96" data-a="Q: Are both catalytic regions of KT2440 Q88C96 active..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify full-length Q88C96 and use coupled and step-resolved assays to quantify CoaB ligase and CoaC decarboxylase activity, FMN occupancy, and oligomeric state.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: biochemical enzyme assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88C96" data-a="EXPERIMENT: Purify full-length Q88C96 and use coupled and step..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(dfp-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88C96" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *dfp* / *coaBC* (CoaBC) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-18T14:54:54.493395</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="dfp-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="dfp-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-dfp-coabc-coabc-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>dfp</em> / <em>coaBC</em> (CoaBC) in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>UniProt:</strong> Q88C96 · <strong>Gene:</strong> <em>dfp</em> (synonym <em>coaBC</em>) · <strong>Locus:</strong> PP_5285<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / KT2440)<br />
+<strong>EC numbers:</strong> 6.3.2.5 (phosphopantothenate–cysteine ligase) + 4.1.1.36 (phosphopantothenoylcysteine decarboxylase)</p>
+<hr />
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (Answer to the Research Question)</h2>
+<p>Q88C96 (<em>dfp</em>/<em>coaBC</em>, PP_5285) encodes <strong>CoaBC</strong>, a <strong>bifunctional, cytoplasmic enzyme that carries out the second and third of the five steps of the universal coenzyme A (CoA) biosynthetic pathway</strong>, converting 4′-phosphopantothenate into 4′-phosphopantetheine. It is a single polypeptide with two catalytic domains:</p>
+<ul>
+<li>A <strong>C-terminal CoaB domain</strong> = <strong>phosphopantothenoylcysteine synthetase (PPCS, EC 6.3.2.5)</strong>, which ligates L-cysteine to 4′-phosphopantothenate to form (R)-4′-phospho-<em>N</em>-pantothenoylcysteine (PPC), using <strong>CTP</strong> (not ATP) and Mg²⁺.</li>
+<li>An <strong>N-terminal CoaC domain</strong> = <strong>phosphopantothenoylcysteine decarboxylase (PPCDC, EC 4.1.1.36)</strong>, an <strong>FMN-dependent</strong> member of the HFCD flavoprotein family that decarboxylates PPC to 4′-phosphopantetheine.</li>
+</ul>
+<p>CoaBC is <strong>essential</strong>, acts in the <strong>cytosol</strong>, forms a higher-order oligomer (dodecamer) subject to <strong>feedback regulation by CoA thioesters</strong>, and is a validated antibacterial drug target.</p>
+<hr />
+<h2 id="2-identity-verification">2. Identity Verification</h2>
+<p>The assignment is unambiguous and consistent across independent lines of evidence:</p>
+<ul>
+<li><strong>Gene symbol history:</strong> The <em>dfp</em> gene ("DNA/pantothenate metabolism flavoprotein") was renamed <strong><em>coaBC</em></strong> when Strauss et al. showed the Dfp protein carries both CoA-pathway activities (PMID 11278255). The UniProt record's dual naming (<em>dfp</em> / <em>coaBC</em>; PPCS-PPCDC; CoaB + CoaC) matches this literature exactly.</li>
+<li><strong>Domain/family match:</strong> The provided InterPro/family annotation (HFCD flavoprotein in the N-terminal section; CoaB-like_sf; CoaBC; DNA/pantothenate-metab_flavo_C; Flavoprotein) precisely matches the biochemically defined two-domain architecture of Dfp/CoaBC.</li>
+<li><strong>Organism match:</strong> Pseudomonad-specific CoA-pathway physiology (below) is documented for the closely related <em>P. aeruginosa</em> (PMID 21551303), directly relevant to <em>P. putida</em>.</li>
+</ul>
+<p>No conflicting gene of the same symbol was encountered. The literature for "<em>dfp</em>/<em>coaBC</em>" describes this exact bifunctional CoA-biosynthesis flavoprotein.</p>
+<p><strong>Target-specific sequence evidence (Q88C96, 403 aa):</strong> Direct analysis of the <em>P. putida</em> KT2440 sequence confirms both intact catalytic domains and their conserved active-site residues:<br />
+- <strong>N-terminal PPCDC/CoaC domain (~1–190):</strong> carries the HFCD flavoprotein signature <strong>G-G-I-A-A-Y-K at residues 15–21</strong>, matching Kupke's conserved G-G/S-I-A-X-Y-K coenzyme/substrate-binding motif (PMID 11358972); a <strong>Cys159</strong> lies in the region homologous to the <em>E. coli</em> Dfp substrate-clamp Cys158.<br />
+- <strong>C-terminal PPCS/CoaB domain (~200–403):</strong> carries the strictly conserved synthetase motif <strong>K-L-K-K at residues 288–291</strong>, corresponding to the essential <em>E. coli</em> Lys289 (KXKK) motif (PMID 12140293).<br />
+- The N-terminus (MQRLYRKRIV…) is basic/hydrophilic with <strong>no signal peptide or transmembrane segment</strong>, consistent with cytoplasmic localization.</p>
+<p>This confirms the orthology-based assignment at the level of the actual <em>P. putida</em> protein rather than relying solely on distant homologs.</p>
+<hr />
+<h2 id="3-primary-function-reaction-catalyzed-and-substrate-specificity">3. Primary Function: Reaction Catalyzed and Substrate Specificity</h2>
+<p><strong>Overall reaction (two consecutive pathway steps):</strong></p>
+<blockquote>
+<p>4′-phosphopantothenate + L-cysteine + CTP → (via PPC) → 4′-phosphopantetheine + CO₂ + CMP + PPi (+ Mg²⁺ required)</p>
+</blockquote>
+<p>Strauss et al. identified PPCS as "the last unidentified coenzyme A biosynthetic enzyme in bacteria" and showed that the <em>dfp</em> product (renamed <em>coaBC</em>) "also has phosphopantothenoylcysteine synthetase activity, using CTP rather than ATP as the activating nucleoside 5′-triphosphate," which "completes the identification of all the enzymes involved in the biosynthesis of coenzyme A in bacteria" (PMID 11278255). Balibar et al. describe <em>coaBC</em> as "a single gene encoding a bifunctional protein catalyzing two consecutive steps in the CoA pathway converting 4′-phosphopantothenate to 4′-phosphopantetheine" (PMID 21551303).</p>
+<h3 id="3a-coab-ppcs-domain-ec-6325-c-terminal">3a. CoaB / PPCS domain (EC 6.3.2.5) — C-terminal</h3>
+<ul>
+<li><strong>Substrates:</strong> 4′-phosphopantothenate, L-cysteine, CTP, Mg²⁺.</li>
+<li><strong>Substrate specificity for the nucleotide:</strong> distinctively uses <strong>CTP</strong> rather than ATP (PMID 11278255) — a hallmark that distinguishes bacterial PPCS from the eukaryotic (ATP-using) enzyme.</li>
+<li><strong>Mechanism:</strong> proceeds in <strong>two half-reactions</strong>. The phosphopantothenate carboxyl is first activated as an <strong>acyl-cytidylate (phosphopantothenoyl-cytidylate) intermediate</strong>, then attacked by the cysteine amine. Kupke trapped this intermediate using mutant His-CoaB N210D (and with wild type when cysteine was omitted), and showed the strictly conserved <strong>²⁸⁹KXKK²⁹² motif (Lys289)</strong> is essential — its exchange abolishes both intermediate formation and product (PMID 12140293). The CoaB domain forms <strong>dimers</strong> (PMID 12140293).</li>
+</ul>
+<h3 id="3b-coac-ppcdc-domain-ec-41136-n-terminal-flavoprotein">3b. CoaC / PPCDC domain (EC 4.1.1.36) — N-terminal, flavoprotein</h3>
+<ul>
+<li><strong>Substrate/product:</strong> decarboxylates (R)-4′-phospho-<em>N</em>-pantothenoylcysteine (PPC) to <strong>4′-phosphopantetheine</strong> (PMID 11358972).</li>
+<li><strong>Cofactor:</strong> <strong>FMN</strong>, bound <strong>non-covalently at the interface between two subunits</strong> within a Rossmann fold; the domain belongs to the <strong>HFCD</strong> ("homooligomeric flavin-containing Cys decarboxylase") family, together with the lantibiotic LanD enzymes EpiD/MrsD and the plant salt-tolerance protein AtHAL3a (PMID 11358972, PMID 15459342). Because the flavin sits at a subunit interface, oligomerization (trimer → dodecamer) is required to assemble a functional active site (PMID 15459342).</li>
+<li><strong>Mechanism:</strong> an <strong>FMN-mediated oxidative decarboxylation</strong>. The reaction proceeds through an <strong>oxidatively decarboxylated aminoenethiol intermediate</strong> (loss of CO₂ + two H atoms, confirmed by high-resolution MS), which is then <strong>re-reduced by a redox-active cysteine</strong> (Cys175 in AtHAL3a; equivalents Asn125/Cys158 essential in bacterial Dfp) to yield the saturated phosphopantetheine thiol (PMID 11923307, PMID 11358972). Key catalytic/substrate-clamp residues in the conserved G-G/S-I-A-X-Y-K motif are required for flavin binding and activity (PMID 11358972).</li>
+</ul>
+<p><strong>Note on domain order vs. reaction order:</strong> In the polypeptide the <strong>decarboxylase (CoaC) is N-terminal</strong> and the <strong>synthetase (CoaB) is C-terminal</strong>, whereas in the pathway the synthetase acts first — hence the name "Coa<strong>B</strong>C."</p>
+<hr />
+<h2 id="4-subcellular-localization">4. Subcellular Localization</h2>
+<p>CoaBC is a <strong>soluble cytoplasmic enzyme</strong>. CoA biosynthesis is a cytosolic process, and CoaBC has been characterized as a soluble oligomeric protein (gel filtration; native MS; crystallography of homologs) with no signal peptide or membrane-spanning region in Q88C96 (PMID 12140293, PMID 33420031). Its function — producing the CoA precursor 4′-phosphopantetheine — is therefore carried out <strong>inside the cell, in the cytoplasm</strong>, where downstream CoaD/CoaE complete CoA assembly.</p>
+<hr />
+<h2 id="5-pathway-context-and-regulation">5. Pathway Context and Regulation</h2>
+<ul>
+<li><strong>Pathway:</strong> CoA is assembled in <strong>five steps from pantothenate</strong> (PanK/CoaA(X) → <strong>PPCS(CoaB) → PPCDC(CoaC)</strong> → PPAT/CoaD → DPCK/CoaE); the intermediates are common to prokaryotes and eukaryotes (PMID 15893380). CoaBC occupies steps 2–3, downstream of pantothenate kinase and upstream of phosphopantetheine adenylyltransferase.</li>
+<li><strong>Downstream fate of the product:</strong> The 4′-phosphopantetheine made by CoaBC is converted by CoaD (PPAT) and CoaE (DPCK) into <strong>free CoA</strong>. CoA is then the donor from which <strong>4′-phosphopantetheinyl transferases (PPTases; AcpS, Sfp)</strong> transfer the 4′-phosphopantetheine moiety onto a conserved serine of apo-<strong>acyl carrier proteins (ACP)</strong> and <strong>peptidyl carrier proteins (PCP)</strong>, producing the holo forms whose phosphopantetheine "swinging arm" thiol is essential for fatty-acid, polyketide, and nonribosomal-peptide synthesis (PMID 15065855, PMID 11525165). Thus CoaBC feeds both the central CoA pool and the carrier-protein machinery — the basis of its essentiality.</li>
+<li><strong>Regulation:</strong> The first full-length CoaBC structure (from <em>Mycobacterium smegmatis</em>) shows the enzyme "is organised as a <strong>dodecamer</strong> and <strong>regulated by CoA thioesters</strong>," with inhibitors binding "a <strong>cryptic allosteric site within CoaB</strong>" (PMID 33420031). This implies end-product/thioester feedback control over CoA output at the CoaBC node.</li>
+<li><strong>Pseudomonad-specific feature:</strong> In <em>Pseudomonas</em>, the upstream pantothenate kinase is the <strong>type III CoaX</strong> (not <em>E. coli</em>'s CoaA). Consequently <em>P. aeruginosa</em> — unlike <em>E. coli</em> — <strong>cannot use pantethine to bypass loss of coaBC</strong>, because of the differing substrate specificity of its pantothenate kinase (PMID 21551303). This indicates pseudomonads, including <em>P. putida</em>, depend on <strong>de novo CoaBC activity</strong> with no salvage bypass at this step.</li>
+</ul>
+<hr />
+<h2 id="6-essentiality-and-biomedicalbiotechnological-relevance">6. Essentiality and Biomedical/Biotechnological Relevance</h2>
+<ul>
+<li><strong>Essential gene:</strong> <em>coaBC</em> is essential in <em>E. coli</em> (arabinose-regulated depletion) and its depletion is <strong>bactericidal</strong> in <em>M. tuberculosis</em> (PMID 21551303, PMID 33420031).</li>
+<li><strong>Validated drug target:</strong> The CoA biosynthetic pathway "is a target for antibacterial drug discovery" (PMID 15893380); CoaBC specifically has been pursued with high-throughput biochemical screens and native ion-mobility MS to find selective inhibitors of the CoaB domain (PMID 33420031, PMID 31488574). The same essentiality principle underlies its interest in <em>Pseudomonas</em>.</li>
+<li><strong>Essentiality in <em>P. putida</em> KT2440 (inference):</strong> Genome-scale metabolic models of KT2440 predict a defined essential-gene set, and a genome-wide mini-Tn5 knockout screen recovered only <em>conditionally</em> essential auxotrophs (amino acids, biotin, nicotinate, vitamin B12) rescuable by supplementation (PMID 20158506). Because CoA cannot be imported and this pathway step cannot be salvaged in <em>Pseudomonas</em> (no pantethine bypass; PMID 21551303), <em>coaBC</em> (PP_5285) is expected to be <strong>unconditionally essential</strong> — consistent with its being absent from recoverable mutant/auxotroph collections and with demonstrated essentiality of <em>coaBC</em> in <em>E. coli</em> and <em>M. tuberculosis</em>.</li>
+</ul>
+<hr />
+<h2 id="7-supported-vs-refuted-hypotheses">7. Supported vs. Refuted Hypotheses</h2>
+<p><strong>Supported:</strong><br />
+- H1: Q88C96 is the bifunctional CoaBC (PPCS + PPCDC) of CoA biosynthesis — <strong>strongly supported</strong> (multiple primary studies of orthologs; family/domain match).<br />
+- H2: The synthetase uses CTP and an acyl-cytidylate intermediate — <strong>supported</strong> (PMID 11278255, 12140293).<br />
+- H3: The decarboxylase is an FMN-dependent HFCD flavoprotein acting via an aminoenethiol intermediate — <strong>supported</strong> (PMID 11358972, 11923307).<br />
+- H4: The enzyme is cytoplasmic and essential — <strong>supported</strong> (PMID 33420031, 21551303).</p>
+<p><strong>Refuted / ruled out:</strong><br />
+- The bacterial synthetase does <strong>not</strong> use ATP as activator (uses CTP) — the ATP hypothesis is refuted for this domain (PMID 11278255).<br />
+- A pantethine-salvage bypass of CoaBC does <strong>not</strong> operate in <em>Pseudomonas</em> (refuted for pseudomonads; PMID 21551303).</p>
+<hr />
+<h2 id="8-limitations-and-future-directions">8. Limitations and Future Directions</h2>
+<ul>
+<li><strong>Direct evidence gap:</strong> Mechanistic/structural data derive from orthologs (<em>E. coli</em> Dfp, <em>M. smegmatis</em>/<em>M. tuberculosis</em> CoaBC, <em>Arabidopsis</em> AtHAL3a). No <em>P. putida</em> KT2440-specific enzymological study was located; the annotation for Q88C96 is by strong orthology/inference. Direct biochemical confirmation (CTP specificity, FMN content, k_cat/K_m) and a <em>P. putida</em> structure would close this gap.</li>
+<li><strong>Regulation specifics:</strong> Feedback by CoA thioesters is established in mycobacterial CoaBC; whether the <em>P. putida</em> enzyme shares the same allosteric site/kinetics remains to be tested.</li>
+<li><strong>Future work:</strong> Verify essentiality in <em>P. putida</em> KT2440 (e.g., conditional knockdown), determine the oligomeric state and FMN stoichiometry, and evaluate CoaB-domain inhibitors for antipseudomonal activity.</li>
+</ul>
+<hr />
+<h2 id="references-pmids">References (PMIDs)</h2>
+<ul>
+<li>11278255 — Strauss et al., <em>J. Biol. Chem.</em> 2001. PPCS identification; <em>dfp</em>→<em>coaBC</em>; CTP-dependent synthetase.</li>
+<li>12140293 — Kupke, <em>J. Biol. Chem.</em> 2002. CoaB domain mechanism; acyl-cytidylate intermediate; Lys289 (KXKK) motif; CoaB dimerization.</li>
+<li>11358972 — Kupke, <em>J. Biol. Chem.</em> 2001. N-terminal PPCDC domain; HFCD flavoprotein family; conserved motifs.</li>
+<li>11923307 — Hernández-Acosta et al., 2002. AtHAL3a; general PPCDC oxidative-decarboxylation mechanism (aminoenethiol intermediate).</li>
+<li>21551303 — Balibar et al., 2011. Essentiality of <em>coaBC</em>; Pseudomonas pantothenate kinase (CoaX) specificity; no pantethine bypass.</li>
+<li>33420031 — Mendes et al., 2021. First full-length CoaBC structure (dodecamer); CoA-thioester regulation; allosteric CoaB inhibitors; bactericidal on depletion.</li>
+<li>31488574 — Chan et al., 2019. Native IM-MS structural analysis of <em>E. coli</em> PPCS domain; inhibitor screening.</li>
+<li>15893380 — Leonardi et al., <em>Prog. Lipid Res.</em> 2005. Review: CoA biosynthesis genetics/enzymology; antibacterial target.</li>
+<li>15459342 — Rangarajan et al., 2004. HFCD/FMN flavoprotein fold; non-covalent FMN at subunit interface; trimer→dodecamer assembly (Pad1, EpiD, MrsD, AtHAL3a).</li>
+<li>15065855 — Mofid et al., 2004. PPTase (Sfp) mechanism; transfer of 4′-phosphopantetheine from CoA to ACP/PCP serine.</li>
+<li>11525165 — Xu et al., 2001. ACP structure; 4′-phosphopantetheine prosthetic group / swinging arm derived from CoA.</li>
+<li>20158506 — Molina-Henares et al., 2010. Genome-wide <em>P. putida</em> KT2440 mutant screen; essential/conditionally essential gene identification.</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="dfp-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="dfp-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88C96
+gene_symbol: dfp
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  dfp (PP_5285), also called coaBC, encodes a bifunctional bacterial coenzyme A
+  biosynthesis enzyme. Its C-terminal CoaB region uses CTP to ligate cysteine
+  to 4&#39;-phosphopantothenate, and its N-terminal FMN-dependent CoaC region then
+  decarboxylates phosphopantothenoylcysteine to 4&#39;-phosphopantetheine. Q88C96
+  therefore performs reactions 2 and 3 of the five-reaction conversion of
+  pantothenate to CoA. Its sequence has the expected fused CoaC-CoaB domain
+  architecture, although direct KT2440 enzyme assays have not been reported.
+existing_annotations:
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Generic catalytic activity should be replaced by both specific CoaBC reactions.
+    action: MODIFY
+    reason: &gt;-
+      Q88C96 contains distinct CoaB ligase and CoaC decarboxylase regions, and
+      both exact molecular-function terms are already supported independently
+      in GOA. The parent catalytic-activity term is true but uninformative.
+    proposed_replacement_terms:
+    - id: GO:0004632
+      label: phosphopantothenate--cysteine ligase activity
+    - id: GO:0004633
+      label: phosphopantothenoylcysteine decarboxylase activity
+    supported_by:
+    - reference_id: file:PSEPK/dfp/dfp-goa.tsv
+      supporting_text: &#34;GO:0003824\tcatalytic activity&#34;
+    - reference_id: file:PSEPK/dfp/dfp-uniprot.txt
+      supporting_text: &#34;RecName: Full=Coenzyme A biosynthesis bifunctional protein CoaBC&#34;
+- term:
+    id: GO:0004632
+    label: phosphopantothenate--cysteine ligase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: The CoaB ligase reaction is one of the two core functions of Dfp.
+    action: ACCEPT
+    reason: &gt;-
+      The C-terminal region belongs to the CoaB/PPC synthetase family, carries
+      conserved CTP-binding features, and is assigned the exact Rhea reaction
+      by HAMAP and RuleBase.
+    supported_by:
+    - reference_id: file:PSEPK/dfp/dfp-goa.tsv
+      supporting_text: &#34;GO:0004632\tphosphopantothenate--cysteine ligase activity&#34;
+    - reference_id: file:PSEPK/dfp/dfp-uniprot.txt
+      supporting_text: &#34;Reaction=(R)-4&#39;-phosphopantothenate + L-cysteine + CTP&#34;
+    - reference_id: file:PSEPK/dfp/dfp-uniprot.txt
+      supporting_text: &#34;In the C-terminal section; belongs to the PPC synthetase&#34;
+    - reference_id: PMID:11278255
+      supporting_text: &#34;also has phosphopantothenoylcysteine synthetase activity, using CTP rather than ATP&#34;
+- term:
+    id: GO:0004633
+    label: phosphopantothenoylcysteine decarboxylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: The FMN-dependent CoaC reaction is the second core function of Dfp.
+    action: ACCEPT
+    reason: &gt;-
+      The N-terminal region is an HFCD-family flavoprotein with the conserved
+      catalytic architecture, and UniProt records the exact
+      phosphopantothenoylcysteine decarboxylation reaction.
+    supported_by:
+    - reference_id: file:PSEPK/dfp/dfp-goa.tsv
+      supporting_text: &#34;GO:0004633\tphosphopantothenoylcysteine decarboxylase activity&#34;
+    - reference_id: file:PSEPK/dfp/dfp-uniprot.txt
+      supporting_text: &#34;Reaction=N-[(R)-4-phosphopantothenoyl]-L-cysteine + H(+)&#34;
+    - reference_id: file:PSEPK/dfp/dfp-uniprot.txt
+      supporting_text: &#34;In the N-terminal section; belongs to the HFCD&#34;
+    - reference_id: PMID:11278255
+      supporting_text: &#34;the NH(2)-terminal domain of the Dfp protein from bacteria catalyzes the next step in CoA biosynthesis, the decarboxylation&#34;
+- term:
+    id: GO:0010181
+    label: FMN binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: FMN is the catalytic cofactor of the CoaC region but is not a standalone core function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      UniProt specifies one FMN per subunit, consistent with the
+      flavin-dependent CoaC mechanism. The substrate-specific decarboxylase
+      activity is the informative core molecular function.
+    supported_by:
+    - reference_id: file:PSEPK/dfp/dfp-goa.tsv
+      supporting_text: &#34;GO:0010181\tFMN binding&#34;
+    - reference_id: file:PSEPK/dfp/dfp-uniprot.txt
+      supporting_text: &#34;Note=Binds 1 FMN per subunit.&#34;
+- term:
+    id: GO:0015937
+    label: coenzyme A biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Fused CoaBC performs steps 2 and 3 of coenzyme A biosynthesis.
+    action: ACCEPT
+    reason: &gt;-
+      Both sequential reactions convert the product of pantothenate kinase to
+      4&#39;-phosphopantetheine for CoaD, and UniProt places Q88C96 at both steps 2
+      and 3 of the five-step pathway.
+    supported_by:
+    - reference_id: file:PSEPK/dfp/dfp-goa.tsv
+      supporting_text: &#34;GO:0015937\tcoenzyme A biosynthetic process&#34;
+    - reference_id: file:PSEPK/dfp/dfp-uniprot.txt
+      supporting_text: &#34;CoA from (R)-pantothenate: step 2/5.&#34;
+    - reference_id: file:PSEPK/dfp/dfp-uniprot.txt
+      supporting_text: &#34;CoA from (R)-pantothenate: step 3/5.&#34;
+    - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md
+      supporting_text: &#34;| 2. PPCS (CoaB) | 6.3.2.5 | **dfp** (CoaBC) | PP_5285 / Q88C96&#34;
+- term:
+    id: GO:0015941
+    label: pantothenate catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: CoaBC uses a phosphorylated pantothenate intermediate biosynthetically rather than catabolizing pantothenate.
+    action: REMOVE
+    reason: &gt;-
+      Dfp channels 4&#39;-phosphopantothenate forward toward CoA. InterPro&#39;s
+      pantothenate-catabolism mapping reverses the biological direction and
+      conflicts with the two exact CoA-biosynthetic pathway assignments.
+    supported_by:
+    - reference_id: file:PSEPK/dfp/dfp-goa.tsv
+      supporting_text: &#34;GO:0015941\tpantothenate catabolic process&#34;
+    - reference_id: file:PSEPK/dfp/dfp-uniprot.txt
+      supporting_text: &#34;Catalyzes two sequential steps in the biosynthesis of&#34;
+- term:
+    id: GO:0071513
+    label: phosphopantothenoylcysteine decarboxylase complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: part_of
+  review:
+    summary: The oligomeric CoaBC assembly is a phosphopantothenoylcysteine decarboxylase complex.
+    action: ACCEPT
+    reason: &gt;-
+      GO:0071513 is defined by the complex&#39;s decarboxylase reaction rather than
+      a fixed subunit architecture. Full-length bacterial CoaBC family members
+      form oligomeric complexes whose CoaC regions catalyze this reaction;
+      direct structural work shows a dodecameric fused CoaBC assembly.
+    supported_by:
+    - reference_id: file:PSEPK/dfp/dfp-goa.tsv
+      supporting_text: &#34;GO:0071513\tphosphopantothenoylcysteine decarboxylase complex&#34;
+    - reference_id: PMID:33420031
+      supporting_text: &#34;Both M. tuberculosis CoaBC (MtbCoaBC) (Supplementary Fig. 1a) and M. smegmatis CoaBC (MsmCoaBC) (Supplementary Fig. 1b) exclusively exhibited a dodecameric assembly&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:33420031
+  title: Inhibiting Mycobacterium tuberculosis CoaBC by targeting an allosteric site.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified full-length CoaBC structural and biochemical study in
+      mycobacteria. It establishes the fused two-reaction architecture and
+      oligomeric complex but does not directly assay Q88C96.
+  findings:
+  - statement: &gt;-
+      In most prokaryotes a single fused CoaBC protein performs reactions 2 and
+      3 of CoA biosynthesis and assembles as an oligomeric complex.
+    supporting_text: &#34;the second and third steps being catalysed in the vast majority of prokaryotes&#34;
+- id: PMID:11278255
+  title: Phosphopantothenoylcysteine synthetase from Escherichia coli. Identification and characterization of the last unidentified coenzyme A biosynthetic enzyme in bacteria.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified foundational biochemical evidence that bacterial Dfp is
+      bifunctional CoaBC and that its ligase region uses CTP rather than ATP.
+      The experiment used E. coli Dfp, not Q88C96.
+  findings:
+  - statement: &gt;-
+      E. coli Dfp combines phosphopantothenoylcysteine decarboxylase with a
+      CTP-dependent phosphopantothenoylcysteine synthetase activity.
+    supporting_text: &#34;the protein encoded by the dfp gene, here renamed coaBC, also has phosphopantothenoylcysteine synthetase activity, using CTP rather than ATP&#34;
+- id: file:PSEPK/dfp/dfp-uniprot.txt
+  title: UniProtKB entry for dfp
+  findings:
+  - statement: &gt;-
+      UniProt assigns both exact reactions, both pathway positions, FMN and
+      magnesium cofactors, and the expected CoaB/CoaC domain architecture to
+      Q88C96.
+- id: file:PSEPK/dfp/dfp-goa.tsv
+  title: QuickGO GOA annotations for dfp
+  findings:
+  - statement: The fetched GOA table contains the seven annotations reviewed for dfp.
+- id: file:PSEPK/dfp/dfp-deep-research-openscientist.md
+  title: OpenScientist gene research for dfp
+  findings:
+  - statement: &gt;-
+      The report supports the bifunctional domain assignment and CTP/FMN
+      reaction chemistry, while finding no direct KT2440 enzymology. Claims
+      about essentiality, oligomeric state, and feedback regulation remain
+      ortholog-based and are not promoted into Q88C96 core functions.
+    supporting_text: &#34;No *P. putida* KT2440-specific enzymological study was located&#34;
+- id: file:projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md
+  title: OpenScientist pathway research for PSEPK pantothenate and CoA biosynthesis
+  findings:
+  - statement: &gt;-
+      The pathway report identifies one KT2440 dfp/coaBC protein as satisfying
+      both the ligase and decarboxylase reactions.
+core_functions:
+- description: &gt;-
+    CTP-dependent phosphopantothenate--cysteine ligase activity of the
+    C-terminal CoaB region, producing phosphopantothenoylcysteine in CoA
+    biosynthesis.
+  molecular_function:
+    id: GO:0004632
+    label: phosphopantothenate--cysteine ligase activity
+  directly_involved_in:
+  - id: GO:0015937
+    label: coenzyme A biosynthetic process
+  supported_by:
+  - reference_id: file:PSEPK/dfp/dfp-uniprot.txt
+    supporting_text: &#34;In the C-terminal section; belongs to the PPC synthetase&#34;
+  - reference_id: file:PSEPK/dfp/dfp-goa.tsv
+    supporting_text: &#34;GO:0004632\tphosphopantothenate--cysteine ligase activity&#34;
+  - reference_id: PMID:11278255
+    supporting_text: &#34;using CTP rather than ATP as the activating nucleoside 5&#39;-triphosphate&#34;
+- description: &gt;-
+    FMN-dependent phosphopantothenoylcysteine decarboxylase activity of the
+    N-terminal CoaC region, producing 4&#39;-phosphopantetheine in CoA biosynthesis.
+  molecular_function:
+    id: GO:0004633
+    label: phosphopantothenoylcysteine decarboxylase activity
+  directly_involved_in:
+  - id: GO:0015937
+    label: coenzyme A biosynthetic process
+  in_complex:
+    id: GO:0071513
+    label: phosphopantothenoylcysteine decarboxylase complex
+  supported_by:
+  - reference_id: file:PSEPK/dfp/dfp-uniprot.txt
+    supporting_text: &#34;In the N-terminal section; belongs to the HFCD&#34;
+  - reference_id: file:PSEPK/dfp/dfp-goa.tsv
+    supporting_text: &#34;GO:0004633\tphosphopantothenoylcysteine decarboxylase activity&#34;
+  - reference_id: PMID:11278255
+    supporting_text: &#34;decarboxylation of (R)-4&#39;-phospho-N-pantothenoylcysteine to form 4&#39;-phosphopantetheine&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Are both catalytic regions of KT2440 Q88C96 active with the predicted CTP,
+    cysteine, and FMN requirements despite the UniProt feature-propagation caution?
+suggested_experiments:
+- description: &gt;-
+    Purify full-length Q88C96 and use coupled and step-resolved assays to
+    quantify CoaB ligase and CoaC decarboxylase activity, FMN occupancy, and
+    oligomeric state.
+  experiment_type: biochemical enzyme assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

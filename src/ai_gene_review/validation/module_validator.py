@@ -681,12 +681,15 @@ def validate_terms(
     terms: List[Tuple[str, str]],
     adapter_map: Dict[str, Optional[str]],
     resolver: Resolver,
+    label_aliases: Optional[Dict[str, Set[str]]] = None,
 ) -> Tuple[List[str], List[str]]:
     """Validate a list of ``(id, label)`` terms, returning (errors, warnings).
 
     ``adapter_map`` maps a prefix to an OAK adapter string, to ``None`` (skip
     silently), or omits it (skip with a warning). ``resolver`` performs the
-    actual ontology lookup for configured prefixes.
+    actual ontology lookup for configured prefixes. ``label_aliases`` adds
+    explicitly reviewed labels when the configured ontology snapshot lags the
+    authoritative source.
     """
     errors: List[str] = []
     warnings: List[str] = []
@@ -714,7 +717,10 @@ def validate_terms(
         if status == "not_found":
             errors.append(f"Term id {curie} not found in configured ontology")
             continue
-        err = compare_label(curie, label, primary, aliases)
+        accepted_aliases = set(aliases)
+        if label_aliases:
+            accepted_aliases.update(label_aliases.get(curie, set()))
+        err = compare_label(curie, label, primary, accepted_aliases)
         if err:
             errors.append(err)
 
@@ -787,6 +793,18 @@ def load_oak_adapter_map(config_path: Path) -> Dict[str, Optional[str]]:
         data = yaml.safe_load(f) or {}
     adapters = data.get("ontology_adapters", {})
     return {str(k): (None if v is None else str(v)) for k, v in adapters.items()}
+
+
+def load_term_label_aliases(config_path: Path) -> Dict[str, Set[str]]:
+    """Load reviewed label aliases used to bridge stale ontology snapshots."""
+    with open(config_path) as f:
+        data = yaml.safe_load(f) or {}
+    raw_aliases = data.get("term_label_aliases", {})
+    return {
+        str(curie): {str(label) for label in labels}
+        for curie, labels in raw_aliases.items()
+        if isinstance(labels, list)
+    }
 
 
 def _build_oak_resolver(adapter_map: Dict[str, Optional[str]]) -> Resolver:
@@ -908,6 +926,7 @@ def validate_module_file(
     if config_path is None:
         config_path = project_root / "conf" / "oak_config.yaml"
     adapter_map = load_oak_adapter_map(config_path)
+    label_aliases = load_term_label_aliases(config_path)
 
     with open(path) as f:
         doc = yaml.safe_load(f)
@@ -917,7 +936,7 @@ def validate_module_file(
     resolver_was_injected = resolver is not None
     if resolver is None:
         resolver = _build_oak_resolver(adapter_map)
-    errors, warnings = validate_terms(terms, adapter_map, resolver)
+    errors, warnings = validate_terms(terms, adapter_map, resolver, label_aliases)
     errors.extend(validate_taxon_context(doc))
     if branch_resolver is None:
         branch_resolver = (
@@ -1100,7 +1119,14 @@ def validate_supporting_text(
     errors: List[str] = []
     warnings: List[str] = []
     for source_id, supporting_text in snippets:
-        result = validator.validate(supporting_text, source_id)
+        try:
+            result = validator.validate(supporting_text, source_id)
+        except Exception as exc:  # noqa: BLE001 - external publication service
+            warnings.append(
+                f"Supporting text unverified ({source_id}): fetch failed: "
+                f"{type(exc).__name__}: {exc}"
+            )
+            continue
         if result.is_valid:
             continue
         message = str(getattr(result, "message", "") or "")
@@ -1141,7 +1167,14 @@ def validate_reference_titles(
     errors: List[str] = []
     warnings: List[str] = []
     for ref_id, title in refs:
-        result = validator.validate_title(ref_id, title)
+        try:
+            result = validator.validate_title(ref_id, title)
+        except Exception as exc:  # noqa: BLE001 - external publication service
+            warnings.append(
+                f"Reference title unverified ({ref_id}): fetch failed: "
+                f"{type(exc).__name__}: {exc}"
+            )
+            continue
         if result.is_valid:
             continue
         message = str(getattr(result, "message", "") or "")

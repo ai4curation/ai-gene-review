@@ -1,0 +1,3992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RGR - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>RGR</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P47804" target="_blank" class="term-link">
+                        P47804
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "RGR";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P47804" data-a="DESCRIPTION: RGR (RPE-retinal G protein-coupled receptor, &#34;RGR ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>RGR (RPE-retinal G protein-coupled receptor, &#34;RGR opsin&#34;) is a 291-residue, seven-transmembrane member of the class A (rhodopsin) G protein-coupled receptor family, opsin subfamily, expressed preferentially in the retinal pigment epithelium (RPE) and Mueller cells of the neural retina. Unlike the signalling opsins of photoreceptor cells, RGR carries all-trans-retinal as its ground-state chromophore, covalently bound through a Schiff base to a conserved lysine (Lys255). On absorption of light it acts as a photoisomerase, photochemically converting bound all-trans-retinal to 11-cis-retinal, thereby supplying 11-cis chromophore for regeneration of visual pigments as a light-dependent complement to the enzymatic RPE65/RDH route of the visual (retinoid) cycle. In RPE cells RGR also mediates light-dependent mobilization and translocation of stored all-trans-retinyl esters from lipid droplets to endoplasmic-reticulum membranes, regulating retinyl-ester-processing enzymes (LRAT and all-trans-retinyl ester hydrolase). RGR is a multi-pass membrane protein of the endoplasmic reticulum / microsomal membranes. Mutations in RGR cause retinitis pigmentosa 44 (RP44).</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P47804" data-a="GO:0005886" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) transfer of the plasma-membrane location of signalling opsins. RGR is a multi-pass membrane protein, but its demonstrated functional location is the endoplasmic-reticulum / microsomal membrane of RPE cells, not the plasma membrane; RGR is grouped with ER-associated retinoid-processing proteins. The plasma-membrane call is an over-propagation from photoreceptor opsins.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Location is transferred from signalling opsins that reside in the plasma membrane; RGR functions in ER/microsomal membranes of the RPE and Mueller cells. Keep the generic &#34;membrane&#34; call (GO:0016020) rather than plasma membrane.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RGR/RGR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007186" target="_blank" class="term-link">
+                                    GO:0007186
+                                </a>
+                            </span>
+                            <span class="term-label">G protein-coupled receptor signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P47804" data-a="GO:0007186" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Family-level (IBA) transfer of canonical GPCR signalling. Although RGR is structurally a class-A GPCR opsin, there is no consistent evidence that it activates G proteins or initiates a second-messenger cascade; it carries variant, non-canonical G-protein-coupling motifs. This is an over-annotation of the opsin family signature rather than a demonstrated RGR function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> RGR&#39;s demonstrated role is light-driven retinoid photoisomerization, not G protein signalling; UniProt explicitly notes no consistent evidence of G protein activation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RGR/RGR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">there is no consistent evidence that RGR activates G</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007602" target="_blank" class="term-link">
+                                    GO:0007602
+                                </a>
+                            </span>
+                            <span class="term-label">phototransduction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P47804" data-a="GO:0007602" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic transfer of phototransduction from signalling opsins. RGR is a photoreceptive pigment but does not carry out canonical phototransduction (light-triggered G-protein/second-messenger signalling); its light response drives retinoid isomerization for chromophore regeneration. Over-annotation from the opsin family.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> RGR mediates a photic step of the visual (retinoid) cycle rather than the phototransduction signalling cascade; no evidence for canonical phototransduction signalling by RGR.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RGR/RGR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">there is no consistent evidence that RGR activates G</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008020" target="_blank" class="term-link">
+                                    GO:0008020
+                                </a>
+                            </span>
+                            <span class="term-label">G protein-coupled photoreceptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P47804" data-a="GO:0008020" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA transfer of &#34;G protein-coupled photoreceptor activity&#34; from signalling opsins. RGR is genuinely a light-absorbing opsin (photoreceptor), which is captured well by this term, but the term&#39;s definition specifically entails transmitting the signal by activating an associated G protein - a property for which RGR has no consistent supporting evidence. Retain as a non-core description of its opsin/photoreceptive nature, but RGR&#39;s demonstrated core molecular activity is chromophore (all-trans-retinal) binding and light-driven isomerization, not G-protein-coupled signalling.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correctly identifies RGR as a light-sensing opsin, but the G-protein activation semantics of this term are not supported for RGR; the specific demonstrated MF is all-trans-retinal binding / retinal isomerization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RGR/RGR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Photoreceptor protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RGR/RGR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">there is no consistent evidence that RGR activates G</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071482" target="_blank" class="term-link">
+                                    GO:0071482
+                                </a>
+                            </span>
+                            <span class="term-label">cellular response to light stimulus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P47804" data-a="GO:0071482" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RGR does mediate a cellular response to light: illumination triggers RGR-dependent photoisomerization of its all-trans-retinal chromophore and light-dependent mobilization of retinyl esters in RPE cells. This general term is consistent with the experimental data, though it is broader than RGR&#39;s specific role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the demonstrated light-dependent activity of RGR in RPE cells, but too general to represent the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RGR/RGR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">promotes photoisomerization of all-trans-</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18474598" target="_blank" class="term-link">
+                                        PMID:18474598
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">RGR-opsin mediates light-dependent mobilization of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004930" target="_blank" class="term-link">
+                                    GO:0004930
+                                </a>
+                            </span>
+                            <span class="term-label">G protein-coupled receptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P47804" data-a="GO:0004930" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic annotation from the rhodopsin/opsin GPCR domain signature. RGR belongs to the GPCR class A family by sequence, but there is no consistent evidence that it functions as a signalling G-protein-coupled receptor; it carries variant coupling motifs. This electronic transfer of a signalling MF is an over-annotation of RGR&#39;s actual (chromophore-binding / photoisomerase) function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Domain-based IEA of generic GPCR signalling activity; not supported by RGR-specific evidence, which indicates no consistent G protein activation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RGR/RGR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">there is no consistent evidence that RGR activates G</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007186" target="_blank" class="term-link">
+                                    GO:0007186
+                                </a>
+                            </span>
+                            <span class="term-label">G protein-coupled receptor signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P47804" data-a="GO:0007186" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic transfer of GPCR signalling from the opsin domain signature; duplicates the IBA GO:0007186 call. Not supported by RGR-specific evidence (no consistent G protein activation).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Electronic domain-based propagation of GPCR signalling; RGR&#39;s demonstrated role is retinoid photoisomerization, not G protein signalling.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RGR/RGR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">there is no consistent evidence that RGR activates G</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007601" target="_blank" class="term-link">
+                                    GO:0007601
+                                </a>
+                            </span>
+                            <span class="term-label">visual perception</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P47804" data-a="GO:0007601" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (InterPro2GO) annotation to the broad &#34;visual perception&#34; process. RGR contributes to vision indirectly, by regenerating 11-cis chromophore for visual pigments through the visual cycle; the general term is defensible but non-specific and here derives from a domain signature rather than RGR data. Keep as non-core background context.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> RGR supports vision via chromophore regeneration in the visual cycle, so the broad process term is not wrong, but it is too general to be core and is only electronically supported here.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RGR/RGR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">11-cis-retinal required for regeneration of visual pigments</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007602" target="_blank" class="term-link">
+                                    GO:0007602
+                                </a>
+                            </span>
+                            <span class="term-label">phototransduction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P47804" data-a="GO:0007602" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic transfer of phototransduction from the opsin domain; duplicates the IBA GO:0007602 call. RGR does not carry out the canonical phototransduction signalling cascade. Over-annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Domain-based electronic propagation of phototransduction signalling; RGR instead mediates a photic retinoid-isomerization step of the visual cycle.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RGR/RGR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">there is no consistent evidence that RGR activates G</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009584" target="_blank" class="term-link">
+                                    GO:0009584
+                                </a>
+                            </span>
+                            <span class="term-label">detection of visible light</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000108
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P47804" data-a="GO:0009584" data-r="GO_REF:0000108" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Inferred (GO_REF:0000108, inter-ontology logical link) from the G protein-coupled photoreceptor activity (GO:0008020) annotation. RGR is a photopigment that absorbs light, so &#34;detection of visible light&#34; is not unreasonable, but it is a general downstream inference from an opsin-family MF whose signalling semantics are not supported for RGR. Keep as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Light-absorbing opsin, consistent with light detection, but this is a logical inference from a family-level MF, not a core RGR-specific process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RGR/RGR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">promotes photoisomerization of all-trans-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P47804" data-a="GO:0016020" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic membrane annotation consistent with RGR being a multi-pass membrane opsin (7 transmembrane helices; UniProt SUBCELLULAR LOCATION &#34;Membrane; Multi-pass membrane protein&#34;). Correct but non-specific; the functionally relevant compartment is the ER/microsomal membrane of the RPE.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate generic location for a multi-pass membrane protein; retained as the defensible location call in preference to the plasma-membrane annotations, though it is not specific.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RGR/RGR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Membrane {ECO</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16189514" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16189514
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Towards a proteome-scale map of the human protein-protein in...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P47804" data-a="GO:0005515" data-r="PMID:16189514" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a high-throughput yeast two-hybrid interactome screen (CCSB-HI1; interactor KIFBP / Q96EK5, consistent with the UniProt INTERACTION section). This term is uninformative about RGR&#39;s molecular function; the cached publication is abstract-only. Retain (experimental IPI) but flag as over-annotated / uninformative.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding conveys no specific molecular function; kept per policy (do not remove an IPI) but marked as over-annotated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RGR/RGR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">P47804; Q96EK5: KIFBP</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001523" target="_blank" class="term-link">
+                                    GO:0001523
+                                </a>
+                            </span>
+                            <span class="term-label">retinoid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P47804" data-a="GO:0001523" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (Ensembl Compara) transfer from the mouse ortholog (Q9Z2B3) of the experimentally supported retinoid-metabolic role. This correctly captures RGR&#39;s core biology (light-dependent retinoid processing / chromophore regeneration) and is corroborated by the human IMP annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retinoid metabolism is RGR&#39;s experimentally demonstrated core process; this ortholog-based transfer agrees with the human IMP evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18474598" target="_blank" class="term-link">
+                                        PMID:18474598
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">RGR-opsin mediates light-dependent mobilization of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001523" target="_blank" class="term-link">
+                                    GO:0001523
+                                </a>
+                            </span>
+                            <span class="term-label">retinoid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18474598" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18474598
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Retinal pigment epithelium-retinal G protein receptor-opsin ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P47804" data-a="GO:0001523" data-r="PMID:18474598" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IMP) support from Radu et al. 2008: RNAi knockdown of RGR in human RPE cells and rgr-/- (and rpe65-/-,rgr-/-) knockout mice show that RGR is required for light-dependent mobilization of all-trans-retinyl esters and for normal isomerase activity / chromophore regeneration. This is the core demonstrated biological process for RGR.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported by loss-of-function (RNAi and knockout) experiments establishing RGR&#39;s role in light-dependent retinoid processing.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18474598" target="_blank" class="term-link">
+                                        PMID:18474598
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">RGR-opsin mediates light-dependent mobilization of</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18474598" target="_blank" class="term-link">
+                                        PMID:18474598
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">because RGR functions as a photoisomerase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001523" target="_blank" class="term-link">
+                                    GO:0001523
+                                </a>
+                            </span>
+                            <span class="term-label">retinoid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P47804" data-a="GO:0001523" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity (ISS) transfer from the mouse ortholog (Q9Z2B3) of the retinoid-metabolic role; redundant with, and corroborated by, the human IMP and IEA annotations to the same term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the experimentally demonstrated core retinoid-metabolic function; redundant with the IMP annotation but not incorrect.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18474598" target="_blank" class="term-link">
+                                        PMID:18474598
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">RGR-opsin mediates light-dependent mobilization of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016918" target="_blank" class="term-link">
+                                    GO:0016918
+                                </a>
+                            </span>
+                            <span class="term-label">retinal binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P47804" data-a="GO:0016918" data-r="GO_REF:0000024" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity (ISS) transfer (from P47803, the opsin paralog) of retinal binding. RGR does bind retinal as a covalently bound Schiff-base chromophore, so this MF is correct and core; however RGR distinctively binds all-trans-retinal, so a more specific child term (GO:0005503 all-trans retinal binding) is preferable.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retinal binding is correct and central, but RGR&#39;s chromophore is specifically all-trans-retinal; use the more precise child term.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005503" target="_blank" class="term-link">
+                                    all-trans retinal binding
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RGR/RGR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Binds all-trans-retinal via a conserved Schiff-base lysine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004930" target="_blank" class="term-link">
+                                    GO:0004930
+                                </a>
+                            </span>
+                            <span class="term-label">G protein-coupled receptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8641686" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8641686
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Localization of the human RGR opsin gene to chromosome 10q23...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P47804" data-a="GO:0004930" data-r="PMID:8641686" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-statement (TAS) GPCR activity from the 1996 chromosomal-mapping paper (abstract-only cache), where RGR is described as an opsin &#34;thought to play a role in the visual process&#34;. This reflects the family assignment rather than a demonstrated signalling function; RGR shows no consistent G protein activation. Over-annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> TAS reflects the historical opsin/GPCR family assignment; RGR&#39;s actual MF is chromophore binding and photoisomerization, and G protein signalling is not supported.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RGR/RGR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">there is no consistent evidence that RGR activates G</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8641686" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8641686
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Localization of the human RGR opsin gene to chromosome 10q23...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P47804" data-a="GO:0005886" data-r="PMID:8641686" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-statement (TAS) plasma-membrane location, mirroring the IBA plasma-membrane call and reflecting the generic expectation for an opsin GPCR. RGR&#39;s demonstrated functional location is the ER/microsomal membrane of RPE and Mueller cells. Over-annotation of the specific compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Specific plasma-membrane localization is not demonstrated for RGR, which functions in ER/microsomal membranes; the generic &#34;membrane&#34; call is preferred.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RGR/RGR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007186" target="_blank" class="term-link">
+                                    GO:0007186
+                                </a>
+                            </span>
+                            <span class="term-label">G protein-coupled receptor signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8641686" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8641686
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Localization of the human RGR opsin gene to chromosome 10q23...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P47804" data-a="GO:0007186" data-r="PMID:8641686" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-statement (TAS) GPCR signalling from the 1996 mapping paper, reflecting the opsin family assignment. Duplicates the IBA/IEA GO:0007186 calls; not supported by RGR-specific signalling data. Over-annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Historical family-based statement of GPCR signalling; RGR mediates retinoid photoisomerization rather than canonical G protein signalling.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RGR/RGR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">there is no consistent evidence that RGR activates G</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007601" target="_blank" class="term-link">
+                                    GO:0007601
+                                </a>
+                            </span>
+                            <span class="term-label">visual perception</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8641686" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8641686
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Localization of the human RGR opsin gene to chromosome 10q23...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P47804" data-a="GO:0007601" data-r="PMID:8641686" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-statement (TAS) that RGR plays a role in the visual process. RGR does contribute to vision by regenerating 11-cis chromophore for visual pigments via the visual cycle; the broad term is defensible but too general to be core. Keep as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> RGR indirectly supports vision through chromophore regeneration, so the general process term is acceptable but non-specific.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RGR/RGR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">11-cis-retinal required for regeneration of visual pigments</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds all-trans-retinal as a covalently attached (Schiff-base, Lys255) chromophore, the ground-state pigment of the RGR opsin.</h3>
+                <span class="vote-buttons" data-g="P47804" data-a="FUNCTION: Binds all-trans-retinal as a covalently attached (..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005503" target="_blank" class="term-link">
+                            all-trans retinal binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/RGR/RGR-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Binds all-trans-retinal via a conserved Schiff-base lysine</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Upon illumination, photoisomerizes bound all-trans-retinal to 11-cis-retinal, supplying 11-cis chromophore for regeneration of visual pigments; a light-dependent, RPE65-independent complement to the enzymatic visual cycle.</h3>
+                <span class="vote-buttons" data-g="P47804" data-a="FUNCTION: Upon illumination, photoisomerizes bound all-trans..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005503" target="_blank" class="term-link">
+                            all-trans retinal binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                endoplasmic reticulum
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/RGR/RGR-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">promotes photoisomerization of all-trans-</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18474598" target="_blank" class="term-link">
+                                PMID:18474598
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">because RGR functions as a photoisomerase</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Acts as a light-driven cis-trans isomerase (photoisomerase) on its retinal chromophore, interconverting all-trans- and 11-cis-retinal; this underlies the light-dependent retinoid-metabolic step of the visual cycle in RPE cells (mobilization of all-trans-retinyl esters and chromophore regeneration). No dedicated MF term for retinal photoisomerase activity currently exists (the former GO:0004744 retinal isomerase activity is obsolete); GO:0016859 is used as the closest molecular-function parent.</h3>
+                <span class="vote-buttons" data-g="P47804" data-a="FUNCTION: Acts as a light-driven cis-trans isomerase (photoi..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016859" target="_blank" class="term-link">
+                            cis-trans isomerase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                endoplasmic reticulum
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18474598" target="_blank" class="term-link">
+                                PMID:18474598
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">because RGR functions as a photoisomerase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/RGR/RGR-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">promotes photoisomerization of all-trans-</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16189514" target="_blank" class="term-link">
+                            PMID:16189514
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Towards a proteome-scale map of the human protein-protein interaction network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18474598" target="_blank" class="term-link">
+                            PMID:18474598
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Retinal pigment epithelium-retinal G protein receptor-opsin mediates light-dependent translocation of all-trans-retinyl esters for synthesis of visual chromophore in retinal pigment epithelial cells.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">RGR-opsin is required for light-dependent mobilization/translocation of all-trans-retinyl esters in RPE cells (RNAi in human RPE cells; rgr-/- and rpe65-/-,rgr-/- knockout mice), supporting retinoid metabolic process.</div>
+
+                        <div class="finding-text">"RGR-opsin mediates light-dependent mobilization of"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">RGR functions as a photoisomerase and, unlike photoreceptor opsins, does not require RPE65 for synthesis of its chromophore.</div>
+
+                        <div class="finding-text">"because RGR functions as a photoisomerase"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">In the dark RGR-opsin inhibits LRAT and all-trans-retinyl ester hydrolase in vitro, with inhibition released upon light exposure.</div>
+
+                        <div class="finding-text">"RGR-opsin inhibits lecithin:retinol acyltransferase"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8641686" target="_blank" class="term-link">
+                            PMID:8641686
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Localization of the human RGR opsin gene to chromosome 10q23.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">RGR encodes an opsin (retinal G protein-coupled receptor) expressed in Mueller cells and the RPE and mapped to chromosome 10q23; described as playing a role in the visual process.</div>
+
+                        <div class="finding-text">"expressed in Müller cells and the retinal pigment epithelium"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/RGR/RGR-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry P47804 (RGR_HUMAN)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">RGR binds all-trans-retinal via a Schiff-base lysine and, on illumination, photoisomerizes it to 11-cis-retinal for regeneration of visual pigments; also mobilizes all-trans-retinyl esters to ER membranes in the RPE.</div>
+
+                        <div class="finding-text">"Binds all-trans-retinal via a conserved Schiff-base lysine"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">RGR is structurally a GPCR-family opsin but shows no consistent evidence of G protein activation or canonical second-messenger signalling.</div>
+
+                        <div class="finding-text">"there is no consistent evidence that RGR activates G"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">RGR is a multi-pass membrane protein; mutations cause retinitis pigmentosa 44 (RP44).</div>
+
+                        <div class="finding-text">"Retinitis pigmentosa 44 (RP44)"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does human RGR support any G-protein or arrestin coupling in vivo, or is its light response entirely devoted to retinoid photoisomerization and retinyl-ester trafficking?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P47804" data-a="Q: Does human RGR support any G-protein or arrestin c..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the quantitative contribution of the RGR photoisomerase pathway versus the RPE65 enzymatic pathway to 11-cis chromophore supply under different light regimes?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P47804" data-a="Q: What is the quantitative contribution of the RGR p..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Structural determination (cryo-EM) of RGR with bound all-trans-retinal to define the chromophore pocket and the basis of its all-trans preference.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: RGR&#39;s all-trans preference and photoisomerase activity are determined by its chromophore-binding pocket.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: structural biology</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P47804" data-a="EXPERIMENT: Structural determination (cryo-EM) of RGR with bou..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Time-resolved spectroscopy of purified human RGR to measure the quantum yield and kinetics of all-trans- to 11-cis-retinal photoisomerization.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: RGR efficiently photoisomerizes all-trans-retinal to 11-cis-retinal on illumination.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: biophysical spectroscopy</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P47804" data-a="EXPERIMENT: Time-resolved spectroscopy of purified human RGR t..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RGR-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P47804" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="rgr-rpe-retinal-g-protein-coupled-receptor-review-notes">RGR (RPE-retinal G protein-coupled receptor) — review notes</h1>
+<p>Human gene, UniProt <strong>P47804</strong>, HGNC:9990, chromosome 10q23. 291 aa, 7-transmembrane opsin.</p>
+<h2 id="identity-and-family">Identity and family</h2>
+<ul>
+<li>RGR is the "RPE-retinal G protein-coupled receptor" / "RGR opsin", a member of the<br />
+  GPCR class A (rhodopsin) family, opsin subfamily<br />
+  [file:human/RGR/RGR-uniprot.txt "Belongs to the G protein-coupled receptor 1 family. Opsin subfamily"].</li>
+<li>7 transmembrane helices annotated (TRANSMEM 16-36, 53-73, 92-112, 131-151, 176-196,<br />
+  220-240, 248-268), consistent with a multi-pass membrane opsin<br />
+  [file:human/RGR/RGR-uniprot.txt].</li>
+<li>Carries a covalently bound retinal chromophore via a Schiff base to a conserved lysine<br />
+  at position 255 (MOD_RES 255 "N6-(retinylidene)lysine")<br />
+  [file:human/RGR/RGR-uniprot.txt "N6-(retinylidene)lysine"].</li>
+</ul>
+<h2 id="chromophore-binds-all-trans-retinal-distinctive">Chromophore: binds all-trans-retinal (distinctive)</h2>
+<p>Unlike signalling opsins (which bind 11-cis-retinal in the dark), RGR preferentially binds<br />
+<strong>all-trans-retinal</strong> as its ground-state chromophore and, upon illumination, photoisomerizes<br />
+it to 11-cis-retinal:</p>
+<ul>
+<li>[file:human/RGR/RGR-uniprot.txt "Contains a covalently bound retinal chromophore linked via a"] /<br />
+  "Schiff base to a conserved lysine, and can bind both all-trans-retinal and 11-cis-retinal"<br />
+  and "Upon illumination, mediates photoisomerization of all-trans-retinal to 11-cis-retinal".</li>
+<li>FUNCTION: "Binds all-trans-retinal via a conserved Schiff-base lysine and, upon<br />
+  illumination, promotes photoisomerization of all-trans-retinal to 11-cis-retinal required<br />
+  for regeneration of visual pigments" [file:human/RGR/RGR-uniprot.txt].</li>
+<li>Founding characterization (not cached): Shen et al. 1994 Biochemistry 33:13117-13125,<br />
+  PMID:7947717 "A human opsin-related gene that encodes a retinaldehyde-binding protein"<br />
+  (RN [1] in UniProt), which is the ECO:0000269 source UniProt cites for the retinal-binding<br />
+  and photoisomerization PTM statements.</li>
+</ul>
+<h2 id="function-in-the-visual-retinoid-cycle-pmid18474598-full-text-available">Function in the visual (retinoid) cycle — PMID:18474598 (full text available)</h2>
+<p>Radu et al. 2008 (J Biol Chem 283:19730-8) is the key experimental paper and the IMP source<br />
+for GO:0001523 retinoid metabolic process. Human RPE cells and knock-out mice were used:</p>
+<ul>
+<li>RGR-opsin mediates <strong>light-dependent mobilization of all-trans-retinyl esters</strong> in RPE cells;<br />
+  RNAi knockdown of RGR in human RPE cells abolishes the light-dependent depletion of<br />
+  all-trans-REs <a href="https://pubmed.ncbi.nlm.nih.gov/18474598" title="these data suggest that RGR-opsin mediates light-dependent   mobilization of\n all- trans- REs by RPE cells">PMID:18474598</a> (verbatim in full text: "RGR-opsin mediates<br />
+  light-dependent mobilization of").</li>
+<li>Genetic epistasis: light-dependent all-trans-RE mobilization seen in rpe65-/- mice is<br />
+  abolished in rpe65-/-,rgr-/- double knockouts <a href="https://pubmed.ncbi.nlm.nih.gov/18474598" title="the light-dependent depletion of   all- trans- REs seen in rpe65 - / - mice was\n abolished in rpe65 - / - , rgr - / - mice">PMID:18474598</a>.</li>
+<li>Proposed mechanism: RGR-opsin translocates all-trans-retinyl esters from a lipid-droplet<br />
+  storage pool to an "isomerase pool" in ER membranes, where they are used as substrate for<br />
+  synthesis of new visual chromophore <a href="https://pubmed.ncbi.nlm.nih.gov/18474598" title="RGR-opsin mediates light-dependent   translocation of\n all- trans- retinyl esters from a storage pool in lipid droplets to an\n   isomerase pool in membranes\n of the endoplasmic reticulum">PMID:18474598</a>.</li>
+<li>In the dark, RGR-opsin inhibits LRAT (lecithin:retinol acyltransferase) and all-trans-retinyl<br />
+  ester hydrolase in vitro; inhibition is released on light exposure <a href="https://pubmed.ncbi.nlm.nih.gov/18474598" title="in the dark,   RGR-opsin inhibits lecithin:retinol\n acyltransferase\n and all- trans- retinyl ester hydrolase   in vitro and that this\n inhibition is released upon exposure to light">PMID:18474598</a>.</li>
+<li>Reduced isomerase activity (~3-fold) in rgr-/- RPE, explaining slower rhodopsin regeneration<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/18474598" title="Isomerase\n activity was ...3-fold lower in the rgr - / - versus wild-type   homogenates">PMID:18474598</a>.</li>
+<li>The paper explicitly states RGR functions as a <strong>photoisomerase</strong>, independent of RPE65:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/18474598" title="RGR does not require Rpe65 for\n synthesis of its chromophore because RGR   functions as a photoisomerase">PMID:18474598</a>.</li>
+</ul>
+<h2 id="g-protein-signalling-not-well-supported">G-protein signalling: NOT well supported</h2>
+<p>Although structurally a class-A GPCR opsin, RGR is not a canonical signalling GPCR:</p>
+<ul>
+<li>[file:human/RGR/RGR-uniprot.txt "Although RGR is structurally a"] /<br />
+  "GPCR-family opsin, there is no consistent evidence that RGR activates G proteins or initiates<br />
+  a canonical second-messenger signaling cascade".</li>
+<li>The paper notes RGR has variant, non-canonical G-protein-coupling motifs: it "contains the<br />
+  variant\n motifs GRY and NA XX Y" (vs the canonical D(E)RY / NPxxY), i.e. impaired canonical<br />
+  G-protein coupling <a href="https://pubmed.ncbi.nlm.nih.gov/18474598">PMID:18474598</a>.</li>
+<li>Consequence: GPCR-signalling / phototransduction annotations (GO:0007186, GO:0007602,<br />
+  GO:0004930, GO:0008020) are best treated as family-level electronic/phylogenetic<br />
+  over-propagations rather than RGR's demonstrated core function. RGR's demonstrated role is<br />
+  photoisomerization / retinoid metabolism, not G-protein signal transduction.</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>SUBCELLULAR LOCATION: "Membrane; Multi-pass membrane protein"<br />
+  [file:human/RGR/RGR-uniprot.txt "Membrane"]. Functionally RGR is an ER/microsomal (RPE<br />
+  endoplasmic-reticulum) membrane protein; PMID:18474598 lists RGR-opsin among ER-associated<br />
+  retinoid-processing proteins ("Several retinoid-processing\n proteins are associated with the<br />
+  ER, including LRAT\n ..., 11- cis- RDH\n ..., RGR-opsin"). The GOA "plasma membrane" (IBA/TAS)<br />
+  annotations are phylogenetic transfers from signalling opsins and are not the biologically<br />
+  demonstrated location; "membrane" (GO:0016020) is defensible but non-specific.</li>
+</ul>
+<h2 id="tissue-expression">Tissue expression</h2>
+<ul>
+<li>Preferentially expressed at high levels in the retinal pigment epithelium (RPE) and Müller<br />
+  cells of the neural retina [file:human/RGR/RGR-uniprot.txt "retinal pigment epithelium (RPE)<br />
+  and Mueller cells of the neural"; PMID:8641686 "expressed in Müller cells and the retinal<br />
+  pigment epithelium"].</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>Mutations cause <strong>Retinitis pigmentosa 44 (RP44)</strong> [MIM:613769]; variant Ser66Arg (VAR_017034)<br />
+  reported in RP patients [file:human/RGR/RGR-uniprot.txt "Retinitis pigmentosa 44 (RP44)";<br />
+  PMID:10581022 "Mutations in RGR, encoding a light-sensitive opsin homologue, in patients with<br />
+  retinitis pigmentosa"].</li>
+</ul>
+<h2 id="protein-interaction-pmid16189514-abstract-only">Protein interaction (PMID:16189514) — abstract-only</h2>
+<ul>
+<li>GOA GO:0005515 IPI is from Rual et al. 2005 high-throughput yeast two-hybrid interactome<br />
+  (CCSB-HI1); WITH/FROM UniProtKB:Q96EK5 (KIFBP). The cached record is abstract-only<br />
+  (full_text_available: false); no RGR-specific interaction detail is in the abstract. UniProt<br />
+  INTERACTION section lists P47804:Q96EK5 (KIFBP), consistent. Bare "protein binding" is<br />
+  uninformative — MARK_AS_OVER_ANNOTATED (do not REMOVE an IPI).</li>
+</ul>
+<h2 id="curation-summary-of-goa-20-annotations">Curation summary of GOA (20 annotations)</h2>
+<p>Core, demonstrated function = light-driven retinoid photoisomerization / retinoid metabolism +<br />
+all-trans-retinal (chromophore) binding, in RPE/Müller-cell membranes (ER). GPCR-signalling and<br />
+phototransduction annotations are family-level propagations that RGR does not biochemically<br />
+support and are marked as over-annotations (KEEP_AS_NON_CORE for phylogenetic IBA; REMOVE only<br />
+for clearly wrong IEA electronic propagations). Experimental/IPI annotations are never removed.</p>
+<h3 id="core-function-term-ids-chosen">Core function term ids chosen</h3>
+<ul>
+<li>MF: GO:0005503 all-trans retinal binding (chromophore; more specific than GO:0016918).</li>
+<li>BP: GO:0106434 retinal isomerization (light-driven all-trans -&gt; 11-cis).</li>
+<li>BP: GO:0001523 retinoid metabolic process (experimentally supported, IMP PMID:18474598).</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P47804
+gene_symbol: RGR
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  RGR (RPE-retinal G protein-coupled receptor, &#34;RGR opsin&#34;) is a 291-residue,
+  seven-transmembrane member of the class A (rhodopsin) G protein-coupled
+  receptor family, opsin subfamily, expressed preferentially in the retinal
+  pigment epithelium (RPE) and Mueller cells of the neural retina. Unlike the
+  signalling opsins of photoreceptor cells, RGR carries all-trans-retinal as its
+  ground-state chromophore, covalently bound through a Schiff base to a conserved
+  lysine (Lys255). On absorption of light it acts as a photoisomerase,
+  photochemically converting bound all-trans-retinal to 11-cis-retinal, thereby
+  supplying 11-cis chromophore for regeneration of visual pigments as a
+  light-dependent complement to the enzymatic RPE65/RDH route of the visual
+  (retinoid) cycle. In RPE cells RGR also mediates light-dependent mobilization
+  and translocation of stored all-trans-retinyl esters from lipid droplets to
+  endoplasmic-reticulum membranes, regulating retinyl-ester-processing enzymes
+  (LRAT and all-trans-retinyl ester hydrolase). RGR is a multi-pass membrane
+  protein of the endoplasmic reticulum / microsomal membranes. Mutations in RGR
+  cause retinitis pigmentosa 44 (RP44).
+alternative_products:
+- name: 1 (Short)
+  id: P47804-1
+- name: 2 (Long)
+  id: P47804-2
+  sequence_note: VSP_003773
+- name: &#39;3&#39;
+  id: P47804-3
+  sequence_note: VSP_038387
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) transfer of the plasma-membrane location of signalling
+      opsins. RGR is a multi-pass membrane protein, but its demonstrated
+      functional location is the endoplasmic-reticulum / microsomal membrane of
+      RPE cells, not the plasma membrane; RGR is grouped with ER-associated
+      retinoid-processing proteins. The plasma-membrane call is an
+      over-propagation from photoreceptor opsins.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Location is transferred from signalling opsins that reside in the plasma
+      membrane; RGR functions in ER/microsomal membranes of the RPE and Mueller
+      cells. Keep the generic &#34;membrane&#34; call (GO:0016020) rather than plasma
+      membrane.
+    supported_by:
+    - reference_id: file:human/RGR/RGR-uniprot.txt
+      supporting_text: &gt;-
+        SUBCELLULAR LOCATION: Membrane
+- term:
+    id: GO:0007186
+    label: G protein-coupled receptor signaling pathway
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Family-level (IBA) transfer of canonical GPCR signalling. Although RGR is
+      structurally a class-A GPCR opsin, there is no consistent evidence that it
+      activates G proteins or initiates a second-messenger cascade; it carries
+      variant, non-canonical G-protein-coupling motifs. This is an
+      over-annotation of the opsin family signature rather than a demonstrated
+      RGR function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      RGR&#39;s demonstrated role is light-driven retinoid photoisomerization, not G
+      protein signalling; UniProt explicitly notes no consistent evidence of G
+      protein activation.
+    supported_by:
+    - reference_id: file:human/RGR/RGR-uniprot.txt
+      supporting_text: &gt;-
+        there is no consistent evidence that RGR activates G
+- term:
+    id: GO:0007602
+    label: phototransduction
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic transfer of phototransduction from signalling opsins. RGR is
+      a photoreceptive pigment but does not carry out canonical
+      phototransduction (light-triggered G-protein/second-messenger signalling);
+      its light response drives retinoid isomerization for chromophore
+      regeneration. Over-annotation from the opsin family.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      RGR mediates a photic step of the visual (retinoid) cycle rather than the
+      phototransduction signalling cascade; no evidence for canonical
+      phototransduction signalling by RGR.
+    supported_by:
+    - reference_id: file:human/RGR/RGR-uniprot.txt
+      supporting_text: &gt;-
+        there is no consistent evidence that RGR activates G
+- term:
+    id: GO:0008020
+    label: G protein-coupled photoreceptor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IBA transfer of &#34;G protein-coupled photoreceptor activity&#34; from signalling
+      opsins. RGR is genuinely a light-absorbing opsin (photoreceptor), which is
+      captured well by this term, but the term&#39;s definition specifically entails
+      transmitting the signal by activating an associated G protein - a property
+      for which RGR has no consistent supporting evidence. Retain as a non-core
+      description of its opsin/photoreceptive nature, but RGR&#39;s demonstrated core
+      molecular activity is chromophore (all-trans-retinal) binding and
+      light-driven isomerization, not G-protein-coupled signalling.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correctly identifies RGR as a light-sensing opsin, but the G-protein
+      activation semantics of this term are not supported for RGR; the specific
+      demonstrated MF is all-trans-retinal binding / retinal isomerization.
+    supported_by:
+    - reference_id: file:human/RGR/RGR-uniprot.txt
+      supporting_text: &gt;-
+        Photoreceptor protein
+    - reference_id: file:human/RGR/RGR-uniprot.txt
+      supporting_text: &gt;-
+        there is no consistent evidence that RGR activates G
+- term:
+    id: GO:0071482
+    label: cellular response to light stimulus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      RGR does mediate a cellular response to light: illumination triggers
+      RGR-dependent photoisomerization of its all-trans-retinal chromophore and
+      light-dependent mobilization of retinyl esters in RPE cells. This general
+      term is consistent with the experimental data, though it is broader than
+      RGR&#39;s specific role.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Consistent with the demonstrated light-dependent activity of RGR in RPE
+      cells, but too general to represent the core molecular function.
+    supported_by:
+    - reference_id: file:human/RGR/RGR-uniprot.txt
+      supporting_text: &gt;-
+        promotes photoisomerization of all-trans-
+    - reference_id: PMID:18474598
+      supporting_text: &gt;-
+        RGR-opsin mediates light-dependent mobilization of
+- term:
+    id: GO:0004930
+    label: G protein-coupled receptor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro2GO electronic annotation from the rhodopsin/opsin GPCR domain
+      signature. RGR belongs to the GPCR class A family by sequence, but there
+      is no consistent evidence that it functions as a signalling
+      G-protein-coupled receptor; it carries variant coupling motifs. This
+      electronic transfer of a signalling MF is an over-annotation of RGR&#39;s
+      actual (chromophore-binding / photoisomerase) function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Domain-based IEA of generic GPCR signalling activity; not supported by
+      RGR-specific evidence, which indicates no consistent G protein activation.
+    supported_by:
+    - reference_id: file:human/RGR/RGR-uniprot.txt
+      supporting_text: &gt;-
+        there is no consistent evidence that RGR activates G
+- term:
+    id: GO:0007186
+    label: G protein-coupled receptor signaling pathway
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro2GO electronic transfer of GPCR signalling from the opsin domain
+      signature; duplicates the IBA GO:0007186 call. Not supported by
+      RGR-specific evidence (no consistent G protein activation).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Electronic domain-based propagation of GPCR signalling; RGR&#39;s demonstrated
+      role is retinoid photoisomerization, not G protein signalling.
+    supported_by:
+    - reference_id: file:human/RGR/RGR-uniprot.txt
+      supporting_text: &gt;-
+        there is no consistent evidence that RGR activates G
+- term:
+    id: GO:0007601
+    label: visual perception
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic (InterPro2GO) annotation to the broad &#34;visual perception&#34;
+      process. RGR contributes to vision indirectly, by regenerating 11-cis
+      chromophore for visual pigments through the visual cycle; the general term
+      is defensible but non-specific and here derives from a domain signature
+      rather than RGR data. Keep as non-core background context.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      RGR supports vision via chromophore regeneration in the visual cycle, so
+      the broad process term is not wrong, but it is too general to be core and
+      is only electronically supported here.
+    supported_by:
+    - reference_id: file:human/RGR/RGR-uniprot.txt
+      supporting_text: &gt;-
+        11-cis-retinal required for regeneration of visual pigments
+- term:
+    id: GO:0007602
+    label: phototransduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro2GO electronic transfer of phototransduction from the opsin
+      domain; duplicates the IBA GO:0007602 call. RGR does not carry out the
+      canonical phototransduction signalling cascade. Over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Domain-based electronic propagation of phototransduction signalling; RGR
+      instead mediates a photic retinoid-isomerization step of the visual cycle.
+    supported_by:
+    - reference_id: file:human/RGR/RGR-uniprot.txt
+      supporting_text: &gt;-
+        there is no consistent evidence that RGR activates G
+- term:
+    id: GO:0009584
+    label: detection of visible light
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Inferred (GO_REF:0000108, inter-ontology logical link) from the
+      G protein-coupled photoreceptor activity (GO:0008020) annotation. RGR is a
+      photopigment that absorbs light, so &#34;detection of visible light&#34; is not
+      unreasonable, but it is a general downstream inference from an opsin-family
+      MF whose signalling semantics are not supported for RGR. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Light-absorbing opsin, consistent with light detection, but this is a
+      logical inference from a family-level MF, not a core RGR-specific process.
+    supported_by:
+    - reference_id: file:human/RGR/RGR-uniprot.txt
+      supporting_text: &gt;-
+        promotes photoisomerization of all-trans-
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic membrane annotation consistent with RGR being a multi-pass
+      membrane opsin (7 transmembrane helices; UniProt SUBCELLULAR LOCATION
+      &#34;Membrane; Multi-pass membrane protein&#34;). Correct but non-specific; the
+      functionally relevant compartment is the ER/microsomal membrane of the RPE.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Accurate generic location for a multi-pass membrane protein; retained as
+      the defensible location call in preference to the plasma-membrane
+      annotations, though it is not specific.
+    supported_by:
+    - reference_id: file:human/RGR/RGR-uniprot.txt
+      supporting_text: &gt;-
+        Membrane {ECO
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16189514
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a high-throughput yeast two-hybrid interactome
+      screen (CCSB-HI1; interactor KIFBP / Q96EK5, consistent with the UniProt
+      INTERACTION section). This term is uninformative about RGR&#39;s molecular
+      function; the cached publication is abstract-only. Retain (experimental
+      IPI) but flag as over-annotated / uninformative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Bare protein binding conveys no specific molecular function; kept per
+      policy (do not remove an IPI) but marked as over-annotated.
+    supported_by:
+    - reference_id: file:human/RGR/RGR-uniprot.txt
+      supporting_text: &gt;-
+        P47804; Q96EK5: KIFBP
+- term:
+    id: GO:0001523
+    label: retinoid metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic (Ensembl Compara) transfer from the mouse ortholog (Q9Z2B3) of
+      the experimentally supported retinoid-metabolic role. This correctly
+      captures RGR&#39;s core biology (light-dependent retinoid processing /
+      chromophore regeneration) and is corroborated by the human IMP annotation.
+    action: ACCEPT
+    reason: &gt;-
+      Retinoid metabolism is RGR&#39;s experimentally demonstrated core process;
+      this ortholog-based transfer agrees with the human IMP evidence.
+    supported_by:
+    - reference_id: PMID:18474598
+      supporting_text: &gt;-
+        RGR-opsin mediates light-dependent mobilization of
+- term:
+    id: GO:0001523
+    label: retinoid metabolic process
+  evidence_type: IMP
+  original_reference_id: PMID:18474598
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental (IMP) support from Radu et al. 2008: RNAi knockdown of RGR in
+      human RPE cells and rgr-/- (and rpe65-/-,rgr-/-) knockout mice show that
+      RGR is required for light-dependent mobilization of all-trans-retinyl
+      esters and for normal isomerase activity / chromophore regeneration. This
+      is the core demonstrated biological process for RGR.
+    action: ACCEPT
+    reason: &gt;-
+      Directly supported by loss-of-function (RNAi and knockout) experiments
+      establishing RGR&#39;s role in light-dependent retinoid processing.
+    supported_by:
+    - reference_id: PMID:18474598
+      supporting_text: &gt;-
+        RGR-opsin mediates light-dependent mobilization of
+    - reference_id: PMID:18474598
+      supporting_text: &gt;-
+        because RGR functions as a photoisomerase
+- term:
+    id: GO:0001523
+    label: retinoid metabolic process
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Sequence-similarity (ISS) transfer from the mouse ortholog (Q9Z2B3) of the
+      retinoid-metabolic role; redundant with, and corroborated by, the human
+      IMP and IEA annotations to the same term.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the experimentally demonstrated core retinoid-metabolic
+      function; redundant with the IMP annotation but not incorrect.
+    supported_by:
+    - reference_id: PMID:18474598
+      supporting_text: &gt;-
+        RGR-opsin mediates light-dependent mobilization of
+- term:
+    id: GO:0016918
+    label: retinal binding
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Sequence-similarity (ISS) transfer (from P47803, the opsin paralog) of
+      retinal binding. RGR does bind retinal as a covalently bound Schiff-base
+      chromophore, so this MF is correct and core; however RGR distinctively
+      binds all-trans-retinal, so a more specific child term (GO:0005503
+      all-trans retinal binding) is preferable.
+    action: MODIFY
+    reason: &gt;-
+      Retinal binding is correct and central, but RGR&#39;s chromophore is
+      specifically all-trans-retinal; use the more precise child term.
+    proposed_replacement_terms:
+    - id: GO:0005503
+      label: all-trans retinal binding
+    supported_by:
+    - reference_id: file:human/RGR/RGR-uniprot.txt
+      supporting_text: &gt;-
+        Binds all-trans-retinal via a conserved Schiff-base lysine
+- term:
+    id: GO:0004930
+    label: G protein-coupled receptor activity
+  evidence_type: TAS
+  original_reference_id: PMID:8641686
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Author-statement (TAS) GPCR activity from the 1996 chromosomal-mapping
+      paper (abstract-only cache), where RGR is described as an opsin &#34;thought to
+      play a role in the visual process&#34;. This reflects the family assignment
+      rather than a demonstrated signalling function; RGR shows no consistent G
+      protein activation. Over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      TAS reflects the historical opsin/GPCR family assignment; RGR&#39;s actual MF
+      is chromophore binding and photoisomerization, and G protein signalling is
+      not supported.
+    supported_by:
+    - reference_id: file:human/RGR/RGR-uniprot.txt
+      supporting_text: &gt;-
+        there is no consistent evidence that RGR activates G
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: PMID:8641686
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Author-statement (TAS) plasma-membrane location, mirroring the IBA
+      plasma-membrane call and reflecting the generic expectation for an opsin
+      GPCR. RGR&#39;s demonstrated functional location is the ER/microsomal membrane
+      of RPE and Mueller cells. Over-annotation of the specific compartment.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Specific plasma-membrane localization is not demonstrated for RGR, which
+      functions in ER/microsomal membranes; the generic &#34;membrane&#34; call is
+      preferred.
+    supported_by:
+    - reference_id: file:human/RGR/RGR-uniprot.txt
+      supporting_text: &gt;-
+        SUBCELLULAR LOCATION: Membrane
+- term:
+    id: GO:0007186
+    label: G protein-coupled receptor signaling pathway
+  evidence_type: TAS
+  original_reference_id: PMID:8641686
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Author-statement (TAS) GPCR signalling from the 1996 mapping paper,
+      reflecting the opsin family assignment. Duplicates the IBA/IEA GO:0007186
+      calls; not supported by RGR-specific signalling data. Over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Historical family-based statement of GPCR signalling; RGR mediates
+      retinoid photoisomerization rather than canonical G protein signalling.
+    supported_by:
+    - reference_id: file:human/RGR/RGR-uniprot.txt
+      supporting_text: &gt;-
+        there is no consistent evidence that RGR activates G
+- term:
+    id: GO:0007601
+    label: visual perception
+  evidence_type: TAS
+  original_reference_id: PMID:8641686
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Author-statement (TAS) that RGR plays a role in the visual process. RGR
+      does contribute to vision by regenerating 11-cis chromophore for visual
+      pigments via the visual cycle; the broad term is defensible but too general
+      to be core. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      RGR indirectly supports vision through chromophore regeneration, so the
+      general process term is acceptable but non-specific.
+    supported_by:
+    - reference_id: file:human/RGR/RGR-uniprot.txt
+      supporting_text: &gt;-
+        11-cis-retinal required for regeneration of visual pigments
+core_functions:
+- description: &gt;-
+    Binds all-trans-retinal as a covalently attached (Schiff-base, Lys255)
+    chromophore, the ground-state pigment of the RGR opsin.
+  molecular_function:
+    id: GO:0005503
+    label: all-trans retinal binding
+  supported_by:
+  - reference_id: file:human/RGR/RGR-uniprot.txt
+    supporting_text: &gt;-
+      Binds all-trans-retinal via a conserved Schiff-base lysine
+- description: &gt;-
+    Upon illumination, photoisomerizes bound all-trans-retinal to 11-cis-retinal,
+    supplying 11-cis chromophore for regeneration of visual pigments; a
+    light-dependent, RPE65-independent complement to the enzymatic visual cycle.
+  molecular_function:
+    id: GO:0005503
+    label: all-trans retinal binding
+  locations:
+  - id: GO:0005783
+    label: endoplasmic reticulum
+  supported_by:
+  - reference_id: file:human/RGR/RGR-uniprot.txt
+    supporting_text: &gt;-
+      promotes photoisomerization of all-trans-
+  - reference_id: PMID:18474598
+    supporting_text: &gt;-
+      because RGR functions as a photoisomerase
+- description: &gt;-
+    Acts as a light-driven cis-trans isomerase (photoisomerase) on its retinal
+    chromophore, interconverting all-trans- and 11-cis-retinal; this underlies
+    the light-dependent retinoid-metabolic step of the visual cycle in RPE cells
+    (mobilization of all-trans-retinyl esters and chromophore regeneration). No
+    dedicated MF term for retinal photoisomerase activity currently exists (the
+    former GO:0004744 retinal isomerase activity is obsolete); GO:0016859 is used
+    as the closest molecular-function parent.
+  molecular_function:
+    id: GO:0016859
+    label: cis-trans isomerase activity
+  locations:
+  - id: GO:0005783
+    label: endoplasmic reticulum
+  supported_by:
+  - reference_id: PMID:18474598
+    supporting_text: &gt;-
+      because RGR functions as a photoisomerase
+  - reference_id: file:human/RGR/RGR-uniprot.txt
+    supporting_text: &gt;-
+      promotes photoisomerization of all-trans-
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology
+    links
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:16189514
+  title: Towards a proteome-scale map of the human protein-protein interaction network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput yeast two-hybrid interactome screen (CCSB-HI1). Source of
+      the bare GO:0005515 protein-binding IPI (interactor KIFBP/Q96EK5, matching
+      the UniProt INTERACTION section). Abstract-only cache; no RGR-specific
+      interaction detail beyond the interactome dataset. Uninformative for RGR&#39;s
+      molecular function.
+- id: PMID:18474598
+  title: Retinal pigment epithelium-retinal G protein receptor-opsin mediates light-dependent
+    translocation of all-trans-retinyl esters for synthesis of visual chromophore
+    in retinal pigment epithelial cells.
+  findings:
+  - statement: &gt;-
+      RGR-opsin is required for light-dependent mobilization/translocation of
+      all-trans-retinyl esters in RPE cells (RNAi in human RPE cells; rgr-/- and
+      rpe65-/-,rgr-/- knockout mice), supporting retinoid metabolic process.
+    supporting_text: &gt;-
+      RGR-opsin mediates light-dependent mobilization of
+  - statement: &gt;-
+      RGR functions as a photoisomerase and, unlike photoreceptor opsins, does
+      not require RPE65 for synthesis of its chromophore.
+    supporting_text: &gt;-
+      because RGR functions as a photoisomerase
+  - statement: &gt;-
+      In the dark RGR-opsin inhibits LRAT and all-trans-retinyl ester hydrolase
+      in vitro, with inhibition released upon light exposure.
+    supporting_text: &gt;-
+      RGR-opsin inhibits lecithin:retinol acyltransferase
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text available (PMC2443657). Key experimental (IMP) source for RGR&#39;s
+      role in light-dependent retinoid processing / photoisomerization in RPE
+      cells; also the ECO:0000315 IMP source for GO:0001523. Verified against the
+      cached full text.
+- id: PMID:8641686
+  title: Localization of the human RGR opsin gene to chromosome 10q23.
+  findings:
+  - statement: &gt;-
+      RGR encodes an opsin (retinal G protein-coupled receptor) expressed in
+      Mueller cells and the RPE and mapped to chromosome 10q23; described as
+      playing a role in the visual process.
+    supporting_text: &gt;-
+      expressed in Müller cells and the retinal pigment epithelium
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Chromosomal-mapping paper (10q23), abstract-only cache. TAS source for the
+      GPCR-activity, plasma-membrane, GPCR-signalling and visual-perception
+      annotations, which reflect the historical opsin/GPCR family assignment
+      rather than demonstrated signalling function.
+- id: file:human/RGR/RGR-uniprot.txt
+  title: UniProt entry P47804 (RGR_HUMAN)
+  findings:
+  - statement: &gt;-
+      RGR binds all-trans-retinal via a Schiff-base lysine and, on illumination,
+      photoisomerizes it to 11-cis-retinal for regeneration of visual pigments;
+      also mobilizes all-trans-retinyl esters to ER membranes in the RPE.
+    supporting_text: &gt;-
+      Binds all-trans-retinal via a conserved Schiff-base lysine
+  - statement: &gt;-
+      RGR is structurally a GPCR-family opsin but shows no consistent evidence of
+      G protein activation or canonical second-messenger signalling.
+    supporting_text: &gt;-
+      there is no consistent evidence that RGR activates G
+  - statement: &gt;-
+      RGR is a multi-pass membrane protein; mutations cause retinitis pigmentosa
+      44 (RP44).
+    supporting_text: &gt;-
+      Retinitis pigmentosa 44 (RP44)
+suggested_questions:
+- question: &gt;-
+    Does human RGR support any G-protein or arrestin coupling in vivo, or is its
+    light response entirely devoted to retinoid photoisomerization and
+    retinyl-ester trafficking?
+- question: &gt;-
+    What is the quantitative contribution of the RGR photoisomerase pathway
+    versus the RPE65 enzymatic pathway to 11-cis chromophore supply under
+    different light regimes?
+suggested_experiments:
+- hypothesis: &gt;-
+    RGR&#39;s all-trans preference and photoisomerase activity are determined by its
+    chromophore-binding pocket.
+  description: &gt;-
+    Structural determination (cryo-EM) of RGR with bound all-trans-retinal to
+    define the chromophore pocket and the basis of its all-trans preference.
+  experiment_type: structural biology
+- hypothesis: &gt;-
+    RGR efficiently photoisomerizes all-trans-retinal to 11-cis-retinal on
+    illumination.
+  description: &gt;-
+    Time-resolved spectroscopy of purified human RGR to measure the quantum
+    yield and kinetics of all-trans- to 11-cis-retinal photoisomerization.
+  experiment_type: biophysical spectroscopy
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
