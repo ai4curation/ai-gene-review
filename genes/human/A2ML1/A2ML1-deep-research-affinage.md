@@ -8,27 +8,22 @@ self_evaluation_pairwise: loss
 faith_pct: 100.0
 n_discoveries: 8
 citation_count: 8
-gates_passed: False
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for A2ML1 (human)
-
-> ⚠️ **CAUTION — trust gate(s) tripped; review before using:**
->
-> - Affinage's own head-to-head self-evaluation scored this record `pairwise = loss` (not `win`) vs the curated UniProt reference — treat the narrative with extra scepticism.
 
 ## Current model (mechanistic narrative)
 
 A2ML1 is a secreted broad-spectrum protease inhibitor of the alpha-2-macroglobulin family expressed in stratified epithelia and other tissues, where it was first identified as the p170 autoantigen recognized by paraneoplastic pemphigus autoantibodies [PMID:20805888]. Loss-of-function variants in A2ML1 confer susceptibility to otitis media: rare and damaging variants cosegregate with disease in human pedigrees and otitis-prone children [PMID:26121085], variant carriers show reduced A2ML1 expression [PMID:31009165], and A2ml1-knockout mice develop spontaneous middle ear disease with tympanic membrane perforation and effusion accompanied by upregulation of desmoplakin (Dsp), implicating dysregulated keratinocyte/epithelial integrity as the disease mechanism [PMID:38759260]. In pancreatic cancer, A2ML1 is overexpressed and promotes progression and epithelial-mesenchymal transition by downregulating LZTR1 and activating the KRAS/MAPK pathway [PMID:40615919]. Heterozygous germline A2ML1 variants were associated with a Noonan-syndrome-like phenotype in a zebrafish model [PMID:24939586], but a systematic segregation analysis across RASopathy families found these variants inherited from unaffected parents alongside alternative disease-causing aberrations, not supporting a causal role in Noonan syndrome [PMID:33082526].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0098772 molecular function regulator activity
 - **localization:** GO:0005576 extracellular region

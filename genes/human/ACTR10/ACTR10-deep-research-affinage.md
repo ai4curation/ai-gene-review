@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 4
 citation_count: 3
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for ACTR10 (human)
@@ -22,9 +23,7 @@ note: >-
 
 ACTR10 (Arp11), the pointed-end subunit of the dynactin complex, mediates the physical attachment of dynactin-bound cargo to the dynein retrograde motor in neurons [PMID:28414272]. It is specifically required for coupling mitochondria to dynactin and thereby for dynein-driven retrograde mitochondrial transport in axons; an Actr10 construct lacking its dynactin-binding domain still binds mitochondria, indicating that Actr10 functions as the mitochondria-anchoring element rather than merely a structural dynactin subunit [PMID:28414272]. This retrograde transport activity is essential for homeostatic mitochondrial distribution: its loss causes aged organelles to accumulate at axon terminals while cell body mitochondria are depleted [PMID:33376159]. Beyond mitochondria, Actr10 is required for proper distribution of Mbp mRNA in oligodendrocytes, where Mbp mRNA granules associate with the dynein/dynactin motor complex, extending its role to motor-driven mRNA transport [PMID:29073112]. Genetic interaction places Actr10-dependent retrograde mitochondrial movement in a pathway with the fission GTPase Drp1 [PMID:28414272].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0060090 molecular adaptor activity
 - **localization:** GO:0005856 cytoskeleton, GO:0005739 mitochondrion

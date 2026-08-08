@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 57
 citation_count: 57
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for SLX4 (human)
@@ -22,9 +23,7 @@ note: >-
 
 SLX4 (BTBD12/FANCP) is a multidomain scaffold that assembles and activates a modular toolkit of structure-specific endonucleases—XPF-ERCC1, MUS81-EME1, and SLX1—to process branched DNA intermediates arising during replication, recombination, and interstrand crosslink (ICL) repair [PMID:19596235, PMID:19595721]. Through direct contacts it stimulates each partner nuclease and directs substrate specificity: the SLX1-SLX4 module is a Holliday junction resolvase and 5'-flap endonuclease [PMID:19596236, PMID:12832395], the N-terminal SLX4-XPF-ERCC1 interaction enhances XPF-ERCC1 activity up to 100-fold and executes the unhooking incisions of replication-coupled ICL repair [PMID:24726326, PMID:24726325], and CDK1-driven phosphorylation of the MUS81-binding region folds an SAP domain that recruits MUS81-EME1 into a stable SLX-MUS holoenzyme providing efficient HJ resolution at G2/M [PMID:24076221, PMID:36288699]. Structural work shows SLX4 activates SLX1 by displacing its autoinhibitory homodimer and that the SLX4 SAP domain positions 5'-flap substrates for accurate cleavage [PMID:25753413, PMID:34181713]. SLX4 itself dimerizes via its BTB domain, an event required for foci formation and telomeric localization [PMID:27131364]. Damage-site recruitment is multi-modal: the UBZ1 domain reads K63-linked polyubiquitin deposited by RNF168 and ubiquitylated FANCD2 at ICLs [PMID:24794496, PMID:21464321, PMID:34706224], while SUMO-interacting motifs (cooperating with PARylation) target SLX4 to resected/laser damage, fragile sites, PML bodies, and ALT telomeres [PMID:25533185, PMID:25722289]. At telomeres SLX4 docks on the shelterin subunit TRF2 via an HxLxP motif to deliver its nucleases and regulate telomere length and fragility [PMID:24012755, PMID:23994477], and it drives recombination-based ALT telomere processing in opposition to the BLM-TOP3A-RMI dissolution pathway [PMID:28877996]. SLX4 additionally functions as a SUMO E3 ligase that SUMOylates itself and XPF [PMID:25533188], forms SUMO/dimerization-driven nuclear condensates that compartmentalize the SUMO-RNF4 pathway and promote topoisomerase-1 DPC extraction [PMID:37059091], interacts with the helicase RTEL1 to prevent replication-transcription conflicts [PMID:32398829], and binds MSH2 through a SHIP box to suppress MutSα-dependent mismatch repair [PMID:35166826]. SLX4 protein levels are buffered by RNF4-mediated ubiquitin-dependent degradation counterbalanced by USP7 within PML nuclear bodies, preventing unscheduled nuclease activity [PMID:41002028]. Biallelic SLX4 mutations cause Fanconi anemia subtype FA-P, and its essential ICL-repair function maps to the N-terminal XPF-ERCC1-binding region [PMID:21240275, PMID:21240277, PMID:21240276].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0140097 catalytic activity, acting on DNA, GO:0060090 molecular adaptor activity, GO:0016740 transferase activity, GO:0003677 DNA binding, GO:0098772 molecular function regulator activity
 - **localization:** GO:0005634 nucleus, GO:0000228 nuclear chromosome, GO:0005654 nucleoplasm

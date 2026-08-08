@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 32
 citation_count: 34
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for ABCA1 (human)
@@ -22,9 +23,7 @@ note: >-
 
 ABCA1 is an ATP-hydrolyzing integral membrane transporter that drives the rate-limiting first step of reverse cholesterol transport, exporting cellular cholesterol and phospholipids to lipid-poor apolipoproteins—principally apoA-I—to nucleate nascent HDL particles; loss-of-function mutations cause Tangier disease [PMID:10882340, PMID:11111099, PMID:11483617]. The purified protein reconstituted in liposomes hydrolyzes ATP in a manner preferentially stimulated by phosphatidylcholine and sphingomyelin and inhibited by specific sterols, establishing its direct enzymatic mechanism [PMID:16500904], and it operates as an extracellular phospholipid translocase that extracts outer-leaflet phospholipids through a hydrophobic gateway/annulus tunnel in its extracellular domain rather than as an inner-to-outer floppase [PMID:35974019]. ABCA1 activity generates two classes of cell-surface apoA-I binding sites—a minor direct ABCA1/apoA-I site and a dominant high-capacity site formed by apoA-I engaging ABCA1-generated lipid domains, the latter requiring the apoA-I C-terminus and driving HDL assembly [PMID:17478755]. ApoA-I binding additionally triggers JAK2/STAT3, PKA, PKC, and CDC42 signaling that feeds back on lipid efflux, protein stability, and inflammation [PMID:22064972]. The transporter cycles between the plasma membrane and endosomes via clathrin/Rab5-mediated retroendocytosis with Rab4-dependent recycling that contributes to efflux [PMID:19170766], and it partitions into lipid rafts and phagosomes in association with syntaxin 13 and flotillin-1 [PMID:15469992]. ABCA1 abundance is tightly controlled transcriptionally—induced by LXR/RXR, RAR, and AMPK–LXRα, and repressed by ORP8, TRAK2, and CXCL12/CXCR4–GSK3β/TCF21 signaling [PMID:14560020, PMID:28655204, PMID:27343431, PMID:31662443]—and post-translationally through calpain-mediated degradation accelerated by PLD2-dependent serine phosphorylation, OSBP, and AGE–RAGE–ubiquitin/lysosomal pathways [PMID:16118212, PMID:18450749, PMID:29097054]. Beyond efflux, ABCA1 restrains TLR4-driven macrophage inflammation through membrane lipid remodeling [PMID:19797709], governs beta-cell cholesterol homeostasis and insulin secretion [PMID:17322896, PMID:22315319], directs hepatic HDL assembly and VLDL secretion [PMID:22001232], maintains astrocyte apoE lipidation and neuroinflammatory tone [PMID:23376685], and acts as a myeloid tumor suppressor by limiting IL-3Rβ/MAPK/JAK2 signaling [PMID:32160545].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0140657 ATP-dependent activity, GO:0016787 hydrolase activity, GO:0005215 transporter activity, GO:0008289 lipid binding, GO:0140104 molecular carrier activity
 - **localization:** GO:0005886 plasma membrane, GO:0005768 endosome, GO:0005764 lysosome

@@ -273,7 +273,8 @@ the check was run — `GO:0005886` documented 4 of 7 donors, `GO:0005096` 3 of 6
 
 ## 9. Affinage record
 
-`ACAP3-deep-research-affinage.md` has `gates_passed: True`, five numeric PMIDs, no
+`ACAP3-deep-research-affinage.md` has `self_evaluation_pairwise: win` and clear trust gates,
+five numeric PMIDs, no
 bioRxiv-DOI-in-a-PMID-field entries. Its narrative is accurate on the four functional
 papers and was useful for finding PMID:41520057 and PMID:39098591, which the UniProt
 reference list does not contain. Its own GO grounding is coarse (`GO:0098772 molecular

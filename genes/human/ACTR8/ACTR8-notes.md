@@ -13,7 +13,8 @@ UniProt; the seeder de-duplicates it).
 ## 1. Provider record: empty, and that is a provider gap, not a literature gap
 
 The affinage record has `n_discoveries: 0`, `citation_count: 0`, no findings table and no
-citations, with `gates_passed: True` (vacuously — there is nothing to gate). Per the campaign
+citations, and no `self_evaluation_pairwise` score; the trust gates were clear only vacuously —
+there is nothing to gate. Per the campaign
 rule, an empty provider record is **not** evidence that literature is absent, and here it is
 demonstrably wrong: the UniProt `RN` list alone carries 13 references including a 2.6 Å crystal
 structure paper with `FUNCTION, SUBUNIT, AND ATP-BINDING SITES` in its `RP` line

@@ -6,15 +6,25 @@ file — 794 such genes at time of writing). Running the tool with `--write` wri
 `genes/human/<GENE>/<GENE>-deep-research-affinage.md`, which the AIGR review workflow
 already ingests — so no pipeline change is needed to "wire in" Affinage.
 
-**Where the committed examples live.** We do **not** commit the generated files into the
-live `genes/human/` tree. Two reasons: (1) the repo PR template asks not to commit
-`*-deep-research-*.md`; (2) more importantly, a file in a gene folder is *ingested by a
-future review of that gene* — and some Affinage records describe the **wrong protein**
-(symbol collisions, see below), so an in-tree file would feed wrong-gene biology into a
-later review despite its CAUTION banner. The committed examples therefore live here under
-`results/example-<GENE>-deep-research-affinage.md` (5 genes), mirroring the existing
-`example-GPX4` demo. Use `--write` locally when you actually intend a file to seed a
-specific gene's review.
+**Where the committed examples live, and what gates an in-tree write.** The 5 demo genes
+of this slice are committed *here*, under `results/example-<GENE>-deep-research-affinage.md`,
+mirroring the existing `example-GPX4` demo — they illustrate the tool's output (including
+the two collision cases) without seeding any gene's review. That is separate from the
+backlog campaign, which *does* write into the live tree: there are 58
+`genes/human/*/*-deep-research-affinage.md` files committed at time of writing, one per
+gene actually being reviewed.
+
+The care needed is because a file in a gene folder is *ingested by a future review of that
+gene* — and some Affinage records describe the **wrong protein** (symbol collisions, see
+below). The file itself carries no in-file warning: it is a faithful provider record, and
+the trust-gate judgment belongs in the review's `reference_review`, not in the source file.
+So the safety check lives in the **tool** instead — `--write`/`--out` into `genes/` is
+**refused** (non-zero exit) when a wrong-protein gate trips (accession mismatch or a
+non-human organism token in the narrative opening), unless `--force` is passed. The soft
+`pairwise` signal only warns; it is already in the frontmatter as
+`self_evaluation_pairwise`. Use `--write` when you actually intend a file to seed a
+specific gene's review, and record your assessment of the record in that review's
+`references[].reference_review`.
 
 ## The 10-gene slice (gates make the case)
 
@@ -47,10 +57,13 @@ that a naive import would have silently accepted:
 - **ADA** — the organism-token gate + `pairwise = loss` flagged the multi-entity chimera
   (see the [project page](../AFFINAGE_EVALUATION.md) §3).
 
-Every example file is clearly marked as **external, LLM-generated preliminary research**
-(not a curated annotation), records the mechanism-profile GO ids **for reference only**
-(with a "do not import directly" note), and surfaces any tripped gate as a ⚠️ CAUTION
-banner at the top.
+Every example file is a **faithful, unedited rendering** of the Affinage record — clearly
+marked in its frontmatter as
+**external, LLM-generated preliminary research** (not a curated annotation) and reproducing
+Affinage's own mechanism-profile GO ids as-is. It carries **no AIGR interpretation**: the
+trust gates print to **stderr** (see the ADA/ACAT1 runs above), and the reviewer records the
+resulting judgment — including whether to import the GO grounding — in the gene review's
+`references[].reference_review`, never in the source file.
 
 ## Reproduce / extend
 

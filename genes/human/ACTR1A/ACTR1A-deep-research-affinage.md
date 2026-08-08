@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 2
 citation_count: 2
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for ACTR1A (human)
@@ -22,9 +23,7 @@ note: >-
 
 ACTR1A (alpha-centractin) is a subunit of the dynactin complex that additionally participates in innate immune signaling and is subject to post-translational regulation [PMID:31221720, PMID:41142317]. ACTR1A physically associates with TLR2 and is required for TLR2-mediated pro-inflammatory cytokine induction, since its knockdown reduces cytokine output downstream of the receptor [PMID:31221720]. ACTR1A is also an in vitro substrate of the SETD3 protein histidine methyltransferase, which methylates recombinant ACTR1A and contacts it in cells, extending SETD3's substrate repertoire beyond beta-actin to this dynactin subunit [PMID:41142317]. Beyond these findings, the structural basis of these interactions, the in-cell methylation site, and the link between ACTR1A modification and dynactin function have not been characterized in the available corpus.
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** *(none)*
 - **localization:** *(none)*

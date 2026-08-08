@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 41
 citation_count: 41
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for FANCM (human)
@@ -22,9 +23,7 @@ note: >-
 
 FANCM is an ATP-dependent DNA translocase and branch-point migrase that recognizes branched DNA intermediates—Holliday junctions, replication forks, and D-loops—and remodels them to preserve genome stability during replication stress [PMID:18206976, PMID:18285517]. Through its N-terminal translocase domain it catalyzes bidirectional branch migration and replication fork reversal in an ATPase-dependent manner [PMID:18206976, PMID:18843105], with the Hel2i subdomain coupling specific branched-DNA engagement to catalytic migration [PMID:39189453, PMID:40447800]. Beyond its enzymatic activity, FANCM serves as a chromatin-targeting scaffold that loads the Fanconi anemia core complex onto chromatin in a cell-cycle-dependent manner and is required for normal FANCD2 monoubiquitination [PMID:18174376, PMID:17289582]; it bridges the FA and Bloom syndrome dissolvasome pathways through two conserved motifs—MM1 binding the core complex via FANCF and MM2 binding RMI1/topoisomerase IIIα—with loss of bridging elevating sister chromatid exchange [PMID:20064461, PMID:22392978]. FANCM functions in a stable heterodimeric module with the histone-fold proteins MHF1-MHF2, which stimulate its DNA binding and fork-remodeling activity and switch its DNA-binding preference toward branched DNA [PMID:20347428, PMID:20347429, PMID:24699063], and it partners with FAAP24, whose DNA-binding (HhH)2 domain targets the complex to chromatin [PMID:17289582, PMID:24003026]. Functionally distinct activities are separable: the translocase activity is dispensable for FA pathway activation but required for replication fork stability, ICL traverse, ATR/CHK1 checkpoint signaling, and recovery of stalled forks [PMID:18285517, PMID:18995830, PMID:22279085, PMID:24207054], and FANCM facilitates ATR checkpoint activation by promoting RPA and TopBP1 chromatin retention [PMID:20670894, PMID:20057355]. FANCM is regulated by ATR-dependent phosphorylation at S1045 and by Plk1/β-TRCP-driven mitotic degradation that releases the core complex from chromatin [PMID:23698467, PMID:19270156]. At ALT telomeres, its translocase activity and BTR-complex interaction suppress TERRA R-loops and BLM-driven break-induced telomere synthesis, rendering FANCM-BTR disruption selectively toxic to ALT cancer cells [PMID:31138795, PMID:31138797], and FANCM loss is synthetic-lethal with BRCA1 hypomorphs and with SMARCAL1 [PMID:33882298, PMID:39510066]. The ortholog studies establish a conserved role in limiting recombination outcomes by dissociating D-loops, including meiotic crossover control [PMID:18851838, PMID:32386601].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0140657 ATP-dependent activity, GO:0003677 DNA binding, GO:0140097 catalytic activity, acting on DNA, GO:0060090 molecular adaptor activity, GO:0098772 molecular function regulator activity
 - **localization:** GO:0005694 chromosome, GO:0005634 nucleus

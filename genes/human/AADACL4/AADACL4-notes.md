@@ -37,8 +37,8 @@ have not, to our knowledge, been described for AADAC or the related enzymes AADA
 AADACL4."]. The `AADACL1` in that sentence is NCEH1/KIAA1363, so the review is naming the
 AADAC/NCEH1 clade AADACL4 belongs to.
 
-The affinage deep-research record is empty (`n_discoveries: 0`, `citation_count: 0`,
-though `gates_passed: True`). Following the campaign rule that an empty affinage record is
+The affinage deep-research record is empty (`n_discoveries: 0`, `citation_count: 0`, and no
+`self_evaluation_pairwise` score — the trust gates were clear only for want of anything to gate). Following the campaign rule that an empty affinage record is
 not evidence that literature is absent, I checked independently:
 
 - UniProt cites exactly one reference for this entry, the chromosome 1 sequencing paper

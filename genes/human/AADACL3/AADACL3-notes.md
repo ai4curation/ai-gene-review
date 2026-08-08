@@ -51,8 +51,8 @@ analysis below.
 
 ## Literature: checked, and genuinely absent
 
-Affinage returned an empty record (`n_discoveries: 0`, `citation_count: 0`,
-`gates_passed: True`). Per the campaign rules an empty provider record is not
+Affinage returned an empty record (`n_discoveries: 0`, `citation_count: 0`, and no
+`self_evaluation_pairwise` score). Per the campaign rules an empty provider record is not
 evidence that literature is absent, so PubMed was searched directly. Seven
 records mention AADACL3, and not one assays the protein or its activity: two
 livestock body-weight association studies (Chinese Holstein cows, Chinese

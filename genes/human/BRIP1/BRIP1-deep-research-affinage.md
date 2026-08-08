@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 38
 citation_count: 40
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for BRIP1 (human)
@@ -22,9 +23,7 @@ note: >-
 
 BRIP1 (BACH1/FANCJ) is a 5′-to-3′ DEAH-box ATP-dependent DNA helicase that maintains genome stability during DNA replication and repair, and its loss defines Fanconi anemia complementation group J [PMID:16153896, PMID:16116423, PMID:16116424, PMID:16116421]. Catalytic activity depends on an N-terminal iron–sulfur cluster coordinated by three conserved cysteines—mutated in Fanconi anemia and cancer—and on Q-motif (Q25)-dependent dimerization, with the dimer showing enhanced ATPase, helicase, and DNA-binding activity [PMID:16973432, PMID:22582397, PMID:32542039]. The enzyme unwinds duplex DNA, dissociates G-quadruplex (G4) structures, disrupts triplex DNA and protein–DNA complexes, and inhibits RAD51 strand exchange, contacting both translocating and non-translocating strands during unwinding [PMID:18426915, PMID:18978354, PMID:19150983, PMID:17145708]. A central physiological role is resolving G4 obstacles during replication: FANCJ counteracts fork stalling at G4 structures—a function it performs in cell-free Xenopus extracts independently of the canonical FA pathway—and engages G4s through a dedicated AKKQ recognition motif that also mediates MLH1 binding, while a PIP-like region recruits REV1 to assemble a G4 repair complex [PMID:23530069, PMID:25193968, PMID:27342280, PMID:31861576]. FANCJ operates in interstrand crosslink repair downstream of FANCD2 monoubiquitination, where its helicase activity and direct MLH1 (MutLα) interaction—rather than its BRCA1 interaction—are required to correct ICL sensitivity [PMID:16116421, PMID:17581638]. FANCJ directly binds and stabilizes FANCD2/FANCI and is reciprocally required for FANCD2 chromatin loading and focus formation [PMID:25070891, PMID:26336824, PMID:20676667]. In homologous recombination, CDK-dependent S990 phosphorylation drives both BRCA1 interaction and K1249 acetylation, the latter recruiting CtIP to promote DNA end resection [PMID:32251466, PMID:22792074]. FANCJ couples to checkpoint and replication-stress responses via phospho-Thr1133-dependent binding to the TopBP1 BRCT7/8 domains, supporting ATR signaling and RPA chromatin loading, and cooperates with RPA on damaged and G4 substrates [PMID:20159562, PMID:21127055, PMID:17596542]. Genetically, FANCJ helicase function suppresses spontaneous and replication-stress-induced microsatellite instability independently of FANCD2, with Fancj-null mice predisposed to lymphoma [PMID:26637282, PMID:27179029]. Beyond replication and repair, FANCJ unfolds protein adducts in DNA–protein crosslink repair to enable SPRTN cleavage and translesion synthesis [PMID:36608669], and contributes to S-phase PARP1 activity through its MLH1 interaction, explaining its requirement for PARP inhibitor efficacy in BRCA1-deficient cells [PMID:38521768].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0140657 ATP-dependent activity, GO:0140097 catalytic activity, acting on DNA, GO:0003677 DNA binding, GO:0016787 hydrolase activity, GO:0060090 molecular adaptor activity
 - **localization:** GO:0005634 nucleus, GO:0000228 nuclear chromosome

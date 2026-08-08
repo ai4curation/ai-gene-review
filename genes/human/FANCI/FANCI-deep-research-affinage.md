@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 43
 citation_count: 43
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for FANCI (human)
@@ -22,9 +23,7 @@ note: >-
 
 FANCI is a central effector of the Fanconi anemia DNA interstrand crosslink (ICL) repair pathway, functioning as the obligate partner of FANCD2 in a heterodimeric (ID2) clamp that recognizes and processes damaged replication forks [PMID:17412408, PMID:17460694]. The complex acts as a sliding clamp that diffuses on dsDNA and stalls specifically at single-strand/double-strand junctions characteristic of stalled forks, then encircles the DNA through a closed conformation [PMID:39085614, PMID:32066963]. Activation proceeds through ordered post-translational regulation: ATR phosphorylates conserved S/TQ motifs (notably S556, S559, S565), priming the complex by destabilizing its open state, stabilizing DNA and FANCD2 association, and protecting the eventual ubiquitin marks from USP1:UAF1 [PMID:18931676, PMID:32117957, PMID:36050501], and PP2A dephosphorylates an inhibitory FANCD2 cluster to license chromatin loading [PMID:39535917]. The UBE2T-FANCL E2-E3 pair then monoubiquitinates FANCD2 (K561) and FANCI (K523), a reaction strongly stimulated by FANCI's DNA binding and required for clamping the heterodimer on dsDNA [PMID:19111657, PMID:19589784, PMID:22287633, PMID:32167469]; FANCI's own ubiquitin reciprocally protects FANCD2's ubiquitin from USP1-UAF1 deubiquitination and enables re-ubiquitination, establishing an interdependent ubiquitin lock [PMID:32510829, PMID:36385258]. The activated clamp recruits the downstream nuclease FAN1 and directly stabilizes RAD51-DNA filaments to protect fork ends [PMID:20671156, PMID:27694619]. Beyond canonical repair, FANCI carries out FANCD2-independent functions: it restrains dormant origin firing under replication stress [PMID:25843623], localizes to the nucleolus to support pre-rRNA transcription and large-subunit processing in its deubiquitinated state [PMID:30692263], stimulates homologous recombination D-loop formation and is essential for meiosis and spermatogenesis [PMID:31219578, PMID:34373449], and can switch from FANCD2 partnering to PIDD1 binding to drive caspase-2/PIDDosome-dependent apoptosis when ICL repair fails [PMID:34256011]. Patient-derived mutations affecting the C-terminal NLS/EDGE region and the Tower domain disrupt these activities, linking FANCI to the Fanconi anemia phenotype [PMID:20971953, PMID:27405460].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0003677 DNA binding, GO:0003723 RNA binding, GO:0140096 catalytic activity, acting on a protein, GO:0060090 molecular adaptor activity, GO:0098772 molecular function regulator activity
 - **localization:** GO:0005634 nucleus, GO:0000228 nuclear chromosome, GO:0005730 nucleolus

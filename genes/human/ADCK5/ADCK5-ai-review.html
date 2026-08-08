@@ -1,0 +1,3721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADCK5 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ADCK5</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q3MIX3" target="_blank" class="term-link">
+                        Q3MIX3
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ADCK5";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q3MIX3" data-a="DESCRIPTION: ADCK5 is a 580-residue human member of the ancient..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ADCK5 is a 580-residue human member of the ancient UbiB (aarF-domain) family of atypical protein-kinase-like proteins, one of five human paralogs alongside ADCK1, ADCK2 and the two characterised coenzyme Q factors COQ8A (ADCK3) and COQ8B (ADCK4). In eukaryotes UbiB proteins are found exclusively in mitochondria and plastids, and ADCK5 is detected in high-confidence human mitochondrial proteome surveys and co-purifies predominantly with mitochondrial proteins; a hydrophobic segment at residues 50-67 is predicted to anchor it in a membrane. Its protein-kinase-like domain retains the complete catalytic and nucleotide-positioning core of the fold - the beta3 lysine, the alphaC glutamate, the catalytic-loop aspartate and asparagine, and the DFG aspartate - so it is not a degenerate pseudokinase. At the same time it retains both UbiB-specific features that distinguish this family from conventional kinases: the invariant KxGQ motif, whose N-terminal domain occludes the pocket that conventional kinases use to bind peptide substrates, and an alanine-rich loop in place of the canonical glycine-rich nucleotide loop, which in the characterised relatives produces an unusual preference for ADP over ATP. No catalytic activity, substrate or physiological process has been established for ADCK5 by direct assay. In the two relatives that have been assayed the fold does not support generic protein phosphorylation in trans, yet COQ8B does phosphorylate one specific partner protein, so a restricted, substrate-selective activity for ADCK5 remains an open possibility rather than an excluded one. Reported cellular roles - promotion of lung cancer cell invasion and migration via a SOX9/PTTG1 axis, and induction of airway epithelial senescence - rest on overexpression and knockdown studies without accompanying enzymology.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q3MIX3" data-a="GO:0016020" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but weakly grounded, and less informative than the available evidence. This row is the automatic mapping of UniProt SubCell SL-0162 (Membrane) to GO:0016020, and that SubCell assignment traces to a SUBCELLULAR LOCATION line reading &#34;Membrane {ECO:0000305}; Single-pass membrane protein {ECO:0000305}&#34; - a curator inference drawn from a purely predicted transmembrane helix at residues 50-67 (ECO:0000255). There is no experimental membrane measurement for ADCK5. The statement is nonetheless very likely true: UniProt records COQ8A as Mitochondrion membrane, single-pass, and ADCK1 as Mitochondrion, and ADCK5 is independently placed in the mitochondrion by the HTP row below. Kept as ACCEPT because a general parent term that is true should not be removed, and because refining it to GO:0031966 mitochondrial membrane would mean joining an experimental mitochondrion call to a predicted membrane call - a composite inference this review declines to make on ADCK5&#39;s behalf. The substantive issue is upstream and not fixable in GO: ADCK1 and ADCK2 receive SL-0173 (Mitochondrion) from the same UniProt pipeline while ADCK5 receives only SL-0162. That difference is not arbitrary - ADCK1 and ADCK2 each have an experimental mitochondrial localisation of their own (ECO:0000269|PubMed:33988507) that ADCK5 lacks - but the reason ADCK5 lacks it is that it was never tested: that study states its kinome library did not contain ADCK5. Raised as a UniProt correction request in suggested_questions, on ADCK5&#39;s own evidence rather than on parity with its paralogs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A true but prediction-derived parent term. Retained rather than removed because ADCK5 is almost certainly membrane-associated, and rather than refined because its submitochondrial placement has never been measured.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25498144" target="_blank" class="term-link">
+                                        PMID:25498144
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">they contain predicted single-pass transmembrane (TM) domains that could limit solubility</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27499294" target="_blank" class="term-link">
+                                        PMID:27499294
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">endogenous COQ8A is partially buried in the inner mitochondrial membrane with its C-terminus facing the matrix</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q3MIX3" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; supported by a single yeast two-hybrid partner, NOTCH2NLA (Q7Z3S9), from the Rolland/CCSB proteome-scale interactome screen. Expanding the IntAct records shows this one screen is logged three separate times under three sub-method labels - two hybrid array, two hybrid prey pooling approach, and validated two hybrid - which is what inflates UniProt&#39;s NbExp to 4. It is one experiment, not three, and across all 54 IntAct records for Q3MIX3 there is no orthogonal assay for this pair (MI score 0.67 throughout). The compartments also sit awkwardly together: NOTCH2NLA is a reviewed 236-residue human-specific protein annotated Secreted and Cytoplasm that acts on neural progenitor proliferation, whereas ADCK5 is a mitochondrial UbiB-family protein whose only large interaction dataset returns 17 of 25 partners annotated to the mitochondrion. That compartment argument is a supporting consideration rather than a decisive one, and it is stated here as an assumption: it holds if ADCK5&#39;s kinase-like domain faces the matrix, as COQ8A&#39;s C-terminus is measured to do, but ADCK5&#39;s own sidedness has never been determined and an outer-membrane anchor presenting the domain to the cytosol is not excluded - which is the same uncertainty that stops this review proposing GO:0031966. The verdict does not depend on it: the method-replication argument stands alone. Marked as over-annotated rather than removed: this is an experimental IPI whose primary data this review has not seen, and the term is not positively contradicted, merely unreplicated by any independent method and uninformative as written. Not modified to a more specific molecular-function term because there is no characterised activity to modify it to. The partner-identity check ran clean - Q7Z3S9 is the reviewed, canonical, full-length Swiss-Prot entry, not a TrEMBL or partial-ORFeome substitute.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> One yeast two-hybrid screen triple-logged under three sub-method labels, with no orthogonal assay for this pair anywhere in IntAct, and a bare term that names no activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27499294" target="_blank" class="term-link">
+                                        PMID:27499294
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">endogenous COQ8A is partially buried in the inner mitochondrial membrane with its C-terminus facing the matrix</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ADCK5/ADCK5-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">MI score 0.67 on every row; no orthogonal assay anywhere in IntAct.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31515488
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Extensive disruption of protein interactions by genetic vari...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q3MIX3" data-a="GO:0005515" data-r="PMID:31515488" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Same partner as the row above, NOTCH2NLA (Q7Z3S9), from a second two-hybrid study that screens the effect of genetic variants on interactions. Judged separately per partner and per reference as required, and it reaches the same verdict for a reason specific to it: this is not independent corroboration of the Rolland hit. It is a two hybrid array experiment from the same CCSB resource lineage, i.e. method replication within one assay class rather than orthogonal validation. It inherits the same compartment consideration as the row above - a secreted and cytoplasmic human-specific neural regulator paired with a mitochondrial UbiB protein - and it inherits that consideration&#39;s limits too: ADCK5&#39;s membrane sidedness has never been measured, so this supports the verdict without being required by it. Had this been a different method, the two rows together would have justified MODIFY to an informative molecular-function term; as it stands there is no characterised binding activity to name. Over-annotated rather than removed, on the same grounds as the previous row.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A second two-hybrid screen from the same CCSB resource lineage, so method replication within one assay class rather than the orthogonal validation this partner would need.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ADCK5/ADCK5-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">MI score 0.67 on every row; no orthogonal assay anywhere in IntAct.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q3MIX3" data-a="GO:0005739" data-r="PMID:34800366" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Well supported, and the single most informative annotation ADCK5 has. The reference is MitoCoP, a quantitative high-confidence human mitochondrial proteome, and the identical row is carried by ADCK1 and ADCK2. It is corroborated from three independent directions: the UbiB family is mitochondrial throughout eukaryotes; ADCK5&#39;s largest interaction dataset (PMID:27499296, the mitochondrial protein interaction map) returns 25 distinct partners of which 17 are UniProt-annotated to the mitochondrion; and the protein carries an N-terminal basic, hydroxylated-residue-rich segment of the kind that directs mitochondrial import. The complex-to-subunit projection failure mode was checked and does not apply here - PMID:34800366 is a proteome-wide localisation census that assigns no functional or phenotype term, so there is no phenotype able to spread across a complex, unlike the ComplexPortal-derived case documented on INO80 subunits.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> High-confidence mitochondrial proteome membership, corroborated independently by the family&#39;s exclusively mitochondrial distribution in eukaryotes and by an interactome dominated by mitochondrial proteins.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25498144" target="_blank" class="term-link">
+                                        PMID:25498144
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In eukaryotes, UbiB homologs are found exclusively in mitochondria</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The pipeline behind the GO:0016020 row. Its input for ADCK5 is SubCell SL-0162 (Membrane), which resolves to GO:0016020 and nothing more specific.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Source of the first GO:0005515 row. Reports an ADCK5-NOTCH2NLA interaction by yeast two-hybrid, logged in IntAct three times under three sub-method labels of the same screen.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link">
+                            PMID:31515488
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Extensive disruption of protein interactions by genetic variants across the allele frequency spectrum in human populations.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Source of the second GO:0005515 row; recovers the same ADCK5-NOTCH2NLA pair by two hybrid array from the same CCSB resource lineage, so it is method replication rather than orthogonal validation.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">MitoCoP places ADCK5 in the high-confidence human mitochondrial proteome; this is the source of the GO:0005739 HTP row, and the identical row is carried by ADCK1 and ADCK2.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25498144" target="_blank" class="term-link">
+                            PMID:25498144
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mitochondrial ADCK3 employs an atypical protein kinase-like fold to enable coenzyme Q biosynthesis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Defines the UbiB-specific sequence features, including the invariant KxGQ motif and the AAAS alanine-rich loop that replaces the canonical glycine-rich nucleotide-binding loop. Both are retained in ADCK5, at K147 and A209.</div>
+
+                        <div class="finding-text">"an atypical AAAS motif in an alanine-rich (A-rich) loop that replaces the canonical glycine-rich (G-rich) nucleotide-binding loop"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Argues that the KxGQ domain is positioned to inhibit protein kinase activity by occupying the site conventional kinases use for peptide substrates.</div>
+
+                        <div class="finding-text">"the KxGQ domain is likely to be an autoinhibitory domain because it fills the space normally occupied by peptide or protein substrates in typical protein kinases"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Establishes that eukaryotic UbiB proteins are mitochondrial, corroborating ADCK5&#39;s HTP mitochondrion row independently of the proteomics.</div>
+
+                        <div class="finding-text">"In eukaryotes, UbiB homologs are found exclusively in mitochondria"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27499294" target="_blank" class="term-link">
+                            PMID:27499294
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cerebellar Ataxia and Coenzyme Q Deficiency through Loss of Unorthodox Kinase Activity.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Demonstrates that COQ8A and yeast Coq8p lack canonical protein kinase activity in trans; the source of the NOT|enables GO:0004672 and NOT|involved_in GO:0006468 annotations carried by both COQ8A and COQ8B.</div>
+
+                        <div class="finding-text">"neither catalyzes canonical protein kinase activity"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Attributes the loss of generic protein-kinase function to the KxGQ domain blocking the peptide substrate site.</div>
+
+                        <div class="finding-text">"which occludes the canonical peptide substrate pocket"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Explicitly leaves ADCK1, ADCK2 and ADCK5 uncharacterised, so nothing in this paper is direct evidence about ADCK5.</div>
+
+                        <div class="finding-text">"More distantly related COQ8A/B homologs (ADCK1, ADCK2, and ADCK5) could also play a role"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38425362" target="_blank" class="term-link">
+                            PMID:38425362
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In vitro construction of the COQ metabolon unveils the molecular determinants of coenzyme Q biosynthesis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">COQ8B phosphorylates a specific protein substrate, COQ3, at multiple sites - the result that stops this review concluding that the UbiB fold is incapable of phosphorylating a protein.</div>
+
+                        <div class="finding-text">"COQ3, but not COQ6, is phosphorylated by COQ8B at multiple sites"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The same study excludes small-molecule kinase activity for COQ8B, narrowing the family&#39;s plausible activities.</div>
+
+                        <div class="finding-text">"GC/MS analyses did not detect any phosphorylated CoQ intermediates, suggesting that the enzyme is not a small-molecule kinase"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33988507" target="_blank" class="term-link">
+                            PMID:33988507
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A subcellular map of the human kinome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The subcellular kinome atlas underpins the experimental mitochondrial localisation (ECO:0000269|PubMed:33988507) that UniProt gives every human UbiB protein except ADCK5 - though not to the same degree, and the difference matters. For ADCK1 and ADCK2 it is the SOLE cited evidence, so there it supplied the annotation. For COQ8A and COQ8B it is one tag among several and the latest of them (COQ8A also cites PubMed:11888884 from 2002 and PubMed:25498144; COQ8B also cites PubMed:24270420 from 2013), so there it corroborated an annotation that already existed. ADCK5 has no tag from it at all, because it states that ADCK5 was not present in the screened library - so ADCK5&#39;s missing annotation reflects absence of testing rather than a negative result, which is what makes the UniProt correction request reasonable rather than a request to overrule data. The four genes the screen did cover are the entire rest of the human UbiB family; ADCK5 is the only member it could not assess. The supplied/corroborated split is computed in family_census.json under mitochondrial_localisation_provenance, not asserted from memory.</div>
+
+                        <div class="finding-text">"ADCK5 and OBSCN were absent from the library"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Stronger than a bare absence. The sentence sits in a passage reconciling the screen&#39;s 22 mitochondrial kinases against the MitoCarta2.0 mitochondrial proteome, and that passage lists two distinct kinds of exception. ADCK5 and OBSCN are in the first kind: absent from the library, so never assessed. FASTK and PAK5 are in the second and opposite kind: they were in the library, were tested, and were called non-mitochondrial. ADCK5 belongs to the first group only - a mitochondrial candidate the assay never reached, not one it examined and rejected.</div>
+
+                        <div class="finding-text">"14 of them have been documented in mitochondrial proteome database MitoCarta2.0"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27499296" target="_blank" class="term-link">
+                            PMID:27499296
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mitochondrial Protein Interaction Mapping Identifies Regulators of Respiratory Chain Function.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Contributes 40 of ADCK5&#39;s 54 IntAct records, yielding 25 distinct partners of which 17 are UniProt-annotated to the mitochondrion. Independent corroboration of the mitochondrion row, and the source of the compartment consideration that sits alongside - but is not required by - the method-replication argument against the NOTCH2NLA pairing.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32277958" target="_blank" class="term-link">
+                            PMID:32277958
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">aarF domain containing kinase 5 gene promotes invasion and migration of lung cancer cells through ADCK5-SOX9-PTTG1 pathway.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The only ADCK5-specific functional study. Proposes that ADCK5 phosphorylates SOX9 at Ser181 to upregulate PTTG1 and drive invasion and migration, but states the central claim as a possibility rather than a demonstration.</div>
+
+                        <div class="finding-text">"showed that ADCK5 might regulate the expression of tumor oncogene human"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The Ser181 assignment rests on mutagenesis of the substrate plus a motif-match argument, not on a direct kinase assay.</div>
+
+                        <div class="finding-text">"The serine 181 site of SOX9 is in a"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/ADCK5/ADCK5-bioinformatics/RESULTS.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ADCK5 (Q3MIX3) - is the &#34;protein serine/threonine kinase&#34; assignment supported?</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">MAFFT alignment of the five human UbiB proteins, yeast Coq8p, E. coli UbiB and PKA Calpha shows ADCK5 retains both UbiB inhibitory features (KxGQ K147; A-rich loop A209) and the complete catalytic core (K228, E281, D360, N365, D382). Published reference residues are asserted before use, and the two independently anchored A-rich-loop columns resolve to the same alignment column.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Census of the five human UbiB genes: ADCK5 is the only one with zero IBA annotations, and the EC downgrade to 2.7.-.- with loss of the Ser/Thr-kinase keyword has been applied only to COQ8A and COQ8B, the two members actually assayed.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">All 54 IntAct records for Q3MIX3 were retrieved without truncation; the NOTCH2NLA interaction is one Y2H screen logged under three sub-method labels plus one further Y2H from the same resource lineage, with no orthogonal assay.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> UniProt correction request (1 of 2). Q3MIX3 carries EC=2.7.11.-, the Serine/threonine-protein kinase keyword, and consequently the cross-reference &#34;GO:0004674; F:protein serine/threonine kinase activity; IEA:UniProtKB-KW&#34;, while the same entry states that the function of this protein is not yet clear and that it is not known whether it has protein kinase activity at all. UniProt has already applied exactly this correction to the two family members whose activity was measured: COQ8A and COQ8B were moved to the generic EC 2.7.-.- and lost the Ser/Thr-kinase keyword after Stefely et al. showed they lack canonical protein kinase activity in trans. ADCK5 and ADCK2 were not. Because GOA no longer imports keyword-derived annotations, today&#39;s GO record is unaffected - but any consumer reading UniProt directly still sees an activity assertion the entry&#39;s own FUNCTION line disclaims. Should ADCK5 be downgraded to EC 2.7.-.- with the Ser/Thr-kinase keyword removed?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: UniProt/Swiss-Prot curation</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q3MIX3" data-a="Q: UniProt correction request (1 of 2). Q3MIX3 carrie..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> UniProt correction request (2 of 2). Q3MIX3&#39;s SUBCELLULAR LOCATION is only Membrane, single-pass, inferred from a predicted TM helix, so its SubCell mapping is SL-0162 and it gains only GO:0016020 - no mitochondrial term. ADCK1 and ADCK2 both carry SL-0173 (Mitochondrion), each on an experimental annotation ECO:0000269|PubMed:33988507 from the subcellular kinome atlas. ADCK5 has no such annotation, and the reason is worth stating precisely: that study reports that ADCK5 was absent from its kinome library, so this is untested rather than tested-and-negative. Meanwhile ADCK5 has mitochondrial evidence of its own - it is in the MitoCoP high-confidence mitochondrial proteome (PMID:34800366), 17 of the 25 partners in its mitochondrial-interactome dataset are themselves mitochondrial, and every characterised eukaryotic UbiB protein is mitochondrial. Should Mitochondrion be added to ADCK5&#39;s SUBCELLULAR LOCATION on that basis? Posed on ADCK5&#39;s own evidence, not on parity with paralogs whose annotation rests on an assay ADCK5 never received.</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: UniProt/Swiss-Prot curation</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q3MIX3" data-a="Q: UniProt correction request (2 of 2). Q3MIX3&#39;s SUBC..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> PAINT/PAN-GO coverage. ADCK5 is the only one of the five human UbiB genes with no evolutionary-model annotation at all; UniProt records that Q3MIX3 has 0 GO annotations based on evolutionary models. PTHR43173, the family containing both ADCK1 (SF19) and ADCK5 (SF28), has exactly one annotated node, PTN005148758, seeded by a single yeast protein (MCP2, SGD:S000004243, itself SF19) and carrying GO:0005743, GO:0007005 and GO:0055088. ADCK1 inherits all three; ADCK5 inherits none, because the node lies inside the SF19 clade. This is a reach/coverage gap rather than a mis-propagation, and it is deliberately raised as a question and not acted on: a single yeast seed is thin support for extending three terms across the whole family, and ADCK5 already has direct HTP evidence for the mitochondrion. Should a family-level PTHR43173 node carry the mitochondrial localisation that is true of every characterised eukaryotic UbiB protein?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: GO Consortium PAINT curation</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q3MIX3" data-a="Q: PAINT/PAN-GO coverage. ADCK5 is the only one of th..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should GO be able to record the UbiB/ADCK atypical-kinase architecture at all? There is currently no way to state &#34;protein-kinase-like fold with an occluded substrate pocket and an ADP-selective nucleotide loop, catalytic activity undetermined&#34;. For ADCK5 the honest GO position is simply the absence of a molecular-function term, which is what GOA now has - but the same gap pushed COQ8A&#39;s annotation into the generic GO:0016301 kinase activity for what is really ATP hydrolysis. The sharpest evidence of the cost is on COQ8B, not on ADCK5: GOA carries both NOT|enables GO:0004672 (IDA, PMID:27499294) and enables GO:0004672 (IDA, PMID:38425362) for that gene, so read as terms alone it asserts and negates protein kinase activity at once. That is an expressivity limit, not a curation error - COQ8B&#39;s reviewer reconciled the two explicitly in free text, recording that the negation refers to general in-trans behaviour and does not contradict the specific COQ3 phosphorylation. The reconciliation is correct and simply cannot be said in terms: GO offers no way to express &#34;no activity in trans toward general substrates, but yes toward this one specific substrate&#34;. Raised as an ontology-coverage observation, not a request to create a term for this gene, and not an action on COQ8B, which is out of scope here.</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: GO ontology development</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q3MIX3" data-a="Q: Should GO be able to record the UbiB/ADCK atypical..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Differential scanning fluorimetry (thermal shift) on purified ADCK5 lacking the predicted transmembrane segment, against a panel of ADP, ATP and non-hydrolysable analogues, exactly as was done for COQ8A. This tests the single best-founded prediction about the protein and would decide between GO:0043531 ADP binding and GO:0005524 ATP binding. This review proposes neither term, because neither has been measured for ADCK5.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: ADCK5 binds adenine nucleotides with the ADP-over-ATP preference that the retained A-rich loop alanine A209 confers in COQ8A and yeast Coq8p.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: biochemical assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q3MIX3" data-a="EXPERIMENT: Differential scanning fluorimetry (thermal shift) ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> ATPase assay on purified ADCK5 in the presence and absence of cardiolipin and CoQ biosynthetic intermediates. A positive result would distinguish a conserved family ATPase from a genuinely divergent activity, and would support GO:0016887.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: ADCK5 has ATP hydrolysis activity modulated by lipids and CoQ intermediates, as COQ8A does.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: enzyme assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q3MIX3" data-a="EXPERIMENT: ATPase assay on purified ADCK5 in the presence and..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> The COQ8B precedent shows the productive experiment is not a generic peptide-substrate panel - which is what failed for COQ8A - but a search for a specific partner. Run an ATP-dependent phosphorylation screen with intact-protein mass spectrometry against ADCK5&#39;s own co-purifying mitochondrial partners (CHCHD2, CHCHD3, IMMT, PMPCB and the other mitochondrial hits of PMID:27499296), rather than a generic kinase assay.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Like COQ8B, ADCK5 phosphorylates a specific mitochondrial partner protein rather than generic substrates.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: biochemical assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q3MIX3" data-a="EXPERIMENT: The COQ8B precedent shows the productive experimen..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Mutate the A-rich loop alanine A209 to glycine and test whether nucleotide selectivity flips toward ATP and autophosphorylation is enabled, as A339G does in COQ8A and A197G in yeast Coq8p. A positive result would establish that the occluded-pocket mechanism operates in ADCK5, which is currently inferred from sequence alone.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The KxGQ/A-rich autoinhibitory architecture is functional in ADCK5, not merely present in sequence.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: mutagenesis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q3MIX3" data-a="EXPERIMENT: Mutate the A-rich loop alanine A209 to glycine and..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Carbonate extraction and protease-protection assays on isolated mitochondria, with submitochondrial fractionation. This is the measurement that would justify GO:0031966 mitochondrial membrane or GO:0005743 mitochondrial inner membrane in place of the current generic GO:0016020; its absence is why this review proposes neither.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: ADCK5 is anchored in the mitochondrial inner membrane via the predicted 50-67 helix, with the kinase-like domain facing the matrix, as COQ8A is.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: cell fractionation</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q3MIX3" data-a="EXPERIMENT: Carbonate extraction and protease-protection assay..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> PMID:32277958 infers the Ser181 site from mutagenesis of the substrate plus a motif-match argument, with no in vitro kinase assay reported. Perform a recombinant ADCK5 plus recombinant SOX9 kinase assay with a catalytically dead control mutating the DFG aspartate D382, to distinguish direct phosphorylation from an indirect consequence of overexpression.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The reported ADCK5-SOX9-PTTG1 pathway involves direct phosphotransfer by ADCK5 to SOX9 Ser181.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: biochemical assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q3MIX3" data-a="EXPERIMENT: PMID:32277958 infers the Ser181 site from mutagene..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> ADCK5 has never been assayed. Its catalytic activity, its substrate and its physiological process are all undetermined: whether it transfers a phosphate to a protein, to a small molecule, or hydrolyses ATP without transferring anything at all, and whether it prefers ADP or ATP, are open questions with no measurement on either side. UniProt states the gap in its own FUNCTION line, and the paper that resolved the equivalent question for COQ8A explicitly set ADCK5 aside.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">WHOLLY_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Established: mitochondrial localisation (MitoCoP high-confidence proteome, HTP), an interactome dominated by mitochondrial proteins, and a UbiB-family protein-kinase-like fold that retains the complete catalytic and nucleotide-positioning core (beta3 K228, alphaC E281, catalytic-loop D360 and N365, DFG D382) behind both UbiB-specific features that occlude the conventional substrate route (KxGQ K147, A-rich loop A209). Not established: any measured activity, any nucleotide preference, any substrate, any physiological process, and the submitochondrial compartment and membrane topology. Note the fold argument constrains but does not close the question in either direction - COQ8A was shown to lack canonical protein kinase activity in trans, yet COQ8B phosphorylates COQ3, so an activity restricted to one specific partner remains live.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> ADCK5 is Pharos Tdark and is the only one of the five human UbiB genes with no evolutionary-model (IBA) annotation at all, so it inherits nothing from its family and has contributed nothing to it. After this review its entire GO record is one prediction-derived membrane term, one high-throughput mitochondrion term and two bare protein binding rows from a single two-hybrid pairing - the deep-unknome signature. The two characterised relatives both turned out to do something the family name did not predict, which is a reason to expect the same here rather than to assume ADCK5 is a redundant paralog.</p>
+
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"More distantly related COQ8A/B homologs (ADCK1, ADCK2, and ADCK5) could also play a role"</em> — PMID:27499294</li>
+
+                <li><em>"The human genome contains five UbiB family genes"</em> — PMID:25498144</li>
+
+                <li><em>"The kinase label on ADCK5 is a **fold-derived name, not a measured activity**"</em> — file:human/ADCK5/ADCK5-bioinformatics/RESULTS.md</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> GO cannot express what is actually known about this protein&#39;s molecular architecture: a protein-kinase-like fold whose conventional peptide-substrate pocket is occluded by its own N-terminal KxGQ domain and whose glycine-rich nucleotide loop is replaced by an alanine-rich, ADP-selective one, with the catalytic core intact but no activity determined. The only faithful GO position available is silence, so an architecture that is conserved from bacteria to humans and is the defining feature of an entire kinase-like family is unrepresentable.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">ONTOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Established: the UbiB-specific features are defined, quantified across the family, and structurally interpreted, and ADCK5 retains them. Missing: any term between GO:0016301 kinase activity, which asserts an activity ADCK5 has not been shown to have, and no term at all. The cost is visible on the characterised paralogs too - COQ8A&#39;s demonstrated ATP hydrolysis is recorded as generic GO:0016301 kinase activity alongside a NOT annotation to GO:0004672, which is an accurate but awkward way to describe an enzyme, and COQ8B ends up carrying enables GO:0004672 and NOT|enables GO:0004672 at the same time because the ontology cannot distinguish a generic activity from a single-substrate one. In COQ8B&#39;s case the curator reconciled the two correctly in prose; the point is that no arrangement of GO terms could have carried that reconciliation.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> This is a family-level gap rather than an ADCK5-specific one; it affects all five human ADCK genes and their orthologs throughout eukaryotes and bacteria. No new term is proposed here, because for ADCK5 specifically there is no measured activity for such a term to record - the gap is raised so that it is visible when a member is eventually characterised.</p>
+
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"an atypical AAAS motif in an alanine-rich (A-rich) loop that replaces the canonical glycine-rich (G-rich) nucleotide-binding loop"</em> — PMID:25498144</li>
+
+                <li><em>"the KxGQ domain is likely to be an autoinhibitory domain because it fills the space normally occupied by peptide or protein substrates in typical protein kinases"</em> — PMID:25498144</li>
+
+                <li><em>"neither catalyzes canonical protein kinase activity"</em> — PMID:27499294</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Affinage</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ADCK5-deep-research-affinage.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q3MIX3" data-a="DEEP_RESEARCH: Affinage" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Affinage mechanistic annotation for ADCK5 (human)</span>
+
+
+                    <span class="report-badge">Affinage</span>
+
+
+                    <span class="report-badge">Affinage (Claude Sonnet reading pass + Opus synthesis pass)</span>
+
+
+                    <span class="report-badge">5 citations</span>
+
+
+
+
+
+                </div>
+
+
+                <h1 id="affinage-mechanistic-annotation-for-adck5-human">Affinage mechanistic annotation for ADCK5 (human)</h1>
+<h2 id="current-model-mechanistic-narrative">Current model (mechanistic narrative)</h2>
+<p>ADCK5 is an atypical kinase implicated in cancer cell motility and in cellular senescence of airway epithelium. In lung cancer cells, ADCK5 phosphorylates the transcription factor SOX9 at serine 181, and phospho-SOX9 in turn upregulates the oncogene PTTG1, defining an ADCK5–SOX9–PTTG1 axis that drives invasion and migration <a href="https://pubmed.ncbi.nlm.nih.gov/32277958">PMID:32277958</a>. In airway epithelial cells, ADCK5 overexpression elevates senescence markers (SA-β-gal, P21, P16), increases ROS and γH2AX, impairs mitochondrial membrane potential, and activates PI3K/AKT phosphorylation, placing ADCK5 upstream of the PI3K/AKT axis in senescence <a href="https://pubmed.ncbi.nlm.nih.gov/41222693">PMID:41222693</a>. Beyond these gain-of-function and phenotypic studies, no direct in vitro reconstitution of ADCK5 kinase activity or substrate biochemistry has been characterized in the available corpus.</p>
+<h2 id="affinage-mechanism-profile-its-own-goreactome-grounding">Affinage mechanism profile (its own GO/Reactome grounding)</h2>
+<p><em>Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs.</em></p>
+<ul>
+<li><strong>molecular_activity:</strong> GO:0140096 catalytic activity, acting on a protein</li>
+<li><strong>localization:</strong> <em>(none)</em></li>
+<li><strong>pathway (Reactome):</strong> <em>(none)</em></li>
+<li><strong>partners:</strong> SOX9</li>
+<li><strong>complexes:</strong> <em>(none)</em></li>
+</ul>
+<h2 id="dated-findings-citation-anchored">Dated findings (citation-anchored)</h2>
+<table>
+<thead>
+<tr>
+<th>Year</th>
+<th>Confidence</th>
+<th>Finding</th>
+<th>PMIDs</th>
+<th>Journal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2020</td>
+<td>Medium</td>
+<td>ADCK5 promotes invasion and migration of lung cancer cells by phosphorylating transcription factor SOX9, with serine 181 identified as a required phosphorylation site; phospho-SOX9 then upregulates the oncogene PTTG1, defining an ADCK5-SOX9-PTTG1 signaling pathway.</td>
+<td>PMID:32277958</td>
+<td>Experimental cell research</td>
+</tr>
+<tr>
+<td>2024</td>
+<td>Low</td>
+<td>ADCK5 protein expression is upregulated in cancer cells following BET bromodomain inhibitor (JQ1) treatment, confirmed by immunoblotting, suggesting ADCK5 as a compensatory kinase target in BRD inhibitor resistance.</td>
+<td>PMID:39241280</td>
+<td>Neoplasia (New York, N.Y.)</td>
+</tr>
+<tr>
+<td>2025</td>
+<td>Medium</td>
+<td>ADCK5 overexpression in airway epithelial cells increases markers of cellular senescence (SA-β-gal-positive cells, P21, P16), elevates ROS and γH2AX, impairs mitochondrial membrane potential, and activates PI3K/AKT phosphorylation, placing ADCK5 upstream of the PI3K/AKT signaling axis in airway epithelial senescence.</td>
+<td>PMID:41222693</td>
+<td>Naunyn-Schmiedeberg's archives of pharmacology</td>
+</tr>
+<tr>
+<td>2025</td>
+<td>Low</td>
+<td>ADCK5 is identified as a highly expressed senescence-related gene in severe asthma airway cells; Leucokinin VIII acetate inhibits ADCK5 expression and reduces excessive cellular senescence in vitro, establishing ADCK5 as a driver of airway cell senescence.</td>
+<td>PMID:40885090</td>
+<td>International immunopharmacology</td>
+</tr>
+<tr>
+<td>2024</td>
+<td>Low</td>
+<td>A PPI network analysis identified strong interactions between ADCK5 and MFN1 (mitofusin-1) and between BNIP3 and NBR1 in the context of mitochondria-related gene networks, suggesting ADCK5 participates in mitochondrial protein interaction networks.</td>
+<td>PMID:38783263</td>
+<td>BMC medical genomics</td>
+</tr>
+</tbody>
+</table>
+<h2 id="citations">Citations</h2>
+<ul>
+<li>PMID:32277958</li>
+<li>PMID:38783263</li>
+<li>PMID:39241280</li>
+<li>PMID:40885090</li>
+<li>PMID:41222693</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ADCK5-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q3MIX3" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="adck5-q3mix3-review-notes">ADCK5 (Q3MIX3) — review notes</h1>
+<p>Human ADCK5, 580 aa, chromosome 8, HGNC:21738. Pharos class <strong>Tdark</strong>.<br />
+UniProt name: "Uncharacterized aarF domain-containing protein kinase 5".</p>
+<h2 id="starting-hypothesis-and-how-it-resolved">Starting hypothesis and how it resolved</h2>
+<p>The task brief proposed that <code>GO:0004672 protein kinase activity</code> / <code>GO:0006468 protein
+phosphorylation</code> on ADCK5 would be fold-name-propagated-into-activity errors, on the grounds<br />
+that the characterised UbiB members COQ8A/COQ8B turned out not to be canonical protein<br />
+kinases.</p>
+<p><strong>Outcome: the mechanism is real and demonstrable, but the predicted annotation error is not<br />
+in GOA.</strong> ADCK5's entire GOA record is four rows and contains no molecular-function term<br />
+other than <code>GO:0005515 protein binding</code>. QuickGO returns <strong>0 hits</strong> for <code>GO:0004674</code> with<br />
+<code>goUsage=descendants</code> on Q3MIX3. There is nothing to REMOVE or MODIFY on kinase grounds.</p>
+<p>The unsupported kinase claim does exist — but one layer up, in UniProt:</p>
+<ul>
+<li><code>DE  RecName: ... EC=2.7.11.-</code> (protein-serine/threonine kinase)</li>
+<li><code>KW  Serine/threonine-protein kinase;</code></li>
+<li><code>DR   GO; GO:0004674; F:protein serine/threonine kinase activity; IEA:UniProtKB-KW.</code></li>
+</ul>
+<p>…in the same entry that says <em>"The function of this protein is not yet clear."</em> and <em>"It is<br />
+not known if it has protein kinase activity and what type of substrate it would<br />
+phosphorylate (Ser, Thr or Tyr)."</em> GOA no longer imports keyword-derived (SPKW) annotations,<br />
+so the GO record is clean while the UniProt record is not. Reported as a UniProt correction<br />
+request rather than a GO action.</p>
+<p><strong>Verified rather than assumed, with a control.</strong> QuickGO returns <strong>0</strong> human annotations for<br />
+<code>GO_REF:0000043</code> (the Swiss-Prot-keyword pipeline, retired ~April 2026), against <strong>139,714</strong><br />
+for <code>GO_REF:0000044</code> (SubCell) and <strong>1,862</strong> for <code>GO_REF:0000041</code> (UniPathway) — so the zero is<br />
+specific to the keyword pipeline, not an artefact of the query. And <code>GO:0004674</code> itself is<br />
+alive in GOA: PRKACA (P17612) carries 31 annotations to it, by ARBA and by many IDAs. ADCK5<br />
+receives it by no route at all.</p>
+<h2 id="family-and-structural-basis-see-adck5-bioinformatics">Family and structural basis (see <code>ADCK5-bioinformatics/</code>)</h2>
+<p>ADCK5 is a UbiB-family atypical kinase. Stefely et al. defined the UbiB-specific features<br />
+[PMID:25498144 "including a unique and invariant KxGQ motif"; "an atypical AAAS motif in an<br />
+alanine-rich (A-rich) loop that replaces the canonical glycine-rich (G-rich)<br />
+nucleotide-binding loop"], and argued they inhibit protein-kinase function — <a href="https://pubmed.ncbi.nlm.nih.gov/25498144" title="the KxGQ domain is likely to be an autoinhibitory domain because it fills the space normally occupied by peptide or protein substrates in typical protein kinases">PMID:25498144</a>.</p>
+<p>A MAFFT alignment of the five human UbiB proteins + yeast Coq8p + <em>E. coli</em> UbiB + PKA Cα<br />
+(negative control), with every published reference residue asserted before use, shows<br />
+<strong>ADCK5 retains both inhibitory features and the full catalytic core</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>feature</th>
+<th>ADCK5</th>
+<th>PKA Cα</th>
+<th>discriminates?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>KxGQ lysine (COQ8A K276)</td>
+<td><strong>K147</strong></td>
+<td><em>gap</em></td>
+<td>yes</td>
+</tr>
+<tr>
+<td>A-rich loop Ala (COQ8A A339 ≡ PKA G53)</td>
+<td><strong>A209</strong></td>
+<td>G</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>catalytic-loop Asp (COQ8A D488)</td>
+<td>D360</td>
+<td>D</td>
+<td>no</td>
+</tr>
+<tr>
+<td>DFG Asp (COQ8A D507)</td>
+<td>D382</td>
+<td>D</td>
+<td>no</td>
+</tr>
+<tr>
+<td>β3 Lys (PKA K73)</td>
+<td>K228</td>
+<td>K</td>
+<td>no</td>
+</tr>
+<tr>
+<td>αC Glu (PKA E92)</td>
+<td>E281</td>
+<td>E</td>
+<td>no</td>
+</tr>
+<tr>
+<td>catalytic-loop Asn (PKA N172)</td>
+<td>N365</td>
+<td>N</td>
+<td>no</td>
+</tr>
+</tbody>
+</table>
+<p>So ADCK5 is neither a canonical protein kinase nor a dead pseudokinase: it has an intact<br />
+nucleotide-binding/catalytic core behind a UbiB-type occluded substrate pocket.</p>
+<p>The A209 assignment is corroborated two ways — the motif <code>AAAS</code> sits at 207–210 in ADCK5<br />
+exactly as it sits at 337–340 in COQ8A, and the COQ8A-anchored and PKA-anchored columns<br />
+resolve to the same alignment column (391).</p>
+<h2 id="the-mirror-error-avoided">The mirror error, avoided</h2>
+<p>"UbiB proteins are not protein kinases" would be too strong. COQ8A/Coq8p indeed lack<br />
+generic in-trans activity <a href="https://pubmed.ncbi.nlm.nih.gov/27499294" title="neither catalyzes canonical protein kinase activity">PMID:27499294</a>, but <strong>COQ8B has a demonstrated protein substrate</strong>: <a href="https://pubmed.ncbi.nlm.nih.gov/38425362" title="COQ3, but not COQ6, is phosphorylated by COQ8B at multiple sites">PMID:38425362</a>. The same paper excludes<br />
+small-molecule kinase activity for COQ8B <a href="https://pubmed.ncbi.nlm.nih.gov/38425362" title="GC/MS analyses did not detect any phosphorylated CoQ intermediates, suggesting that the enzyme is not a small-molecule kinase">PMID:38425362</a>. (Caveat worth carrying: that study used ancestral-sequence-reconstructed COQ8<br />
+proteins, so it is a statement about the reconstructed tetrapod enzyme.)</p>
+<p>So the right reading for ADCK5 is: <em>generic</em> Ser/Thr kinase activity is unsupported and<br />
+architecturally disfavoured; a <em>specific</em>, substrate-restricted activity is open and would<br />
+need direct assay. GOA reflects this correctly today by carrying no MF term at all.</p>
+<h2 id="localisation">Localisation</h2>
+<ul>
+<li>
+<p>UniProt gives only <code>SUBCELLULAR LOCATION: Membrane {ECO:0000305}; Single-pass membrane</code><br />
+  protein <code>{ECO:0000305}</code> — a curator inference from a <em>predicted</em> <code>TRANSMEM 50..67</code><br />
+  (<code>ECO:0000255</code>). That maps to SubCell <code>SL-0162</code> → the <code>GO:0016020 membrane</code> IEA row.</p>
+</li>
+<li>
+<p>The mitochondrion is better supported: MitoCoP high-confidence mitochondrial proteome<br />
+  (PMID:34800366, HTP); <a href="https://pubmed.ncbi.nlm.nih.gov/25498144" title="In eukaryotes, UbiB homologs are found exclusively   in mitochondria">PMID:25498144</a>; and 17 of ADCK5's 25 distinct IntAct partners from the mitochondrial<br />
+  interactome study (PMID:27499296) are UniProt-annotated to the mitochondrion.</p>
+</li>
+<li>
+<p><strong>Asymmetry worth reporting, correctly attributed.</strong> ADCK1 and ADCK2 receive<br />
+<code>SL-0173 Mitochondrion</code> → <code>GO:0005739</code> from UniProt; ADCK5 receives only <code>SL-0162 Membrane</code>.<br />
+  My first reading was that the difference lay in UniProt's <code>SUBCELLULAR LOCATION</code> line rather<br />
+  than in the evidence, since all three carry the same MitoCoP HTP row. <strong>That was wrong</strong>, and<br />
+  checkable in-tree once ADCK1's review merged: <code>ADCK1-uniprot.txt:117</code> reads<br />
+<code>SUBCELLULAR LOCATION: Mitochondrion {ECO:0000269|PubMed:33988507}</code>, MitoCoP is not cited in<br />
+  that entry at all, and ADCK2's entry carries the same <code>ECO:0000269|PubMed:33988507</code>. Both<br />
+  paralogs have a dedicated experimental localisation that ADCK5 does not.</p>
+</li>
+<li>
+<p><strong>But the reason ADCK5 lacks it is absence of testing, not a negative result</strong> — that study<br />
+  states plainly <a href="https://pubmed.ncbi.nlm.nih.gov/33988507" title="ADCK5 and OBSCN were absent from the library">PMID:33988507</a>. QuickGO<br />
+  returns 0 annotations for Q3MIX3 from that reference, consistent with never having been<br />
+  assayed. So the UniProt correction request stands, but on ADCK5's own evidence (MitoCoP HTP;<br />
+  17/25 mitochondrial interactome partners; family-wide mitochondrial distribution) rather<br />
+  than on a parity that does not hold.</p>
+</li>
+<li>
+<p>Submitochondrial assignment (inner membrane?) is <strong>not</strong> established for ADCK5. Combining<br />
+  "mitochondrion (HTP)" with "membrane (predicted TM)" to assert <code>GO:0031966</code> would be a<br />
+  composite claim; left as a suggested experiment instead.</p>
+</li>
+</ul>
+<h2 id="paint">PAINT</h2>
+<p><code>PTHR43173</code> (ADCK5 = SF28, ADCK1 = SF19) has exactly <strong>one</strong> annotated node,<br />
+<code>PTN005148758</code>, seeded by a single yeast protein, MCP2 (<code>SGD:S000004243</code>, itself SF19),<br />
+carrying <code>GO:0005743</code>, <code>GO:0007005</code>, <code>GO:0055088</code>. ADCK1 inherits all three; ADCK5 inherits<br />
+nothing, because the node sits in the SF19 clade.</p>
+<p>ADCK5 is the <strong>only</strong> human UbiB gene with zero IBA rows — UniProt states it independently:<br />
+<code>PAN-GO; Q3MIX3; 0 GO annotations based on evolutionary models.</code> This is the inverse of this<br />
+campaign's usual finding: under-reach, not over-propagation. Filed as a question to PAINT,<br />
+not as an action, because ADCK5 genuinely sits outside the annotated node's clade and the<br />
+node's evidence is a single yeast seed.</p>
+<h2 id="go0005515-the-notch2nla-rows"><code>GO:0005515</code> — the NOTCH2NLA rows</h2>
+<p>Both rows name the same partner, NOTCH2NLA (Q7Z3S9). UniProt records <code>NbExp=4</code>, but expanding<br />
+IntAct shows PMID:25416956 logs the interaction <strong>three times as three sub-method labels of<br />
+one Y2H screen</strong> (<code>two hybrid array</code> + <code>two hybrid prey pooling approach</code> + <code>validated two
+hybrid</code>), and PMID:31515488 adds one more <code>two hybrid array</code> from the same CCSB resource<br />
+lineage. MI score 0.67 throughout; no orthogonal assay in any of ADCK5's 54 IntAct records.<br />
+Third occurrence of this <code>NbExp</code> trap in the campaign (after ACRV1, ADAMTSL5).</p>
+<p>NOTCH2NLA is <code>Secreted</code>/<code>Cytoplasm</code>, human-specific, and functions in neural progenitor<br />
+proliferation. Y2H places both proteins in the yeast nucleus and so removes the targeting<br />
+constraint.</p>
+<p><strong>The compartment argument is an assumption, and is stated as one.</strong> It holds if ADCK5's<br />
+kinase-like domain faces the matrix, as COQ8A's C-terminus is measured to do <a href="https://pubmed.ncbi.nlm.nih.gov/27499294" title="endogenous COQ8A is partially buried in the inner mitochondrial membrane with its C-terminus facing the matrix">PMID:27499294</a> — but ADCK5's own sidedness has never been measured, and an outer-membrane<br />
+anchor presenting the domain to the cytosol is not excluded. That is the same uncertainty that<br />
+stops this review proposing <code>GO:0031966</code>, so leaning on the compartment argument while<br />
+declining the localisation refinement would be inconsistent. The verdict does not need it: the<br />
+method-replication argument stands alone. (Caught by the PR reviewer; conceded.)</p>
+<p>Checks that came back <strong>negative</strong> (recorded so they are not re-run blindly):<br />
+- NOTCH2NLA resolves to a reviewed, canonical, full-length Swiss-Prot entry — no<br />
+  TrEMBL/partial-ORFeome substitution as on ACRV1.<br />
+- PMID:34800366 is a proteome-wide localisation census carrying no functional/phenotype<br />
+  term, so the ACTR8 complex-to-subunit projection failure mode does not apply.<br />
+- No retraction, erratum or expression of concern on any cited PMID<br />
+  (<code>CommentsCorrections/RefType</code> on each cited record, plus Crossref <code>relation</code>/<code>update-to</code><br />
+  for the six load-bearing DOIs).</p>
+<h2 id="literature-quality">Literature quality</h2>
+<p>The only ADCK5-specific functional paper is PMID:32277958 (lung cancer, SOX9/PTTG1). Its<br />
+abstract is hedged throughout — "showed that ADCK5 might regulate the expression of tumor<br />
+oncogene human pituitary tumor transforming gene-1 (PTTG1) by phosphorylating transcription<br />
+factor SOX9" — and it reports no in vitro kinase assay; the SOX9 S181 claim rests on<br />
+mutagenesis of the substrate plus a motif-match argument, "The serine 181 site of SOX9 is in<br />
+a motif that is targeted by ADCK5." Full text unavailable. The affinage record restates this<br />
+as fact ("ADCK5 phosphorylates the transcription factor SOX9 at serine 181"); the abstract<br />
+does not support that strength. No GOA row rests on this paper, so nothing needed changing —<br />
+recorded because the discrepancy is the kind that would otherwise propagate.</p>
+<p>affinage <code>gates_passed: True</code>, <code>faith_pct: 50.0</code>, 5 citations, all numeric PMIDs (no<br />
+<code>PMID:bio_*</code> preprint ids). Its remaining findings (senescence, JQ1, asthma) are<br />
+low-confidence, single-study, and none underpins a GOA row.</p>
+<h2 id="verdicts">Verdicts</h2>
+<table>
+<thead>
+<tr>
+<th>row</th>
+<th>term</th>
+<th>evidence</th>
+<th>action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>GO:0016020 membrane</td>
+<td>IEA GO_REF:0000044</td>
+<td>ACCEPT (true but prediction-derived and less informative than the evidence allows)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>GO:0005515 protein binding (NOTCH2NLA)</td>
+<td>IPI PMID:25416956</td>
+<td>MARK_AS_OVER_ANNOTATED</td>
+</tr>
+<tr>
+<td>3</td>
+<td>GO:0005515 protein binding (NOTCH2NLA)</td>
+<td>IPI PMID:31515488</td>
+<td>MARK_AS_OVER_ANNOTATED</td>
+</tr>
+<tr>
+<td>4</td>
+<td>GO:0005739 mitochondrion</td>
+<td>HTP PMID:34800366</td>
+<td>ACCEPT</td>
+</tr>
+</tbody>
+</table>
+<p>No <code>core_functions</code> are asserted. ADCK5's molecular activity is genuinely undetermined —<br />
+UniProt says so, Pharos calls it Tdark, and this review found no measurement to replace<br />
+that. Per CLAUDE.md the "No core functions defined" warning is left standing rather than<br />
+silenced with invented content.</p>
+<p>That absence is now recorded positively rather than only as a warning: two <code>knowledge_gaps</code><br />
+entries carry it, a <code>BIOLOGY</code>/<code>WHOLLY_DARK</code> gap for the undetermined activity, substrate and<br />
+process, and an <code>ONTOLOGY</code>/<code>MF_DARK</code> gap for GO's inability to express the UbiB<br />
+occluded-pocket architecture. Both are grounded in quotes already verified in this review.<br />
+(The reviewer's point, and a good one: as prose in <code>suggested_questions</code> the finding is read<br />
+once; in <code>knowledge_gaps</code> it feeds the Function Knowledge Gaps project.)</p>
+<h2 id="a-break-test-can-be-too-destructive-to-discriminate">A break-test can be too destructive to discriminate</h2>
+<p>Worth recording because it is a failure mode this campaign has not named, and it kept a<br />
+defect alive across two rounds of this review.</p>
+<p>I reported that a vacuity counter had been "moved inside the sentence loop". I had <em>added</em> the<br />
+inner increment and left the outer one, so the guard still reported itself exercised whenever<br />
+a unit tripped the pre-filter even if no sentence routed — the precise blindness it exists to<br />
+detect. The reason it survived my own break-testing is the general point:</p>
+<blockquote>
+<p>the only committed vacuity break-test blanked the topic from the surface entirely, driving<br />
+<strong>both</strong> increments to zero, so it passed identically against the correct and the incorrect<br />
+implementation.</p>
+</blockquote>
+<p>Blanking a whole surface proves only that the check reads the surface at all. To certify<br />
+"the counter is inside the loop", the mutation has to <em>be</em> that difference: a unit that trips<br />
+the pre-filter while <strong>no sentence routes</strong>. That probe (<code>"COQ8A is a paralog of interest. The
+row is IDA."</code> — paralog and token present, never in one sentence) reports the guard exercised<br />
+under the old implementation and reports vacuity under the new one, so it discriminates.</p>
+<p><strong>The mutation must be as fine as the claim.</strong> A coarser mutation still goes green, and green<br />
+is what makes it feel tested. This sits alongside the other guard failures found here — a<br />
+check that failed on <em>perfect</em> agreement, an unreachable branch that read as coverage, a probe<br />
+placed where it was easier to catch than the real thing — and it is the subtlest of them,<br />
+because the break-test genuinely ran and genuinely passed.</p>
+<h2 id="reconciliation">Reconciliation</h2>
+<p>GOA TSV: 4 data rows. <code>existing_annotations</code>: 4 entries. No collapse; the two <code>GO:0005515</code><br />
+rows share a partner but differ by reference, and the seeder keys on reference, so both<br />
+survived.</p>
+            </div>
+        </details>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioinformatics Results</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RESULTS.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q3MIX3" data-a="DOC: Bioinformatics Results" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="adck5-q3mix3-is-the-protein-serinethreonine-kinase-assignment-supported">ADCK5 (Q3MIX3) — is the "protein serine/threonine kinase" assignment supported?</h1>
+<p>Four reproducible analyses, all runnable from this directory with no arguments:</p>
+<div class="codehilite"><pre><span></span><code>python3<span class="w"> </span>ubib_motif_analysis.py<span class="w">              </span><span class="c1"># diagnostic residue columns</span>
+python3<span class="w"> </span>ubib_motif_analysis.py<span class="w"> </span>--self-test<span class="w">  </span><span class="c1"># break-tests its guards, both directions</span>
+python3<span class="w"> </span>family_annotation_census.py<span class="w">         </span><span class="c1"># human UbiB family GO/EC census</span>
+python3<span class="w"> </span>partner_localisation.py<span class="w">             </span><span class="c1"># IntAct partners: topology and assay independence</span>
+python3<span class="w"> </span>audit_adck5_claims.py<span class="w">               </span><span class="c1"># prose surfaces must not drift from the JSON</span>
+python3<span class="w"> </span>audit_adck5_claims.py<span class="w"> </span>--self-test<span class="w">   </span><span class="c1"># break-tests the audit, both directions</span>
+</code></pre></div>
+
+<p>Outputs: <code>results.json</code>, <code>family_census.json</code>, <code>partner_localisation.json</code>,<br />
+<code>ubib_family.fasta</code>, <code>ubib_family.aln.fasta</code>. Deleting the <code>.json</code>/<code>.fasta</code> files and<br />
+re-running reproduces them byte-for-byte.</p>
+<p>All four scripts are <strong>stdlib-only</strong> (plus <code>mafft</code> on <code>PATH</code> for the alignment), so the bare<br />
+<code>python3</code> invocations above work on a clean interpreter. That is deliberate: an interim<br />
+version of the audit imported PyYAML, which would have made the documented command fail for<br />
+anyone without it while working fine on the author's machine — a documentation defect that<br />
+only shows up on someone else's.</p>
+<p><code>audit_adck5_claims.py</code> re-reads the three JSON outputs and asserts that every residue call,<br />
+census number and withdrawn phrasing is consistent across <code>RESULTS.md</code>, <code>ADCK5-notes.md</code> and<br />
+<code>ADCK5-ai-review.yaml</code> — the "fixed in N places, landed in N−1" failure. It earned its keep, twice:<br />
+after the PR reviewer pointed out that the compartment argument assumed a membrane sidedness<br />
+this review elsewhere declines to assert, the first "fix" softened <strong>one</strong> of four<br />
+occurrences. Widening the scan to the whole gene folder found two more — a second YAML field<br />
+and a <em>script docstring</em> — which is why the scan is not limited to the prose files. The<br />
+<strong>fourth</strong> survived even that, in this very file, because the paragraph <em>paraphrased</em> the<br />
+withdrawn conclusion instead of repeating the pinned literal. Scope had been widened;<br />
+vocabulary had not.</p>
+<p>That is a limit of literal matching, not a gap in the phrase list, so adding more literals<br />
+would not have closed it. The compartment claim is now guarded <strong>structurally</strong>: any<br />
+paragraph that states NOTCH2NLA's own localisation — the contrast the argument is built from<br />
+— must carry a statement that ADCK5's sidedness is unmeasured, in that paragraph or the next.<br />
+The trigger is the topic, so rewording the conclusion cannot evade it.</p>
+<p>A file-level version of that invariant was written first, tested against the actual text that<br />
+shipped, and <strong>passed</strong> — the historical file hedged in a different section. Hence<br />
+paragraph-locality, and hence <code>--self-test</code> replays that real paragraph rather than a<br />
+synthetic mutation.</p>
+<p><strong>Then the paragraph-local version turned out to be file-level too, on the surface that<br />
+mattered most.</strong> <code>_paragraphs()</code> split on blank lines, and <code>ADCK5-ai-review.yaml</code> contains<br />
+<strong>zero</strong> blank lines — so the whole 550-line file came back as one paragraph, and a hedge in<br />
+the <code>GO:0016020</code> row was silently satisfying the check for an unhedged claim in a <em>different<br />
+annotation</em>. Found by the PR reviewer, and it is the fifth instance in this PR of one shape:<br />
+<strong>a check whose unit of analysis is coarser than the unit the claim lives in.</strong> The splitter<br />
+now divides a YAML surface at every mapping key, so each <code>summary</code>, <code>reason</code> and<br />
+<code>gap_statement</code> is its own unit — <strong>233 units, not 1</strong> — while markdown keeps blank-line<br />
+paragraphs, and the one-paragraph lookahead applies only to markdown, since an adjacent YAML<br />
+field is usually an unrelated key. Fixing it immediately caught the row-3 summary, which had<br />
+been asserting the argument flatly under a renamed label.</p>
+<p>The split is a line scan rather than a YAML parse, for a reason worth stating: a parse needs<br />
+a failure branch, and the only obvious fallback — treat the file as one blob — silently<br />
+restores exactly the file-level behaviour this function exists to abolish. There is no parse<br />
+and therefore no fallback, and a YAML surface that yields fewer than two units is a hard<br />
+error naming the pattern to check.</p>
+<p>Residual limit, stated rather than hidden: in markdown a hedge more than one paragraph away<br />
+still evades this, so withdrawing a claim still needs a human re-read.</p>
+<p>Two further hardening points from the same review. The historical paragraph was originally<br />
+read by <code>git show</code> from a branch-local SHA — which would not exist in a fresh clone after<br />
+squash-merge, so <strong>the strongest test in the suite would have broken the moment this PR<br />
+landed</strong>. It is now frozen as<br />
+<code>fixtures/historical_unhedged_compartment_paragraph.md</code>, and a self-test asserts that fixture<br />
+is <em>excluded</em> from the live scan, since it preserves the bad text on purpose. And<br />
+<code>expect_flag</code> takes a <code>match=</code> naming the guard under test, on <strong>all 19</strong> call sites:<br />
+replaying the historical paragraph fires <strong>two</strong> messages, only one of which is the<br />
+compartment guard, so without <code>match=</code> that test could have passed on an unrelated check.<br />
+Asserting that <em>something</em> failed is not asserting that the thing you were testing failed.</p>
+<p>Writing the audit exposed four defects in the audit itself, every one found by running the<br />
+break-tests and none by reading it:</p>
+<ol>
+<li>a residue check that reported a conflict between K147 and K228, both correct — it <strong>failed<br />
+   on perfect agreement</strong>, i.e. the happy path was the untested path;</li>
+<li>a withdrawn-phrase matcher that fired on this file's own explanation of the correction it<br />
+   was policing;</li>
+<li>a keyword-argument mismatch that aborted the suite halfway while the earlier checks still<br />
+   printed as passes;</li>
+<li>the widened scan matching <strong>its own definition list</strong> — the registry of withdrawn phrasings<br />
+   necessarily contains all of them. Fixed by excluding exactly one file, this script, by<br />
+   resolved path rather than by extension; a self-test plants a phrase in a <em>sibling</em> script<br />
+   and requires a catch, so the exclusion cannot silently widen.</li>
+</ol>
+<h3 id="the-class-that-kept-recurring-and-the-invariant-that-closes-it">The class that kept recurring, and the invariant that closes it</h3>
+<p>Four review items in this PR were one thing: <strong>a claim about a paralog's database record,<br />
+asserted in prose with nothing in the repo to check it against.</strong> The parity framing<br />
+(blocking), the supplied-vs-corroborated split (blocking), the MitoCoP row (blocking), and<br />
+ADCK2's SubCell provenance (raised as a suggestion) — the MitoCoP row being the other half of<br />
+the very sentence whose first half was fixed the round before. (For the record, since this<br />
+paragraph names the same paralogs: their SL-0173 rests on <code>PubMed:33988507</code>, an assay ADCK5<br />
+was never in.) Fixing these one at a time was losing to the rate of discovery.</p>
+<p>So <code>check_cross_gene_claims</code> closes the class. Every cross-gene <em>record</em> claim must be<br />
+<strong>covered</strong>: the fact lives in <code>family_census.json</code> and is re-asserted against the committed<br />
+JSON, or against the committed PAINT table — <strong>ten dimensions</strong>: IBA rows, the MitoCoP<br />
+<code>GO:0005739</code> HTP row, EC numbers, the Ser/Thr keyword, <code>SUBCELLULAR LOCATION</code>, <code>NOT|</code> rows,<br />
+the screen-provenance partition, the exact per-gene tag sets pinned by the table in the<br />
+localisation section below, the PAINT node's terms and seed, and the exact kinase-row sets<br />
+(term, evidence, qualifier and reference) for COQ8A and COQ8B. The PAINT table is <strong>shared<br />
+repo state this review does not own</strong>: if another branch re-fetches the family, this gene's<br />
+audit will fail, and that failure should be read as "the upstream table moved", not "the<br />
+review drifted".</p>
+<p><strong>Routing is per sentence, not per unit — and that mattered.</strong> The first version routed per<br />
+<em>unit</em>, so one covered token gave a blanket pass to every other record claim in the same unit.<br />
+The reviewer-predicted fifth instance was already in the tree because of it: the sentence<br />
+stating that GOA carries both a negated and a positive <code>GO:0004672</code> IDA row for COQ8B tripped<br />
+the gate, resolved to the <code>negated</code> dimension via its <code>NOT|</code> token, and passed — while the<br />
+positive row and both PMIDs were asserted nowhere. The self-test had "proved" the catch only<br />
+because its probe was appended as a standalone paragraph carrying no covered token. Both are<br />
+fixed: routing is per sentence (paralog and record token must occur in the <em>same</em> sentence),<br />
+and the <code>kinase_rows</code> dimension asserts the <strong>exact</strong> kinase-row set, with references, for<br />
+COQ8A and COQ8B.</p>
+<p><strong>Residual limits, stated rather than papered over.</strong> Two of them, and the second is the<br />
+larger:</p>
+<ol>
+<li>Routing is per sentence, not per <em>claim</em>. A sentence mixing a covered record claim with an<br />
+   uncovered one still passes, because a sentence's tokens are unioned into one decision.</li>
+<li><strong>A record claim whose subject is an antecedent in a neighbouring sentence is not gated at<br />
+   all</strong> — "…carried by ADCK1 and ADCK2." followed by "The HTP row…". Carrying the last-named<br />
+   paralog forward across sentences was implemented and then <em>withdrawn</em>: with the colon no<br />
+   longer splitting, both in-tree claims this gate exists for already sit in one sentence<br />
+   each, so it bought nothing and produced three false positives on sentences about ADCK5's<br />
+<strong>own</strong> evidence codes. Anaphora across a sentence boundary is therefore a known hole, not<br />
+   a covered case.</li>
+</ol>
+<p>Regex cannot do better than this honestly, and pretending otherwise is exactly how the<br />
+per-unit version came to claim more than it did.</p>
+<p><strong>What makes it close the class rather than enumerate it</strong> is that the <em>trigger</em> is generic.<br />
+Any <strong>sentence</strong> naming a paralog alongside a <strong>record-shaped token</strong> — a GO evidence code<br />
+(the full vocabulary, not a sample), <code>GO_REF:</code>,<br />
+<code>ECO:</code> id, SubCell id, EC number or PANTHER node id — must route to a covered dimension, and<br />
+fails if it does not. A bare <code>GO:xxxxxxx</code> is deliberately excluded: it names a <em>term</em>, and<br />
+terms are discussed throughout the literature prose. An earlier version keyed the trigger on<br />
+the token→dimension map itself, whose keys mapped one-to-one onto the covered dimensions, so<br />
+the uncovered branch was <strong>unreachable for any real prose</strong> — it closed the enumerated<br />
+dimensions while claiming to close the class. The self-test proves the difference by running the two<br />
+failures a reviewer <em>predicted</em> would be the fifth instance — a claim about which evidence<br />
+code backs a paralog's positive kinase row, and a claim about a paralog's annotation and<br />
+experimental counts — and requiring both to fail <strong>without any token being added first</strong>. The<br />
+probe strings live in the audit script rather than here, since writing a hypothetical false<br />
+claim into a scanned surface would trip the very guard being described.</p>
+<p>Literature claims about paralogs stay out of scope, and that exclusion is narrow and stated:<br />
+those are anchored by <code>supporting_text</code> and already checked verbatim against the cached<br />
+publications. <strong>There is no exemption list</strong>: one was added for a unit whose record token was<br />
+ADCK5's own <code>IPI</code>, then found <em>unreachable</em> once routing moved to sentence level — described<br />
+here as an active escape while no input could reach it. Restricting <code>.py</code> surfaces to comments<br />
+and docstrings removed the only case that motivated it, so the mechanism is gone rather than<br />
+kept as decoration.</p>
+<p>Every guard is exercised in the direction it exists to catch <strong>and</strong> in the happy<br />
+direction, plus invariants about the harness itself; <code>--self-test</code> reports the count<br />
+rather than this file hardcoding it, because that number drifted three times while the<br />
+suite grew and a hand-written figure that has to track a computed one is exactly the<br />
+drift this whole file argues against. Two replay <strong>real</strong> defects from this<br />
+PR's own history, frozen as fixtures: the unhedged compartment paragraph and the<br />
+pre-retraction parity units.</p>
+<h2 id="question">Question</h2>
+<p>UniProt names ADCK5 "Uncharacterized aarF domain-containing protein kinase 5", assigns it<br />
+<code>EC 2.7.11.-</code>, gives it the <code>Serine/threonine-protein kinase</code> keyword, and therefore emits<br />
+<code>DR GO; GO:0004674; F:protein serine/threonine kinase activity; IEA:UniProtKB-KW</code>. In the<br />
+same entry it states that "The function of this protein is not yet clear."</p>
+<p>ADCK5 belongs to the UbiB family. For the two human members whose activity was actually<br />
+measured, the answer to "is this a protein kinase?" turned out to be largely no: Stefely<br />
+et al. showed "neither catalyzes canonical protein kinase activity" in trans<br />
+(PMID:27499294). So the question is whether ADCK5's kinase label is a real activity call or<br />
+a fold name propagated into an activity.</p>
+<h2 id="analysis-1-diagnostic-residue-columns">Analysis 1 — diagnostic residue columns</h2>
+<p>MAFFT <code>--auto</code> alignment of the five human UbiB proteins plus yeast Coq8p, <em>E. coli</em> UbiB<br />
+and a canonical protein kinase negative control (PKA Cα, P17612). Motif columns are located<br />
+from a reference sequence whose residue numbering is <strong>published</strong>, and every published<br />
+residue is asserted against the downloaded sequence before any column is read.</p>
+<p>Percent identity to ADCK5 over co-aligned columns:</p>
+<table>
+<thead>
+<tr>
+<th>sequence</th>
+<th>identity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ADCK1</td>
+<td>39.9%</td>
+</tr>
+<tr>
+<td>Coq8p (yeast)</td>
+<td>24.2%</td>
+</tr>
+<tr>
+<td>UbiB (<em>E. coli</em>)</td>
+<td>24.1%</td>
+</tr>
+<tr>
+<td>COQ8B</td>
+<td>22.4%</td>
+</tr>
+<tr>
+<td>COQ8A</td>
+<td>21.4%</td>
+</tr>
+<tr>
+<td>ADCK2</td>
+<td>20.3%</td>
+</tr>
+<tr>
+<td>PKA Cα</td>
+<td>15.6%</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>column</th>
+<th>reference</th>
+<th>UbiB expects</th>
+<th>PKA has</th>
+<th><strong>ADCK5 has</strong></th>
+<th>discriminates?</th>
+<th>other UbiB</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>KxGQ lysine</td>
+<td>COQ8A:276</td>
+<td>K</td>
+<td><em>gap</em></td>
+<td><strong>K147</strong></td>
+<td>yes</td>
+<td>6/6</td>
+</tr>
+<tr>
+<td>A-rich loop</td>
+<td>COQ8A:339</td>
+<td>A</td>
+<td>G</td>
+<td><strong>A209</strong></td>
+<td>yes</td>
+<td>5/6</td>
+</tr>
+<tr>
+<td>G-rich loop 2nd Gly</td>
+<td>PKA:53</td>
+<td>A</td>
+<td>G</td>
+<td><strong>A209</strong></td>
+<td>yes</td>
+<td>5/6</td>
+</tr>
+<tr>
+<td>catalytic-loop Asp</td>
+<td>COQ8A:488</td>
+<td>D</td>
+<td>D</td>
+<td><strong>D360</strong></td>
+<td>no</td>
+<td>6/6</td>
+</tr>
+<tr>
+<td>DFG Asp</td>
+<td>COQ8A:507</td>
+<td>D</td>
+<td>D</td>
+<td><strong>D382</strong></td>
+<td>no</td>
+<td>6/6</td>
+</tr>
+<tr>
+<td>β3 (VAIK) Lys</td>
+<td>PKA:73</td>
+<td>K</td>
+<td>K</td>
+<td><strong>K228</strong></td>
+<td>no</td>
+<td>6/6</td>
+</tr>
+<tr>
+<td>αC Glu</td>
+<td>PKA:92</td>
+<td>E</td>
+<td>E</td>
+<td><strong>E281</strong></td>
+<td>no</td>
+<td>6/6</td>
+</tr>
+<tr>
+<td>catalytic-loop Asn</td>
+<td>PKA:172</td>
+<td>N</td>
+<td>N</td>
+<td><strong>N365</strong></td>
+<td>no</td>
+<td>6/6</td>
+</tr>
+</tbody>
+</table>
+<p>Two independent anchors — COQ8A's A-rich loop A339 and PKA's G-rich loop G53 — resolve to<br />
+<strong>the same alignment column (391)</strong>, which is the correspondence Stefely et al. assert<br />
+("the analogous A-rich loop of ADCK3"). The script asserts this rather than assuming it; if<br />
+MAFFT separated them, the A-rich claim would not be supported by this alignment and the run<br />
+aborts.</p>
+<h3 id="what-this-shows">What this shows</h3>
+<p><strong>ADCK5 is built like a UbiB protein, not like a canonical protein kinase.</strong> It retains<br />
+both features that Stefely et al. identified as positioned to <em>inhibit</em> protein kinase<br />
+activity:</p>
+<ul>
+<li>the invariant <strong>KxGQ</strong> motif (K147) — the motif whose domain "occludes the canonical<br />
+  peptide substrate pocket" (PMID:27499294), and which is absent altogether from PKA<br />
+  (the column is a gap);</li>
+<li>the <strong>A-rich loop</strong> alanine (A209, third residue of an <code>AAAS</code> at 207–210, exactly as<br />
+  COQ8A's A339 is the third residue of an <code>AAAS</code> at 337–340) in place of the canonical<br />
+  glycine. This is the residue whose A→G mutation in COQ8A/Coq8p flips nucleotide<br />
+  selectivity and <em>enables</em> autophosphorylation.</li>
+</ul>
+<p><strong>ADCK5 is not a dead pseudokinase either.</strong> The catalytic and nucleotide-positioning<br />
+machinery is fully intact: β3 lysine, αC glutamate, catalytic-loop aspartate and<br />
+asparagine, and the DFG aspartate are all present. Those five columns do not discriminate<br />
+(PKA has them too) and are reported as non-discriminating rather than counted as evidence<br />
+either way.</p>
+<h3 id="one-incidental-per-gene-difference-relevant-to-the-sibling-reviews">One incidental per-gene difference, relevant to the sibling reviews</h3>
+<p>At the A-rich-loop column, <strong>ADCK2 alone among the seven UbiB proteins carries a glycine</strong>,<br />
+the same residue PKA has. Every other member — ADCK5, ADCK1, COQ8A, COQ8B, Coq8p, <em>E. coli</em><br />
+UbiB — has alanine. In COQ8A and Coq8p this exact A→G change is the engineered mutation<br />
+that reverses ADP-over-ATP selectivity. Whether ADCK2 is therefore natively ATP-preferring<br />
+is untested; flagged for the ADCK2 reviewer rather than concluded here.</p>
+<h2 id="analysis-2-human-ubib-family-goec-census">Analysis 2 — human UbiB family GO/EC census</h2>
+<p>Complete (non-truncated) QuickGO and UniProt queries for all five human UbiB genes.</p>
+<p>| gene | EC | Ser/Thr kinase KW | annotations | IBA | experimental | IBA node | NOT| rows |<br />
+|---|---|---|---|---|---|---|---|<br />
+| <strong>ADCK5</strong> | <strong>2.7.11.-</strong> | <strong>yes</strong> | 4 | <strong>0</strong> | 3 | <strong>none</strong> | 0 |<br />
+| ADCK1 | 2.7.-.- | yes | 8 | 3 | 4 | PTN005148758 | 0 |<br />
+| ADCK2 | 2.7.11.- | yes | 8 | 1 | 5 | PTN000059786 | 0 |<br />
+| COQ8A | 2.7.-.- | no | 87 | 1 | 83 | PTN000059692 | 2 |<br />
+| COQ8B | 2.7.-.- | no | 19 | 1 | 12 | PTN000059692 | 2 |</p>
+<p>Two findings, both asserted by the script so they fail loudly if the databases move:</p>
+<ol>
+<li><strong>ADCK5 is the only human UbiB gene with no IBA annotation at all.</strong> UniProt states this<br />
+   independently: "PAN-GO; Q3MIX3; 0 GO annotations based on evolutionary models."</li>
+<li><strong>The EC downgrade tracks whether the activity was measured.</strong> COQ8A and COQ8B, the two<br />
+   members actually assayed, were moved to the generic <code>EC 2.7.-.-</code> and lost the Ser/Thr<br />
+   kinase keyword, and both carry <code>NOT|enables GO:0004672</code> plus <code>NOT|involved_in GO:0006468</code><br />
+   (IDA, PMID:27499294). ADCK5 and ADCK2, never assayed, still carry <code>EC 2.7.11.-</code> and the<br />
+   keyword. ADCK1 is intermediate: <code>EC 2.7.-.-</code> but the keyword retained.</li>
+</ol>
+<h3 id="why-adck1-and-adck2-get-a-mitochondrial-uniprot-annotation-and-adck5-does-not">Why ADCK1 and ADCK2 get a mitochondrial UniProt annotation and ADCK5 does not</h3>
+<h4 id="they-were-in-an-imaging-screen-pubmed33988507-whose-library-did-not-contain-adck5">(they were in an imaging screen, PubMed:33988507, whose library did not contain ADCK5)</h4>
+<p>Worth stating precisely, because the obvious reading is wrong. All three genes carry the same<br />
+MitoCoP HTP row (<code>PMID:34800366</code>), so it looks as though UniProt is treating identical evidence<br />
+differently. It is not: <code>ADCK1-uniprot.txt:117</code> reads<br />
+<code>SUBCELLULAR LOCATION: Mitochondrion {ECO:0000269|PubMed:33988507}</code> and ADCK2's entry carries<br />
+the same evidence tag, while MitoCoP is <strong>not cited in either entry</strong>. Both paralogs have a<br />
+dedicated <em>experimental</em> localisation from the subcellular kinome atlas that ADCK5 lacks.</p>
+<p><strong>But ADCK5 lacks it because it was never assayed</strong>, not because it was assayed and found<br />
+elsewhere. That paper says so: <em>"ADCK5 and OBSCN were absent from the library"</em>. QuickGO returns<br />
+<strong>0</strong> annotations for Q3MIX3 from <code>PMID:33988507</code>, consistent with absence of testing.</p>
+<p>The passage supports a slightly stronger reading than a bare absence. It is reconciling the<br />
+screen's 22 mitochondrial kinases against the MitoCarta2.0 mitochondrial proteome, and it lists<br />
+two kinds of exception: ADCK5 and OBSCN, <em>absent from the library</em>; and FASTK and PAK5, which<br />
+were in the library and which the authors tested and called non-mitochondrial. ADCK5 is in the<br />
+first group — a mitochondrial candidate the assay never reached, not one it examined and<br />
+rejected. <code>family_census.json</code> also records what that screen did for each paralog's UniProt<br />
+localisation, and the two cases are not the same — <code>mitochondrial_localisation_provenance</code><br />
+partitions them:</p>
+<table>
+<thead>
+<tr>
+<th>gene</th>
+<th><code>ECO:0000269</code> tags on its mitochondrial location</th>
+<th>role of the screen</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ADCK1</td>
+<td><code>PubMed:33988507</code></td>
+<td><strong>sole</strong> evidence — supplied it</td>
+</tr>
+<tr>
+<td>ADCK2</td>
+<td><code>PubMed:33988507</code></td>
+<td><strong>sole</strong> evidence — supplied it</td>
+</tr>
+<tr>
+<td>COQ8A</td>
+<td><code>PubMed:11888884</code> (2002), <code>PubMed:25498144</code>, <code>PubMed:33988507</code></td>
+<td>one of three, and the latest — <strong>corroborated</strong> it</td>
+</tr>
+<tr>
+<td>COQ8B</td>
+<td><code>PubMed:24270420</code> (2013), <code>PubMed:33988507</code></td>
+<td>one of two, and the later — <strong>corroborated</strong> it</td>
+</tr>
+<tr>
+<td><strong>ADCK5</strong></td>
+<td><em>none</em></td>
+<td><strong>absent from the library</strong></td>
+</tr>
+</tbody>
+</table>
+<p>An earlier draft said the screen "supplied" the localisation for all four, which the JSON in<br />
+the same commit refuted. The load-bearing conclusion is unaffected and is what the partition<br />
+asserts: all four paralogs were in the library and <strong>ADCK5 is the only member it could not<br />
+assess.</strong> The script fails if that partition changes.</p>
+<p>The evidence tags behind this are now computed into <code>family_census.json</code> by<br />
+<code>family_annotation_census.py</code> rather than described in prose, and the script asserts the<br />
+corrected claim: if ADCK1 or ADCK2 ever loses its experimental mitochondrial location, or if<br />
+ADCK5 gains one, the run fails and the correction request must be revised. A cross-gene claim<br />
+has to be checkable from the repository, not from a live query someone once ran — which is the<br />
+defect that let the original parity claim stand for four surfaces.</p>
+<p>So the UniProt correction request in the review is posed on ADCK5's own evidence — its MitoCoP<br />
+membership, 17 of 25 mitochondrial interactome partners, and the family's exclusively<br />
+mitochondrial distribution — and not on a parity with its paralogs that does not hold. An<br />
+earlier draft made the parity claim on three surfaces, including in text addressed to UniProt<br />
+curators who would have checked it.</p>
+<h3 id="an-unflagged-contradiction-in-a-neighbouring-gene-visible-in-this-census">An unflagged contradiction in a neighbouring gene, visible in this census</h3>
+<p><code>family_census.json</code> records COQ8B holding <strong>both</strong> of these, from the same aspect and the<br />
+same evidence code:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">GO</span><span class="o">:</span><span class="mi">0004672</span><span class="w"> </span><span class="n">IDA</span><span class="w"> </span><span class="n">NOT</span><span class="o">|</span><span class="n">enables</span><span class="w">      </span><span class="o">(</span><span class="n">PMID</span><span class="o">:</span><span class="mi">27499294</span><span class="o">)</span>
+<span class="n">GO</span><span class="o">:</span><span class="mi">0004672</span><span class="w"> </span><span class="n">IDA</span><span class="w"> </span><span class="n">enables</span><span class="w">          </span><span class="o">(</span><span class="n">PMID</span><span class="o">:</span><span class="mi">38425362</span><span class="o">)</span>
+</code></pre></div>
+
+<p>Read as GO terms alone, that asserts and negates protein kinase activity for the same gene<br />
+simultaneously.</p>
+<p><strong>This is an ontology-expressivity gap, not a curation defect.</strong> The merged COQ8B review<br />
+<code>ACCEPT</code>s both rows <em>and reconciles them explicitly</em> — its NOT row records that the negation<br />
+"refers to general in-trans kinase behaviour; it does not contradict the later, specific<br />
+ATP-dependent COQ3 phosphorylation by COQ8B (PMID:38425362)". The curator got it right. What<br />
+they could not do is express it <strong>in terms</strong>: GO offers no way to say "no activity in trans<br />
+toward general substrates, but yes toward this one specific substrate", so the reconciliation<br />
+lives in free text while the term-level record stays self-contradictory to any consumer<br />
+reading terms.</p>
+<p>That is the same gap recorded in ADCK5's second <code>knowledge_gaps</code> entry, and COQ8B shows its<br />
+cost on a <strong>characterised</strong> member rather than a dark one — arguably the better illustration,<br />
+since there the biology is known and the ontology still cannot carry it.</p>
+<p><em>(An earlier draft of this section claimed the COQ8B review had missed the conflict. It had<br />
+not. The claim came from reading the structured fields — term, evidence, negated, action —<br />
+and not the summaries. Checking <code>action:</code> values is not checking a review.)</em></p>
+<h2 id="analysis-3-paint-node-placement-just-fetch-panther-paint">Analysis 3 — PAINT node placement (<code>just fetch-panther-paint</code>)</h2>
+<p>ADCK5 is <code>PTHR43173:SF28</code>; ADCK1 is <code>PTHR43173:SF19</code>; ADCK2 is <code>PTHR45890:SF1</code>; COQ8A/COQ8B<br />
+are <code>PTHR43851:SF1</code>/<code>SF4</code>. Three different PANTHER families for five paralogs.</p>
+<table>
+<thead>
+<tr>
+<th>family</th>
+<th>node</th>
+<th>terms</th>
+<th>seeds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PTHR43173</td>
+<td>PTN005148758</td>
+<td>GO:0005743 mitochondrial inner membrane; GO:0007005 mitochondrion organization; GO:0055088 lipid homeostasis</td>
+<td><code>SGD:S000004243</code> (yeast MCP2)</td>
+</tr>
+<tr>
+<td>PTHR43851</td>
+<td>PTN000059692</td>
+<td>GO:0006744 ubiquinone biosynthetic process</td>
+<td>8 entities incl. COQ8A, COQ8B</td>
+</tr>
+</tbody>
+</table>
+<p><code>PTHR43173</code> — ADCK5's own family — has exactly <strong>one</strong> annotated node, seeded by a single<br />
+yeast protein (MCP2, itself <code>PTHR43173:SF19</code>). ADCK1 receives all three of its terms;<br />
+<strong>ADCK5 receives none</strong>, because the node sits in the SF19 clade and does not reach SF28.</p>
+<p>A reach scan of the three node terms was run but hit a page cap for GO:0005743 (2,500 of<br />
+10,019) and GO:0007005 (2,500 of 9,097), so those entity lists are <strong>floors and are not<br />
+reported as complete</strong>. The load-bearing claim does not depend on them: the per-gene QuickGO<br />
+query for Q3MIX3 returned all 4 of 4 annotations, none IBA, and UniProt's PAN-GO line agrees.<br />
+The GO:0006744 scan was complete (1,920 of 1,920) and contains no ADCK5.</p>
+<h2 id="analysis-4-the-go0005515-partner-and-the-interaction-record">Analysis 4 — the <code>GO:0005515</code> partner, and the interaction record</h2>
+<p>All 54 IntAct interaction records for Q3MIX3 (complete; <code>len(rows) == totalElements</code><br />
+asserted):</p>
+<table>
+<thead>
+<tr>
+<th>reference</th>
+<th>method</th>
+<th>n</th>
+<th>partners</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PMID:27499296</td>
+<td>anti tag coip</td>
+<td>40</td>
+<td>25 distinct partners, <strong>17 of 25 UniProt-annotated to the mitochondrion</strong> (ATP5F1B, C1QBP, CHCHD2, CHCHD3, ECH1, ETFA, HARS2, HOGA1, HSPA9, IMMT, MRPL2, NDUFAB1, PMPCB, POLDIP2, SHMT2, SSBP1, STOML2)</td>
+</tr>
+<tr>
+<td>PMID:25416956</td>
+<td><strong>two hybrid array + two hybrid prey pooling approach + validated two hybrid</strong></td>
+<td>3</td>
+<td><strong>NOTCH2NLA</strong></td>
+</tr>
+<tr>
+<td>PMID:31515488</td>
+<td>two hybrid array</td>
+<td>1</td>
+<td><strong>NOTCH2NLA</strong></td>
+</tr>
+<tr>
+<td>PMID:33961781</td>
+<td>anti tag coip</td>
+<td>2</td>
+<td>TMEM160, ZMPSTE24</td>
+</tr>
+<tr>
+<td>others</td>
+<td>various</td>
+<td>8</td>
+<td>singletons</td>
+</tr>
+</tbody>
+</table>
+<p>The two GOA <code>GO:0005515</code> rows both name <strong>NOTCH2NLA (Q7Z3S9)</strong>. UniProt records<br />
+<code>Q3MIX3; Q7Z3S9: NOTCH2NLA; NbExp=4;</code> — but the four experiments are <strong>three sub-method<br />
+labels of one Rolland/CCSB Y2H screen</strong> plus one further Y2H from the same resource<br />
+lineage. MI score 0.67 on every row; no orthogonal assay anywhere in IntAct. This is the<br />
+third gene in this campaign where <code>NbExp</code> counts sub-methods of a single screen (after<br />
+ACRV1 and ADAMTSL5).</p>
+<p>Compartment (a supporting consideration, <strong>not</strong> a conclusion): NOTCH2NLA (Q7Z3S9, reviewed,<br />
+236 aa) is annotated <code>Secreted</code> and <code>Cytoplasm</code> and is a human-specific regulator of neural<br />
+progenitor proliferation. ADCK5 is a mitochondrial protein — in eukaryotes "UbiB homologs are<br />
+found exclusively in mitochondria" — and its only large interaction dataset (PMID:27499296,<br />
+the mitochondrial interactome) returns 25 partners of which 17 are annotated to the<br />
+mitochondrion. Y2H places both proteins in the yeast nucleus, removing whatever targeting<br />
+constraint applies in vivo.</p>
+<p><strong>How far that argument actually goes.</strong> It requires ADCK5's kinase-like domain to face the<br />
+matrix, as COQ8A's C-terminus is measured to do. <strong>ADCK5's own sidedness has never been<br />
+measured</strong> — the single transmembrane segment is a prediction, and an outer-membrane anchor<br />
+presenting the domain to the cytosol is not excluded. That is precisely the uncertainty that<br />
+stops this review proposing <code>GO:0031966</code>, so the compartment point is stated here as an<br />
+assumption and nothing rests on it. The <code>MARK_AS_OVER_ANNOTATED</code> verdict rests on the<br />
+method-replication argument, which stands alone.</p>
+<p>Every number above is computed by <code>partner_localisation.py</code>, not typed: it re-pulls all 54<br />
+IntAct records (asserting <code>len(rows) == totalElements</code>), resolves every partner by <strong>UniProt<br />
+accession</strong> rather than gene symbol, and emits <code>17 of 25</code>,<br />
+<code>orthogonal_assay_for_goa_partners: {Q7Z3S9: false}</code>, <code>mi_scores: [0.67]</code> (one distinct score<br />
+across every row — itself evidence the rows are not independent observations) and<br />
+<code>methods_by_pmid</code>, which is what shows <code>25416956</code> contributing three sub-method labels and<br />
+<code>31515488</code> one. <code>audit_adck5_claims.py</code> then holds this<br />
+file, the notes and the review YAML to those values, and fails if an orthogonal assay ever<br />
+appears for Q7Z3S9 — which would make the <code>MARK_AS_OVER_ANNOTATED</code> verdict stale.</p>
+<p>(A first draft of this file claimed all 25 partners were mitochondrial and the measurement<br />
+refused it. Resolving by accession also removes a real ambiguity: the symbols <code>HARS2</code> and<br />
+<code>MRPL2</code> each match two reviewed Swiss-Prot entries, so a symbol-keyed lookup would have<br />
+silently picked one.)</p>
+<p><strong>Negative results from this check, recorded so the next reviewer knows it was run:</strong><br />
+NOTCH2NLA resolves to a <em>reviewed, canonical, full-length</em> Swiss-Prot entry — no TrEMBL or<br />
+partial-ORFeome substitution of the kind found on ACRV1. And the mitochondrion HTP row's<br />
+reference (PMID:34800366) is a proteome-wide localisation census, not a complex-to-subunit<br />
+projection: it carries no functional or phenotype term that could spread across a complex,<br />
+so the ACTR8 projection failure mode does not apply.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>The kinase label on ADCK5 is a <strong>fold-derived name, not a measured activity</strong> — UniProt says<br />
+so itself. But the correct inference is narrower than "UbiB proteins are not protein<br />
+kinases": COQ8B <em>does</em> phosphorylate a specific protein substrate, COQ3<br />
+(PMID:38425362, "COQ3, but not COQ6, is phosphorylated by COQ8B at multiple sites"), and<br />
+that took direct assay to establish. So ADCK5's intact catalytic core plus intact<br />
+autoinhibitory KxGQ and A-rich features are consistent with a nucleotide-dependent,<br />
+substrate-restricted activity of an as-yet unknown kind — and are <strong>not</strong> consistent with<br />
+the generic <code>protein serine/threonine kinase activity</code> that its keyword asserts.</p>
+<p>Crucially, <strong>there is nothing in ADCK5's GOA to act on</strong>: GOA carries no <code>GO:0004674</code>,<br />
+<code>GO:0004672</code> or <code>GO:0006468</code> row for Q3MIX3 (QuickGO returns 0 hits for GO:0004674 with<br />
+<code>goUsage=descendants</code>). The unsupported claim survives only in UniProt's keyword/EC layer,<br />
+which GOA no longer imports. The actionable item is therefore a <strong>UniProt correction<br />
+request</strong>, not a GO annotation change.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q3MIX3
+gene_symbol: ADCK5
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  ADCK5 is a 580-residue human member of the ancient UbiB (aarF-domain) family of atypical
+  protein-kinase-like proteins, one of five human paralogs alongside ADCK1, ADCK2 and the two
+  characterised coenzyme Q factors COQ8A (ADCK3) and COQ8B (ADCK4). In eukaryotes UbiB
+  proteins are found exclusively in mitochondria and plastids, and ADCK5 is detected in
+  high-confidence human mitochondrial proteome surveys and co-purifies predominantly with
+  mitochondrial proteins; a hydrophobic segment at residues 50-67 is predicted to anchor it in
+  a membrane. Its protein-kinase-like domain retains the complete catalytic and
+  nucleotide-positioning core of the fold - the beta3 lysine, the alphaC glutamate, the
+  catalytic-loop aspartate and asparagine, and the DFG aspartate - so it is not a degenerate
+  pseudokinase. At the same time it retains both UbiB-specific features that distinguish this
+  family from conventional kinases: the invariant KxGQ motif, whose N-terminal domain occludes
+  the pocket that conventional kinases use to bind peptide substrates, and an alanine-rich loop
+  in place of the canonical glycine-rich nucleotide loop, which in the characterised relatives
+  produces an unusual preference for ADP over ATP. No catalytic activity, substrate or
+  physiological process has been established for ADCK5 by direct assay. In the two relatives
+  that have been assayed the fold does not support generic protein phosphorylation in trans,
+  yet COQ8B does phosphorylate one specific partner protein, so a restricted,
+  substrate-selective activity for ADCK5 remains an open possibility rather than an excluded
+  one. Reported cellular roles - promotion of lung cancer cell invasion and migration via a
+  SOX9/PTTG1 axis, and induction of airway epithelial senescence - rest on overexpression and
+  knockdown studies without accompanying enzymology.
+existing_annotations:
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB-SubCell:SL-0162
+  review:
+    summary: &gt;-
+      Correct but weakly grounded, and less informative than the available evidence. This row is
+      the automatic mapping of UniProt SubCell SL-0162 (Membrane) to GO:0016020, and that
+      SubCell assignment traces to a SUBCELLULAR LOCATION line reading &#34;Membrane {ECO:0000305};
+      Single-pass membrane protein {ECO:0000305}&#34; - a curator inference drawn from a purely
+      predicted transmembrane helix at residues 50-67 (ECO:0000255). There is no experimental
+      membrane measurement for ADCK5. The statement is nonetheless very likely true: UniProt
+      records COQ8A as Mitochondrion membrane, single-pass, and ADCK1 as Mitochondrion, and
+      ADCK5 is independently placed in the mitochondrion by the HTP row below. Kept as
+      ACCEPT because a general parent term that is true should not be removed, and because
+      refining it to GO:0031966 mitochondrial membrane would mean joining an experimental
+      mitochondrion call to a predicted membrane call - a composite inference this review
+      declines to make on ADCK5&#39;s behalf. The substantive issue is upstream and not fixable in
+      GO: ADCK1 and ADCK2 receive SL-0173 (Mitochondrion) from the same UniProt pipeline while
+      ADCK5 receives only SL-0162. That difference is not arbitrary - ADCK1 and ADCK2 each have
+      an experimental mitochondrial localisation of their own (ECO:0000269|PubMed:33988507)
+      that ADCK5 lacks - but the reason ADCK5 lacks it is that it was never tested: that study
+      states its kinome library did not contain ADCK5. Raised as a UniProt correction request
+      in suggested_questions, on ADCK5&#39;s own evidence rather than on parity with its
+      paralogs.
+    action: ACCEPT
+    reason: &gt;-
+      A true but prediction-derived parent term. Retained rather than removed because ADCK5 is
+      almost certainly membrane-associated, and rather than refined because its submitochondrial
+      placement has never been measured.
+    supported_by:
+    - reference_id: PMID:25498144
+      supporting_text: they contain predicted single-pass transmembrane (TM) domains that could
+        limit solubility
+    - reference_id: PMID:27499294
+      supporting_text: endogenous COQ8A is partially buried in the inner mitochondrial membrane
+        with its C-terminus facing the matrix
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:Q7Z3S9
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; supported by a single yeast two-hybrid partner, NOTCH2NLA
+      (Q7Z3S9), from the Rolland/CCSB proteome-scale interactome screen. Expanding the IntAct
+      records shows this one screen is logged three separate times under three sub-method
+      labels - two hybrid array, two hybrid prey pooling approach, and validated two hybrid -
+      which is what inflates UniProt&#39;s NbExp to 4. It is one experiment, not three, and across
+      all 54 IntAct records for Q3MIX3 there is no orthogonal assay for this pair (MI score
+      0.67 throughout). The compartments also sit awkwardly together: NOTCH2NLA is a reviewed
+      236-residue human-specific protein annotated Secreted and Cytoplasm that acts on neural
+      progenitor proliferation, whereas ADCK5 is a mitochondrial UbiB-family protein whose only
+      large interaction dataset returns 17 of 25 partners annotated to the mitochondrion. That
+      compartment argument is a supporting consideration rather than a decisive one, and it is
+      stated here as an assumption: it holds if ADCK5&#39;s kinase-like domain faces the matrix, as
+      COQ8A&#39;s C-terminus is measured to do, but ADCK5&#39;s own sidedness has never been determined
+      and an outer-membrane anchor presenting the domain to the cytosol is not excluded - which
+      is the same uncertainty that stops this review proposing GO:0031966. The verdict does not
+      depend on it: the method-replication argument stands alone. Marked as
+      over-annotated rather than removed: this is an experimental IPI whose primary data this
+      review has not seen, and the term is not positively contradicted, merely unreplicated by
+      any independent method and uninformative as written. Not modified to a more specific
+      molecular-function term because there is no characterised activity to modify it to. The
+      partner-identity check ran clean - Q7Z3S9 is the reviewed, canonical, full-length
+      Swiss-Prot entry, not a TrEMBL or partial-ORFeome substitute.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      One yeast two-hybrid screen triple-logged under three sub-method labels, with no
+      orthogonal assay for this pair anywhere in IntAct, and a bare term that names no activity.
+    supported_by:
+    - reference_id: PMID:27499294
+      supporting_text: endogenous COQ8A is partially buried in the inner mitochondrial membrane
+        with its C-terminus facing the matrix
+    - reference_id: file:human/ADCK5/ADCK5-bioinformatics/RESULTS.md
+      supporting_text: MI score 0.67 on every row; no orthogonal assay anywhere in IntAct.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:31515488
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:Q7Z3S9
+  review:
+    summary: &gt;-
+      Same partner as the row above, NOTCH2NLA (Q7Z3S9), from a second two-hybrid study that
+      screens the effect of genetic variants on interactions. Judged separately per partner and
+      per reference as required, and it reaches the same verdict for a reason specific to it:
+      this is not independent corroboration of the Rolland hit. It is a two hybrid array
+      experiment from the same CCSB resource lineage, i.e. method replication within one assay
+      class rather than orthogonal validation. It inherits the same compartment consideration as
+      the row above - a secreted and cytoplasmic human-specific neural regulator paired with a
+      mitochondrial UbiB protein - and it inherits that consideration&#39;s limits too: ADCK5&#39;s
+      membrane sidedness has never been measured, so this supports the verdict without being
+      required by it. Had this been a different method, the two rows together would have
+      justified MODIFY to an informative molecular-function term; as it stands there is no
+      characterised binding activity to name.
+      Over-annotated rather than removed, on the same grounds as the previous row.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      A second two-hybrid screen from the same CCSB resource lineage, so method replication
+      within one assay class rather than the orthogonal validation this partner would need.
+    supported_by:
+    - reference_id: file:human/ADCK5/ADCK5-bioinformatics/RESULTS.md
+      supporting_text: MI score 0.67 on every row; no orthogonal assay anywhere in IntAct.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Well supported, and the single most informative annotation ADCK5 has. The reference is
+      MitoCoP, a quantitative high-confidence human mitochondrial proteome, and the identical
+      row is carried by ADCK1 and ADCK2. It is corroborated from three independent directions:
+      the UbiB family is mitochondrial throughout eukaryotes; ADCK5&#39;s largest interaction
+      dataset (PMID:27499296, the mitochondrial protein interaction map) returns 25 distinct
+      partners of which 17 are UniProt-annotated to the mitochondrion; and the protein carries
+      an N-terminal basic, hydroxylated-residue-rich segment of the kind that directs
+      mitochondrial import. The complex-to-subunit projection failure mode was checked and does
+      not apply here - PMID:34800366 is a proteome-wide localisation census that assigns no
+      functional or phenotype term, so there is no phenotype able to spread across a complex,
+      unlike the ComplexPortal-derived case documented on INO80 subunits.
+    action: ACCEPT
+    reason: &gt;-
+      High-confidence mitochondrial proteome membership, corroborated independently by the
+      family&#39;s exclusively mitochondrial distribution in eukaryotes and by an interactome
+      dominated by mitochondrial proteins.
+    supported_by:
+    - reference_id: PMID:25498144
+      supporting_text: In eukaryotes, UbiB homologs are found exclusively in mitochondria
+suggested_questions:
+- question: &gt;-
+    UniProt correction request (1 of 2). Q3MIX3 carries EC=2.7.11.-, the
+    Serine/threonine-protein kinase keyword, and consequently the cross-reference &#34;GO:0004674;
+    F:protein serine/threonine kinase activity; IEA:UniProtKB-KW&#34;, while the same entry states
+    that the function of this protein is not yet clear and that it is not known whether it has
+    protein kinase activity at all. UniProt has already applied exactly this correction to the
+    two family members whose activity was measured: COQ8A and COQ8B were moved to the generic
+    EC 2.7.-.- and lost the Ser/Thr-kinase keyword after Stefely et al. showed they lack
+    canonical protein kinase activity in trans. ADCK5 and ADCK2 were not. Because GOA no longer
+    imports keyword-derived annotations, today&#39;s GO record is unaffected - but any consumer
+    reading UniProt directly still sees an activity assertion the entry&#39;s own FUNCTION line
+    disclaims. Should ADCK5 be downgraded to EC 2.7.-.- with the Ser/Thr-kinase keyword removed?
+  experts:
+  - UniProt/Swiss-Prot curation
+- question: &gt;-
+    UniProt correction request (2 of 2). Q3MIX3&#39;s SUBCELLULAR LOCATION is only Membrane,
+    single-pass, inferred from a predicted TM helix, so its SubCell mapping is SL-0162 and it
+    gains only GO:0016020 - no mitochondrial term. ADCK1 and ADCK2 both carry SL-0173
+    (Mitochondrion), each on an experimental annotation ECO:0000269|PubMed:33988507 from the
+    subcellular kinome atlas. ADCK5 has no such annotation, and the reason is worth stating
+    precisely: that study reports that ADCK5 was absent from its kinome library, so this is
+    untested rather than tested-and-negative. Meanwhile ADCK5 has mitochondrial evidence of its
+    own - it is in the MitoCoP high-confidence mitochondrial proteome (PMID:34800366), 17 of the
+    25 partners in its mitochondrial-interactome dataset are themselves mitochondrial, and every
+    characterised eukaryotic UbiB protein is mitochondrial. Should Mitochondrion be added to
+    ADCK5&#39;s SUBCELLULAR LOCATION on that basis? Posed on ADCK5&#39;s own evidence, not on parity
+    with paralogs whose annotation rests on an assay ADCK5 never received.
+  experts:
+  - UniProt/Swiss-Prot curation
+- question: &gt;-
+    PAINT/PAN-GO coverage. ADCK5 is the only one of the five human UbiB genes with no
+    evolutionary-model annotation at all; UniProt records that Q3MIX3 has 0 GO annotations based
+    on evolutionary models. PTHR43173, the family containing both ADCK1 (SF19) and ADCK5 (SF28),
+    has exactly one annotated node, PTN005148758, seeded by a single yeast protein (MCP2,
+    SGD:S000004243, itself SF19) and carrying GO:0005743, GO:0007005 and GO:0055088. ADCK1
+    inherits all three; ADCK5 inherits none, because the node lies inside the SF19 clade. This is
+    a reach/coverage gap rather than a mis-propagation, and it is deliberately raised as a
+    question and not acted on: a single yeast seed is thin support for extending three terms
+    across the whole family, and ADCK5 already has direct HTP evidence for the mitochondrion.
+    Should a family-level PTHR43173 node carry the mitochondrial localisation that is true of
+    every characterised eukaryotic UbiB protein?
+  experts:
+  - GO Consortium PAINT curation
+- question: &gt;-
+    Should GO be able to record the UbiB/ADCK atypical-kinase architecture at all? There is
+    currently no way to state &#34;protein-kinase-like fold with an occluded substrate pocket and an
+    ADP-selective nucleotide loop, catalytic activity undetermined&#34;. For ADCK5 the honest GO
+    position is simply the absence of a molecular-function term, which is what GOA now has - but
+    the same gap pushed COQ8A&#39;s annotation into the generic GO:0016301 kinase activity for what
+    is really ATP hydrolysis. The sharpest evidence of the cost is on COQ8B, not on ADCK5: GOA
+    carries both NOT|enables GO:0004672 (IDA, PMID:27499294) and enables GO:0004672 (IDA,
+    PMID:38425362) for that gene, so read as terms alone it asserts and negates protein kinase
+    activity at once. That is an expressivity limit, not a curation error - COQ8B&#39;s reviewer
+    reconciled the two explicitly in free text, recording that the negation refers to general
+    in-trans behaviour and does not contradict the specific COQ3 phosphorylation. The
+    reconciliation is correct and simply cannot be said in terms: GO offers no way to express
+    &#34;no activity in trans toward general substrates, but yes toward this one specific
+    substrate&#34;. Raised as an ontology-coverage observation, not a request to create a term for
+    this gene, and not an action on COQ8B, which is out of scope here.
+  experts:
+  - GO ontology development
+suggested_experiments:
+- hypothesis: &gt;-
+    ADCK5 binds adenine nucleotides with the ADP-over-ATP preference that the retained A-rich
+    loop alanine A209 confers in COQ8A and yeast Coq8p.
+  description: &gt;-
+    Differential scanning fluorimetry (thermal shift) on purified ADCK5 lacking the predicted
+    transmembrane segment, against a panel of ADP, ATP and non-hydrolysable analogues, exactly
+    as was done for COQ8A. This tests the single best-founded prediction about the protein and
+    would decide between GO:0043531 ADP binding and GO:0005524 ATP binding. This review proposes
+    neither term, because neither has been measured for ADCK5.
+  experiment_type: biochemical assay
+- hypothesis: &gt;-
+    ADCK5 has ATP hydrolysis activity modulated by lipids and CoQ intermediates, as COQ8A does.
+  description: &gt;-
+    ATPase assay on purified ADCK5 in the presence and absence of cardiolipin and CoQ
+    biosynthetic intermediates. A positive result would distinguish a conserved family ATPase
+    from a genuinely divergent activity, and would support GO:0016887.
+  experiment_type: enzyme assay
+- hypothesis: &gt;-
+    Like COQ8B, ADCK5 phosphorylates a specific mitochondrial partner protein rather than
+    generic substrates.
+  description: &gt;-
+    The COQ8B precedent shows the productive experiment is not a generic peptide-substrate panel
+    - which is what failed for COQ8A - but a search for a specific partner. Run an ATP-dependent
+    phosphorylation screen with intact-protein mass spectrometry against ADCK5&#39;s own
+    co-purifying mitochondrial partners (CHCHD2, CHCHD3, IMMT, PMPCB and the other mitochondrial
+    hits of PMID:27499296), rather than a generic kinase assay.
+  experiment_type: biochemical assay
+- hypothesis: &gt;-
+    The KxGQ/A-rich autoinhibitory architecture is functional in ADCK5, not merely present in
+    sequence.
+  description: &gt;-
+    Mutate the A-rich loop alanine A209 to glycine and test whether nucleotide selectivity flips
+    toward ATP and autophosphorylation is enabled, as A339G does in COQ8A and A197G in yeast
+    Coq8p. A positive result would establish that the occluded-pocket mechanism operates in
+    ADCK5, which is currently inferred from sequence alone.
+  experiment_type: mutagenesis
+- hypothesis: &gt;-
+    ADCK5 is anchored in the mitochondrial inner membrane via the predicted 50-67 helix, with the
+    kinase-like domain facing the matrix, as COQ8A is.
+  description: &gt;-
+    Carbonate extraction and protease-protection assays on isolated mitochondria, with
+    submitochondrial fractionation. This is the measurement that would justify GO:0031966
+    mitochondrial membrane or GO:0005743 mitochondrial inner membrane in place of the current
+    generic GO:0016020; its absence is why this review proposes neither.
+  experiment_type: cell fractionation
+- hypothesis: &gt;-
+    The reported ADCK5-SOX9-PTTG1 pathway involves direct phosphotransfer by ADCK5 to SOX9
+    Ser181.
+  description: &gt;-
+    PMID:32277958 infers the Ser181 site from mutagenesis of the substrate plus a motif-match
+    argument, with no in vitro kinase assay reported. Perform a recombinant ADCK5 plus
+    recombinant SOX9 kinase assay with a catalytically dead control mutating the DFG aspartate
+    D382, to distinguish direct phosphorylation from an indirect consequence of overexpression.
+  experiment_type: biochemical assay
+knowledge_gaps:
+- gap_statement: &gt;-
+    ADCK5 has never been assayed. Its catalytic activity, its substrate and its physiological
+    process are all undetermined: whether it transfers a phosphate to a protein, to a small
+    molecule, or hydrolyses ATP without transferring anything at all, and whether it prefers ADP
+    or ATP, are open questions with no measurement on either side. UniProt states the gap in its
+    own FUNCTION line, and the paper that resolved the equivalent question for COQ8A explicitly
+    set ADCK5 aside.
+  boundary: &gt;-
+    Established: mitochondrial localisation (MitoCoP high-confidence proteome, HTP), an
+    interactome dominated by mitochondrial proteins, and a UbiB-family protein-kinase-like fold
+    that retains the complete catalytic and nucleotide-positioning core (beta3 K228, alphaC E281,
+    catalytic-loop D360 and N365, DFG D382) behind both UbiB-specific features that occlude the
+    conventional substrate route (KxGQ K147, A-rich loop A209). Not established: any measured
+    activity, any nucleotide preference, any substrate, any physiological process, and the
+    submitochondrial compartment and membrane topology. Note the fold argument constrains but
+    does not close the question in either direction - COQ8A was shown to lack canonical protein
+    kinase activity in trans, yet COQ8B phosphorylates COQ3, so an activity restricted to one
+    specific partner remains live.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: WHOLLY_DARK
+  status: OPEN
+  significance: &gt;-
+    ADCK5 is Pharos Tdark and is the only one of the five human UbiB genes with no
+    evolutionary-model (IBA) annotation at all, so it inherits nothing from its family and has
+    contributed nothing to it. After this review its entire GO record is one prediction-derived
+    membrane term, one high-throughput mitochondrion term and two bare protein binding rows from
+    a single two-hybrid pairing - the deep-unknome signature. The two characterised relatives
+    both turned out to do something the family name did not predict, which is a reason to expect
+    the same here rather than to assume ADCK5 is a redundant paralog.
+  provenance:
+  - reference_id: PMID:27499294
+    supporting_text: More distantly related COQ8A/B homologs (ADCK1, ADCK2, and ADCK5) could
+      also play a role
+  - reference_id: PMID:25498144
+    supporting_text: The human genome contains five UbiB family genes
+  - reference_id: file:human/ADCK5/ADCK5-bioinformatics/RESULTS.md
+    supporting_text: The kinase label on ADCK5 is a **fold-derived name, not a measured
+      activity**
+- gap_statement: &gt;-
+    GO cannot express what is actually known about this protein&#39;s molecular architecture: a
+    protein-kinase-like fold whose conventional peptide-substrate pocket is occluded by its own
+    N-terminal KxGQ domain and whose glycine-rich nucleotide loop is replaced by an
+    alanine-rich, ADP-selective one, with the catalytic core intact but no activity determined.
+    The only faithful GO position available is silence, so an architecture that is conserved
+    from bacteria to humans and is the defining feature of an entire kinase-like family is
+    unrepresentable.
+  boundary: &gt;-
+    Established: the UbiB-specific features are defined, quantified across the family, and
+    structurally interpreted, and ADCK5 retains them. Missing: any term between GO:0016301
+    kinase activity, which asserts an activity ADCK5 has not been shown to have, and no term at
+    all. The cost is visible on the characterised paralogs too - COQ8A&#39;s demonstrated ATP
+    hydrolysis is recorded as generic GO:0016301 kinase activity alongside a NOT annotation to
+    GO:0004672, which is an accurate but awkward way to describe an enzyme, and COQ8B ends up
+    carrying enables GO:0004672 and NOT|enables GO:0004672 at the same time because the ontology
+    cannot distinguish a generic activity from a single-substrate one. In COQ8B&#39;s case the
+    curator reconciled the two correctly in prose; the point is that no arrangement of GO terms
+    could have carried that reconciliation.
+  gap_kind:
+  - ONTOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    This is a family-level gap rather than an ADCK5-specific one; it affects all five human ADCK
+    genes and their orthologs throughout eukaryotes and bacteria. No new term is proposed here,
+    because for ADCK5 specifically there is no measured activity for such a term to record - the
+    gap is raised so that it is visible when a member is eventually characterised.
+  provenance:
+  - reference_id: PMID:25498144
+    supporting_text: an atypical AAAS motif in an alanine-rich (A-rich) loop that replaces the
+      canonical glycine-rich (G-rich) nucleotide-binding loop
+  - reference_id: PMID:25498144
+    supporting_text: the KxGQ domain is likely to be an autoinhibitory domain because it fills
+      the space normally occupied by peptide or protein substrates in typical protein kinases
+  - reference_id: PMID:27499294
+    supporting_text: neither catalyzes canonical protein kinase activity
+references:
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings:
+  - statement: &gt;-
+      The pipeline behind the GO:0016020 row. Its input for ADCK5 is SubCell SL-0162 (Membrane),
+      which resolves to GO:0016020 and nothing more specific.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Correctly applied - SL-0162 does map to GO:0016020, confirmed against the UniProt
+      locations endpoint. The weakness is in the pipeline&#39;s input, not its operation: ADCK5&#39;s
+      SUBCELLULAR LOCATION line is itself an ECO:0000305 inference from a predicted TM helix.
+      ADCK1 and ADCK2 feed the same pipeline SL-0173 and gain GO:0005739 - but that is not a
+      like-for-like comparison and must not be read as one: their SL-0173 rests on an
+      experimental localisation (ECO:0000269|PubMed:33988507) from a kinome-wide imaging screen
+      whose library did not contain ADCK5. The asymmetry is therefore untested versus tested,
+      not identical evidence handled differently.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings:
+  - statement: &gt;-
+      Source of the first GO:0005515 row. Reports an ADCK5-NOTCH2NLA interaction by yeast
+      two-hybrid, logged in IntAct three times under three sub-method labels of the same screen.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The citation is correct and the screen is a legitimate large-scale resource; the caution is
+      about weight, not identity. Counting its three IntAct sub-method rows as independent
+      replication would triple-count one experiment - the same artefact previously documented on
+      ACRV1 and ADAMTSL5.
+- id: PMID:31515488
+  title: Extensive disruption of protein interactions by genetic variants across the
+    allele frequency spectrum in human populations.
+  findings:
+  - statement: &gt;-
+      Source of the second GO:0005515 row; recovers the same ADCK5-NOTCH2NLA pair by two hybrid
+      array from the same CCSB resource lineage, so it is method replication rather than
+      orthogonal validation.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings:
+  - statement: &gt;-
+      MitoCoP places ADCK5 in the high-confidence human mitochondrial proteome; this is the
+      source of the GO:0005739 HTP row, and the identical row is carried by ADCK1 and ADCK2.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Checked for the complex-to-subunit projection pattern and cleared: this is a proteome-wide
+      localisation census with no functional or phenotype term attached, so no phenotype can
+      spread across a complex from it.
+- id: PMID:25498144
+  title: Mitochondrial ADCK3 employs an atypical protein kinase-like fold to enable
+    coenzyme Q biosynthesis.
+  findings:
+  - statement: &gt;-
+      Defines the UbiB-specific sequence features, including the invariant KxGQ motif and the
+      AAAS alanine-rich loop that replaces the canonical glycine-rich nucleotide-binding loop.
+      Both are retained in ADCK5, at K147 and A209.
+    supporting_text: an atypical AAAS motif in an alanine-rich (A-rich) loop that replaces the
+      canonical glycine-rich (G-rich) nucleotide-binding loop
+  - statement: &gt;-
+      Argues that the KxGQ domain is positioned to inhibit protein kinase activity by occupying
+      the site conventional kinases use for peptide substrates.
+    supporting_text: the KxGQ domain is likely to be an autoinhibitory domain because it fills
+      the space normally occupied by peptide or protein substrates in typical protein kinases
+  - statement: &gt;-
+      Establishes that eukaryotic UbiB proteins are mitochondrial, corroborating ADCK5&#39;s HTP
+      mitochondrion row independently of the proteomics.
+    supporting_text: In eukaryotes, UbiB homologs are found exclusively in mitochondria
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The structural basis for this review&#39;s central call. Every residue number taken from it
+      (COQ8A K276, A339, D488, D507) was asserted against the downloaded Q8NI60 sequence before
+      use, and all four matched.
+- id: PMID:27499294
+  title: Cerebellar Ataxia and Coenzyme Q Deficiency through Loss of Unorthodox Kinase
+    Activity.
+  findings:
+  - statement: &gt;-
+      Demonstrates that COQ8A and yeast Coq8p lack canonical protein kinase activity in trans;
+      the source of the NOT|enables GO:0004672 and NOT|involved_in GO:0006468 annotations carried
+      by both COQ8A and COQ8B.
+    supporting_text: neither catalyzes canonical protein kinase activity
+  - statement: &gt;-
+      Attributes the loss of generic protein-kinase function to the KxGQ domain blocking the
+      peptide substrate site.
+    supporting_text: which occludes the canonical peptide substrate pocket
+  - statement: &gt;-
+      Explicitly leaves ADCK1, ADCK2 and ADCK5 uncharacterised, so nothing in this paper is
+      direct evidence about ADCK5.
+    supporting_text: More distantly related COQ8A/B homologs (ADCK1, ADCK2, and ADCK5) could
+      also play a role
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Central to the family argument but deliberately not treated as evidence about ADCK5 itself
+      - the paper says in terms that ADCK5 was not studied. It constrains what the fold does
+      generically; it does not establish what ADCK5 does.
+- id: PMID:38425362
+  title: In vitro construction of the COQ metabolon unveils the molecular determinants
+    of coenzyme Q biosynthesis.
+  findings:
+  - statement: &gt;-
+      COQ8B phosphorylates a specific protein substrate, COQ3, at multiple sites - the result
+      that stops this review concluding that the UbiB fold is incapable of phosphorylating a
+      protein.
+    supporting_text: COQ3, but not COQ6, is phosphorylated by COQ8B at multiple sites
+  - statement: &gt;-
+      The same study excludes small-molecule kinase activity for COQ8B, narrowing the family&#39;s
+      plausible activities.
+    supporting_text: GC/MS analyses did not detect any phosphorylated CoQ intermediates,
+      suggesting that the enzyme is not a small-molecule kinase
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cited specifically to avoid the mirror error of inferring absence of an activity from the
+      family&#39;s reputation. Weighted with a caveat that is easy to miss: the COQ8 proteins used
+      were ancestral-sequence reconstructions of the tetrapod enzymes rather than the extant
+      human proteins, so this is strong evidence that the fold can phosphorylate a protein and
+      weaker evidence about human COQ8B specifically.
+- id: PMID:33988507
+  title: A subcellular map of the human kinome.
+  findings:
+  - statement: &gt;-
+      The subcellular kinome atlas underpins the experimental mitochondrial localisation
+      (ECO:0000269|PubMed:33988507) that UniProt gives every human UbiB protein except ADCK5 -
+      though not to the same degree, and the difference matters. For ADCK1 and ADCK2 it is the
+      SOLE cited evidence, so there it supplied the annotation. For COQ8A and COQ8B it is one
+      tag among several and the latest of them (COQ8A also cites PubMed:11888884 from 2002 and
+      PubMed:25498144; COQ8B also cites PubMed:24270420 from 2013), so there it corroborated an
+      annotation that already existed. ADCK5 has no tag from it at all, because it states that
+      ADCK5 was not present in the screened library - so ADCK5&#39;s missing annotation reflects
+      absence of testing rather than a negative result, which is what makes the UniProt
+      correction request reasonable rather than a request to overrule data. The four genes the
+      screen did cover are the entire rest of the human UbiB family; ADCK5 is the only member
+      it could not assess. The supplied/corroborated split is computed in
+      family_census.json under mitochondrial_localisation_provenance, not asserted from memory.
+    supporting_text: ADCK5 and OBSCN were absent from the library
+  - statement: &gt;-
+      Stronger than a bare absence. The sentence sits in a passage reconciling the screen&#39;s 22
+      mitochondrial kinases against the MitoCarta2.0 mitochondrial proteome, and that passage
+      lists two distinct kinds of exception. ADCK5 and OBSCN are in the first kind: absent from
+      the library, so never assessed. FASTK and PAK5 are in the second and opposite kind: they
+      were in the library, were tested, and were called non-mitochondrial. ADCK5 belongs to the
+      first group only - a mitochondrial candidate the assay never reached, not one it examined
+      and rejected.
+    supporting_text: 14 of them have been documented in mitochondrial proteome database
+      MitoCarta2.0
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Not the source of any ADCK5 GOA row - QuickGO returns 0 annotations for Q3MIX3 from this
+      reference, consistent with the paper&#39;s own statement that ADCK5 was not in the library.
+      Cited to establish why the paralogs&#39; UniProt mitochondrial annotation does not extend to
+      ADCK5, after an earlier draft of this review wrongly asserted the three genes rested on
+      identical evidence.
+- id: PMID:27499296
+  title: Mitochondrial Protein Interaction Mapping Identifies Regulators of Respiratory
+    Chain Function.
+  findings:
+  - statement: &gt;-
+      Contributes 40 of ADCK5&#39;s 54 IntAct records, yielding 25 distinct partners of which 17 are
+      UniProt-annotated to the mitochondrion. Independent corroboration of the mitochondrion row,
+      and the source of the compartment consideration that sits alongside - but is not required
+      by - the method-replication argument against the NOTCH2NLA pairing.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Not the source of any GOA row for ADCK5; used only as corroborating interactome context.
+      The 17-of-25 figure was measured against each partner&#39;s UniProt subcellular location rather
+      than asserted - an earlier draft claimed all 25 were mitochondrial and the measurement
+      refused it.
+- id: PMID:32277958
+  title: aarF domain containing kinase 5 gene promotes invasion and migration of lung
+    cancer cells through ADCK5-SOX9-PTTG1 pathway.
+  findings:
+  - statement: &gt;-
+      The only ADCK5-specific functional study. Proposes that ADCK5 phosphorylates SOX9 at Ser181
+      to upregulate PTTG1 and drive invasion and migration, but states the central claim as a
+      possibility rather than a demonstration.
+    supporting_text: showed that ADCK5 might regulate the expression of tumor oncogene human
+    full_text_unavailable: true
+  - statement: &gt;-
+      The Ser181 assignment rests on mutagenesis of the substrate plus a motif-match argument,
+      not on a direct kinase assay.
+    supporting_text: The serine 181 site of SOX9 is in a
+    full_text_unavailable: true
+  reference_review:
+    relevance: MEDIUM
+    correctness: LOW_QUALITY
+    review_notes: &gt;-
+      Not miscited and not disputed in the literature, but methodologically thin for the weight
+      placed on it elsewhere: the abstract hedges every step (&#34;might regulate&#34;, &#34;might be
+      required&#34;), reports no in vitro kinase assay, and full text is unavailable. The affinage
+      record restates it as an established fact that ADCK5 phosphorylates SOX9 at serine 181,
+      which the abstract does not support. No GOA row depends on it, so nothing in the GO record
+      needed changing on this account.
+- id: file:human/ADCK5/ADCK5-bioinformatics/RESULTS.md
+  title: ADCK5 (Q3MIX3) - is the &#34;protein serine/threonine kinase&#34; assignment supported?
+  findings:
+  - statement: &gt;-
+      MAFFT alignment of the five human UbiB proteins, yeast Coq8p, E. coli UbiB and PKA Calpha
+      shows ADCK5 retains both UbiB inhibitory features (KxGQ K147; A-rich loop A209) and the
+      complete catalytic core (K228, E281, D360, N365, D382). Published reference residues are
+      asserted before use, and the two independently anchored A-rich-loop columns resolve to the
+      same alignment column.
+  - statement: &gt;-
+      Census of the five human UbiB genes: ADCK5 is the only one with zero IBA annotations, and
+      the EC downgrade to 2.7.-.- with loss of the Ser/Thr-kinase keyword has been applied only
+      to COQ8A and COQ8B, the two members actually assayed.
+  - statement: &gt;-
+      All 54 IntAct records for Q3MIX3 were retrieved without truncation; the NOTCH2NLA
+      interaction is one Y2H screen logged under three sub-method labels plus one further Y2H
+      from the same resource lineage, with no orthogonal assay.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Analyses committed alongside this review and reproducible from the gene folder. Guards were
+      break-tested in both directions via --self-test, and the anchor guard caught a real error
+      during development: PKA Calpha residue numbers taken from the classical Knighton convention
+      are offset by one from UniProt P17612&#39;s numbering.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

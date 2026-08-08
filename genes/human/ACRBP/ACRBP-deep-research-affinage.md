@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 12
 citation_count: 12
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for ACRBP (human)
@@ -22,9 +23,7 @@ note: >-
 
 ACRBP (SP32/OY-TES-1/CT23) is an acrosomal matrix protein that controls the packaging and timed activation of the sperm protease proacrosin during spermiogenesis and fertilization [PMID:8144514, PMID:27303034]. It was first purified as a proacrosin-binding protein that selectively recognizes the 55-/53-/49-kDa proacrosin and acrosin-intermediate forms and accelerates proacrosin autoactivation at basic pH in vitro, acting through both amino- and carboxyl-terminal sequences of proacrosin [PMID:8144514]. In mouse, alternative splicing generates two functionally distinct isoforms that bind separate domains of the proacrosin C-terminus: ACRBP-V5 drives formation and configuration of the large acrosomal granule during early spermiogenesis, while the processed ACRBP-C retains proacrosin in an inactive state and accelerates its autoactivation upon acrosomal exocytosis [PMID:23426433, PMID:27303034]. Genetic ablation of both isoforms causes acrosome malformation, fragmented acrosomes, and severe subfertility, with ACRBP-V5 transgenic rescue restoring acrosomal granule formation; the subfertility reflects an incomplete acrosome reaction rather than impaired sperm migration [PMID:27303034, PMID:30606959]. Maturation of ACRBP from precursor to mature form depends on the proprotein convertase PCSK4, and ACRBP undergoes tyrosine phosphorylation during capacitation, with surface ACRBP contributing to sperm–zona pellucida binding and priming of the acrosome reaction [PMID:22357636, PMID:15955892, PMID:34086710]. A separate body of low-confidence work links ACRBP/OY-TES-1/CT23 knockdown to proliferation, migration, and apoptosis phenotypes in mesenchymal stem cells and hepatocellular carcinoma lines, but this somatic role has not been mechanistically resolved in the available corpus.
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0098772 molecular function regulator activity, GO:0140313 molecular sequestering activity
 - **localization:** GO:0031410 cytoplasmic vesicle, GO:0005886 plasma membrane
