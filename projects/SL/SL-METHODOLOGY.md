@@ -142,3 +142,72 @@ to skip the lookup when running without network access.
 | SL-0158 | Lysosome | 10 | 0 | 0% |
 | SL-0147 | Endomembrane system | 10 | 2 | 20% |
 | SL-0182 | Nucleus membrane | 10 | 0 | 0% |
+
+
+---
+
+# Redundancy test
+
+```bash
+uv run python projects/SL/scripts/sl_redundancy.py
+```
+
+Asks, for each SL-unique annotation to term T, whether the gene carries any other CC term that
+is a proper descendant of T under `is_a`/`part_of`, using the local GO SQLite build. Used to
+test — and refute — the hypothesis that SL over-annotation is duplication; see
+[the project page](../SL.md#the-redundancy-hypothesis-tested-and-refuted).
+
+**The output below is post-intervention and partly circular**: the SL-0162 and SL-0090 review
+batches deliberately selected redundant annotations, which inflates the redundant group's issue
+rate from 10% to 13%. The result quoted on the project page is the pre-batch measurement.
+
+## Redundancy of SL-unique annotations
+
+- SL-unique annotations examined: **1300**
+- with a review action: **1297**
+- of those, the gene already carries a more specific CC term from another source: **445/1297 (34%)**
+
+### Issue rate, split by redundancy
+
+| Group | n | Issue rate | KEEP_AS_NON_CORE |
+|---|---|---|---|
+| Redundant (more specific term present) | 445 | 56/445 (13%) | 137 (31%) |
+| Not redundant (SL term is the most specific) | 852 | 71/852 (8%) | 269 (32%) |
+
+### By SL location (>= 10 reviewed)
+
+| SL | GO term | n | Redundant | Issue rate | Issue rate if redundant | if not |
+|---|---|---|---|---|---|---|
+| SL-0086 | cytoplasm | 176 | 116 (66%) | 9/176 (5%) | 4/116 (3%) | 5/60 (8%) |
+| SL-0243 | extracellular region | 89 | 13 (15%) | 13/89 (15%) | 1/13 (8%) | 12/76 (16%) |
+| SL-0191 | nucleus | 77 | 32 (42%) | 8/77 (10%) | 2/32 (6%) | 6/45 (13%) |
+| SL-0039 | plasma membrane | 74 | 12 (16%) | 7/74 (9%) | 0/12 (0%) | 7/62 (11%) |
+| SL-0162 | membrane | 61 | 34 (56%) | 19/61 (31%) | 14/34 (41%) | 5/27 (19%) |
+| SL-0090 | cytoskeleton | 59 | 47 (80%) | 16/59 (27%) | 14/47 (30%) | 2/12 (17%) |
+| SL-0097 | endoplasmic reticulum membrane | 36 | 2 (6%) | 0/36 (0%) | 0/2 (0%) | 0/34 (0%) |
+| SL-0251 | spindle | 25 | 22 (88%) | 2/25 (8%) | 2/22 (9%) | 0/3 (0%) |
+| SL-0132 | Golgi apparatus | 23 | 13 (57%) | 4/23 (17%) | 2/13 (15%) | 2/10 (20%) |
+| SL-0134 | Golgi membrane | 21 | 0 (0%) | 0/21 (0%) | n/a | 0/21 (0%) |
+| SL-0095 | endoplasmic reticulum | 21 | 4 (19%) | 2/21 (10%) | 0/4 (0%) | 2/17 (12%) |
+| SL-0168 | mitochondrial inner membrane | 19 | 4 (21%) | 2/19 (11%) | 1/4 (25%) | 1/15 (7%) |
+| SL-0468 | chromosome | 18 | 15 (83%) | 1/18 (6%) | 1/15 (7%) | 0/3 (0%) |
+| SL-0071 | clathrin-coated vesicle membrane | 18 | 0 (0%) | 0/18 (0%) | n/a | 0/18 (0%) |
+| SL-0151 | late endosome membrane | 18 | 7 (39%) | 0/18 (0%) | 0/7 (0%) | 0/11 (0%) |
+| SL-0198 | perinuclear region of cytoplasm | 17 | 0 (0%) | 0/17 (0%) | n/a | 0/17 (0%) |
+| SL-0161 | melanosome | 17 | 0 (0%) | 1/17 (6%) | n/a | 1/17 (6%) |
+| SL-0048 | centrosome | 15 | 3 (20%) | 1/15 (7%) | 0/3 (0%) | 1/12 (8%) |
+| SL-0200 | periplasmic space | 14 | 3 (21%) | 0/14 (0%) | 0/3 (0%) | 0/11 (0%) |
+| SL-0170 | mitochondrial matrix | 14 | 1 (7%) | 1/14 (7%) | 0/1 (0%) | 1/13 (8%) |
+| SL-0091 | cytosol | 13 | 0 (0%) | 0/13 (0%) | n/a | 0/13 (0%) |
+| SL-0188 | nucleolus | 13 | 0 (0%) | 1/13 (8%) | n/a | 1/13 (8%) |
+| SL-0171 | mitochondrial membrane | 13 | 9 (69%) | 4/13 (31%) | 3/9 (33%) | 1/4 (25%) |
+| SL-0066 | cilium | 12 | 8 (67%) | 3/12 (25%) | 2/8 (25%) | 1/4 (25%) |
+| SL-0283 | dendrite | 12 | 2 (17%) | 0/12 (0%) | 0/2 (0%) | 0/10 (0%) |
+| SL-0049 | chloroplast | 11 | 1 (9%) | 2/11 (18%) | 1/1 (100%) | 1/10 (10%) |
+| SL-0197 | perikaryon | 11 | 0 (0%) | 0/11 (0%) | n/a | 0/11 (0%) |
+| SL-0023 | autophagosome | 11 | 1 (9%) | 1/11 (9%) | 0/1 (0%) | 1/10 (10%) |
+| SL-0260 | synaptic vesicle membrane | 11 | 2 (18%) | 0/11 (0%) | 0/2 (0%) | 0/9 (0%) |
+| SL-0147 | endomembrane system | 10 | 4 (40%) | 2/10 (20%) | 1/4 (25%) | 1/6 (17%) |
+| SL-0279 | axon | 10 | 4 (40%) | 0/10 (0%) | 0/4 (0%) | 0/6 (0%) |
+| SL-0158 | lysosome | 10 | 5 (50%) | 0/10 (0%) | 0/5 (0%) | 0/5 (0%) |
+| SL-0182 | nuclear membrane | 10 | 0 (0%) | 0/10 (0%) | n/a | 0/10 (0%) |

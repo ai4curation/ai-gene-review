@@ -351,7 +351,7 @@
         <h1>UniProt Subcellular Locations (SL) Unique Terms Project</h1>
 
         <p class="project-meta">
-            <span class="badge m-SCOPING">SCOPING</span>
+            <span class="badge m-IN_PROGRESS">IN_PROGRESS</span>
             <span class="badge tag t-PIPELINE">PIPELINE</span>
         </p>
 
@@ -383,8 +383,8 @@ only the GO term. The SL pipeline writes <code>UniProtKB-SubCell:SL-xxxx</code> 
 WITH/FROM column. The location-level view that took SPKW a separate mapping step is available<br />
 for free, per annotation.</p>
 <h2 id="key-finding-the-failure-is-granularity-not-truth">Key finding: the failure is granularity, not truth</h2>
-<p>Across 1,297 reviewed SL-unique annotations in this corpus (986 gene folders), <strong>40% were<br />
-downgraded or worse</strong> and <strong>9% carry a hard issue</strong> (<code>REMOVE</code> / <code>MARK_AS_OVER_ANNOTATED</code> /<br />
+<p>Across 1,297 reviewed SL-unique annotations in this corpus (986 gene folders), <strong>41% were<br />
+downgraded or worse</strong> and <strong>10% carry a hard issue</strong> (<code>REMOVE</code> / <code>MARK_AS_OVER_ANNOTATED</code> /<br />
 <code>MODIFY</code>). But the issue rate is not spread evenly, and the pattern is sharp:</p>
 <table>
 <thead>
@@ -420,7 +420,7 @@ downgraded or worse</strong> and <strong>9% carry a hard issue</strong> (<code>R
 <tr>
 <td>SL-0162 Membrane</td>
 <td>61</td>
-<td><strong>23%</strong></td>
+<td><strong>31%</strong></td>
 <td></td>
 <td>SL-0151 Late endosome membrane</td>
 <td>18</td>
@@ -438,7 +438,7 @@ downgraded or worse</strong> and <strong>9% carry a hard issue</strong> (<code>R
 <tr>
 <td>SL-0090 Cytoskeleton</td>
 <td>59</td>
-<td><strong>17%</strong></td>
+<td><strong>27%</strong></td>
 <td></td>
 <td>SL-0091 Cytosol</td>
 <td>13</td>
@@ -491,9 +491,11 @@ downgraded or worse</strong> and <strong>9% carry a hard issue</strong> (<code>R
 </tr>
 </tbody>
 </table>
+<p>(The SL-0162 and SL-0090 rates include the batches reviewed under their own subprojects; the<br />
+pre-batch figures were 23% and 17%.)</p>
 <p>Same organelle, same pipeline, same curators. The under-specified location is three to four<br />
 times worse. The pattern repeats for Golgi apparatus (17%) versus Golgi apparatus membrane<br />
-(0%), endoplasmic reticulum (10%) versus ER membrane (0%), and bare Membrane (23%) versus<br />
+(0%), endoplasmic reticulum (10%) versus ER membrane (0%), and bare Membrane (31%) versus<br />
 every specific membrane in the table (0%).</p>
 <p><strong>This is a different failure mode from SPKW.</strong> SPKW's problems were semantic — process<br />
 conflation, regulatory conflation, expression mistaken for function. The gene was in the wrong<br />
@@ -501,6 +503,100 @@ place in a pathway. SL's problem is that an under-specified location maps to a G
 <em>true but uninformative</em>, and reviewers then have to adjudicate whether "true but<br />
 uninformative" counts as over-annotation. Hence the unusually high <code>KEEP_AS_NON_CORE</code> share<br />
 (406 of 1,297, 31%) alongside a modest hard-issue rate.</p>
+<h2 id="the-redundancy-hypothesis-tested-and-refuted">The redundancy hypothesis, tested and refuted</h2>
+<p>The obvious mechanical explanation, and the fix this project first proposed: SL-unique<br />
+annotations get flagged because the gene <em>already carries a more specific term from another<br />
+source</em>, so the broad SL term is pure duplication. If that were right, GOA could suppress an<br />
+SL-derived CC annotation whenever a descendant is present from any other reference, and most<br />
+of the problem would disappear.</p>
+<p>It was tested directly (<code>projects/SL/scripts/sl_redundancy.py</code>, committed). For every<br />
+SL-unique annotation, the script asks whether any other CC term on that gene is a proper<br />
+descendant under <code>is_a</code>/<code>part_of</code>, and cross-tabulates against the reviewer's verdict.</p>
+<p><strong>The hypothesis fails.</strong> Measured before this project's own review batches:</p>
+<table>
+<thead>
+<tr>
+<th>Group</th>
+<th>n</th>
+<th>Issue rate</th>
+<th><code>KEEP_AS_NON_CORE</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Redundant — more specific term already present</td>
+<td>445</td>
+<td><strong>10%</strong></td>
+<td>31%</td>
+</tr>
+<tr>
+<td>Not redundant — the SL term is the most specific the gene has</td>
+<td>852</td>
+<td><strong>8%</strong></td>
+<td>32%</td>
+</tr>
+</tbody>
+</table>
+<p>Two percentage points. And the split barely moves inside individual locations either<br />
+(SL-0162: 26% vs 19%; SL-0090: 17% vs 17%; SL-0171: 33% vs 25%). Redundancy is also not<br />
+tracking breadth in the way the story needs: spindle is 88% redundant with an 8% issue rate,<br />
+chromosome 83% redundant with 6%.</p>
+<p>The reviewer quotes explain why. Genes were flagged for <em>vagueness</em>, not duplication —<br />
+"marked over-annotated for lack of specificity rather than for lack of membrane association"<br />
+(human <a href="../../genes/human/ABHD14A/ABHD14A-ai-review.html">ABHD14A</a>), "not wrong, but 'membrane' is the uninformative parent" (yeast <a href="../../genes/yeast/DCV1/DCV1-ai-review.html">DCV1</a>). A gene<br />
+whose only annotation is <code>membrane</code> is as uninformatively annotated as one with <code>membrane</code><br />
+plus five specific terms, arguably worse. Deduplication fixes the second case and misses the<br />
+first.</p>
+<p><strong>So there is no cheap structural fix.</strong> This is an evidential judgment about whether a<br />
+location says anything, and it has to be made per annotation.</p>
+<p><em>Caveat on re-running the numbers:</em> the table above is the pre-intervention measurement.<br />
+Re-running the script now returns 13% vs 8%, because the <a href="SL/SL-0162-MEMBRANE.html">SL-0162</a> and<br />
+<a href="SL/SL-0090-CYTOSKELETON.html">SL-0090</a> batches deliberately selected redundant cases to<br />
+re-review. That is a self-fulfilling measurement and should not be quoted as a result.</p>
+<h2 id="failure-mode-patterns">Failure-mode patterns</h2>
+<p>Four patterns, established across the subprojects. The first is the SL pipeline's own; the<br />
+others have SPKW analogues.</p>
+<table>
+<thead>
+<tr>
+<th>Pattern</th>
+<th>Description</th>
+<th>Examples</th>
+<th>SPKW analogue</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A. Under-specification</strong></td>
+<td>Term is true and adds no information over the gene's topology or existing annotations</td>
+<td><code>membrane</code> for a known ER protein; <code>cytoskeleton</code> for a microtubule protein; <code>mitochondrial membrane</code> for an inner-membrane protein</td>
+<td>none — this is SL's own</td>
+</tr>
+<tr>
+<td><strong>B. Association ≠ residence</strong></td>
+<td>Protein binds or anchors to the structure but is not located in it</td>
+<td><a href="../../genes/human/SGCA/SGCA-ai-review.html">SGCA</a>, <a href="../../genes/human/SGCE/SGCE-ai-review.html">SGCE</a> (sarcolemmal proteins linked to cytoskeleton via the DGC)</td>
+<td>regulatory conflation</td>
+</tr>
+<tr>
+<td><strong>C. Family-rule propagation</strong></td>
+<td>A location true of some family members is attached to all by a HAMAP/UniRule rule or a sequence feature</td>
+<td>PSEPK and METEA enolase (<code>Secreted</code> from pathogen moonlighting); yeast <a href="../../genes/yeast/THI22/THI22-ai-review.html">THI22</a> (signal-peptide prediction); human <a href="../../genes/human/PGRMC1/PGRMC1-ai-review.html">PGRMC1</a></td>
+<td>subclade divergence</td>
+</tr>
+<tr>
+<td><strong>D. Transit annotated as destination</strong></td>
+<td>Protein passes through a compartment to reach a tethered, injected or embedded destination</td>
+<td>SALTY <a href="../../genes/SALTY/slrP/slrP-ai-review.html">slrP</a> (T3SS effector); STAAU <a href="../../genes/STAAU/lytN/lytN-ai-review.html">lytN</a> (cross-wall); ACET2 SdbA (SLH-tethered)</td>
+<td>toxin vs effector</td>
+</tr>
+</tbody>
+</table>
+<p>Pattern C is the one with a targeted fix: auditing the handful of family rules that attach<br />
+<code>Secreted</code>/<code>Cell surface</code> to housekeeping enzyme families would remove a disproportionate<br />
+share of the <em>wrong</em> (as opposed to merely vague) annotations. HAMAP MF_00318 on enolase<br />
+alone accounts for two of the 13 SL-0243 flags in this small corpus and would account for far<br />
+more at GOA scale.</p>
 <p>Full tables and the query in <a href="SL/SL-METHODOLOGY.html">SL-METHODOLOGY.md</a>, regenerable from a<br />
 committed script.</p>
 <h2 id="subprojects">Subprojects</h2>
@@ -509,16 +605,46 @@ committed script.</p>
 <tr>
 <th>Subproject</th>
 <th>SL</th>
-<th>Genes</th>
+<th>Reviewed</th>
+<th>Issue rate</th>
 <th>Status</th>
 </tr>
 </thead>
 <tbody>
 <tr>
+<td><a href="SL/SL-0162-MEMBRANE.html">Membrane</a></td>
+<td>SL-0162</td>
+<td>61</td>
+<td>31%</td>
+<td>5 annotations moved; pattern A</td>
+</tr>
+<tr>
+<td><a href="SL/SL-0090-CYTOSKELETON.html">Cytoskeleton</a></td>
+<td>SL-0090</td>
+<td>59</td>
+<td>27%</td>
+<td>6 annotations moved; patterns A + B</td>
+</tr>
+<tr>
+<td><a href="SL/SL-0243-SECRETED.html">Secreted</a></td>
+<td>SL-0243</td>
+<td>89</td>
+<td>15%</td>
+<td>analysis only; patterns C + D</td>
+</tr>
+<tr>
+<td><a href="SL/SL-MITOCHONDRIA.html">Mitochondrial granularity triple</a></td>
+<td>SL-0171/0168/0170</td>
+<td>46</td>
+<td>31/11/7%</td>
+<td>controlled comparison; analysis only</td>
+</tr>
+<tr>
 <td><a href="CONDENSATES/GO_0034045-annotation-audit.html">SL-0221 / phagophore assembly site membrane</a></td>
 <td>SL-0221</td>
-<td>11 reviewed, 18 annotations moved</td>
-<td>audit complete, feeding GO issue #29437</td>
+<td>29</td>
+<td>—</td>
+<td>18 annotations moved; feeding GO issue #29437</td>
 </tr>
 </tbody>
 </table>
@@ -542,27 +668,30 @@ condensate with no bounding bilayer.</p>
   reviewed <a href="http://amigo.geneontology.org/amigo/term/GO:0034045">GO:0034045</a>/<a href="http://amigo.geneontology.org/amigo/term/GO:0097632">GO:0097632</a> assertions in this corpus had been <code>ACCEPT</code>ed. Re-reviewed<br />
   against the ontology defect, 18 of 29 moved to <code>MODIFY</code>.</li>
 </ul>
-<h2 id="proposed-next-subprojects">Proposed next subprojects</h2>
-<p>Chosen from the issue-rate table, highest first:</p>
-<ol>
-<li><strong>SL-0162 Membrane → <a href="http://amigo.geneontology.org/amigo/term/GO:0016020">GO:0016020</a></strong> (61 reviewed, 23% issue, 14 flagged). The largest<br />
-   under-specified location. Likely to expose whether "membrane" ever adds information over<br />
-   the specific compartment terms a gene already carries.</li>
-<li><strong>SL-0171 Mitochondrion membrane</strong> (31%) against its specific siblings SL-0168 / SL-0170.<br />
-   A controlled test of the granularity hypothesis inside one organelle.</li>
-<li><strong>SL-0090 Cytoskeleton → <a href="http://amigo.geneontology.org/amigo/term/GO:0005856">GO:0005856</a></strong> (59 reviewed, 17%). Suspected to conflate "binds or<br />
-   regulates the cytoskeleton" with "is a cytoskeletal component" — the SL analogue of SPKW's<br />
-   regulatory conflation, and the one place the two projects' failure modes may meet.</li>
-<li><strong>SL-0243 Secreted → <a href="http://amigo.geneontology.org/amigo/term/GO:0005576">GO:0005576</a></strong> (89 reviewed, 15%). Largest location outside the<br />
-   generic ones; worth checking whether signal-peptide-driven predictions dominate.</li>
-</ol>
+<h2 id="what-the-subprojects-established">What the subprojects established</h2>
+<ul>
+<li><strong>The granularity signal is real and large</strong> — 31% on <code>membrane</code>, 27% on <code>cytoskeleton</code>,<br />
+  31% on <code>mitochondrial membrane</code>, against 0% on every precise membrane term in the corpus.</li>
+<li><strong>But it is not redundancy</strong>, so it cannot be automated away (above).</li>
+<li><strong>Precision does not reduce errors; it makes them visible.</strong> The mitochondrial triple's<br />
+  precise siblings still fail at 7-11%, but they fail <em>informatively</em>: a wrong sub-compartment<br />
+  (SCHPO <a href="../../genes/SCHPO/tim10/tim10-ai-review.html">tim10</a>, rat <a href="../../genes/rat/Tp53/Tp53-ai-review.html">Tp53</a>) or, in one case, a wrong organelle entirely (ARTAN <a href="../../genes/ARTAN/A0A2U1PS28/A0A2U1PS28-ai-review.html">A0A2U1PS28</a>,<br />
+  a chloroplastic protein annotated to the mitochondrial inner membrane). Vague terms cannot<br />
+  be wrong in that way, which is the problem with them.</li>
+<li><strong>Two of the four patterns are inherited from SPKW</strong>, which suggests the underlying cause is<br />
+  the family-rule and prediction layer shared by both pipelines rather than anything specific<br />
+  to keywords or locations.</li>
+</ul>
 <h2 id="open-questions">Open questions</h2>
 <ul>
 <li>Is <code>KEEP_AS_NON_CORE</code> the right disposition for a true-but-uninformative location, or should<br />
   the project argue for a distinct verdict? A third of all SL-unique annotations land there.</li>
-<li>Should GOA suppress an SL-derived CC annotation when the gene already carries a more<br />
-  specific descendant from any source? That single rule would address most of the granularity<br />
-  cases without touching UniProt.</li>
+<li>~~Should GOA suppress an SL-derived CC annotation when the gene already carries a more<br />
+  specific descendant from any source?~~ <strong>Tested and refuted</strong> (above): it would address<br />
+  almost nothing. What <em>would</em> help is harder — a judgment about whether a location is<br />
+  informative for a given protein, which is not derivable from the annotation graph.</li>
+<li>Should GO's <code>located_in</code> be usable at all for peripheral association (pattern B), or does<br />
+  that need a different relation? <a href="../../genes/human/SGCA/SGCA-ai-review.html">SGCA</a> and <a href="../../genes/human/SGCE/SGCE-ai-review.html">SGCE</a> are the test cases.</li>
 <li>How many SL locations map to GO terms whose logical axioms do not hold for the structure the<br />
   location names? SL-0221 was found by accident. There is no systematic check.</li>
 <li>Does the issue rate hold outside this corpus? These 986 genes were selected for review for<br />
@@ -572,8 +701,9 @@ condensate with no bounding bilayer.</p>
 <ul>
 <li><strong>Started</strong>: 2026-08-08</li>
 <li><strong>Corpus scan</strong>: 1,300 SL-unique annotations, 986 gene folders, 1,297 with reviews</li>
-<li><strong>Genes reviewed under this project</strong>: 11 (all SL-0221)</li>
-<li><strong>Script</strong>: <code>projects/SL/scripts/scan_sl_unique.py</code></li>
+<li><strong>Genes reviewed under this project</strong>: 22 — 11 for SL-0221, 5 for SL-0162, 6 for SL-0090</li>
+<li><strong>Annotations moved</strong>: 29 — 18 under SL-0221, 11 under SL-0162/SL-0090</li>
+<li><strong>Scripts</strong>: <code>projects/SL/scripts/scan_sl_unique.py</code>, <code>projects/SL/scripts/sl_redundancy.py</code></li>
 </ul>
     </div>
 
