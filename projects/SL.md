@@ -147,6 +147,29 @@ site) genuinely do not exist and are now proposed on the ATG2A, ATG2B and atg-18
 Everywhere else in the SL corpus, the destination exists — the question is only whether the
 reviewer looked for it.
 
+### Pattern C has a mirror image: the reviewer's family argument over-reaches too
+
+A blinded OpenScientist run on yeast **THI22** (`genes/yeast/THI22/THI22-hypotheses/`,
+pre-registered in `THI22-notes.md` before the result) tested the SL-0243 `Secreted` annotation
+neutrally. It confirmed the verdict — no evidence places THI22 outside the cell — but refuted
+the reasoning behind it, and the refutation generalises.
+
+This review had argued: *THI22's paralogs THI20/THI21 are cytosolic, so secretion is
+implausible, so the annotation is over-annotated.* The run reproduced the key sequence fact
+blind — the N-terminal extension is unique to THI22 among the three paralogs, hydropathy peak
+3.78 vs ~0.5–0.8 — and then read it the **opposite** way: uniqueness is evidence of
+neofunctionalization toward the endomembrane system, not evidence that THI22 behaves like its
+sisters. SGD's locus record (verified against the SGD API) reports ER and vacuole localization
+for SWAT-GFP and mCherry fusions. The prediction's error is the **endpoint, not the signal** —
+entering the secretory pathway is not being secreted.
+
+The lesson for this project: *"family members are secreted, so this one is"* (pattern C) and
+*"family members are cytosolic, so this one is"* are the same inference pointed in opposite
+directions, and a reviewer refuting the first can commit the second. Family context constrains
+a localization; it does not determine it, and the case where a protein diverges from its
+paralogs is exactly the case worth annotating. Verdicts reached by paralog analogy alone should
+say so explicitly, so the reasoning can be checked separately from the conclusion.
+
 Pattern C is the one with a targeted fix: auditing the handful of family rules that attach
 `Secreted`/`Cell surface` to housekeeping enzyme families would remove a disproportionate
 share of the *wrong* (as opposed to merely vague) annotations. HAMAP MF_00318 on enolase

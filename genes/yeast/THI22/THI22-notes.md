@@ -210,3 +210,45 @@ functional secretory signal. Three outcomes are distinguishable:
 
 Per project practice, any conclusion resting on PMIDs not in `publications/` will be recorded
 as a lead rather than wired as an annotation until the primary literature is cached.
+
+### Result (2026-08-08, 770 s, 3 iterations)
+
+Report: `THI22-hypotheses/function-hypothesis-go-0005576/openscientist.md`. Non-empty with four
+artifacts including computed provenance (`provenance_nterm_hydropathy.json/.png`). Leak check
+clean — the only mentions of `*-bioinformatics` in the report are its own statement that such
+analyses were withheld.
+
+**Outcome 3 of the three pre-registered, with a correction to this review's reasoning.**
+
+*Blind agreement on the sequence fact.* The held-out local observation was that the N-terminal
+extension is unique to THI22 among THI20/THI21/THI22. OpenScientist reached the same fact
+independently and quantified it — a "family-atypical ~24-aa hydrophobic N-terminal extension"
+with a Kyte-Doolittle peak of 3.78 against ~0.79 (THI20) and ~0.49 (THI21) — running its own
+analysis with saved provenance. It was not told to look at the N-terminus.
+
+*Where it went further, and where this review was wrong.* This review argued: paralogs are
+cytosolic, therefore secretion is implausible, therefore the annotation is over-annotated, and
+whether the extension is a real signal is an open gap. The run reads the same paralog contrast
+the opposite way — the extension is most likely a **functional ER-targeting signal**, and its
+uniqueness is evidence of neofunctionalization toward the endomembrane system, not evidence
+that THI22 behaves like its sisters. SGD's locus record (verified directly against the SGD
+API, not taken from the report) states "SWAT-GFP and mCherry fusion proteins localize to the
+endoplasmic reticulum and vacuole respectively".
+
+So the verdict `MARK_AS_OVER_ANNOTATED` survives, but for a different reason: the error in
+GO:0005576 is the **endpoint, not the signal**. Entering the secretory pathway is not the same
+as being secreted.
+
+*What was wired, and what was gated.* The annotation keeps `MARK_AS_OVER_ANNOTATED`; its
+`reason` was rewritten and now cites the run. ER (GO:0005783) and vacuole (GO:0005773) are
+recorded as **leads only** and deliberately not annotated: the primary imaging references are
+not cached, and the calls are high-throughput and tag-dependent (the N-terminal and C-terminal
+tags disagree with each other). The cytosol IBA is flagged as questionable but left untouched
+pending the same references. All three `supporting_text` quotes were verified
+character-exact against their sources — `file:` and `SGD:` prefixes are in the reference
+validator's skip list, so nothing checks them automatically.
+
+*Open follow-up.* Caching the SWAT-GFP and mCherry primary references would let the ER/vacuole
+calls be annotated properly and would settle the cytosol IBA. Note this review's own earlier
+falcon-derived note that "Huh et al. 2003 GFP screen did not give a clear THI22 localization"
+(PMID:14562095) is consistent — SWAT is a later, more sensitive N-terminal tagging method.
