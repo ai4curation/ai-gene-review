@@ -1,0 +1,2277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cysI - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>cysI</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88KB9" target="_blank" class="term-link">
+                        Q88KB9
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "cysI";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88KB9" data-a="DESCRIPTION: CysI is the siroheme- and iron-sulfur-containing c..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CysI is the siroheme- and iron-sulfur-containing catalytic sulfite reductase of assimilatory sulfate reduction. The best current model for pseudomonads is a ferredoxin-fed enzyme, with FprA supplying reducing equivalents either through reduced ferredoxin or directly, rather than the enterobacterial CysJ-dependent architecture.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KB9" data-a="GO:0016491" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but too broad to identify the six-electron sulfite reduction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0050311 is the best current molecular-function term for the ferredoxin-fed Pseudomonas CysI model.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0020037" target="_blank" class="term-link">
+                                    GO:0020037
+                                </a>
+                            </span>
+                            <span class="term-label">heme binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KB9" data-a="GO:0020037" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct cofactor-binding property of the CysI hemoprotein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The siroheme cofactor is integral to catalysis, but the substrate-specific sulfite reductase activity is the core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/cysI/cysI-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Sulphite reductase hemoprotein, beta subunit</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051536" target="_blank" class="term-link">
+                                    GO:0051536
+                                </a>
+                            </span>
+                            <span class="term-label">iron-sulfur cluster binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KB9" data-a="GO:0051536" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct supporting cofactor-binding property.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> CysI contains the conserved nitrite/sulfite-reductase iron-sulfur domains, but cluster binding alone does not identify the physiological reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050311" target="_blank" class="term-link">
+                                    GO:0050311
+                                </a>
+                            </span>
+                            <span class="term-label">sulfite reductase (ferredoxin) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:interpro/panther/PTHR32439/PTHR32439-entries.csv
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KB9" data-a="GO:0050311" data-r="file:interpro/panther/PTHR32439/PTHR32439-entries.csv" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Best current activity term for the Pseudomonas CysI model.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Q88KB9 belongs to PTHR32439, which contains the reviewed ferredoxin-fed sulfite reductase Sir P9WJ02, whereas the classical E. coli NADPH-dependent CysI P17846 belongs to PTHR11493:SF47. The PTHR32439 subfamily label for Q88KB9 is not functionally reliable, so this ISS proposal rests on the family-level match, the exact Sir exemplar, and corroborating Pseudomonas genetics rather than on the subfamily name.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/cysI/cysI-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   PANTHER; PTHR32439:SF9; BLR3264 PROTEIN; 1.
+DR   PANTHER; PTHR32439; FERREDOXIN--NITRITE REDUCTASE, CHLOROPLASTIC; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:interpro/panther/PTHR32439/PTHR32439-entries.csv
+
+                                </span>
+
+                                <div class="support-text">P9WJ02,Sulfite reductase [ferredoxin],protein,83331,Mycobacterium tuberculosis (strain CDC 1551 / Oshkosh),Mycobacterium tuberculosis (strain CDC 1551 / Oshkosh),sir,555,PTHR32439:SF0,&#34;FERREDOXIN--NITRITE REDUCTASE, CHLOROPLASTIC&#34;,True</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:interpro/panther/PTHR11493/PTHR11493-entries.csv
+
+                                </span>
+
+                                <div class="support-text">P17846,Sulfite reductase [NADPH] hemoprotein beta-component,protein,83333,Escherichia coli (strain K12),Escherichia coli (strain K12),cysI,570,PTHR11493:SF47,SULFITE REDUCTASE [NADPH] SUBUNIT BETA,True</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23794620" target="_blank" class="term-link">
+                                        PMID:23794620
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">pseudomonads utilize sulfite reduction enzymology distinct from that of E. coli</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000103" target="_blank" class="term-link">
+                                    GO:0000103
+                                </a>
+                            </span>
+                            <span class="term-label">sulfate assimilation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:interpro/panther/PTHR32439/PTHR32439-entries.csv
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KB9" data-a="GO:0000103" data-r="file:interpro/panther/PTHR32439/PTHR32439-entries.csv" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CysI catalyzes the terminal reductive step of sulfate assimilation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The PTHR32439 ferredoxin-sulfite-reductase exemplar and the exact cysI assignment support transfer of the conserved terminal sulfate-assimilation role, while Pseudomonas genetics corroborate the pathway context.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:interpro/panther/PTHR32439/PTHR32439-entries.csv
+
+                                </span>
+
+                                <div class="support-text">P9WJ02,Sulfite reductase [ferredoxin],protein,83331,Mycobacterium tuberculosis (strain CDC 1551 / Oshkosh),Mycobacterium tuberculosis (strain CDC 1551 / Oshkosh),sir,555,PTHR32439:SF0,&#34;FERREDOXIN--NITRITE REDUCTASE, CHLOROPLASTIC&#34;,True</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23794620" target="_blank" class="term-link">
+                                        PMID:23794620
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">fprA is necessary for effective sulfate assimilation by P. putida</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes reduction of sulfite to sulfide in assimilatory sulfate reduction; the ferredoxin-dependent GO term represents the current Pseudomonas model.</h3>
+                <span class="vote-buttons" data-g="Q88KB9" data-a="FUNCTION: Catalyzes reduction of sulfite to sulfide in assim..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050311" target="_blank" class="term-link">
+                            sulfite reductase (ferredoxin) activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000103" target="_blank" class="term-link">
+                                sulfate assimilation
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/cysI/cysI-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   PANTHER; PTHR32439:SF9; BLR3264 PROTEIN; 1.
+DR   PANTHER; PTHR32439; FERREDOXIN--NITRITE REDUCTASE, CHLOROPLASTIC; 1.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:interpro/panther/PTHR32439/PTHR32439-entries.csv
+
+                        </span>
+
+                        <div class="finding-text">P9WJ02,Sulfite reductase [ferredoxin],protein,83331,Mycobacterium tuberculosis (strain CDC 1551 / Oshkosh),Mycobacterium tuberculosis (strain CDC 1551 / Oshkosh),sir,555,PTHR32439:SF0,&#34;FERREDOXIN--NITRITE REDUCTASE, CHLOROPLASTIC&#34;,True</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23794620" target="_blank" class="term-link">
+                                PMID:23794620
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">pseudomonads utilize sulfite reduction enzymology distinct from that of E. coli</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/cysI/cysI-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88KB9 for Pseudomonas putida KT2440 cysI</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The exact record identifies Q88KB9 as a sulfite reductase hemoprotein.</div>
+
+                        <div class="finding-text">"Sulphite reductase hemoprotein, beta subunit"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The sequence has conserved nitrite/sulfite reductase iron-sulfur domains.</div>
+
+                        <div class="finding-text">"InterPro; IPR006067; NO2/SO3_Rdtase_4Fe4S_dom."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Q88KB9 belongs to the broad PTHR32439 siroheme-reductase family.</div>
+
+                        <div class="finding-text">"DR   PANTHER; PTHR32439:SF9; BLR3264 PROTEIN; 1.
+DR   PANTHER; PTHR32439; FERREDOXIN--NITRITE REDUCTASE, CHLOROPLASTIC; 1."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR32439/PTHR32439-entries.csv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PANTHER representative entries for the ferredoxin sulfite/nitrite reductase family</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PTHR32439 contains reviewed Mycobacterium Sir P9WJ02, a ferredoxin-dependent sulfite reductase.</div>
+
+                        <div class="finding-text">"P9WJ02,Sulfite reductase [ferredoxin],protein,83331,Mycobacterium tuberculosis (strain CDC 1551 / Oshkosh),Mycobacterium tuberculosis (strain CDC 1551 / Oshkosh),sir,555,PTHR32439:SF0,&#34;FERREDOXIN--NITRITE REDUCTASE, CHLOROPLASTIC&#34;,True"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR11493/PTHR11493-entries.csv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PANTHER representative entries for the classical NADPH-dependent CysI family</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">E. coli CysI P17846 belongs to the distinct PTHR11493:SF47 family.</div>
+
+                        <div class="finding-text">"P17846,Sulfite reductase [NADPH] hemoprotein beta-component,protein,83333,Escherichia coli (strain K12),Escherichia coli (strain K12),cysI,570,PTHR11493:SF47,SULFITE REDUCTASE [NADPH] SUBUNIT BETA,True"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23794620" target="_blank" class="term-link">
+                            PMID:23794620
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Role for ferredoxin:NAD(P)H oxidoreductase (FprA) in sulfate assimilation and siderophore biosynthesis in Pseudomonads.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Pseudomonad sulfate assimilation depends on FprA and differs from the enterobacterial CysJI architecture.</div>
+
+                        <div class="finding-text">"fprA is necessary for effective sulfate assimilation by P. putida"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The paper concludes that pseudomonads use distinct sulfite-reduction enzymology.</div>
+
+                        <div class="finding-text">"pseudomonads utilize sulfite reduction enzymology distinct from that of E. coli"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does KT2440 CysI receive electrons through a discrete ferredoxin, directly from Fpr-I, or through more than one interchangeable carrier?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88KB9" data-a="Q: Does KT2440 CysI receive electrons through a discr..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute Q88KB9 sulfite reduction with Q88MD5, NADPH, and candidate KT2440 ferredoxins, measuring sulfide formation and direct electron transfer.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: reconstituted electron-transfer assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88KB9" data-a="EXPERIMENT: Reconstitute Q88KB9 sulfite reduction with Q88MD5,..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(cysI-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88KB9" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of *cysI* (PP_2371, UniProt Q88KB9) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-25T16:18:56.456515</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="cysI-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="cysI-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-cysi-pp_2371-uniprot-q88kb9-in-pseudomonas-putida-kt2440">Functional Annotation of <em>cysI</em> (PP_2371, UniProt Q88KB9) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (Answer to the Research Question)</h2>
+<p><em>cysI</em> (locus <strong>PP_2371</strong>; UniProt <strong>Q88KB9</strong>) encodes the <strong>sulfite reductase hemoprotein (SiRHP), the β subunit of assimilatory NADPH‑dependent sulfite reductase (EC 1.8.1.2)</strong>. Its primary catalytic function is the <strong>six‑electron reduction of sulfite (SO₃²⁻) to sulfide (S²⁻/H₂S)</strong> at a unique <strong>siroheme–[4Fe‑4S] coupled cofactor</strong>. This is the <strong>terminal reductive step of the assimilatory sulfate‑reduction pathway</strong>, generating the reduced sulfur (sulfide) that is subsequently incorporated into L‑cysteine (and thence methionine, coenzymes, and other sulfur metabolites). The enzyme is a <strong>soluble cytoplasmic</strong> protein that acts as the catalytic partner of the CysJ diflavin flavoprotein, which delivers electrons from NADPH. The functional assignment is supported by conserved domain architecture and sequence homology, and by decades of experimental biochemistry, crystallography, and genetics in the closely related enterobacterial and <em>Pseudomonas</em>/actinobacterial systems.</p>
+<p><strong>Identity verification:</strong> The gene symbol <em>cysI</em>, the UniProt description ("Sulphite reductase hemoprotein, beta subunit"), the InterPro/Pfam domains (PF01077 nitrite/sulfite reductase 4Fe‑4S; PF03460 ferredoxin‑like half‑domain), and the cofactor keywords (4Fe‑4S, Heme, Iron, Iron‑sulfur, Oxidoreductase) are <strong>fully mutually consistent</strong> and match the canonical CysI hemoprotein of assimilatory sulfite reductase. No ambiguity was found. Where direct <em>P. putida</em> KT2440 biochemical studies of PP_2371 are lacking, function is inferred from strong orthology to experimentally characterized CysI proteins.</p>
+<hr />
+<h2 id="2-molecular-identity-and-domain-architecture">2. Molecular Identity and Domain Architecture</h2>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value (UniProt Q88KB9)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene / locus</td>
+<td><em>cysI</em> / PP_2371</td>
+</tr>
+<tr>
+<td>Length / mass</td>
+<td>550 aa / 62.2 kDa</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> KT2440 (taxid 160488)</td>
+</tr>
+<tr>
+<td>Keywords</td>
+<td>4Fe‑4S, Heme, Iron, Iron‑sulfur, Metal‑binding, Oxidoreductase</td>
+</tr>
+<tr>
+<td>GO (function)</td>
+<td>GO:0016491 oxidoreductase; GO:0020037 heme binding; GO:0051539 [4Fe‑4S] binding; GO:0046872 metal‑ion binding</td>
+</tr>
+<tr>
+<td>Domains</td>
+<td>2× "Nitrite/Sulfite reductase 4Fe‑4S" (Pfam PF01077) + 2× "ferredoxin‑like" (Pfam PF03460)</td>
+</tr>
+<tr>
+<td>Cross‑refs</td>
+<td>KEGG ppu:PP_2371; BioCyc PPUT160488:G1G01‑2534‑MONOMER; AlphaFoldDB Q88KB9</td>
+</tr>
+</tbody>
+</table>
+<p>The protein has the characteristic <strong>internally duplicated two‑domain repeat</strong> of the nitrite/sulfite‑reductase (NIR/SIR) superfamily, and its C‑terminus contains the canonical cysteine‑rich cofactor‑ligating motif (…G<strong>C</strong>MNA<strong>C</strong>GHHH…<strong>C</strong>…) that supplies the four cysteine ligands to the [4Fe‑4S] cluster, one of which is the <strong>bridging thiolate shared with the siroheme iron</strong>. There is no signal peptide or transmembrane segment, consistent with a soluble cytoplasmic localization.</p>
+<hr />
+<h2 id="3-primary-function-catalysis-and-substrate-specificity">3. Primary Function: Catalysis and Substrate Specificity</h2>
+<p>The CysI hemoprotein is the <strong>catalytic subunit</strong> that binds substrate and carries out its reduction. The reaction is:</p>
+<blockquote>
+<p><strong>SO₃²⁻ + 6 e⁻ + 6–8 H⁺ → S²⁻ (H₂S) + 3 H₂O</strong></p>
+</blockquote>
+<p>Key features:</p>
+<ul>
+<li><strong>Six‑electron chemistry with no released intermediates.</strong> The active site of the <em>E. coli</em> hemoprotein "is exquisitely designed to catalyze the six‑electron reductions of sulfite to sulfide and nitrite to ammonia" (Crane, Siegel &amp; Getzoff, 1997, PMID 9315848). The enzyme therefore has a <strong>secondary nitrite‑reductase activity</strong> (nitrite → ammonia), reflecting shared active‑site chemistry across the NIR/SIR family, but its <strong>physiological substrate is sulfite</strong> in the cysteine‑biosynthetic (assimilatory) context.</li>
+<li><strong>Push–pull mechanism.</strong> "The substrate evolves through a push‑pull mechanism, where electron transfer is coupled to three dehydration steps" (Askenasy &amp; Stroupe, 2020, PMID 32851831). An extensive network of positively charged residues, ordered waters, and siroheme carboxylates binds, polarizes, and protonates the anionic substrate at the siroheme sixth axial position (Crane et al., 1997, PMID 9315848).</li>
+<li><strong>Assimilatory holoenzyme.</strong> In <em>E. coli</em>, "the flavoprotein and hemoprotein components of … NADPH‑sulfite reductase are encoded by <em>cysJ</em> and <em>cysI</em>, respectively" (Wu, Siegel &amp; Kredich, 1991, PMID 1987123). Electrons flow <strong>NADPH → FAD → FMN (CysJ diflavin flavoprotein) → siroheme/[4Fe‑4S] (CysI) → sulfite</strong>. Recent cryo‑EM confirms the two‑subunit organization: "SiR has two subunits: an NADPH, FMN, and FAD‑binding diflavin flavoprotein and a siroheme/Fe[4S4]‑containing hemoprotein" (Ghazi Esfahani et al., 2025, PMID 40140349). The classical holoenzyme stoichiometry is α₈β₄ (CysJ₈CysI₄).</li>
+</ul>
+<hr />
+<h2 id="4-cofactors-the-siroheme4fe4s-coupled-center">4. Cofactors: The Siroheme–[4Fe‑4S] Coupled Center</h2>
+<p>The defining feature of CysI is its bimetallic active site:</p>
+<ul>
+<li><strong>Siroheme covalently coupled to a [4Fe‑4S] cluster via a shared cysteine.</strong> "The hallmark of sulfite reductase is its catalytic center made of an iron‑containing porphyrinoid called siroheme that is covalently coupled to a [4Fe‑4S] cluster through a shared cysteine ligand" (Askenasy &amp; Stroupe, 2020, PMID 32851831). Crystallography across oxidation states shows "a bridging cysteine thiolate supplied by the protein always covalently links the siroheme (iron isobacteriochlorin) to the Fe4S4 cluster, facilitating their ability to transfer electrons to substrate" (Crane, Siegel &amp; Getzoff, 1997, PMID 9315848). Sulfite binds directly to the siroheme iron; the [4Fe‑4S] cluster tunes the redox potential and relays electrons.</li>
+<li><strong>Cofactor dependency on siroheme biosynthesis (CysG).</strong> Siroheme is made from uroporphyrinogen III by methylation, oxidation, and iron insertion. "<em>cysG</em> mutants cannot reduce sulfite to sulfide and require a source of sulfide or cysteine for growth" (Kolko et al., 2001, PMID 11114933), and <em>cysG</em> "encodes a uroporphyrinogen III methyltransferase required for the synthesis of siroheme, a cofactor for the hemoprotein" (Wu et al., 1991, PMID 1987123). Without siroheme, CysI accumulates as inactive apo‑protein. (<em>P. putida</em> KT2440 encodes the siroheme synthase machinery required to activate CysI.)</li>
+</ul>
+<hr />
+<h2 id="5-biological-process-and-pathway-context">5. Biological Process and Pathway Context</h2>
+<p>CysI catalyzes the <strong>last dedicated reductive step of assimilatory sulfate reduction</strong>, the pathway supplying reduced sulfur for biosynthesis:</p>
+<blockquote>
+<p>sulfate (SO₄²⁻) → <strong>APS</strong> (ATP sulfurylase, CysN/CysD) → <strong>PAPS/sulfite</strong> (APS/PAPS reductase, CysH; in <em>Pseudomonas</em> an APS reductase route) → <strong>sulfide</strong> (<strong>sulfite reductase, CysJI</strong>) → <strong>L‑cysteine</strong> (O‑acetylserine sulfhydrylase / cysteine synthase, CysK/CysM)</p>
+</blockquote>
+<p>Genetic evidence directly ties <em>cysI</em> to sulfide production:<br />
+- In <em>Zymomonas mobilis</em>, inactivation of the sulfite‑reductase genes <em>cysIJ</em> rendered mutants "unable to produce detectable H₂S," and sulfite could not restore it (Tan et al., 2013, PMID 23086550).<br />
+- In <em>Corynebacterium glutamicum</em>, mutational analysis showed <em>cysI</em> (among the <em>cys</em> cluster) "were demonstrated to be involved in the reduction of inorganic sulphur compounds" (Rückert et al., 2005, PMID 16159395).</p>
+<p>The sulfide produced is condensed with O‑acetyl‑L‑serine to form L‑cysteine, the entry point for all sulfur‑containing biomolecules (cysteine, methionine, glutathione, Fe‑S clusters, thiamine, biotin, coenzyme A). In enteric bacteria the <em>cys</em> regulon (including <em>cysJIH</em>) is controlled by the LysR‑type activator <strong>CysB</strong> with N‑acetylserine as inducer and sulfide/cysteine as anti‑inducers (Borum &amp; Monty, 1976, PMID 1107320); an analogous sulfur‑responsive regulatory logic operates in <em>Pseudomonas</em>.</p>
+<h3 id="51-kt2440specific-genomic-and-pathway-organization-this-study">5.1 KT2440‑specific genomic and pathway organization (this study)</h3>
+<p>Database mapping of the <em>P. putida</em> KT2440 genome (KEGG) provides direct, organism‑specific confirmation and refines the pathway picture:</p>
+<ul>
+<li><strong>Exact assignment:</strong> KEGG annotates <strong>ppu:PP_2371 = K00381, "sulfite reductase (NADPH) hemoprotein beta‑component" [EC 1.8.1.2]</strong>, in pathway <strong>ppu00920 (Sulfur metabolism)</strong> and modules <strong>M00176 (Assimilatory sulfate reduction, sulfate ⇒ H₂S)</strong> and <strong>M00616 (Sulfate–sulfur assimilation)</strong>. Chromosomal position: complement(2,707,556–2,709,208), 1,653 bp (550 aa).</li>
+<li><strong>Not an operon with <em>cysJ</em>:</strong> The genes immediately flanking PP_2371 (PP_2370, unknown; PP_2372, putative sugar‑binding protein) are unrelated. Thus, unlike the <em>E. coli cysJIH</em> operon, KT2440 <em>cysI</em> is <strong>genomically dispersed</strong> from its flavoprotein partner. The CysJ diflavin flavoprotein (KO K00380) maps to <strong>PP_0860 / PP_1703</strong> elsewhere on the chromosome.</li>
+<li><strong>PAPS‑independent (APS‑reductase) route:</strong> KT2440 encodes an <strong>APS reductase (CysH, K00390 = PP_2328)</strong> and ATP‑sulfurylase component <strong>CysD (K00957 = PP_1303)</strong>, but <strong>no APS kinase (cysC, K00860) and no PAPS reductase</strong> were found. This indicates that <em>P. putida</em> reduces activated sulfate as <strong>APS directly to sulfite (bypassing PAPS)</strong> — consistent with the [4Fe‑4S] APS reductase characterized in the related <em>P. aeruginosa</em> (Kim et al., 2004, PMID 15491155). CysI (PP_2371) then performs the final <strong>sulfite → sulfide</strong> step, and the sulfide is delivered to <strong>cysteine synthase / O‑acetylserine sulfhydrylase (CysK, K01738 = PP_4571)</strong> to form L‑cysteine.</li>
+</ul>
+<p>Pathway in KT2440: SO₄²⁻ → (ATP sulfurylase, CysDN) → <strong>APS</strong> → (<strong>APS reductase CysH/PP_2328</strong>) → <strong>sulfite</strong> → (<strong>sulfite reductase CysI/PP_2371 + CysJ flavoprotein PP_0860/PP_1703</strong>) → <strong>sulfide</strong> → (<strong>CysK/PP_4571 + O‑acetylserine</strong>) → <strong>L‑cysteine</strong>.</p>
+<p><em>Note on pathway specialization:</em> Assimilatory sulfite reductase (CysI/SiRHP) is mechanistically and evolutionarily distinct from <strong>dissimilatory</strong> sulfite reductase (DsrAB), which uses sulfite as a terminal respiratory electron acceptor (Colman et al., 2022, PMID 35122336); both, however, share the siroheme–[4Fe‑4S] catalytic strategy (Askenasy &amp; Stroupe, 2020, PMID 32851831). PP_2371 belongs to the <strong>assimilatory</strong> class, consistent with <em>P. putida</em>'s aerobic biosynthetic sulfur metabolism.</p>
+<hr />
+<h2 id="6-subcellular-localization">6. Subcellular Localization</h2>
+<p>CysI is a <strong>soluble cytoplasmic</strong> enzyme. It carries no signal peptide or transmembrane helix (UniProt Q88KB9), and the assimilatory NADPH‑sulfite reductase holoenzyme is a soluble cytoplasmic complex composed of the CysJ flavoprotein and CysI hemoprotein (Ghazi Esfahani et al., 2025, PMID 40140349; Wu et al., 1991, PMID 1987123). It therefore performs its reaction in the cytoplasm, drawing reducing equivalents from cytoplasmic NADPH — in contrast to membrane‑bound/periplasmic respiratory nitrite/sulfite reductases (e.g., cytochrome <em>c</em> nitrite reductase NrfA).</p>
+<hr />
+<h2 id="7-supported-and-refuted-hypotheses">7. Supported and Refuted Hypotheses</h2>
+<p><strong>Supported</strong><br />
+- H1: PP_2371/<em>cysI</em> encodes sulfite reductase hemoprotein (β subunit). <strong>Supported</strong> (domain architecture, cofactor keywords, orthology; PMIDs 9315848, 1987123, 40140349).<br />
+- H2: The enzyme catalyzes the six‑electron reduction of sulfite to sulfide. <strong>Supported</strong> (PMIDs 9315848, 40140349, 32851831).<br />
+- H3: Catalysis occurs at a siroheme–[4Fe‑4S] coupled center via a bridging cysteine, using a push‑pull mechanism. <strong>Supported</strong> (PMIDs 32851831, 9315848).<br />
+- H4: The gene product functions in the assimilatory sulfate‑reduction/cysteine‑biosynthesis pathway; loss abolishes H₂S. <strong>Supported</strong> (PMIDs 23086550, 16159395).<br />
+- H5: The product is a soluble cytoplasmic hemoprotein partnering the CysJ diflavin flavoprotein. <strong>Supported</strong> (PMIDs 40140349, 1987123; UniProt features).</p>
+<p><strong>Refuted / excluded</strong><br />
+- That PP_2371 is a <strong>dissimilatory</strong> (respiratory) sulfite reductase — excluded by family/domain type and aerobic assimilatory context.<br />
+- That the physiological substrate is nitrite — nitrite reduction is a documented <em>in vitro</em> side activity but the biological role is sulfite reduction for cysteine biosynthesis.</p>
+<hr />
+<h2 id="8-limitations-and-future-directions">8. Limitations and Future Directions</h2>
+<ul>
+<li><strong>No direct biochemical/structural study of PP_2371 itself</strong> was found; the functional assignment rests on strong orthology to experimentally characterized CysI/SiRHP proteins (primarily <em>E. coli</em>) and on genetic evidence from other bacteria. Direct enzymatic assay, cofactor quantitation, and structure determination of the <em>P. putida</em> protein would confirm the inference.</li>
+<li><strong>Operon structure and regulation in KT2440</strong> (e.g., <em>cysJIH</em> organization, CysB‑type control, sulfur‑starvation induction) were not experimentally verified here and warrant genomic/transcriptomic confirmation.</li>
+<li><strong>Electron‑donor partner in <em>Pseudomonas</em>.</strong> While <em>E. coli</em> uses the NADPH diflavin flavoprotein CysJ, some organisms use ferredoxin/flavodoxin donors; the exact physiological reductant for PP_2371 should be confirmed.</li>
+</ul>
+<hr />
+<h2 id="9-key-references">9. Key References</h2>
+<ul>
+<li>Crane BR, Siegel LM, Getzoff ED. Structures of the siroheme- and Fe4S4-containing active center of sulfite reductase… <em>Biochemistry</em> 1997. PMID <strong>9315848</strong>.</li>
+<li>Askenasy I, Stroupe ME. The Siroheme‑[4Fe‑4S] Coupled Center. 2020. PMID <strong>32851831</strong>.</li>
+<li>Ghazi Esfahani et al. Structure of dimerized assimilatory NADPH‑dependent sulfite reductase… 2025. PMID <strong>40140349</strong> (also PMID 38915618).</li>
+<li>Wu JY, Siegel LM, Kredich NM. High‑level expression of <em>E. coli</em> NADPH‑sulfite reductase (cysJ/cysI; cysG/siroheme). 1991. PMID <strong>1987123</strong>.</li>
+<li>Tan et al. H₂S formation by <em>cysIJ</em>‑inactivated <em>Zymomonas mobilis</em>. 2013. PMID <strong>23086550</strong>.</li>
+<li>Rückert et al. <em>C. glutamicum</em> assimilatory sulphate‑reduction <em>cys</em> cluster. 2005. PMID <strong>16159395</strong>.</li>
+<li>Kolko et al. Alternative siroheme synthesis; <em>cysG</em> required for sulfite reduction. 2001. PMID <strong>11114933</strong>.</li>
+<li>Colman et al. Structural evolution of dissimilatory sulfite reductase (contrast). 2022. PMID <strong>35122336</strong>.</li>
+<li>Borum &amp; Monty. CysB regulation of cysteine biosynthetic enzymes. 1976. PMID <strong>1107320</strong>.</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="cysI-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="cysI-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(cysI-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88KB9" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="cysi-curation-notes">cysI curation notes</h1>
+<h2 id="first-pass-synthesis">First-pass synthesis</h2>
+<ul>
+<li>Q88KB9 has the siroheme/iron-sulfur domain architecture and deposited product<br />
+  name expected for the catalytic CysI sulfite reductase hemoprotein<br />
+  [UniProtKB:Q88KB9, "Sulphite reductase hemoprotein, beta subunit"].</li>
+<li>Q88KB9 belongs to PTHR32439, whose reviewed members include the<br />
+  ferredoxin-dependent sulfite reductase Sir P9WJ02<br />
+  [file:interpro/panther/PTHR32439/PTHR32439-entries.csv,<br />
+  "P9WJ02,Sulfite reductase [ferredoxin]"]. The classical E. coli CysI P17846<br />
+  instead belongs to PTHR11493:SF47<br />
+  [file:interpro/panther/PTHR11493/PTHR11493-entries.csv,<br />
+  "P17846,Sulfite reductase [NADPH] hemoprotein beta-component"].</li>
+<li>Q88KB9's <code>PTHR32439:SF9</code> label is not used as evidence because that subfamily<br />
+  includes misleading CobG/BLR3264 labeling. The ferredoxin-specific proposal<br />
+  rests on the broader family, the exact Sir exemplar, and pathway context.</li>
+<li>Pseudomonas genetics place FprA in effective sulfate assimilation and indicate<br />
+  a sulfite-reduction architecture distinct from enterobacterial CysJI<br />
+  [PMID:23794620, "fprA is necessary for effective sulfate assimilation by P.<br />
+  putida"]. These experiments used P. putida DSM 3601 rather than KT2440 and<br />
+  therefore corroborate the pathway model rather than directly assaying Q88KB9.</li>
+<li>The paper leaves open whether FprA transfers electrons through reduced<br />
+  ferredoxin or directly. GO:0050311 is therefore the best current functional<br />
+  model, not a claim that the exact carrier has been reconstituted.</li>
+</ul>
+<h2 id="open-issue">Open issue</h2>
+<p>Reconstitute CysI with Fpr-I and candidate KT2440 ferredoxins or flavodoxins to<br />
+resolve the immediate electron donor.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88KB9
+gene_symbol: cysI
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  CysI is the siroheme- and iron-sulfur-containing catalytic sulfite reductase
+  of assimilatory sulfate reduction. The best current model for pseudomonads is
+  a ferredoxin-fed enzyme, with FprA supplying reducing equivalents either
+  through reduced ferredoxin or directly, rather than the enterobacterial
+  CysJ-dependent architecture.
+existing_annotations:
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Correct but too broad to identify the six-electron sulfite reduction.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0050311 is the best current molecular-function term for the
+      ferredoxin-fed Pseudomonas CysI model.
+- term:
+    id: GO:0020037
+    label: heme binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Correct cofactor-binding property of the CysI hemoprotein.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The siroheme cofactor is integral to catalysis, but the substrate-specific
+      sulfite reductase activity is the core function.
+    supported_by:
+    - reference_id: file:PSEPK/cysI/cysI-uniprot.txt
+      supporting_text: Sulphite reductase hemoprotein, beta subunit
+- term:
+    id: GO:0051536
+    label: iron-sulfur cluster binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Correct supporting cofactor-binding property.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      CysI contains the conserved nitrite/sulfite-reductase iron-sulfur domains,
+      but cluster binding alone does not identify the physiological reaction.
+- term:
+    id: GO:0050311
+    label: sulfite reductase (ferredoxin) activity
+  evidence_type: ISS
+  original_reference_id: file:interpro/panther/PTHR32439/PTHR32439-entries.csv
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:P9WJ02
+  review:
+    summary: Best current activity term for the Pseudomonas CysI model.
+    action: NEW
+    reason: &gt;-
+      Q88KB9 belongs to PTHR32439, which contains the reviewed ferredoxin-fed
+      sulfite reductase Sir P9WJ02, whereas the classical E. coli NADPH-dependent
+      CysI P17846 belongs to PTHR11493:SF47. The PTHR32439 subfamily label for
+      Q88KB9 is not functionally reliable, so this ISS proposal rests on the
+      family-level match, the exact Sir exemplar, and corroborating Pseudomonas
+      genetics rather than on the subfamily name.
+    supported_by:
+    - reference_id: file:PSEPK/cysI/cysI-uniprot.txt
+      supporting_text: |-
+        DR   PANTHER; PTHR32439:SF9; BLR3264 PROTEIN; 1.
+        DR   PANTHER; PTHR32439; FERREDOXIN--NITRITE REDUCTASE, CHLOROPLASTIC; 1.
+    - reference_id: file:interpro/panther/PTHR32439/PTHR32439-entries.csv
+      supporting_text: P9WJ02,Sulfite reductase [ferredoxin],protein,83331,Mycobacterium tuberculosis (strain CDC 1551 / Oshkosh),Mycobacterium tuberculosis (strain CDC 1551 / Oshkosh),sir,555,PTHR32439:SF0,&#34;FERREDOXIN--NITRITE REDUCTASE, CHLOROPLASTIC&#34;,True
+    - reference_id: file:interpro/panther/PTHR11493/PTHR11493-entries.csv
+      supporting_text: P17846,Sulfite reductase [NADPH] hemoprotein beta-component,protein,83333,Escherichia coli (strain K12),Escherichia coli (strain K12),cysI,570,PTHR11493:SF47,SULFITE REDUCTASE [NADPH] SUBUNIT BETA,True
+    - reference_id: PMID:23794620
+      supporting_text: pseudomonads utilize sulfite reduction enzymology distinct from that of E. coli
+- term:
+    id: GO:0000103
+    label: sulfate assimilation
+  evidence_type: ISS
+  original_reference_id: file:interpro/panther/PTHR32439/PTHR32439-entries.csv
+  qualifier: involved_in
+  supporting_entities:
+  - UniProtKB:P9WJ02
+  review:
+    summary: CysI catalyzes the terminal reductive step of sulfate assimilation.
+    action: NEW
+    reason: &gt;-
+      The PTHR32439 ferredoxin-sulfite-reductase exemplar and the exact cysI
+      assignment support transfer of the conserved terminal sulfate-assimilation
+      role, while Pseudomonas genetics corroborate the pathway context.
+    supported_by:
+    - reference_id: file:interpro/panther/PTHR32439/PTHR32439-entries.csv
+      supporting_text: P9WJ02,Sulfite reductase [ferredoxin],protein,83331,Mycobacterium tuberculosis (strain CDC 1551 / Oshkosh),Mycobacterium tuberculosis (strain CDC 1551 / Oshkosh),sir,555,PTHR32439:SF0,&#34;FERREDOXIN--NITRITE REDUCTASE, CHLOROPLASTIC&#34;,True
+    - reference_id: PMID:23794620
+      supporting_text: fprA is necessary for effective sulfate assimilation by P. putida
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: file:PSEPK/cysI/cysI-uniprot.txt
+  title: UniProtKB entry Q88KB9 for Pseudomonas putida KT2440 cysI
+  findings:
+  - statement: The exact record identifies Q88KB9 as a sulfite reductase hemoprotein.
+    supporting_text: Sulphite reductase hemoprotein, beta subunit
+    reference_section_type: RESULTS
+  - statement: The sequence has conserved nitrite/sulfite reductase iron-sulfur domains.
+    supporting_text: InterPro; IPR006067; NO2/SO3_Rdtase_4Fe4S_dom.
+    reference_section_type: RESULTS
+  - statement: Q88KB9 belongs to the broad PTHR32439 siroheme-reductase family.
+    supporting_text: |-
+      DR   PANTHER; PTHR32439:SF9; BLR3264 PROTEIN; 1.
+      DR   PANTHER; PTHR32439; FERREDOXIN--NITRITE REDUCTASE, CHLOROPLASTIC; 1.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Exact target accession, product name, domain architecture, and PANTHER
+      placement verified in the cached record. The entry is unreviewed and lacks
+      an explicit electron-donor or catalytic-reaction annotation.
+- id: file:interpro/panther/PTHR32439/PTHR32439-entries.csv
+  title: PANTHER representative entries for the ferredoxin sulfite/nitrite reductase family
+  findings:
+  - statement: PTHR32439 contains reviewed Mycobacterium Sir P9WJ02, a ferredoxin-dependent sulfite reductase.
+    supporting_text: P9WJ02,Sulfite reductase [ferredoxin],protein,83331,Mycobacterium tuberculosis (strain CDC 1551 / Oshkosh),Mycobacterium tuberculosis (strain CDC 1551 / Oshkosh),sir,555,PTHR32439:SF0,&#34;FERREDOXIN--NITRITE REDUCTASE, CHLOROPLASTIC&#34;,True
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Exact P9WJ02 row verified. The family is broader than sulfite reductases,
+      and Q88KB9&#39;s SF9 label is not used as functional evidence.
+- id: file:interpro/panther/PTHR11493/PTHR11493-entries.csv
+  title: PANTHER representative entries for the classical NADPH-dependent CysI family
+  findings:
+  - statement: E. coli CysI P17846 belongs to the distinct PTHR11493:SF47 family.
+    supporting_text: P17846,Sulfite reductase [NADPH] hemoprotein beta-component,protein,83333,Escherichia coli (strain K12),Escherichia coli (strain K12),cysI,570,PTHR11493:SF47,SULFITE REDUCTASE [NADPH] SUBUNIT BETA,True
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Exact P17846 row verified as the classical NADPH-dependent comparator.
+- id: PMID:23794620
+  title: Role for ferredoxin:NAD(P)H oxidoreductase (FprA) in sulfate assimilation and siderophore biosynthesis in Pseudomonads.
+  findings:
+  - statement: Pseudomonad sulfate assimilation depends on FprA and differs from the enterobacterial CysJI architecture.
+    supporting_text: fprA is necessary for effective sulfate assimilation by P. putida
+    reference_section_type: ABSTRACT
+  - statement: The paper concludes that pseudomonads use distinct sulfite-reduction enzymology.
+    supporting_text: pseudomonads utilize sulfite reduction enzymology distinct from that of E. coli
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and abstract verified. Experiments used P. putida DSM
+      3601, not KT2440, and did not assay Q88KB9 directly. The paper corroborates
+      Pseudomonas pathway physiology; the exact CysI electron-transfer route
+      remains a model rather than a fully reconstituted KT2440 reaction.
+core_functions:
+- description: &gt;-
+    Catalyzes reduction of sulfite to sulfide in assimilatory sulfate reduction;
+    the ferredoxin-dependent GO term represents the current Pseudomonas model.
+  molecular_function:
+    id: GO:0050311
+    label: sulfite reductase (ferredoxin) activity
+  directly_involved_in:
+  - id: GO:0000103
+    label: sulfate assimilation
+  supported_by:
+  - reference_id: file:PSEPK/cysI/cysI-uniprot.txt
+    supporting_text: |-
+      DR   PANTHER; PTHR32439:SF9; BLR3264 PROTEIN; 1.
+      DR   PANTHER; PTHR32439; FERREDOXIN--NITRITE REDUCTASE, CHLOROPLASTIC; 1.
+  - reference_id: file:interpro/panther/PTHR32439/PTHR32439-entries.csv
+    supporting_text: P9WJ02,Sulfite reductase [ferredoxin],protein,83331,Mycobacterium tuberculosis (strain CDC 1551 / Oshkosh),Mycobacterium tuberculosis (strain CDC 1551 / Oshkosh),sir,555,PTHR32439:SF0,&#34;FERREDOXIN--NITRITE REDUCTASE, CHLOROPLASTIC&#34;,True
+  - reference_id: PMID:23794620
+    supporting_text: pseudomonads utilize sulfite reduction enzymology distinct from that of E. coli
+suggested_questions:
+- question: &gt;-
+    Does KT2440 CysI receive electrons through a discrete ferredoxin, directly
+    from Fpr-I, or through more than one interchangeable carrier?
+suggested_experiments:
+- description: &gt;-
+    Reconstitute Q88KB9 sulfite reduction with Q88MD5, NADPH, and candidate
+    KT2440 ferredoxins, measuring sulfide formation and direct electron transfer.
+  experiment_type: reconstituted electron-transfer assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
