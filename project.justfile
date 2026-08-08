@@ -294,86 +294,161 @@ gene-hypothesis-list organism gene *args="":
 # Examples:
 #   just gene-hypothesis-research openscientist human TP53 --annotation-term-id GO:0003677 --dry-run
 #   just gene-hypothesis-research falcon human TP53 --focus-type core-function --hypothesis "TP53 directly binds DNA"
-gene-hypothesis-research provider organism gene *args="":
+[positional-arguments]
+gene-hypothesis-research provider organism gene *args:
     #!/usr/bin/env bash
     set -euo pipefail
-    provider="{{provider}}"
-    args=( {{args}} )
+    provider="$1"
+    organism="$2"
+    gene="$3"
+    shift 3
+    args=("$@")
     # OpenScientist defaults: >=3 iterations for a real run, and a generous job
     # timeout. Fold-discovery / structural runs routinely exceed the upstream
     # 3600s default (they cancel mid-analysis), so default to 7200s -- the
     # maximum the API allows (OpenScientistParams.timeout is capped at le=7200).
     # Keep --timeout-seconds (subprocess wall) above this; the script default does.
     if [[ "$provider" == "openscientist" ]]; then
+        has_separator=false
+        has_max_iterations=false
+        has_timeout=false
+        expect_param=false
+        for arg in "${args[@]}"; do
+            if [[ "$has_separator" == false ]]; then
+                if [[ "$arg" == "--" ]]; then has_separator=true; fi
+                continue
+            fi
+            if [[ "$expect_param" == true ]]; then
+                if [[ "$arg" == max_iterations=* ]]; then has_max_iterations=true; fi
+                if [[ "$arg" == timeout=* ]]; then has_timeout=true; fi
+                expect_param=false
+                continue
+            fi
+            case "$arg" in
+                --param) expect_param=true ;;
+                --param=max_iterations=*) has_max_iterations=true ;;
+                --param=timeout=*) has_timeout=true ;;
+            esac
+        done
         extra=()
-        if [[ "${args[*]}" != *"max_iterations"* ]]; then extra+=(--param max_iterations=3); fi
-        if [[ "${args[*]}" != *"timeout="* ]]; then extra+=(--param timeout=7200); fi
+        if [[ "$has_max_iterations" == false ]]; then extra+=(--param max_iterations=3); fi
+        if [[ "$has_timeout" == false ]]; then extra+=(--param timeout=7200); fi
         if [[ ${#extra[@]} -gt 0 ]]; then
-            if [[ " ${args[*]} " == *" -- "* ]]; then
+            if [[ "$has_separator" == true ]]; then
                 args+=("${extra[@]}")
             else
                 args+=(-- "${extra[@]}")
             fi
         fi
     fi
-    uv run python scripts/gene_hypothesis_deep_research.py run {{organism}} {{gene}} "$provider" "${args[@]}"
+    uv run python scripts/gene_hypothesis_deep_research.py run "$organism" "$gene" "$provider" "${args[@]}"
 
 # Run focused deep research for every core_functions[*] record in one gene
 # Existing provider outputs are skipped unless --overwrite is supplied.
 # Examples:
 #   just gene-hypothesis-research-all-core openscientist human SCO1 --dry-run
 #   just gene-hypothesis-research-all-core openscientist human SCO1 -- --param use_hypotheses=true
-gene-hypothesis-research-all-core provider organism gene *args="":
+[positional-arguments]
+gene-hypothesis-research-all-core provider organism gene *args:
     #!/usr/bin/env bash
     set -euo pipefail
-    provider="{{provider}}"
-    args=( {{args}} )
+    provider="$1"
+    organism="$2"
+    gene="$3"
+    shift 3
+    args=("$@")
     # OpenScientist defaults: >=3 iterations for a real run, and a generous job
     # timeout. Fold-discovery / structural runs routinely exceed the upstream
     # 3600s default (they cancel mid-analysis), so default to 7200s -- the
     # maximum the API allows (OpenScientistParams.timeout is capped at le=7200).
     # Keep --timeout-seconds (subprocess wall) above this; the script default does.
     if [[ "$provider" == "openscientist" ]]; then
+        has_separator=false
+        has_max_iterations=false
+        has_timeout=false
+        expect_param=false
+        for arg in "${args[@]}"; do
+            if [[ "$has_separator" == false ]]; then
+                if [[ "$arg" == "--" ]]; then has_separator=true; fi
+                continue
+            fi
+            if [[ "$expect_param" == true ]]; then
+                if [[ "$arg" == max_iterations=* ]]; then has_max_iterations=true; fi
+                if [[ "$arg" == timeout=* ]]; then has_timeout=true; fi
+                expect_param=false
+                continue
+            fi
+            case "$arg" in
+                --param) expect_param=true ;;
+                --param=max_iterations=*) has_max_iterations=true ;;
+                --param=timeout=*) has_timeout=true ;;
+            esac
+        done
         extra=()
-        if [[ "${args[*]}" != *"max_iterations"* ]]; then extra+=(--param max_iterations=3); fi
-        if [[ "${args[*]}" != *"timeout="* ]]; then extra+=(--param timeout=7200); fi
+        if [[ "$has_max_iterations" == false ]]; then extra+=(--param max_iterations=3); fi
+        if [[ "$has_timeout" == false ]]; then extra+=(--param timeout=7200); fi
         if [[ ${#extra[@]} -gt 0 ]]; then
-            if [[ " ${args[*]} " == *" -- "* ]]; then
+            if [[ "$has_separator" == true ]]; then
                 args+=("${extra[@]}")
             else
                 args+=(-- "${extra[@]}")
             fi
         fi
     fi
-    uv run python scripts/gene_hypothesis_deep_research.py run-all-core {{organism}} {{gene}} "$provider" "${args[@]}"
+    uv run python scripts/gene_hypothesis_deep_research.py run-all-core "$organism" "$gene" "$provider" "${args[@]}"
 
 # Run one synthesis query over all core_functions[*] records in one gene
 # Examples:
 #   just gene-hypothesis-research-combined-core openscientist human SCO1 --dry-run
 #   just gene-hypothesis-research-combined-core openscientist human SCO1 -- --param use_hypotheses=true
-gene-hypothesis-research-combined-core provider organism gene *args="":
+[positional-arguments]
+gene-hypothesis-research-combined-core provider organism gene *args:
     #!/usr/bin/env bash
     set -euo pipefail
-    provider="{{provider}}"
-    args=( {{args}} )
+    provider="$1"
+    organism="$2"
+    gene="$3"
+    shift 3
+    args=("$@")
     # OpenScientist defaults: >=3 iterations for a real run, and a generous job
     # timeout. Fold-discovery / structural runs routinely exceed the upstream
     # 3600s default (they cancel mid-analysis), so default to 7200s -- the
     # maximum the API allows (OpenScientistParams.timeout is capped at le=7200).
     # Keep --timeout-seconds (subprocess wall) above this; the script default does.
     if [[ "$provider" == "openscientist" ]]; then
+        has_separator=false
+        has_max_iterations=false
+        has_timeout=false
+        expect_param=false
+        for arg in "${args[@]}"; do
+            if [[ "$has_separator" == false ]]; then
+                if [[ "$arg" == "--" ]]; then has_separator=true; fi
+                continue
+            fi
+            if [[ "$expect_param" == true ]]; then
+                if [[ "$arg" == max_iterations=* ]]; then has_max_iterations=true; fi
+                if [[ "$arg" == timeout=* ]]; then has_timeout=true; fi
+                expect_param=false
+                continue
+            fi
+            case "$arg" in
+                --param) expect_param=true ;;
+                --param=max_iterations=*) has_max_iterations=true ;;
+                --param=timeout=*) has_timeout=true ;;
+            esac
+        done
         extra=()
-        if [[ "${args[*]}" != *"max_iterations"* ]]; then extra+=(--param max_iterations=3); fi
-        if [[ "${args[*]}" != *"timeout="* ]]; then extra+=(--param timeout=7200); fi
+        if [[ "$has_max_iterations" == false ]]; then extra+=(--param max_iterations=3); fi
+        if [[ "$has_timeout" == false ]]; then extra+=(--param timeout=7200); fi
         if [[ ${#extra[@]} -gt 0 ]]; then
-            if [[ " ${args[*]} " == *" -- "* ]]; then
+            if [[ "$has_separator" == true ]]; then
                 args+=("${extra[@]}")
             else
                 args+=(-- "${extra[@]}")
             fi
         fi
     fi
-    uv run python scripts/gene_hypothesis_deep_research.py run-combined-core {{organism}} {{gene}} "$provider" "${args[@]}"
+    uv run python scripts/gene_hypothesis_deep_research.py run-combined-core "$organism" "$gene" "$provider" "${args[@]}"
 
 # Find independent literature support for a gene-function hypothesis via deep research
 # Recall-tuned (expect false positives an agent then sifts); general-purpose,
@@ -383,19 +458,41 @@ gene-hypothesis-research-combined-core provider organism gene *args="":
 #   just gene-function-support asta human TP53 --hypothesis "TP53 is a sequence-specific DNA-binding transcription factor" --dry-run
 #   just gene-function-support asta human TP53 --annotation-term-id GO:0003700
 #   just gene-function-support asta human TP53 --term-id GO:0003700 --term-label "DNA-binding transcription factor activity"
-gene-function-support provider organism gene *args="":
+[positional-arguments]
+gene-function-support provider organism gene *args:
     #!/usr/bin/env bash
     set -euo pipefail
-    provider="{{provider}}"
-    args=( {{args}} )
-    if [[ "$provider" == "openscientist" && "${args[*]}" != *"max_iterations"* ]]; then
-        if [[ " ${args[*]} " == *" -- "* ]]; then
+    provider="$1"
+    organism="$2"
+    gene="$3"
+    shift 3
+    args=("$@")
+    has_separator=false
+    has_max_iterations=false
+    expect_param=false
+    for arg in "${args[@]}"; do
+        if [[ "$has_separator" == false ]]; then
+            if [[ "$arg" == "--" ]]; then has_separator=true; fi
+            continue
+        fi
+        if [[ "$expect_param" == true ]]; then
+            if [[ "$arg" == max_iterations=* ]]; then has_max_iterations=true; fi
+            expect_param=false
+            continue
+        fi
+        case "$arg" in
+            --param) expect_param=true ;;
+            --param=max_iterations=*) has_max_iterations=true ;;
+        esac
+    done
+    if [[ "$provider" == "openscientist" && "$has_max_iterations" == false ]]; then
+        if [[ "$has_separator" == true ]]; then
             args+=(--param max_iterations=3)
         else
             args+=(-- --param max_iterations=3)
         fi
     fi
-    uv run python scripts/gene_hypothesis_deep_research.py run-function-support {{organism}} {{gene}} "$provider" "${args[@]}"
+    uv run python scripts/gene_hypothesis_deep_research.py run-function-support "$organism" "$gene" "$provider" "${args[@]}"
 
 # List IBA annotations that are candidates for support-finding research
 # By default only IBAs lacking independent PMID/DOI support are listed.
@@ -415,19 +512,41 @@ gene-iba-support-list organism gene *args="":
 #   just gene-iba-support-research asta human CFAP300 --dry-run
 #   just gene-iba-support-research asta human CFAP300 --annotation-term-id GO:0005737
 #   just gene-iba-support-research asta human CFAP300 --include-supported
-gene-iba-support-research provider organism gene *args="":
+[positional-arguments]
+gene-iba-support-research provider organism gene *args:
     #!/usr/bin/env bash
     set -euo pipefail
-    provider="{{provider}}"
-    args=( {{args}} )
-    if [[ "$provider" == "openscientist" && "${args[*]}" != *"max_iterations"* ]]; then
-        if [[ " ${args[*]} " == *" -- "* ]]; then
+    provider="$1"
+    organism="$2"
+    gene="$3"
+    shift 3
+    args=("$@")
+    has_separator=false
+    has_max_iterations=false
+    expect_param=false
+    for arg in "${args[@]}"; do
+        if [[ "$has_separator" == false ]]; then
+            if [[ "$arg" == "--" ]]; then has_separator=true; fi
+            continue
+        fi
+        if [[ "$expect_param" == true ]]; then
+            if [[ "$arg" == max_iterations=* ]]; then has_max_iterations=true; fi
+            expect_param=false
+            continue
+        fi
+        case "$arg" in
+            --param) expect_param=true ;;
+            --param=max_iterations=*) has_max_iterations=true ;;
+        esac
+    done
+    if [[ "$provider" == "openscientist" && "$has_max_iterations" == false ]]; then
+        if [[ "$has_separator" == true ]]; then
             args+=(--param max_iterations=3)
         else
             args+=(-- --param max_iterations=3)
         fi
     fi
-    uv run python scripts/gene_hypothesis_deep_research.py run-iba-support {{organism}} {{gene}} "$provider" "${args[@]}"
+    uv run python scripts/gene_hypothesis_deep_research.py run-iba-support "$organism" "$gene" "$provider" "${args[@]}"
 
 # ============== ASSAY_TO_FUNCTION readout-mining pipeline ==============
 

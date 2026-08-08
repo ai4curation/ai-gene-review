@@ -1,3 +1,4 @@
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -454,3 +455,170 @@ def test_dry_run_does_not_create_output_directory(tmp_path: Path) -> None:
     assert result.status == "DRY_RUN"
     assert result.output_file.name == "perplexity-lite.md"
     assert not result.output_file.parent.exists()
+
+
+def test_just_wrapper_preserves_quoted_free_text_arguments(tmp_path: Path) -> None:
+    """The public Just wrapper must not flatten quoted variadic arguments."""
+    genes_root = make_gene_workspace(tmp_path / "workspace with spaces")
+    hypothesis = (
+        "Native TEST asks A -- B (or C)? max_iterations is prose; keep punctuation."
+    )
+    context = (
+        "The token timeout= is prose; distinguish native activity from engineered variants."
+    )
+    repo_root = Path(__file__).resolve().parents[1]
+
+    result = subprocess.run(
+        [
+            "just",
+            "gene-hypothesis-research",
+            "openscientist",
+            "human",
+            "TEST",
+            "--genes-root",
+            str(genes_root),
+            "--focus-type",
+            "function-assignment",
+            "--hypothesis",
+            hypothesis,
+            "--slug",
+            "quoted-args",
+            "--term-id",
+            "GO:0003756",
+            "--term-label",
+            "protein disulfide isomerase activity",
+            "--context",
+            context,
+            "--dry-run",
+        ],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert f"hypothesis_text={hypothesis}" in result.stdout
+    assert context in result.stdout
+    assert "max_iterations=3" in result.stdout
+    assert "timeout=7200" in result.stdout
+
+
+@pytest.mark.parametrize(
+    ("recipe", "iba_workspace", "selector_args", "expects_timeout"),
+    [
+        ("gene-hypothesis-research-all-core", False, [], True),
+        ("gene-hypothesis-research-combined-core", False, [], True),
+        (
+            "gene-function-support",
+            False,
+            ["--hypothesis", "TEST has a function (variant A, or B)?"],
+            False,
+        ),
+        ("gene-iba-support-research", True, [], False),
+    ],
+)
+def test_just_wrappers_preserve_arguments_before_and_after_separator(
+    tmp_path: Path,
+    recipe: str,
+    iba_workspace: bool,
+    selector_args: list[str],
+    expects_timeout: bool,
+) -> None:
+    """Every shebang wrapper must forward exact positional argument boundaries."""
+    workspace = tmp_path / "workspace (quoted)"
+    if iba_workspace:
+        genes_root = make_iba_workspace(workspace)
+        gene = "IBAT"
+    else:
+        genes_root = make_gene_workspace(workspace)
+        gene = "TEST"
+    template = tmp_path / "template (review), v1?.md"
+    provider_value = "note=A -- B, with spaces (exact)?"
+    repo_root = Path(__file__).resolve().parents[1]
+
+    result = subprocess.run(
+        [
+            "just",
+            recipe,
+            "openscientist",
+            "human",
+            gene,
+            "--genes-root",
+            str(genes_root),
+            "--template",
+            str(template),
+            *selector_args,
+            "--dry-run",
+            "--",
+            "--param",
+            provider_value,
+        ],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert str(template) in result.stdout
+    assert provider_value in result.stdout
+    assert "max_iterations=3" in result.stdout
+    assert ("timeout=7200" in result.stdout) is expects_timeout
+
+
+def test_just_wrapper_respects_exact_openscientist_param_overrides(
+    tmp_path: Path,
+) -> None:
+    """Explicit provider params suppress only their matching defaults."""
+    genes_root = make_gene_workspace(tmp_path)
+    repo_root = Path(__file__).resolve().parents[1]
+
+    result = subprocess.run(
+        [
+            "just",
+            "gene-hypothesis-research",
+            "openscientist",
+            "human",
+            "TEST",
+            "--genes-root",
+            str(genes_root),
+            "--focus-type",
+            "function-assignment",
+            "--hypothesis",
+            "TEST has an exact function.",
+            "--slug",
+            "explicit-params",
+            "--dry-run",
+            "--",
+            "--param",
+            "max_iterations=7",
+            "--param=timeout=6000",
+        ],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "max_iterations=7" in result.stdout
+    assert "timeout=6000" in result.stdout
+    assert "max_iterations=3" not in result.stdout
+    assert "timeout=7200" not in result.stdout
+
+
+def test_positional_wrapper_variadics_have_no_empty_default() -> None:
+    """Positional variadics must not inject an empty fourth argument."""
+    justfile = (Path(__file__).resolve().parents[1] / "project.justfile").read_text()
+    recipes = [
+        "gene-hypothesis-research",
+        "gene-hypothesis-research-all-core",
+        "gene-hypothesis-research-combined-core",
+        "gene-function-support",
+        "gene-iba-support-research",
+    ]
+
+    for recipe in recipes:
+        assert f"{recipe} provider organism gene *args:" in justfile
+        assert f'{recipe} provider organism gene *args="":' not in justfile
