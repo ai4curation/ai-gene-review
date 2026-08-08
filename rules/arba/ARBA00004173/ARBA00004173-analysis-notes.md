@@ -49,11 +49,23 @@ shared_with_both: 3
   resolved label at all.
 - The InterPro2GO counts are computed against the cached `rules/arba/_interpro2go.txt`.
   Only 35 of the 885 distinct InterPro entries used by this rule are mapped to
-  GO:0005739 by InterPro curators, i.e. the rule asserts mitochondrial localization
-  for ~96% of its InterPro conditions where InterPro2GO does not.
+  GO:0005739 by InterPro curators. This is a **weak proxy**, and an argument from
+  silence: absence of an InterPro2GO mapping is not a curatorial rejection. InterPro2GO
+  maps a term only where it holds for *all* matches, its CC coverage is deliberately
+  sparse, and this rule's condition sets are **conjunctive** — in the 131
+  `InterPro+InterPro+PANTHER`, 99 `InterPro x3`, 99 `InterPro+PANTHER` and 67
+  `InterPro x2` sets, no individual entry needs to imply mitochondrion for the *set*
+  to. Only the 81 single-`InterPro` sets support a like-for-like comparison; that
+  restricted statistic is not computed by the script below.
 - `signature_sets_shared_with_*` compares the set of positive (non-taxon) signature
-  values per condition set; an identical signature set appearing in two different
-  location rules means one architecture is asserted to live in two compartments.
+  values per condition set. An identical signature set appearing in two different
+  location rules means one architecture is asserted to live in two compartments — which
+  is **not by itself a defect**: mitochondrion/cytoplasm and mitochondrion/peroxisome
+  co-annotation is common and often correct (fumarase, aconitase, several aaRSs,
+  beta-oxidation enzymes). Treat these counts as an upper bound on sets warranting
+  per-set triage, not as a defect count. Confirming collapse for a given set requires
+  showing, as for CS779, that the shared signature requires a domain absent from the
+  isoform the location comment is scoped to.
 
 ## 4. Regenerating the inputs
 

@@ -447,15 +447,24 @@ review_summary: >-
   potentially mitochondrial") is correct and, on the UniProt record, even
   understated.
 
-  This is not an isolated bug. The same SCPx architecture simultaneously fires
-  ARBA00004496 (Cytoplasm; CS2894 is the identical FunFam pair) and ARBA00004275
-  (Peroxisome; CS80 is 3.40.47.10:FF:000016 alone), so the three sibling location
-  rules jointly reproduce the union of the two isoforms' recorded locations, of
-  which only Peroxisome is right for SCPx. Quantitatively, 139/1,490 (9.3%) of
-  this rule's condition sets have a signature set that also appears verbatim in
-  the Cytoplasm rule and 19/1,490 (1.3%) in the Peroxisome rule (3 in both) -
-  a signature of isoform/dual-localization collapse operating at scale, not once.
-  Worse, the literature actively argues against mitochondrial residence for this
+  The same SCPx architecture simultaneously fires ARBA00004496 (Cytoplasm; CS2894
+  is the identical FunFam pair) and ARBA00004275 (Peroxisome; CS80 is
+  3.40.47.10:FF:000016 alone), so the three sibling location rules jointly
+  reproduce the union of the two isoforms' recorded locations, of which only
+  Peroxisome is right for SCPx. How far this generalizes is not established here:
+  139/1,490 (9.3%) of this rule's condition sets have a signature set that also
+  appears verbatim in the Cytoplasm rule and 19/1,490 (1.3%) in the Peroxisome
+  rule (3 in both), but co-annotation to mitochondrion plus cytoplasm or
+  peroxisome is routine and often correct (fumarase, aconitase, several
+  aminoacyl-tRNA synthetases, beta-oxidation enzymes), so these counts are an
+  UPPER BOUND on candidate sets for per-set triage, not by themselves evidence of
+  collapse. Distinguishing genuine dual localization from isoform collapse
+  requires inspecting each set - or a baseline measuring how often reviewed
+  proteins matching those signatures legitimately carry both SL values - and
+  neither was done. The isoform-collapse mechanism itself is verified for exactly
+  one orthologue, mouse P32020; human P22307 and rat P11915 were not checked, and
+  ARBA's actual training provenance for CS779 was not established.
+  Independently of scale, the literature actively argues against mitochondrial residence for this
   family: Li, Fan & Papadopoulos (PMID:26901662) showed by live-cell confocal
   imaging that the N-terminal presequence of SCPX/SCP2 is not sufficient to direct
   the proteins to mitochondria, and that PTS1-mediated peroxisomal targeting
@@ -466,9 +475,14 @@ review_summary: >-
   (87%) have no positive taxon condition beyond NOT(Bacteria/Archaea/Viruses),
   only 422 (28%) contain any signature whose label mentions "mitochondri*" (a
   weak proxy), and of the 885 distinct InterPro entries used, 493 have some
-  InterPro2GO mapping but only 35 are mapped to GO:0005739 by InterPro curators -
-  i.e. ~96% of the rule's InterPro conditions make a mitochondrial claim that
-  InterPro curators declined to make.
+  InterPro2GO mapping but only 35 are mapped to GO:0005739 by InterPro curators.
+  That last figure is a weak proxy too and is NOT evidence that InterPro curators
+  rejected a mitochondrial location: InterPro2GO maps a term only where it holds
+  for every match, its CC coverage is deliberately sparse, and - decisively - this
+  rule's condition sets are conjunctive, so for the 131 InterPro+InterPro+PANTHER,
+  99 InterPro x3, 99 InterPro+PANTHER and 67 InterPro x2 sets no individual entry
+  need imply mitochondrion for the set to. Only the 81 single-InterPro sets permit
+  a like-for-like comparison, and that restricted statistic was not computed.
 
   Recommended action is MODIFY rather than DEPRECATE: the biologically sound
   branches are numerous and valuable, and wholesale retirement would lose a large
@@ -495,10 +509,14 @@ action_rationale: >-
   comments without honouring their `molecule:` (isoform) scoping, so an
   architecture-specific signature (thiolase + SCP2 FunFam pair, CS779) inherits a
   location that UniProt records only for a different, domain-deficient isoform
-  (P32020-2). Because this failure mode is systematic - 139 of this rule's
-  condition sets share a signature set with the Cytoplasm rule ARBA00004496 and 19
-  with the Peroxisome rule ARBA00004275 - it warrants a targeted engineering fix
-  plus branch pruning rather than either blanket acceptance or blanket removal. A
+  (P32020-2). Because the failure is a property of the training procedure rather
+  than of one hand-written branch, it warrants a targeted engineering fix plus
+  branch pruning rather than either blanket acceptance or blanket removal. Its
+  prevalence is unquantified: 139 of this rule's condition sets share a signature
+  set with the Cytoplasm rule ARBA00004496 and 19 with the Peroxisome rule
+  ARBA00004275, but genuine dual localization produces the same signal, so those
+  counts bound the triage list from above rather than counting defects, and the
+  mechanism is confirmed only for mouse P32020. A
   secondary, independent problem is the very large tail of low-information
   branches (693 single-FunFam sets, 240 unlabeled) and 140 singleton positive
   taxon clades that look like training-set residue. If UniProt is unwilling to
@@ -524,10 +542,15 @@ suggested_modifications:
   transferred by a signature that requires a domain absent from that product.
 - >-
   Audit the 139 condition sets whose signature set also appears in ARBA00004496
-  (Cytoplasm) and the 19 that also appear in ARBA00004275 (Peroxisome). Sets
-  emitting three different compartments from one identical signature are prima
-  facie evidence of collapsed isoform- or condition-specific localization and
-  should be triaged first.
+  (Cytoplasm) and the 19 that also appear in ARBA00004275 (Peroxisome) - 155
+  distinct sets, since 3 appear in both. They are an upper bound on candidates for
+  collapsed isoform- or
+  condition-specific localization, not a defect count: many families genuinely
+  occupy more than one of these compartments, so each set needs individual
+  inspection - ideally against a baseline of how often reviewed proteins matching
+  the same signature legitimately carry both SUBCELLULAR LOCATION values. Sets
+  where the shared signature requires a domain absent from the isoform bearing the
+  location comment (the CS779 pattern) are the ones to triage first.
 - >-
   Drop, or gate behind benchmarking, condition sets consisting of a single FunFam
   plus only NOT(Bacteria/Archaea/Viruses) where the FunFam has no
@@ -652,16 +675,28 @@ condition_overlap:
     another. (3) Cross-rule overlap, which is the most consequential: 139/1,490
     (9.3%) of this rule's condition sets have a signature set that appears
     identically in the Cytoplasm rule ARBA00004496, 19/1,490 (1.3%) in the
-    Peroxisome rule ARBA00004275, and 3 in both. Identical antecedents emitting
-    mutually exclusive compartments are not sensitivity-enhancing overlap; they are
-    evidence that isoform- and condition-specific locations have been collapsed
-    into a single architecture-level signature. CS779 is the worked example: the
-    same FunFam pair is CS2894 of ARBA00004496, and its thiolase half alone is CS80
-    of ARBA00004275. Separately, of the 885 distinct InterPro entries used by this
+    Peroxisome rule ARBA00004275, and 3 in both. These compartments are not
+    mutually exclusive - mitochondrion/cytoplasm and mitochondrion/peroxisome
+    co-annotation is routine and frequently correct (fumarase, aconitase, several
+    aminoacyl-tRNA synthetases, beta-oxidation enzymes), and the falcon report
+    makes the same point: "For dual-localized families, GO:0005739 should coexist
+    with the other supported component rather than suppress it." The 139 + 19
+    counts are therefore an upper bound on the sets that warrant per-set triage,
+    not a count of collapsed antecedents; separating true dual localization from
+    isoform collapse requires inspecting each set, which this review did not do.
+    What is demonstrated is the single worked example CS779, where the shared
+    signature requires the thiolase FunFam that isoform P32020-2 lacks: the same
+    FunFam pair is CS2894 of ARBA00004496, and its thiolase half alone is CS80 of
+    ARBA00004275. Separately, of the 885 distinct InterPro entries used by this
     rule, 493 already carry some InterPro2GO mapping but only 35 are mapped to
-    GO:0005739 by InterPro curators, so ~96% of the rule's InterPro conditions make
-    a mitochondrial claim the InterPro2GO curators declined to make - the rule is
-    largely non-redundant with InterPro2GO precisely where it is least supported.
+    GO:0005739 by InterPro curators. This is an argument from silence and should
+    not be read as InterPro curators declining a mitochondrial claim: InterPro2GO
+    maps a term only where it holds for all matches, CC coverage there is sparse by
+    design, and this rule's condition sets are conjunctive, so in the 131
+    InterPro+InterPro+PANTHER, 99 InterPro x3, 99 InterPro+PANTHER and 67
+    InterPro x2 sets no single entry need imply mitochondrion for the set to. The
+    comparison is like-for-like only in the 81 single-InterPro sets, and that
+    restricted count was not computed.
   supported_by:
   - reference_id: file:rules/arba/ARBA00004173/ARBA00004173-analysis-notes.md
     supporting_text: Rule ARBA00004173 has 1490 condition sets, which exceeds the
@@ -673,6 +708,9 @@ condition_overlap:
   - reference_id: file:rules/arba/ARBA00004173/ARBA00004173-deep-research-falcon.md
     supporting_text: Where a PANTHER subfamily is sufficient and more specific, a
       parent-family condition may be redundant.
+  - reference_id: file:rules/arba/ARBA00004173/ARBA00004173-deep-research-falcon.md
+    supporting_text: For dual-localized families, GO:0005739 should coexist with the
+      other supported component rather than suppress it.
 go_specificity:
   assessment: APPROPRIATE
   notes: >-
