@@ -138,14 +138,14 @@ is rare enough that no sampling is needed — there are only 25,401 of them.
 
 | | Global (UniProt-GOA) | Repo GOA files | Coverage |
 |---|---:|---:|---:|
-| IEP annotations | 25,401 | 543 | 2.1% |
-| Gene products with IEP | 10,618 | 207 | 1.9% |
+| IEP annotations | 25,401 | 555 | 2.2% |
+| Gene products with IEP | 10,618 | 212 | 2.0% |
 | Distinct GO terms | 2,383 | 277 | 11.6% |
 | Distinct references | 11,777 | 357 | 3.0% |
 
 Within the repo, IEP is rare in the same way it is globally: 530 of 147,856
-cached GOA rows (0.4%), roughly one IEP row per 40 IDA rows. 538 of those have
-been reviewed, across 215 review files.
+cached GOA rows (0.4%), roughly one IEP row per 40 IDA rows. 550 of those have
+been reviewed, across 221 review files.
 
 The reviewed sample is 2% of global IEP, so before drawing conclusions from it,
 see [how representative it is](#is-the-reviewed-sample-representative). The short
@@ -156,12 +156,12 @@ findings rest on, badly skewed by organism and annotation group.
 
 | GO branch (is_a + part_of closure) | Global rows | Global share | Repo share | Flagged in repo |
 |---|---:|---:|---:|---:|
-| response to stimulus (GO:0050896) | 17,099 | 67.3% | 70.1% | 16.7% |
-| developmental process (GO:0032502) | 4,110 | 16.2% | 14.1% | **23.7%** |
-| unclassified (obsolete/unresolvable) | 1,395 | 5.5% | 4.3% | 8.7% |
-| cellular component | 1,147 | 4.5% | 2.6% | 0% |
-| biological regulation (GO:0065007) | 1,060 | 4.2% | 6.1% | 15.2% |
-| metabolic process / localization / MF | 590 | 2.3% | 2.6% | 7.1% |
+| response to stimulus (GO:0050896) | 17,099 | 67.3% | 69.3% | 16.8% |
+| developmental process (GO:0032502) | 4,110 | 16.2% | 15.3% | **22.6%** |
+| unclassified (obsolete/unresolvable) | 1,395 | 5.5% | 4.2% | 8.7% |
+| cellular component | 1,147 | 4.5% | 2.5% | 0% |
+| biological regulation (GO:0065007) | 1,060 | 4.2% | 6.0% | 15.2% |
+| metabolic process / localization / MF | 590 | 2.3% | 2.7% | 13.3% |
 
 Seven out of ten IEP annotations are a "response to X" term, both globally and in
 the repo, which follows directly from the experiment type: expose an organism to
@@ -180,7 +180,7 @@ tissue.
 ### The disposition data: IEP is not wrong so much as peripheral
 
 Reviewers flagged 16.7% of IEP rows (REMOVE + MARK_AS_OVER_ANNOTATED + MODIFY).
-That is worse than the other experimental codes (IDA 6.7%, IMP 6.8%, IGI 6.4%)
+That is worse than the other experimental codes (IDA 6.8%, IMP 6.8%, IGI 6.4%)
 but comparable to ISO (16.8%) and better than IEA (20.4%) — not, on its own, a
 damning number.
 
@@ -188,20 +188,20 @@ The damning number is the other end of the distribution:
 
 | Code | Reviewed rows | % ACCEPT | % whose term reaches `core_functions` |
 |---|---:|---:|---:|
-| TAS | 15,036 | 73.8% | 55.8% |
-| IBA | 9,568 | 72.4% | 50.8% |
-| IDA | 21,599 | 69.5% | 43.9% |
-| IEA | 31,198 | 50.8% | 29.4% |
-| IMP | 9,770 | 48.5% | 32.7% |
-| IGI | 1,555 | 45.3% | 26.5% |
-| ISO | 4,237 | 33.2% | 16.1% |
-| **IEP** | **538** | **22.7%** | **10.0%** |
-| IPI | 17,472 | 10.9% | 4.3% |
+| TAS | 15,432 | 73.9% | 56.2% |
+| IBA | 9,728 | 72.3% | 50.8% |
+| IDA | 21,893 | 69.3% | 43.9% |
+| IEA | 31,612 | 50.6% | 29.4% |
+| IMP | 9,863 | 48.3% | 32.8% |
+| IGI | 1,557 | 45.3% | 26.6% |
+| ISO | 4,245 | 33.1% | 16.2% |
+| **IEP** | **550** | **22.5%** | **10.0%** |
+| IPI | 17,834 | 10.7% | 4.3% |
 
 IEP has the lowest ACCEPT rate and the lowest core-function grounding rate of
 any code surveyed except IPI — and IPI's position is a known artifact of
 `protein binding` rather than a property of physical-interaction evidence. The
-missing IEP mass went to `KEEP_AS_NON_CORE`, which absorbs **55.4%** of IEP
+missing IEP mass went to `KEEP_AS_NON_CORE`, which absorbs **55.6%** of IEP
 rows, the highest share of any code.
 
 So the characteristic IEP annotation is not false. It is *true and peripheral*:
@@ -211,7 +211,7 @@ nothing in the annotation is checkably wrong.
 
 Two more measurements sharpen it:
 
-- **72.1%** of IEP rows are the **sole** carrier of their GO term in the review
+- **72.4%** of IEP rows are the **sole** carrier of their GO term in the review
   — no other evidence code in the same gene supports that term. IEP is not
   mostly redundant confirmation of what IDA/IMP already say; it is mostly
   adding terms nothing else supports.
@@ -235,11 +235,11 @@ main findings rest on come out close to proportional:
 
 | Stratum | Global | Repo | Ratio |
 |---|---:|---:|---:|
-| `response to stimulus` branch | 67.3% | 69.4% | 1.03x |
-| `developmental process` branch | 16.2% | 14.3% | 0.89x |
-| `involved_in` qualifier | 75.3% | 73.2% | 0.97x |
-| `acts_upstream_of_or_within` qualifier | 19.1% | 21.7% | 1.14x |
-| biological_process aspect | 95.2% | 95.5% | 1.00x |
+| `response to stimulus` branch | 67.3% | 68.3% | 1.01x |
+| `developmental process` branch | 16.2% | 15.1% | 0.94x |
+| `involved_in` qualifier | 75.3% | 72.1% | 0.96x |
+| `acts_upstream_of_or_within` qualifier | 19.1% | 23.1% | 1.21x |
+| biological_process aspect | 95.2% | 95.7% | 1.01x |
 | Genes with ≥5 IEP rows, as share of IEP rows | 42.3% | 43% | 1.02x |
 
 So "IEP is overwhelmingly a stimulus-response code", "the developmental branch is
@@ -592,8 +592,8 @@ actually expression-pattern evidence.
 
 ## Where IEP Is Legitimate
 
-IEP is not a code to review adversarially. 22.7% of IEP rows were accepted and
-49 of them ground a term in a gene's `core_functions`. The accepted cases share
+IEP is not a code to review adversarially. 22.5% of IEP rows were accepted and
+50 of them ground a term in a gene's `core_functions`. The accepted cases share
 a single property, and it is the discriminator this project turns on: **the
 gene's job is the response itself**.
 
@@ -618,7 +618,7 @@ gene's job is the response itself**.
   MEDTR/NFP (`nodulation`), worm/skn-1 (`response to oxidative stress`) and
   worm/xbp-1 (`IRE1-mediated unfolded protein response`) all keep IEP rows that
   restate what IMP and IDA independently establish. Here IEP costs nothing and
-  adds a line of evidence — the 27.9% of IEP rows that are *not* the sole carrier
+  adds a line of evidence — the 27.6% of IEP rows that are *not* the sole carrier
   of their term.
 - **Markers that are the differentiated product.** DICDI/ecmB, as above.
 
@@ -682,7 +682,7 @@ Before accepting or flagging an IEP row.
 - `REMOVE` should be reserved for a categorical mismatch, where the process is
   not merely peripheral but belongs to a different functional class entirely
   (human/RB1 `Ras protein signal transduction`, human/FN3K `epithelial cell
-  differentiation`). Only 11 of 538 rows met that bar, four of them added by the
+  differentiation`). Only 11 of 550 rows met that bar, four of them added by the
   miRNA cohort below.
 - Do not REMOVE an IEP row merely because the evidence code is weak. The
   induction happened; what is at issue is the term, not the experiment.
@@ -808,8 +808,8 @@ correct answer is "true, keep it, but it is not what this gene is for."
   corpus that previously held 7. **Reviewing batch cohorts is high-yield**, and
   reviewing them tier-by-tier is what makes the verdicts defensible rather than
   reflexive.
-- Corpus figures updated throughout: reviewed IEP rows 525 → 538, flagged 15.0% →
-  16.7%, REMOVE 7 → 11.
+- Corpus figures updated throughout: reviewed IEP rows 525 → 550 (including 12
+  added by other work merged from `main`), flagged 15.0% → 16.7%, REMOVE 7 → 11.
 
 ### 2026-07-27 (second pass — global denominator)
 
