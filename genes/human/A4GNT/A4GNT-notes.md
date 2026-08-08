@@ -21,4 +21,8 @@ GO lacks a reaction-specific molecular-function term for transfer of GlcNAc from
 
 ## Validation note
 
-The local term validator initially cached GO:0016266 under the exact synonym `protein O-linked glycosylation via N-acetyl-galactosamine`. Live QuickGO and the current GO source instead use `protein O-linked glycosylation via N-acetylgalactosamine`; the cache entry was corrected to that authoritative primary label so the review's author-supplied replacement/core fields validate without adopting a stale synonym.
+The local term validator initially added GO:0016266 under the exact synonym `protein O-linked glycosylation via N-acetyl-galactosamine`. Live QuickGO and the current GO source instead use `protein O-linked glycosylation via N-acetylgalactosamine`; that newly added cache row was changed to the authoritative primary label so the review's author-supplied replacement/core fields validate without adopting a stale synonym.
+
+## PR follow-up
+
+The terminal alpha-GlcNAc cap has biological effects beyond its biosynthesis. Human gastric mucin glycans inhibit H. pylori growth by blocking bacterial cholesteryl-alpha-D-glucopyranoside synthesis [PMID:15310903, "Here, we report that these O-glycans have antimicrobial activity against H. pylori, inhibiting its biosynthesis of cholesteryl-alpha-D-glucopyranoside, a major cell wall component."]. In mice, A4gnt loss removes gastric alpha-GlcNAc and causes spontaneous inflammation-associated gastric adenocarcinoma even without H. pylori [PMID:22307328, "A4gnt(-/-) mice showed complete lack of αGlcNAc expression in gastric gland mucin. Surprisingly, all the mutant mice developed gastric adenocarcinoma through a hyperplasia-dysplasia-carcinoma sequence in the absence of H. pylori infection."]. These are physiological consequences of the glycan product, not separate A4GNT molecular functions.
