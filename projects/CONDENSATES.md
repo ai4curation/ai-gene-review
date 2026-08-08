@@ -97,6 +97,7 @@ batch.
 | [STRESS_GRANULES](STRESS_GRANULES.md) | per-condensate project (human SGs) | `SCOPING`; self-described stub, 5 of ~12 candidates have gene folders |
 | `MODULE:phagophore_assembly_site` | module | `DRAFT`; the corpus's only condensate modeled as a module |
 | `projects/CONDENSATES/scripts/scan_condensate_annotations.py` | audit script | regenerates every number on this page |
+| [GO:0034045 corpus slice audit](CONDENSATES/GO_0034045-annotation-audit.md) | per-assertion re-review | 6 annotations moved `ACCEPT` → `MODIFY`; input to GO issue #29437 |
 
 ### Relationship to the per-condensate projects
 
