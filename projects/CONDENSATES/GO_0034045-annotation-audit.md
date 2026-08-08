@@ -10,18 +10,18 @@ autolink_gene_symbols: false
 
 Supporting page for [Biomolecular Condensates](../CONDENSATES.md), and the first subproject of
 [the SL project](../SL.md) (`SL-0221 Preautophagosomal structure membrane`). This is a per-assertion
-re-adjudication of every `GO:0034045` and `GO:0097632` annotation held in this repository,
-carried out against the analysis in GO issue
+re-adjudication of every `GO:0034045`, `GO:0097632` and `GO:0097629` annotation held in this
+repository, carried out against the analysis in GO issue
 [#29437](https://github.com/geneontology/go-ontology/issues/29437). It is a small slice —
-29 assertions across 13 gene folders, against ~2,151 direct annotations on GO:0034045 — but
+31 assertions across 14 gene folders, against ~2,151 direct annotations on GO:0034045 — but
 it is a slice where every assertion has a written review attached, so it can say something
-the annotation counts cannot.
+the annotation counts cannot. (`GO:0097629` was added to the scope late; see the R4 gap below.)
 
 ## Headline: we reproduced the failure mode
 
 **All 23 previously reviewed assertions were `ACCEPT`.** Not one had been questioned.
-After re-review, 23 of the 29 have moved — 18 to `MODIFY` and 5 to
-`MARK_AS_OVER_ANNOTATED` with the missing terms proposed.
+After re-review, **all 31 have moved** — 26 to `MODIFY` and 5 to
+`MARK_AS_OVER_ANNOTATED` with the missing terms proposed. Nothing is left at `ACCEPT`.
 
 That is the strongest corroboration this corpus can offer for the mechanism described in
 §2 of the issue analysis: a reviewer meeting this term sees a plausible label and a
@@ -43,8 +43,8 @@ annotations there originally.
 
 ## Changes made
 
-**23 of the 29 assertions, across 14 genes, have moved off `ACCEPT`** — 18 to `MODIFY`,
-5 to `MARK_AS_OVER_ANNOTATED` with new terms proposed. All files revalidate clean.
+**All 31 assertions, across 14 genes, have moved off `ACCEPT`** — 26 to `MODIFY`, 5 to
+`MARK_AS_OVER_ANNOTATED` with new terms proposed. All files revalidate clean.
 
 | species | gene | term | evidence | reference | n | destination |
 |---|---|---|---|---|---|---|
@@ -59,6 +59,8 @@ annotations there originally.
 | SCHPO | atg38 | GO:0034045 | IEA | GO_REF:0000044 | 1 | GO:0000407 |
 | yeast | ATG7 | GO:0097632 | IDA | PMID:10233148 | 1 | GO:0000407 |
 | human | ATG14 | GO:0097632 | IBA, IDA | GO_REF:0000033, PMID:21518905 | 2 | GO:0000407 |
+| human | ATG14 | GO:0034045 | EXP ×3, IDA, IEA, TAS | PMID:18843052 + refs | 6 | GO:0061908 phagophore |
+| human | ATG14 | GO:0097629 | IBA, IDA | GO_REF:0000033, PMID:21518905 | 2 | GO:1990462 omegasome |
 
 Two destinations, chosen by what the cited evidence actually shows:
 
@@ -118,6 +120,49 @@ carries the same term as an IEA projected from mouse Rab7a via GO_REF:0000107
 (`WITH UniProtKB:P51150`). Correcting the source should carry through, and both have been
 changed together. This is a two-link instance of the amplification described in §5.1.
 
+## A gap in recommendation R4: GO:0097629 has the same defect
+
+R4 proposes obsoleting `GO:0097632` extrinsic component of phagophore assembly site membrane,
+noting that issue #23424 obsoleted its intrinsic and integral siblings and the parallel
+autophagosome set, and that GO:0097632 "was missed". **A second term was missed in the same
+pass.**
+
+| set | intrinsic | integral | extrinsic |
+|---|---|---|---|
+| autophagosome membrane | GO:0097636 obsolete | GO:0097637 obsolete | GO:0097635 **obsolete** |
+| omegasome membrane | GO:0097630 obsolete | GO:0097631 obsolete | GO:0097629 **live** |
+| phagophore assembly site membrane | GO:0097633 obsolete | GO:0097634 obsolete | GO:0097632 **live** |
+
+For the autophagosome all three went. For the omegasome and the phagophore assembly site, only
+intrinsic and integral went and the extrinsic term survived in both. `GO:0097629` carries the
+identical protein-topology defect as `GO:0097632` and should be obsoleted with it, so R4 should
+name both.
+
+**ATG14 is the demonstration.** It carries `GO:0097629` and `GO:0097632` as IDAs from *the same
+paper and the same experiment* — PMID:21518905, showing the BATS domain binding curved
+PtdIns(3)P-rich autophagic membrane, with puncta overlapping ATG16, LC3 and partially DFCP1.
+One observation, split across two topology terms because the membrane it was observed on has
+two names in GO. Both are now `MODIFY`: the omegasome pair to `GO:1990462`, the
+phagophore-assembly-site pair to `GO:0000407`.
+
+ATG14 is the only gene in this corpus carrying `GO:0097629`, so this slice says nothing about
+how many annotations the term holds at GOA scale — only that the term should not have survived
+#23424.
+
+## ATG14 completes the audit
+
+ATG14's six `GO:0034045` annotations were the last ones sitting at `ACCEPT`, held over from the
+first pass. They moved to `GO:0061908` phagophore rather than `GO:0000407`, because the
+evidence is about the isolation membrane — "Atg14 is present on autophagic isolation membranes"
+(PMID:18843052) — and *isolation membrane* is a related synonym of `GO:0061908`, not of the
+assembly site. Generalizing to `GO:0000407` would also have been redundant: ATG14 already
+carries it from an IDA (PMID:20713597).
+
+`phagophore membrane` is additionally proposed on the ATG14 review, because the BATS-domain
+result is specifically a membrane-binding observation and `GO:0061908` can record it only as
+the structure. Knock-on: ATG14's `core_functions.locations` carried both defective terms and
+now carries `GO:1990462` and `GO:0061908`.
+
 ## The missing-term cases: propose the term, don't hold the annotation
 
 `ATG2A`, `ATG2B` and `worm atg-18` were initially left as `ACCEPT` on the grounds that there
@@ -159,21 +204,22 @@ there is nothing to propose.
 
 ## What this slice supports and does not
 
-**Supports.** That the term is accepted uncritically even under review; that the failure
-is compositional rather than evidential (reviewers substitute pathway membership for
-localization); that the amplification chain is real and visible at small scale; and that
-migration destinations for the Atg1-complex proteins (→ GO:0000407) are unambiguous while
-those for the lipid-transfer and conjugation machinery are blocked on new terms.
+**Supports.** That the term is accepted uncritically even under review; that the failure is
+compositional rather than evidential (reviewers substitute pathway membership for
+localization); that the amplification chain is real and visible at small scale; that every
+assertion in the slice turned out to have a destination, either an existing term or one worth
+proposing; and — from the `GO:0097629` finding — that the #23424 sweep was incomplete in a way
+that is checkable from the ontology alone.
 
-**Does not support.** Anything about the ~2,120 assertions not in this corpus. This slice
-is biased toward genes someone chose to review, and toward IEA/IBA (19 of 29 assertions);
-it contains only four of the 110 manual annotations in §5.3. It is a demonstration that the
-per-assertion method in Stage 5 works and produces corrections, not a sample from which the
-full audit's outcome can be projected.
+**Does not support.** Anything about the ~2,120 assertions not in this corpus. This slice is
+biased toward genes someone chose to review, and toward IEA/IBA (19 of 31 assertions); it
+contains only five of the 110 manual annotations in §5.3, and a single gene (ATG14) supplies
+10 of the 31. It is a demonstration that the per-assertion method in Stage 5 works and produces
+corrections, not a sample from which the full audit's outcome can be projected.
 
 ## Regenerating the inventory
 
-The 29-assertion inventory comes from scanning `genes/*/*/*-goa.tsv` for the two terms and
+The 31-assertion inventory comes from scanning `genes/*/*/*-goa.tsv` for the three terms and
 joining against the `review.action` in the corresponding `*-ai-review.yaml`. The general
 condensate-space scan in
 [the GO and annotation audit](CONDENSATES-go-audit.md) uses the same approach over a wider
