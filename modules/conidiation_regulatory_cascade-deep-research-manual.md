@@ -224,10 +224,12 @@ but structurally unrelated (a zinc-cluster factor, not a C2H2 factor) [PMID:1512
 
 Two "aconidiate" loci define major developmental stages: **acon-2** and **acon-3**.
 Epistasis places *fl* **downstream of acon-2 and upstream of acon-3**: FL regulates
-*acon-3* and the surface hydrophobin gene *eas* (*ccg-2*), while *acon-3* in turn
-controls later markers such as *con-6* and *con-10* [PMID:15126394]. This yields a
-staged cascade (acon-2 → FL → acon-3 → con genes) conceptually parallel to
-BrlA → AbaA → WetA, again built from different gene families.
+*acon-3* and the surface hydrophobin gene *eas* (*ccg-2*) [PMID:15126394]. In that same
+study, elevated *fl* correlated with increased *eas* induction but **not** with *con-6*
+or *con-10* — so the paper does **not** establish an *acon-3* → *con*-gene step, and the
+position of *acon-3* relative to the conidiation-specific *con* genes is unestablished
+[PMID:15126394]. This yields a staged cascade (acon-2 → FL → acon-3) conceptually
+parallel to BrlA → AbaA → WetA, again built from different gene families.
 
 ### 3.3 Direct activation of the hydrophobin output (eas/ccg-2)
 
@@ -236,7 +238,10 @@ in the promoter of **eas (ccg-2)**, a developmentally regulated **hydrophobin** 
 coating macroconidia. In vitro binding assays identified a preferred FL site
 (5′-CGGAAGTTTCCTCCG-3′) upstream of *eas*, demonstrating that the master regulator
 directly activates a terminal cell-surface gene [PMID:15773996]. Additional
-conidiation-associated markers include **con-6** and **con-10** [PMID:15126394].
+conidiation-associated markers include **con-6** and **con-10** (these are late
+conidiation-specific transcripts; note that in [PMID:15126394] elevated *fl* induced
+*eas* but **not** *con-6* or *con-10*, so no *acon-3*/*fl*-dependence of these markers is
+established by that study).
 
 ### 3.4 Light and circadian gating: the White Collar Complex and FRQ
 
@@ -269,7 +274,7 @@ partial conservation of the velvet layer even where the central factors differ
 |---|---|---|
 | Asexual structure | Determinate conidiophore (vesicle/metulae/phialides) | Aerial hyphae budding/fission into macroconidia |
 | Master switch | BrlA (C2H2 zinc finger) | FL/fluffy (Zn₂Cys₆ zinc cluster) |
-| Central cascade | BrlA → AbaA → WetA | acon-2 → FL → acon-3 → con genes |
+| Central cascade | BrlA → AbaA → WetA | acon-2 → FL → acon-3 |
 | brlA orthologue driving conidiophore | Yes | **Absent** |
 | Upstream activation | FluG/SfgA + FlbB/C/D/E | acon-2 stage + WCC light input |
 | Light integration | Velvet complex (VeA/VelB/VosA/LaeA) | White Collar Complex (WC-1/WC-2) |
